@@ -13,7 +13,9 @@ export interface WeatherThresholds {
 
 export interface HourlyMarineWeather {
   time: string; // ISO 8601 (e.g. 2026-11-07T14:00)
-  displayTime: string; // e.g. "11/07 14:00"
+  datePart: string; // e.g. "11/07"
+  hourPart: string; // e.g. "14시"
+  displayTime: string; // e.g. "11/07 14시"
   windSpeedKnots: number | null;
   waveHeightMeters: number | null;
   grade: MarineWeatherGrade;
@@ -26,6 +28,7 @@ export interface MarineWeatherStatusResult {
   lng: number;
   hourly: HourlyMarineWeather[];
   selectedIndex: number;
+  setSelectedIndex: (index: number) => void;
   current: HourlyMarineWeather | null;
   isLoading: boolean;
   error: string | null;

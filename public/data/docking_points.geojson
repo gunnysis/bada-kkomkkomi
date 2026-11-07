@@ -1,7 +1,7 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "version": "0.1.0-beta",
+    "version": "0.3.0-beta",
     "region": "경상남도 통영·거제 해역",
     "updated_at": "2026-11-07",
     "operator_note": "비개발자 운영 가이드: coordinates는 [경도(lng), 위도(lat)] 순서입니다. 사진 파일은 public/images/docking/ 폴더에 넣고 경로만 수정하세요."
@@ -85,6 +85,25 @@
         "photos": [
           "/images/docking/gj-002-berth.svg",
           "/images/docking/gj-002-fender.svg"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.5728, 34.6408]
+      },
+      "properties": {
+        "id": "TY-003",
+        "name": "통영 매물도 당금항 비상 대피 계류지",
+        "purpose": "외해 돌풍·기상 악화 시 소형 조사선 긴급 피항 및 임시 계류",
+        "tide_info": "방파제 내측 평균 수심 2.9m 확보 (남동풍 너울 유입 시 내항 안쪽 계류 권장)",
+        "hazard": "어선 밀집 시간대(일몰 직전) 내항 선회 공간 협소 — 입항 전 어촌계장/선장 채널 교신 권장",
+        "color": "purple",
+        "verified_date": "2026-11-07",
+        "photos": [
+          "/images/docking/ty-003-shelter.svg"
         ]
       }
     }

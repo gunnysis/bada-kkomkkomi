@@ -30,7 +30,6 @@ export function PorpoiseObservationModal({
     return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
   });
   const [count, setCount] = useState(() => existingRecord?.count ?? 1);
-  const [note, setNote] = useState(() => existingRecord?.note ?? '');
 
   if (!isOpen) return null;
 
@@ -42,7 +41,6 @@ export function PorpoiseObservationModal({
       onUpdate(existingRecord.id, {
         observedAt,
         count,
-        note,
       });
     } else {
       onSave({
@@ -50,7 +48,6 @@ export function PorpoiseObservationModal({
         lng,
         observedAt,
         count,
-        note,
       });
     }
     onClose();
@@ -78,13 +75,13 @@ export function PorpoiseObservationModal({
         <div className="flex items-center justify-between border-b border-slate-700/90 pb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/20 text-teal-400">
-              <span className="text-xl">🐬</span>
+              <span className="text-xl" aria-hidden="true">🐬</span>
             </div>
             <div>
               <h2 id="porpoise-modal-title" className="text-base font-black tracking-tight text-white">
-                {existingRecord ? '상괭이 관찰기록 수정' : '상괭이 목격 기록'}
+                {existingRecord ? '상괭이 관찰기록 확인·수정' : '상괭이 목격 기록'}
               </h2>
-              <p className="text-xs text-slate-400">개인 관찰용 (기기 내부 저장)</p>
+              <p className="text-xs text-slate-400">개인 관찰용 (기기 내부 단독 저장)</p>
             </div>
           </div>
           <button
@@ -98,10 +95,10 @@ export function PorpoiseObservationModal({
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {/* 위치 좌표 */}
+          {/* 1. 목격 위치 GPS 좌표 */}
           <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400">목격 위치</span>
+              <span className="text-xs font-bold text-slate-400">관찰 위치 GPS 좌표</span>
               <span className="flex items-center gap-1 font-mono text-xs font-black text-teal-300">
                 <Compass className="h-3.5 w-3.5 text-teal-400" />
                 {lat.toFixed(5)}°N, {lng.toFixed(5)}°E
@@ -109,9 +106,9 @@ export function PorpoiseObservationModal({
             </div>
           </div>
 
-          {/* 목격 일시 */}
+          {/* 2. 목격 날짜 및 시간 */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1.5">
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-bold text-slate-300">
               <Calendar className="h-3.5 w-3.5 text-teal-400" />
               <span>관찰 날짜 및 시간</span>
             </label>
@@ -124,15 +121,16 @@ export function PorpoiseObservationModal({
             />
           </div>
 
-          {/* 발견 개체수 */}
+          {/* 3. 발견 개체수 (기본 1마리) */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+            <label className="mb-1.5 block text-xs font-bold text-slate-300">
               발견 개체수 (마리)
             </label>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setCount((prev) => Math.max(1, prev - 1))}
+                aria-label="개체수 감소"
                 className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white active:scale-90"
               >
                 <Minus className="h-5 w-5" />
@@ -143,6 +141,7 @@ export function PorpoiseObservationModal({
               <button
                 type="button"
                 onClick={() => setCount((prev) => prev + 1)}
+                aria-label="개체수 증가"
                 className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white active:scale-90"
               >
                 <Plus className="h-5 w-5" />
@@ -150,32 +149,19 @@ export function PorpoiseObservationModal({
             </div>
           </div>
 
-          {/* 간단 메모 (선택) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">
-              관찰 메모 (선택)
-            </label>
-            <input
-              type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="예: 어미와 새끼 2마리 유영 관찰"
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm font-bold text-white placeholder-slate-500 focus:border-teal-400 focus:outline-none"
-            />
-          </div>
-
-          <div className="text-[11px] text-slate-400 leading-tight">
-            * 저장된 상괭이 기록은 기기 브라우저에만 보관되며 타인에게 공유되지 않습니다.
+          <div className="rounded-xl border border-slate-700/80 bg-slate-900/60 p-2.5 text-[11px] leading-snug text-slate-400">
+            * 개인 기록은 다른 직원에게 공유되지 않으며 이 기기 브라우저에만 저장됩니다. (브라우저 데이터 초기화 또는 기기 변경 시 유실될 수 있습니다.)
           </div>
 
           {/* 액션 버튼 */}
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-1">
             {existingRecord && onDelete && (
               <button
                 type="button"
                 onClick={handleDelete}
                 className="flex h-12 w-12 items-center justify-center rounded-xl border border-red-500/60 bg-red-950/60 text-red-400 active:scale-95"
                 title="기록 삭제"
+                aria-label="기록 삭제"
               >
                 <Trash2 className="h-5 w-5" />
               </button>
@@ -184,7 +170,7 @@ export function PorpoiseObservationModal({
               type="submit"
               className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-teal-400 py-3 text-sm font-black text-slate-950 shadow-lg active:scale-95"
             >
-              {existingRecord ? '수정 완료' : '상괭이 위치 저장'}
+              {existingRecord ? '수정 저장' : '상괭이 관찰 저장'}
             </button>
           </div>
         </form>

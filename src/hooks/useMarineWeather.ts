@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type {
   HourlyMarineWeather,
   MarineWeatherGrade,
@@ -13,22 +13,49 @@ export const DEFAULT_THRESHOLDS: WeatherThresholds = {
   waveMeter: { good: 1.0, moderate: 1.8 },
 };
 
-function judgeMetric(value: number | null, thresholds: { good: number; moderate: number }): MarineWeatherGrade {
+interface RawHourlyEntry {
+  time: string;
+  datePart: string;
+  hourPart: string;
+  displayTime: string;
+  windSpeedKnots: number | null;
+  waveHeightMeters: number | null;
+}
+
+function judgeMetric(
+  value: number | null,
+  thresholds: { good: number; moderate: number },
+): MarineWeatherGrade {
   if (value === null || Number.isNaN(value)) return 'unknown';
   if (value < thresholds.good) return 'good';
   if (value <= thresholds.moderate) return 'moderate';
   return 'bad';
 }
 
+/**
+ * 풍속과 파고 각각 판정 후 더 나쁜 등급을 최종 결과로 적용
+ * - 단, 하나라도 'bad'이면 'bad'
+ * - 자료가 없거나 조회 실패('unknown')인 항목이 있으면 '좋음'이나 '보통'으로 판정하지 않고 'unknown'('?') 반환
+ */
 function calculateOverallGrade(
   windGrade: MarineWeatherGrade,
-  waveGrade: MarineWeatherGrade
+  waveGrade: MarineWeatherGrade,
 ): MarineWeatherGrade {
   if (windGrade === 'bad' || waveGrade === 'bad') return 'bad';
+  if (windGrade === 'unknown' || waveGrade === 'unknown') return 'unknown';
   if (windGrade === 'moderate' || waveGrade === 'moderate') return 'moderate';
-  if (windGrade === 'good' && waveGrade === 'good') return 'good';
-  if (windGrade === 'unknown' && waveGrade === 'unknown') return 'unknown';
-  return windGrade !== 'unknown' ? windGrade : waveGrade;
+  return 'good';
+}
+
+function getKstCurrentHourPrefix(): string {
+  const now = new Date();
+  // Asia/Seoul (UTC+9) 기준 YYYY-MM-DDTHH 생성
+  const kstTime = new Date(now.getTime() + (9 * 60 + now.getTimezoneOffset()) * 60000);
+  const yyyy = kstTime.getFullYear();
+  const mm = String(kstTime.getMonth() + 1).padStart(2, '0');
+  const dd = String(kstTime.getDate()).padStart(2, '0');
+  const hh = String(kstTime.getHours()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}`;
 }
 
 export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
@@ -36,114 +63,143 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
     lat: initialLat,
     lng: initialLng,
   });
+  const [fetchNonce, setFetchNonce] = useState<number>(0);
 
   const [thresholds, setThresholds] = useState<WeatherThresholds>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_THRESHOLDS);
-      if (raw) return JSON.parse(raw);
-    } catch {}
+      if (raw) return JSON.parse(raw) as WeatherThresholds;
+    } catch {
+      // ignore storage error
+    }
     return DEFAULT_THRESHOLDS;
   });
 
-  const [hourlyData, setHourlyData] = useState<HourlyMarineWeather[]>([]);
+  const [rawHourly, setRawHourly] = useState<RawHourlyEntry[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 기준치 저장
+  // 기준치 저장 (네트워크 재요청 없이 useMemo로 즉시 재판정)
   const updateThresholds = useCallback((newThresholds: WeatherThresholds) => {
     setThresholds(newThresholds);
     try {
       localStorage.setItem(STORAGE_KEY_THRESHOLDS, JSON.stringify(newThresholds));
-    } catch {}
+    } catch {
+      // ignore storage error
+    }
   }, []);
 
-  // Open-Meteo API 호출
-  const fetchWeather = useCallback(async (lat: number, lng: number) => {
+  // 좌표 또는 수동 새로고침 시 Open-Meteo API 비동기 조회 (Effect 내 동기 setState 제거)
+  useEffect(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setIsLoading(true);
-    setError(null);
+    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${coords.lat.toFixed(4)}&longitude=${coords.lng.toFixed(4)}&hourly=wave_height&timezone=Asia%2FSeoul`;
+    const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat.toFixed(4)}&longitude=${coords.lng.toFixed(4)}&hourly=wind_speed_10m&wind_speed_unit=kn&timezone=Asia%2FSeoul`;
 
-    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&hourly=wave_height&timezone=Asia%2FSeoul`;
-    const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&hourly=wind_speed_10m&wind_speed_unit=kn&timezone=Asia%2FSeoul`;
+    Promise.all([
+      fetch(marineUrl, { signal: controller.signal }),
+      fetch(forecastUrl, { signal: controller.signal }),
+    ])
+      .then(async ([marineRes, forecastRes]) => {
+        if (!marineRes.ok || !forecastRes.ok) {
+          throw new Error('해상기상 예보 서버 응답 오류');
+        }
 
-    try {
-      const [marineRes, forecastRes] = await Promise.all([
-        fetch(marineUrl, { signal: controller.signal }),
-        fetch(forecastUrl, { signal: controller.signal }),
-      ]);
+        const marineJson = await marineRes.json();
+        const forecastJson = await forecastRes.json();
 
-      if (!marineRes.ok || !forecastRes.ok) {
-        throw new Error('해상기상 데이터를 조회할 수 없습니다.');
-      }
+        const times: string[] = marineJson.hourly?.time || forecastJson.hourly?.time || [];
+        const waveHeights: (number | null)[] = marineJson.hourly?.wave_height || [];
+        const windSpeeds: (number | null)[] = forecastJson.hourly?.wind_speed_10m || [];
 
-      const marineJson = await marineRes.json();
-      const forecastJson = await forecastRes.json();
+        if (times.length === 0) {
+          throw new Error('해당 좌표의 해상기상 예보 자료가 없습니다.');
+        }
 
-      const times: string[] = marineJson.hourly?.time || forecastJson.hourly?.time || [];
-      const waveHeights: (number | null)[] = marineJson.hourly?.wave_height || [];
-      const windSpeeds: (number | null)[] = forecastJson.hourly?.wind_speed_10m || [];
+        const nowPrefix = getKstCurrentHourPrefix();
+        let startIndex = times.findIndex((t) => t.startsWith(nowPrefix));
+        if (startIndex === -1) startIndex = 0;
 
-      // 현재 시각 기준 이후 48시간 데이터 추출
-      const nowStr = new Date().toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
-      let startIndex = times.findIndex((t) => t.startsWith(nowStr));
-      if (startIndex === -1) startIndex = 0;
-      const targetTimes = times.slice(startIndex, startIndex + 48);
+        const targetTimes = times.slice(startIndex, startIndex + 48);
+        const parsedRaw: RawHourlyEntry[] = targetTimes.map((timeStr, idx) => {
+          const globalIdx = startIndex + idx;
+          const wave = waveHeights[globalIdx] ?? null;
+          const wind = windSpeeds[globalIdx] ?? null;
 
-      const parsedHourly: HourlyMarineWeather[] = targetTimes.map((timeStr, idx) => {
-        const globalIdx = startIndex + idx;
-        const wave = waveHeights[globalIdx] ?? null;
-        const wind = windSpeeds[globalIdx] ?? null;
+          // "YYYY-MM-DDTHH:mm" 직접 파싱으로 타임존 왜곡 원천 차단
+          const [dateSection, timeSection] = timeStr.split('T');
+          const [, monthStr, dayStr] = (dateSection || '').split('-');
+          const hourStr = (timeSection || '00:00').slice(0, 2);
+          const datePart = `${monthStr}/${dayStr}`;
+          const hourPart = `${hourStr}시`;
 
-        const waveGrade = judgeMetric(wave, thresholds.waveMeter);
-        const windGrade = judgeMetric(wind, thresholds.windKnot);
-        const grade = calculateOverallGrade(windGrade, waveGrade);
+          return {
+            time: timeStr,
+            datePart,
+            hourPart,
+            displayTime: `${datePart} ${hourPart}`,
+            windSpeedKnots: wind,
+            waveHeightMeters: wave,
+          };
+        });
 
-        // 표시용 시간 포맷 (예: "11/07 14시")
-        const dateObj = new Date(timeStr);
-        const m = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-        const d = dateObj.getDate().toString().padStart(2, '0');
-        const h = dateObj.getHours().toString().padStart(2, '0');
-        const displayTime = `${m}/${d} ${h}시`;
-
-        return {
-          time: timeStr,
-          displayTime,
-          windSpeedKnots: wind,
-          waveHeightMeters: wave,
-          grade,
-          windGrade,
-          waveGrade,
-        };
+        setRawHourly(parsedRaw);
+        setSelectedIndex(0);
+        setError(null);
+        setLastFetchedAt(Date.now());
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        const msg =
+          err instanceof Error ? err.message : '기상 정보를 불러오지 못했습니다.';
+        // 조회 실패 시 이전 좌표의 좋음/보통 상태가 남지 않도록 즉시 비움 -> '?'(unknown) 표시 보장
+        setRawHourly([]);
+        setError(msg);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       });
 
-      setHourlyData(parsedHourly);
-      setSelectedIndex(0);
-      setLastFetchedAt(Date.now());
-    } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      const msg = err instanceof Error ? err.message : '기상 정보를 불러오지 못했습니다.';
-      setError(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [thresholds]);
+    return () => controller.abort();
+  }, [coords.lat, coords.lng, fetchNonce]);
 
-  // 좌표 변경 시 조회
-  useEffect(() => {
-    void fetchWeather(coords.lat, coords.lng);
-  }, [coords.lat, coords.lng, fetchWeather]);
+  // 기준치(thresholds)와 원시 예보 데이터를 결합해 3단계 등급 도출
+  const hourlyData: HourlyMarineWeather[] = useMemo(() => {
+    return rawHourly.map((item) => {
+      const waveGrade = judgeMetric(item.waveHeightMeters, thresholds.waveMeter);
+      const windGrade = judgeMetric(item.windSpeedKnots, thresholds.windKnot);
+      const grade = calculateOverallGrade(windGrade, waveGrade);
+      return {
+        ...item,
+        grade,
+        windGrade,
+        waveGrade,
+      };
+    });
+  }, [rawHourly, thresholds]);
 
   const updateCoordinates = useCallback((lat: number, lng: number) => {
+    setIsLoading(true);
+    setError(null);
+    setRawHourly([]); // 새 위치 조회 중에는 '?'(unknown)로 초기화하여 오판 방지
     setCoords({ lat, lng });
+  }, []);
+
+  const refresh = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    setRawHourly([]);
+    setFetchNonce((n) => n + 1);
   }, []);
 
   const currentItem = hourlyData[selectedIndex] || null;
@@ -153,6 +209,7 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
     lng: coords.lng,
     hourly: hourlyData,
     selectedIndex,
+    setSelectedIndex,
     current: currentItem,
     isLoading,
     error,
@@ -162,9 +219,8 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
   return {
     ...result,
     thresholds,
-    setSelectedIndex,
     updateCoordinates,
     updateThresholds,
-    refresh: () => fetchWeather(coords.lat, coords.lng),
+    refresh,
   };
 }

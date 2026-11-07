@@ -17,19 +17,31 @@ import { DockingDetailSheet } from './components/DockingDetailSheet';
 import { LayerControlModal } from './components/notebook/LayerControlModal';
 import { FieldReportModal } from './components/notebook/FieldReportModal';
 import { PorpoiseObservationModal } from './components/notebook/PorpoiseObservationModal';
-import { RouteTimeCalculator } from './components/navigation/RouteTimeCalculator';
+import {
+  RouteTimeCalculator,
+  type RouteMapTapMode,
+} from './components/navigation/RouteTimeCalculator';
+import { PortSelectModal } from './components/navigation/PortSelectModal';
 import { MarineWeatherPanel } from './components/navigation/MarineWeatherPanel';
 import { WeatherThresholdSettings } from './components/navigation/WeatherThresholdSettings';
 
-import type { DockingFeature, DockingFeatureCollection, MarkerColor } from './types/docking';
+import type {
+  DockingFeature,
+  DockingFeatureCollection,
+  MarkerColor,
+} from './types/docking';
 import { ALL_MARKER_COLORS, MARKER_COLOR_MAP } from './types/docking';
 import type { PorpoiseRecord } from './types/porpoise';
+import type { MarinePort, PortsDataset } from './types/port';
 import type { RouteWaypoint } from './types/route';
 
 import { useAppConfig } from './hooks/useAppConfig';
 import { usePorpoiseStorage } from './hooks/usePorpoiseStorage';
 import { useMarineWeather } from './hooks/useMarineWeather';
-import { calculateRouteSummary } from './services/routeGeoService';
+import {
+  calculateRouteSummary,
+  resolveSmartWaypoint,
+} from './services/routeGeoService';
 
 interface UserGpsState {
   lat: number;
@@ -38,53 +50,106 @@ interface UserGpsState {
   isSimulated?: boolean;
 }
 
-export function App() {
-  const { config, layers, toggleLayer } = useAppConfig();
-  const { records: porpoiseRecords, addRecord: addPorpoise, updateRecord: updatePorpoise, deleteRecord: deletePorpoise } = usePorpoiseStorage();
+const INITIAL_WAYPOINTS: RouteWaypoint[] = [
+  {
+    id: 'wp_start',
+    name: '통영 당동항 보조물양장',
+    lat: 34.8378,
+    lng: 128.4278,
+    type: 'start',
+    matchedPortId: 'TY-001',
+    isCustomCoord: false,
+  },
+  {
+    id: 'wp_end',
+    name: '한산도 제승당 부잔교',
+    lat: 34.7735,
+    lng: 128.4621,
+    type: 'end',
+    matchedPortId: 'TY-002',
+    isCustomCoord: false,
+  },
+];
 
-  // 1. 네비게이션 탭 상태
+export function App() {
+  const { config, layers, toggleLayer, updateAdminEmail } = useAppConfig();
+  const {
+    records: porpoiseRecords,
+    addRecord: addPorpoise,
+    updateRecord: updatePorpoise,
+    deleteRecord: deletePorpoise,
+  } = usePorpoiseStorage();
+
+  // 1. 대메뉴 및 서브 탭 상태
   const [activeMainTab, setActiveMainTab] = useState<'notebook' | 'navigation'>('notebook');
   const [navSubTab, setNavSubTab] = useState<'route' | 'weather'>('route');
 
-  // 2. 바다수첩 데이터 상태
+  // 2. 정적 데이터 (접안 포인트 GeoJSON + 주요 항포구 JSON)
   const [collection, setCollection] = useState<DockingFeatureCollection | null>(null);
+  const [portsList, setPortsList] = useState<MarinePort[]>([]);
+  const [snapRadiusMeters, setSnapRadiusMeters] = useState<number>(500);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [reloadNonce, setReloadNonce] = useState<number>(0);
+
   const [selectedColor, setSelectedColor] = useState<MarkerColor | 'all'>('all');
   const [selectedFeature, setSelectedFeature] = useState<DockingFeature | null>(null);
 
-  // 3. 모달 상태
+  // 3. 모달 및 지도 인터랙션 모드 상태
   const [isLayerModalOpen, setIsLayerModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportTargetFeature, setReportTargetFeature] = useState<DockingFeature | null>(null);
+  const [customReportCoords, setCustomReportCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isReportPickMode, setIsReportPickMode] = useState(false);
+
   const [showPorpoiseLayer, setShowPorpoiseLayer] = useState(true);
   const [isPorpoiseAddMode, setIsPorpoiseAddMode] = useState(false);
   const [porpoiseModalCoords, setPorpoiseModalCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedPorpoise, setSelectedPorpoise] = useState<PorpoiseRecord | null>(null);
-  const [isWeatherSettingsOpen, setIsWeatherSettingsOpen] = useState(false);
 
-  // 4. GPS & 네트워크 & PWA 설치
+  const [isWeatherSettingsOpen, setIsWeatherSettingsOpen] = useState(false);
+  const [portSelectorTarget, setPortSelectorTarget] = useState<{
+    waypointId: string;
+    label: string;
+  } | null>(null);
+
+  // 4. GPS, 온라인 상태 및 PWA 설치 프롬프트
   const [userLocation, setUserLocation] = useState<UserGpsState | null>(null);
   const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
-  const [isOnline, setIsOnline] = useState<boolean>(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
-  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom: number; nonce: number } | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
+  const [flyTarget, setFlyTarget] = useState<{
+    lat: number;
+    lng: number;
+    zoom: number;
+    nonce: number;
+  } | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    );
   });
 
-  // 5. 바닷길 콕콕 (시간계산기) 상태
-  const [speedKnots, setSpeedKnots] = useState<number>(config.route_defaults?.default_speed_knots || 15);
-  const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>([
-    { id: 'wp_start', name: '통영 당동항', lat: 34.8378, lng: 128.4278, type: 'start' },
-    { id: 'wp_end', name: '한산도 제승당', lat: 34.7735, lng: 128.4621, type: 'end' },
-  ]);
+  // 5. 바닷길 콕콕 - 시간계산기 상태
+  const [speedKnots, setSpeedKnots] = useState<number>(
+    config.route_defaults?.default_speed_knots || 15,
+  );
+  const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(INITIAL_WAYPOINTS);
+  const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('add_waypoint');
 
-  // 6. 바닷길 콕콕 (해상기상) 훅
+  // 6. 바닷길 콕콕 - 해상기상 상태판정 훅
   const marineWeather = useMarineWeather(34.8195, 128.552);
 
-  // PWA 프롬프트 리스너
+  const showToast = useCallback((msg: string, durationMs = 2800) => {
+    setGpsStatusMsg(msg);
+    window.setTimeout(() => setGpsStatusMsg(null), durationMs);
+  }, []);
+
+  // PWA 설치 이벤트 리스너
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -93,8 +158,7 @@ export function App() {
     const handleAppInstalled = () => {
       setDeferredPrompt(null);
       setIsStandalone(true);
-      setGpsStatusMsg('바다꼼꼬미 앱이 기기에 설치되었습니다!');
-      window.setTimeout(() => setGpsStatusMsg(null), 3000);
+      showToast('바다꼼꼬미 앱이 기기에 설치되었습니다!');
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
@@ -102,7 +166,7 @@ export function App() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [showToast]);
 
   // 온라인/오프라인 감지
   useEffect(() => {
@@ -116,46 +180,87 @@ export function App() {
     };
   }, []);
 
-  // GeoJSON 데이터 로드
-  const geoJsonUrl = `${import.meta.env.BASE_URL}data/docking_points.geojson`;
-  const loadGeoJson = useCallback(async () => {
+  // 정적 GeoJSON 및 항포구(ports.json) 비동기 로드 (Effect 내 동기 setState 제거)
+  useEffect(() => {
+    const controller = new AbortController();
+    const base = import.meta.env.BASE_URL;
+    const geoJsonUrl = `${base}data/docking_points.geojson`;
+    const portsUrl = `${base}data/ports.json`;
+
+    Promise.all([
+      fetch(geoJsonUrl, {
+        headers: { Accept: 'application/geo+json, application/json' },
+        signal: controller.signal,
+      }),
+      fetch(portsUrl, {
+        headers: { Accept: 'application/json' },
+        signal: controller.signal,
+      }).catch(() => null),
+    ])
+      .then(async ([geoRes, portsRes]) => {
+        if (!geoRes.ok) {
+          throw new Error(`HTTP ${geoRes.status}: 접안 포인트 GeoJSON을 찾을 수 없습니다.`);
+        }
+        const geoData = (await geoRes.json()) as DockingFeatureCollection;
+        if (!geoData || geoData.type !== 'FeatureCollection' || !Array.isArray(geoData.features)) {
+          throw new Error('GeoJSON 형식이 올바르지 않습니다 (FeatureCollection 필요).');
+        }
+        setCollection(geoData);
+
+        if (portsRes && portsRes.ok) {
+          const portsData = (await portsRes.json()) as PortsDataset;
+          if (Array.isArray(portsData.ports)) {
+            setPortsList(portsData.ports);
+          }
+          if (typeof portsData.snap_radius_meters === 'number') {
+            setSnapRadiusMeters(portsData.snap_radius_meters);
+          }
+        }
+        setErrorMsg(null);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        setErrorMsg(err instanceof Error ? err.message : '데이터 로드 실패');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [reloadNonce]);
+
+  const handleManualReload = useCallback(() => {
     setLoading(true);
     setErrorMsg(null);
-    try {
-      const response = await fetch(geoJsonUrl, { headers: { Accept: 'application/geo+json, application/json' } });
-      if (!response.ok) throw new Error(`HTTP ${response.status}: 파일을 찾을 수 없습니다.`);
-      const data = (await response.json()) as DockingFeatureCollection;
-      setCollection(data);
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : '데이터 로드 실패');
-    } finally {
-      setLoading(false);
-    }
-  }, [geoJsonUrl]);
+    setReloadNonce((n) => n + 1);
+  }, []);
 
-  useEffect(() => {
-    void loadGeoJson();
-  }, [loadGeoJson]);
-
-  // 접안 포인트 필터
+  // 접안 포인트 필터링
   const filteredFeatures = useMemo(() => {
     if (!collection) return [];
     if (selectedColor === 'all') return collection.features;
     return collection.features.filter((f) => f.properties.color === selectedColor);
   }, [collection, selectedColor]);
 
+  const isDockingLayerVisible = useMemo(
+    () => layers.find((l) => l.id === 'docking')?.visible !== false,
+    [layers],
+  );
+
   // 항해 경로 연산 결과
   const routeCalculation = useMemo(() => {
     return calculateRouteSummary(routeWaypoints, speedKnots);
   }, [routeWaypoints, speedKnots]);
 
-  // GPS 요청
+  // GPS 위치 요청
   const handleRequestGps = useCallback(() => {
     if (!('geolocation' in navigator)) {
-      setGpsStatusMsg('GPS 위치 기능을 지원하지 않습니다.');
+      showToast('GPS 위치 기능을 지원하지 않는 기기입니다.');
       return;
     }
-    setGpsStatusMsg('위성 GPS 신호 수신 중...');
+    showToast('위성 GPS 신호 수신 중...');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const nextLoc: UserGpsState = {
@@ -165,38 +270,50 @@ export function App() {
           isSimulated: false,
         };
         setUserLocation(nextLoc);
-        setGpsStatusMsg('실제 GPS 위치 수신 완료');
+        showToast('실제 GPS 위치 수신 완료');
         setFlyTarget({ lat: nextLoc.lat, lng: nextLoc.lng, zoom: 13, nonce: Date.now() });
-        window.setTimeout(() => setGpsStatusMsg(null), 2500);
       },
       () => {
-        const fallbackLoc: UserGpsState = { lat: 34.8125, lng: 128.5085, accuracy: 95, isSimulated: true };
+        const fallbackLoc: UserGpsState = {
+          lat: 34.8125,
+          lng: 128.5085,
+          accuracy: 95,
+          isSimulated: true,
+        };
         setUserLocation(fallbackLoc);
-        setGpsStatusMsg('통영·거제 해역 가상 선박 위치로 이동');
-        setFlyTarget({ lat: fallbackLoc.lat, lng: fallbackLoc.lng, zoom: 12, nonce: Date.now() });
-        window.setTimeout(() => setGpsStatusMsg(null), 3000);
+        showToast('실내/권한 제한 감지 → 통영·거제 해역 가상 선박 위치로 이동');
+        setFlyTarget({
+          lat: fallbackLoc.lat,
+          lng: fallbackLoc.lng,
+          zoom: 12,
+          nonce: Date.now(),
+        });
       },
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 10000 }
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 10000 },
     );
-  }, []);
+  }, [showToast]);
 
   const handleSimulateFieldGps = useCallback(() => {
-    const simLoc: UserGpsState = { lat: 34.8125, lng: 128.5085, accuracy: 85, isSimulated: true };
+    const simLoc: UserGpsState = {
+      lat: 34.8125,
+      lng: 128.5085,
+      accuracy: 85,
+      isSimulated: true,
+    };
     setUserLocation(simLoc);
-    setGpsStatusMsg('통영·거제 한산수도 조사선 GPS(시뮬레이션)');
+    showToast('통영·거제 한산수도 조사선 GPS(시뮬레이션) 활성화');
     setFlyTarget({ lat: simLoc.lat, lng: simLoc.lng, zoom: 12, nonce: Date.now() });
-    window.setTimeout(() => setGpsStatusMsg(null), 2500);
-  }, []);
+  }, [showToast]);
 
   const handleResetBounds = useCallback(() => {
     setFlyTarget({ lat: 34.8195, lng: 128.552, zoom: 11, nonce: Date.now() });
   }, []);
 
-  const handleFlyToPoint = useCallback((lat: number, lng: number) => {
-    setFlyTarget({ lat, lng, zoom: 15, nonce: Date.now() });
+  const handleFlyToPoint = useCallback((lat: number, lng: number, zoom = 14) => {
+    setFlyTarget({ lat, lng, zoom, nonce: Date.now() });
   }, []);
 
-  // PWA 설치
+  // PWA 앱 설치 핸들러
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -205,114 +322,279 @@ export function App() {
     } else {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       if (isIOS) {
-        alert('아이폰/아이패드 설치 방법:\n하단 공유 버튼(네모+화살표)을 누르고 "홈 화면에 추가"를 선택하세요.');
+        alert(
+          '아이폰/아이패드 설치 방법:\n하단 공유 버튼(네모+화살표)을 누르고 "홈 화면에 추가"를 선택하세요.',
+        );
       } else {
-        alert('브라우저 우측 상단 점 3개 메뉴를 누르고 "앱 설치" 또는 "홈 화면에 추가"를 선택하세요.');
+        alert(
+          '브라우저 우측 상단 점 3개 메뉴를 누르고 "앱 설치" 또는 "홈 화면에 추가"를 선택하세요.',
+        );
       }
     }
   };
 
-  // 경로 웨이포인트 조작
-  const handleUpdateWaypointPos = (id: string, lat: number, lng: number) => {
-    setRouteWaypoints((prev) => prev.map((wp) => (wp.id === id ? { ...wp, lat, lng } : wp)));
-  };
+  // [3.2.C 바닷길 시간계산기] 핀 드래그 시 항구 500m 스냅 및 해상 좌표 실시간 동기화
+  const handleUpdateWaypointPos = useCallback(
+    (id: string, lat: number, lng: number) => {
+      setRouteWaypoints((prev) =>
+        prev.map((wp, idx) => {
+          if (wp.id !== id) return wp;
+          const fallbackRole =
+            wp.type === 'start' ? '해상 출발지' : wp.type === 'end' ? '해상 목적지' : `경유지 ${idx}`;
+          const resolved = resolveSmartWaypoint(
+            lat,
+            lng,
+            portsList,
+            fallbackRole,
+            snapRadiusMeters,
+          );
+          if (resolved.matchedPortId) {
+            showToast(`항구 자동 스냅: ${resolved.name}`);
+          }
+          return {
+            ...wp,
+            name: resolved.name,
+            lat: resolved.lat,
+            lng: resolved.lng,
+            matchedPortId: resolved.matchedPortId,
+            isCustomCoord: resolved.isCustomCoord,
+          };
+        }),
+      );
+    },
+    [portsList, snapRadiusMeters, showToast],
+  );
 
-  const handleAddWaypoint = () => {
+  // [3.2.C] 지도 탭으로 포인트 지정 (경유지 추가 / 출발지 지정 / 목적지 지정)
+  const handleMapClickForRoute = useCallback(
+    (lat: number, lng: number) => {
+      if (routeMapTapMode === 'set_start') {
+        const startWp = routeWaypoints[0];
+        if (startWp) handleUpdateWaypointPos(startWp.id, lat, lng);
+        return;
+      }
+      if (routeMapTapMode === 'set_end') {
+        const endWp = routeWaypoints[routeWaypoints.length - 1];
+        if (endWp) handleUpdateWaypointPos(endWp.id, lat, lng);
+        return;
+      }
+      // 'add_waypoint': 목적지 바로 앞에 신규 경유지 삽입
+      const wpIndex = routeWaypoints.length - 1;
+      const resolved = resolveSmartWaypoint(
+        lat,
+        lng,
+        portsList,
+        `경유지 ${wpIndex}`,
+        snapRadiusMeters,
+      );
+      const newWp: RouteWaypoint = {
+        id: `wp_${Date.now()}`,
+        name: resolved.name,
+        lat: resolved.lat,
+        lng: resolved.lng,
+        type: 'waypoint',
+        matchedPortId: resolved.matchedPortId,
+        isCustomCoord: resolved.isCustomCoord,
+      };
+      setRouteWaypoints((prev) => {
+        const next = [...prev];
+        next.splice(next.length - 1, 0, newWp);
+        return next;
+      });
+      showToast(`경유지 추가됨: ${resolved.name}`);
+    },
+    [routeMapTapMode, routeWaypoints, handleUpdateWaypointPos, portsList, snapRadiusMeters, showToast],
+  );
+
+  // 버튼으로 경유지 추가 (마지막 구간 중간 지점)
+  const handleAddWaypointButton = useCallback(() => {
     const newIdx = routeWaypoints.length - 1;
     const prevWp = routeWaypoints[newIdx - 1] || routeWaypoints[0];
     const endWp = routeWaypoints[routeWaypoints.length - 1];
-    const midLat = (prevWp.lat + endWp.lat) / 2 + 0.01;
-    const midLng = (prevWp.lng + endWp.lng) / 2 + 0.01;
+    const midLat = (prevWp.lat + endWp.lat) / 2 + 0.008;
+    const midLng = (prevWp.lng + endWp.lng) / 2 + 0.008;
 
+    const resolved = resolveSmartWaypoint(
+      midLat,
+      midLng,
+      portsList,
+      `경유지 ${newIdx}`,
+      snapRadiusMeters,
+    );
     const newWp: RouteWaypoint = {
       id: `wp_${Date.now()}`,
-      name: `경유지 ${routeWaypoints.length - 1}`,
-      lat: midLat,
-      lng: midLng,
+      name: resolved.name,
+      lat: resolved.lat,
+      lng: resolved.lng,
       type: 'waypoint',
+      matchedPortId: resolved.matchedPortId,
+      isCustomCoord: resolved.isCustomCoord,
     };
 
-    const nextList = [...routeWaypoints];
-    nextList.splice(nextList.length - 1, 0, newWp);
-    setRouteWaypoints(nextList);
-  };
+    setRouteWaypoints((prev) => {
+      const next = [...prev];
+      next.splice(next.length - 1, 0, newWp);
+      return next;
+    });
+  }, [routeWaypoints, portsList, snapRadiusMeters]);
 
-  const handleRemoveWaypoint = (id: string) => {
+  const handleRemoveWaypoint = useCallback((id: string) => {
     setRouteWaypoints((prev) => prev.filter((wp) => wp.id !== id));
-  };
+  }, []);
 
-  const handleResetRoute = () => {
-    setRouteWaypoints([
-      { id: 'wp_start', name: '통영 당동항', lat: 34.8378, lng: 128.4278, type: 'start' },
-      { id: 'wp_end', name: '한산도 제승당', lat: 34.7735, lng: 128.4621, type: 'end' },
-    ]);
-  };
+  const handleReverseRoute = useCallback(() => {
+    setRouteWaypoints((prev) => {
+      if (prev.length < 2) return prev;
+      const reversed = [...prev].reverse();
+      return reversed.map((wp, idx) => ({
+        ...wp,
+        type: idx === 0 ? 'start' : idx === reversed.length - 1 ? 'end' : 'waypoint',
+      }));
+    });
+    showToast('출발지와 목적지 경로가 반전되었습니다.');
+  }, [showToast]);
+
+  const handleResetRoute = useCallback(() => {
+    setRouteWaypoints(INITIAL_WAYPOINTS);
+    showToast('기본 항로(당동항 → 제승당)로 복원되었습니다.');
+  }, [showToast]);
+
+  // 항구 선택 모달에서 항구 선택 시 반영
+  const handleSelectPortForWaypoint = useCallback(
+    (port: MarinePort) => {
+      if (!portSelectorTarget) return;
+      setRouteWaypoints((prev) =>
+        prev.map((wp) =>
+          wp.id === portSelectorTarget.waypointId
+            ? {
+                ...wp,
+                name: port.name,
+                lat: port.lat,
+                lng: port.lng,
+                matchedPortId: port.id,
+                isCustomCoord: false,
+              }
+            : wp,
+        ),
+      );
+      handleFlyToPoint(port.lat, port.lng, 13);
+      showToast(`${portSelectorTarget.label}: ${port.name} 설정 완료`);
+    },
+    [portSelectorTarget, handleFlyToPoint, showToast],
+  );
+
+  // 항구 선택 모달에서 '내 선박 현재 GPS 위치' 선택 시 반영
+  const handleSelectUserGpsForWaypoint = useCallback(() => {
+    if (!portSelectorTarget) return;
+    const lat = userLocation?.lat ?? 34.8125;
+    const lng = userLocation?.lng ?? 128.5085;
+    if (!userLocation) {
+      setUserLocation({ lat, lng, accuracy: 85, isSimulated: true });
+    }
+    setRouteWaypoints((prev) =>
+      prev.map((wp) =>
+        wp.id === portSelectorTarget.waypointId
+          ? {
+              ...wp,
+              name: `내 선박 GPS (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`,
+              lat,
+              lng,
+              matchedPortId: undefined,
+              isCustomCoord: true,
+            }
+          : wp,
+      ),
+    );
+    handleFlyToPoint(lat, lng, 13);
+    showToast(`${portSelectorTarget.label}: 현재 선박 GPS 위치 적용`);
+  }, [portSelectorTarget, userLocation, handleFlyToPoint, showToast]);
+
+  const reportLat = reportTargetFeature
+    ? reportTargetFeature.geometry.coordinates[1]
+    : (customReportCoords?.lat ?? userLocation?.lat ?? 34.8195);
+  const reportLng = reportTargetFeature
+    ? reportTargetFeature.geometry.coordinates[0]
+    : (customReportCoords?.lng ?? userLocation?.lng ?? 128.552);
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#0b192c] text-white select-none">
-      {/* 상단 고정 헤더 & 내비게이션 바 */}
+      {/* 상단 고정 HUD 헤더 */}
       <header
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-2 p-3"
-        style={{ paddingTop: 'calc(var(--safe-top) + 0.75rem)' }}
+        className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1.5 p-2.5 sm:p-3"
+        style={{ paddingTop: 'calc(var(--safe-top) + 0.5rem)' }}
       >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-3.5 py-2.5 shadow-2xl backdrop-blur-md">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow">
-              <Anchor className="h-6 w-6 stroke-[2.6]" aria-hidden="true" />
+        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-3 py-2 shadow-2xl backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow">
+              <Anchor className="h-5 w-5 stroke-[2.6]" aria-hidden="true" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base leading-none font-black tracking-tight text-white sm:text-lg">바다꼼꼬미</h1>
-                <span className="rounded-md bg-sky-500/20 border border-sky-400/50 px-1.5 py-0.5 text-[11px] font-black text-sky-300">
-                  Beta 0.2
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-base leading-none font-black tracking-tight text-white">
+                  바다꼼꼬미
+                </h1>
+                <span className="rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
+                  Beta 0.3
                 </span>
               </div>
-              <p className="mt-1 text-xs font-bold text-slate-300">
-                {activeMainTab === 'notebook' ? '3.1 꼬미의 바다수첩' : '3.2 바닷길 콕콕'}
+              <p className="mt-0.5 text-[11px] font-bold text-slate-300">
+                {activeMainTab === 'notebook'
+                  ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개소)`
+                  : '3.2 바닷길 콕콕 (시간·기상)'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {!isStandalone && (
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="flex items-center gap-1.5 rounded-xl border-2 border-amber-400 bg-amber-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-md transition active:scale-95 animate-pulse"
+                className="flex h-9 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2.5 text-xs font-black text-slate-950 shadow-md transition active:scale-95"
                 title="앱 설치"
               >
-                <Download className="h-4 w-4 stroke-[3]" />
-                <span className="hidden sm:inline">앱 설치</span>
+                <Download className="h-3.5 w-3.5 stroke-[2.8]" />
+                <span>앱 설치</span>
               </button>
             )}
 
             <div
               role="status"
-              className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-extrabold ${
-                isOnline ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300' : 'border-amber-400 bg-amber-950/95 text-amber-200'
+              className={`flex h-9 items-center gap-1 rounded-xl border px-2 text-xs font-extrabold ${
+                isOnline
+                  ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300'
+                  : 'border-amber-400 bg-amber-950/95 text-amber-200'
               }`}
             >
-              {isOnline ? <Wifi className="h-4 w-4 text-emerald-400" /> : <WifiOff className="h-4 w-4 text-amber-400" />}
+              {isOnline ? (
+                <Wifi className="h-3.5 w-3.5 text-emerald-400" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 text-amber-400" />
+              )}
               <span className="hidden sm:inline">{isOnline ? '온라인' : '오프라인'}</span>
             </div>
 
             <button
               type="button"
-              onClick={() => void loadGeoJson()}
+              onClick={handleManualReload}
               aria-label="데이터 새로고침"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95"
             >
-              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
 
         {/* 대메뉴 2종 탭 전환 바 (3.1 꼬미의 바다수첩 vs 3.2 바닷길 콕콕) */}
-        <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-2">
+        <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
           <button
             type="button"
-            onClick={() => setActiveMainTab('notebook')}
-            className={`flex min-h-11 items-center justify-center gap-2 rounded-2xl border-2 py-2 text-xs font-black shadow-lg transition active:scale-95 ${
+            onClick={() => {
+              setActiveMainTab('notebook');
+              setIsPorpoiseAddMode(false);
+              setIsReportPickMode(false);
+            }}
+            className={`flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 py-1.5 text-xs font-black shadow-lg transition active:scale-95 ${
               activeMainTab === 'notebook'
                 ? 'border-sky-400 bg-sky-500 text-slate-950'
                 : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
@@ -324,8 +606,12 @@ export function App() {
 
           <button
             type="button"
-            onClick={() => setActiveMainTab('navigation')}
-            className={`flex min-h-11 items-center justify-center gap-2 rounded-2xl border-2 py-2 text-xs font-black shadow-lg transition active:scale-95 ${
+            onClick={() => {
+              setActiveMainTab('navigation');
+              setIsPorpoiseAddMode(false);
+              setIsReportPickMode(false);
+            }}
+            className={`flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 py-1.5 text-xs font-black shadow-lg transition active:scale-95 ${
               activeMainTab === 'navigation'
                 ? 'border-sky-400 bg-sky-500 text-slate-950'
                 : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
@@ -336,59 +622,59 @@ export function App() {
           </button>
         </div>
 
-        {/* 3.1 꼬미의 바다수첩 서브 컨트롤 바 (공간레이어 / 현장제보 / 상괭이기록 / 마커색상필터) */}
+        {/* 3.1 꼬미의 바다수첩 서브 컨트롤 바 */}
         {activeMainTab === 'notebook' && (
-          <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {/* 공간정보 레이어 모달 버튼 */}
+          <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
             <button
               type="button"
               onClick={() => setIsLayerModalOpen(true)}
-              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-3.5 py-1.5 text-xs font-black text-emerald-300 shadow-lg active:scale-95"
+              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-3 py-1 text-xs font-black text-emerald-300 shadow active:scale-95"
             >
-              <Layers className="h-4 w-4" />
+              <Layers className="h-3.5 w-3.5" />
               <span>공간 레이어</span>
             </button>
 
-            {/* 현장정보 독립 제보 버튼 */}
             <button
               type="button"
               onClick={() => {
                 setReportTargetFeature(null);
                 setIsReportModalOpen(true);
               }}
-              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-3.5 py-1.5 text-xs font-black text-amber-300 shadow-lg active:scale-95"
+              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-3 py-1 text-xs font-black text-amber-300 shadow active:scale-95"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-3.5 w-3.5" />
               <span>현장 제보</span>
             </button>
 
-            {/* 상괭이 관찰 기록 토글 버튼 */}
             <button
               type="button"
               onClick={() => {
-                setIsPorpoiseAddMode(!isPorpoiseAddMode);
-                if (!isPorpoiseAddMode) {
-                  setGpsStatusMsg('지도에서 상괭이를 목격한 위치를 탭하세요 🐬');
-                  window.setTimeout(() => setGpsStatusMsg(null), 3000);
+                const next = !isPorpoiseAddMode;
+                setIsPorpoiseAddMode(next);
+                setIsReportPickMode(false);
+                if (next) {
+                  showToast('지도에서 상괭이를 목격한 위치를 탭하세요 🐬');
                 }
               }}
-              className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border-2 px-3.5 py-1.5 text-xs font-black shadow-lg active:scale-95 ${
+              className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-3 py-1 text-xs font-black shadow active:scale-95 ${
                 isPorpoiseAddMode
-                  ? 'border-teal-300 bg-teal-400 text-slate-950 animate-bounce'
+                  ? 'border-teal-300 bg-teal-400 text-slate-950 animate-pulse'
                   : 'border-teal-500/80 bg-teal-950/90 text-teal-300'
               }`}
             >
               <span>🐬</span>
-              <span>{isPorpoiseAddMode ? '지도 위치 탭 중...' : '상괭이 기록'}</span>
+              <span>{isPorpoiseAddMode ? '위치 탭 대기중' : '상괭이 기록'}</span>
             </button>
 
-            {/* 5색 접안 필터 */}
-            <div className="h-6 w-px bg-slate-700 shrink-0 mx-1" />
+            <div className="mx-0.5 h-5 w-px shrink-0 bg-slate-700" />
+
             <button
               type="button"
               onClick={() => setSelectedColor('all')}
-              className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border-2 px-3.5 py-1.5 text-xs font-black shadow-lg active:scale-95 ${
-                selectedColor === 'all' ? 'border-white bg-sky-400 text-slate-950' : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
+              className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-3 py-1 text-xs font-black shadow active:scale-95 ${
+                selectedColor === 'all'
+                  ? 'border-white bg-sky-400 text-slate-950'
+                  : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
               }`}
             >
               <span>전체 ({collection?.features.length ?? 0})</span>
@@ -396,7 +682,8 @@ export function App() {
 
             {ALL_MARKER_COLORS.map((colorKey) => {
               const meta = MARKER_COLOR_MAP[colorKey];
-              const count = collection?.features.filter((f) => f.properties.color === colorKey).length ?? 0;
+              const count =
+                collection?.features.filter((f) => f.properties.color === colorKey).length ?? 0;
               const isActive = selectedColor === colorKey;
 
               return (
@@ -404,11 +691,16 @@ export function App() {
                   key={colorKey}
                   type="button"
                   onClick={() => setSelectedColor(isActive ? 'all' : colorKey)}
-                  className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border-2 px-3 py-1.5 text-xs font-extrabold shadow-lg active:scale-95 ${
-                    isActive ? 'border-white bg-slate-100 text-slate-950' : 'border-slate-600/90 bg-[#0b192c]/95 text-slate-100'
+                  className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-xs font-extrabold shadow active:scale-95 ${
+                    isActive
+                      ? 'border-white bg-slate-100 text-slate-950'
+                      : 'border-slate-600/90 bg-[#0b192c]/95 text-slate-100'
                   }`}
                 >
-                  <span className="h-3 w-3 rounded-full border border-white/80" style={{ backgroundColor: meta.hex }} />
+                  <span
+                    className="h-2.5 w-2.5 rounded-full border border-white/80"
+                    style={{ backgroundColor: meta.hex }}
+                  />
                   <span>{meta.shortLabel}</span>
                   <span className="opacity-75">({count})</span>
                 </button>
@@ -419,13 +711,13 @@ export function App() {
 
         {/* 3.2 바닷길 콕콕 서브 탭 (시간계산 vs 기상상태판정) */}
         {activeMainTab === 'navigation' && (
-          <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-2">
+          <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
             <button
               type="button"
               onClick={() => setNavSubTab('route')}
-              className={`flex min-h-10 items-center justify-center rounded-xl border py-1.5 text-xs font-black transition active:scale-95 ${
+              className={`flex min-h-9 items-center justify-center rounded-xl border-2 py-1 text-xs font-black transition active:scale-95 ${
                 navSubTab === 'route'
-                  ? 'border-sky-400 bg-sky-500/20 text-sky-300'
+                  ? 'border-amber-400 bg-amber-400/20 text-amber-300'
                   : 'border-slate-700 bg-slate-900/90 text-slate-400'
               }`}
             >
@@ -434,9 +726,9 @@ export function App() {
             <button
               type="button"
               onClick={() => setNavSubTab('weather')}
-              className={`flex min-h-10 items-center justify-center rounded-xl border py-1.5 text-xs font-black transition active:scale-95 ${
+              className={`flex min-h-9 items-center justify-center rounded-xl border-2 py-1 text-xs font-black transition active:scale-95 ${
                 navSubTab === 'weather'
-                  ? 'border-sky-400 bg-sky-500/20 text-sky-300'
+                  ? 'border-amber-400 bg-amber-400/20 text-amber-300'
                   : 'border-slate-700 bg-slate-900/90 text-slate-400'
               }`}
             >
@@ -445,33 +737,35 @@ export function App() {
           </div>
         )}
 
-        {/* GPS 토스트 */}
-        {gpsStatusMsg && (
+        {/* 상태 토스트 알림 */}
+        {(gpsStatusMsg || isReportPickMode) && (
           <div
             role="status"
-            className="pointer-events-auto mx-auto flex items-center gap-2 rounded-xl border border-sky-400/70 bg-slate-950/95 px-4 py-2 text-xs font-extrabold text-sky-200 shadow-xl"
+            className="pointer-events-auto mx-auto flex items-center gap-2 rounded-xl border border-sky-400/80 bg-slate-950/95 px-3.5 py-1.5 text-xs font-extrabold text-sky-200 shadow-xl"
           >
             <ShieldCheck className="h-4 w-4 shrink-0 text-sky-400" />
-            <span>{gpsStatusMsg}</span>
+            <span>
+              {isReportPickMode
+                ? '지도에서 제보할 위치를 직접 탭하세요 📍'
+                : gpsStatusMsg}
+            </span>
           </div>
         )}
 
         {errorMsg && (
           <div
             role="alert"
-            className="pointer-events-auto mx-auto w-full max-w-xl rounded-2xl border-2 border-red-500 bg-red-950/95 p-4 text-white shadow-2xl"
+            className="pointer-events-auto mx-auto w-full max-w-xl rounded-2xl border-2 border-red-500 bg-red-950/95 p-3 text-white shadow-2xl"
           >
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-6 w-6 shrink-0 text-red-300" />
-              <div className="space-y-1 text-xs">
-                <p className="text-sm font-black text-red-200">데이터 로드 오류: {errorMsg}</p>
-              </div>
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="h-5 w-5 shrink-0 text-red-300" />
+              <p className="text-xs font-black text-red-200">데이터 로드 오류: {errorMsg}</p>
             </div>
           </div>
         )}
       </header>
 
-      {/* 메인 지도 */}
+      {/* 메인 100dvh 지도 */}
       <MapView
         activeMainTab={activeMainTab}
         navSubTab={navSubTab}
@@ -480,11 +774,12 @@ export function App() {
         onSelectFeature={(feature) => {
           setSelectedFeature(feature);
           const [lng, lat] = feature.geometry.coordinates;
-          setFlyTarget({ lat, lng, zoom: 14, nonce: Date.now() });
+          handleFlyToPoint(lat, lng, 14);
         }}
         layers={layers}
         showPorpoiseLayer={showPorpoiseLayer}
         isPorpoiseAddMode={isPorpoiseAddMode}
+        isReportPickMode={isReportPickMode}
         porpoiseRecords={porpoiseRecords}
         onSelectPorpoise={(record) => {
           setSelectedPorpoise(record);
@@ -494,8 +789,16 @@ export function App() {
           setSelectedPorpoise(null);
           setIsPorpoiseAddMode(false);
         }}
+        onMapClickForReport={(lat, lng) => {
+          setCustomReportCoords({ lat, lng });
+          setReportTargetFeature(null);
+          setIsReportPickMode(false);
+          setIsReportModalOpen(true);
+        }}
         routeWaypoints={routeWaypoints}
+        routeLegs={routeCalculation.legs}
         onUpdateWaypointPos={handleUpdateWaypointPos}
+        onMapClickForRoute={handleMapClickForRoute}
         weatherCoords={{ lat: marineWeather.lat, lng: marineWeather.lng }}
         weatherGrade={marineWeather.current?.grade || 'unknown'}
         onUpdateWeatherCoords={(lat, lng) => marineWeather.updateCoordinates(lat, lng)}
@@ -506,11 +809,11 @@ export function App() {
         onResetBounds={handleResetBounds}
       />
 
-      {/* 3.1 꼬미의 바다수첩: 하단 빠른 접안지 선택 칩 */}
-      {activeMainTab === 'notebook' && (
+      {/* 3.1 꼬미의 바다수첩: 하단 빠른 접안지 선택 바 (전체 폭 활용 & 레이어 가시성 연동) */}
+      {activeMainTab === 'notebook' && isDockingLayerVisible && (
         <aside
           aria-label="접안 포인트 빠른 선택 목록"
-          className="pointer-events-none fixed bottom-6 left-3.5 right-20 z-[900]"
+          className="pointer-events-none fixed inset-x-3 bottom-3 z-[900] mx-auto max-w-2xl"
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
           <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1">
@@ -524,18 +827,27 @@ export function App() {
                   onClick={() => {
                     setSelectedFeature(feature);
                     const [lng, lat] = feature.geometry.coordinates;
-                    setFlyTarget({ lat, lng, zoom: 14, nonce: Date.now() });
+                    handleFlyToPoint(lat, lng, 14);
                   }}
-                  className={`flex min-h-13 shrink-0 flex-col justify-center rounded-2xl border-2 px-3.5 py-2 text-left shadow-xl backdrop-blur-md transition active:scale-95 ${
-                    isSelected ? 'border-white bg-sky-950/95' : 'border-slate-600/90 bg-[#0b192c]/95'
+                  className={`flex min-h-12 shrink-0 flex-col justify-center rounded-2xl border-2 px-3.5 py-1.5 text-left shadow-xl backdrop-blur-md transition active:scale-95 ${
+                    isSelected
+                      ? 'border-white bg-sky-950/95'
+                      : 'border-slate-600/90 bg-[#0b192c]/95'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: meta.hex }} />
-                    <span className="font-mono text-[11px] font-black text-sky-300">{feature.properties.id}</span>
-                    <span className="text-[11px] font-bold text-slate-300">· {meta.shortLabel}</span>
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: meta.hex }}
+                    />
+                    <span className="font-mono text-[11px] font-black text-sky-300">
+                      {feature.properties.id}
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-300">
+                      · {meta.shortLabel}
+                    </span>
                   </div>
-                  <span className="mt-0.5 max-w-[165px] truncate text-xs font-extrabold text-white">
+                  <span className="mt-0.5 max-w-[175px] truncate text-xs font-extrabold text-white">
                     {feature.properties.name}
                   </span>
                 </button>
@@ -545,10 +857,10 @@ export function App() {
         </aside>
       )}
 
-      {/* 3.2 바닷길 콕콕: 하단 플로팅 패널 (시간계산기 vs 해상기상) */}
+      {/* 3.2 바닷길 콕콕: 하단 전체폭 패널 (우측 컨트롤과 충돌 제로) */}
       {activeMainTab === 'navigation' && (
         <aside
-          className="pointer-events-none fixed bottom-6 left-3.5 right-20 z-[900]"
+          className="pointer-events-none fixed inset-x-3 bottom-3 z-[900] mx-auto max-w-xl"
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
           {navSubTab === 'route' ? (
@@ -556,10 +868,17 @@ export function App() {
               waypoints={routeWaypoints}
               speedKnots={speedKnots}
               calculation={routeCalculation}
-              onAddWaypoint={handleAddWaypoint}
+              mapTapMode={routeMapTapMode}
+              onChangeMapTapMode={setRouteMapTapMode}
+              onOpenPortSelector={(waypointId, label) =>
+                setPortSelectorTarget({ waypointId, label })
+              }
+              onAddWaypoint={handleAddWaypointButton}
               onRemoveWaypoint={handleRemoveWaypoint}
+              onReverseRoute={handleReverseRoute}
               onChangeSpeed={setSpeedKnots}
               onResetRoute={handleResetRoute}
+              onFlyToWaypoint={(lat, lng) => handleFlyToPoint(lat, lng, 13)}
             />
           ) : (
             <MarineWeatherPanel
@@ -577,9 +896,10 @@ export function App() {
         feature={selectedFeature}
         userLocation={userLocation}
         onClose={() => setSelectedFeature(null)}
-        onFlyToPoint={handleFlyToPoint}
+        onFlyToPoint={(lat, lng) => handleFlyToPoint(lat, lng, 15)}
         onRequestReport={(feat) => {
           setReportTargetFeature(feat);
+          setCustomReportCoords(null);
           setIsReportModalOpen(true);
         }}
       />
@@ -595,8 +915,9 @@ export function App() {
         porpoiseCount={porpoiseRecords.length}
       />
 
-      {/* 모달 3: 현장정보 이메일 제보 */}
+      {/* 모달 3: 현장정보 이메일 제보 (key로 타겟/좌표 변경 시 폼 상태 초기화) */}
       <FieldReportModal
+        key={`report-${reportTargetFeature?.properties.id ?? 'custom'}-${reportLat.toFixed(4)}-${reportLng.toFixed(4)}`}
         isOpen={isReportModalOpen}
         onClose={() => {
           setIsReportModalOpen(false);
@@ -604,21 +925,38 @@ export function App() {
         }}
         pointId={reportTargetFeature?.properties.id}
         pointName={reportTargetFeature?.properties.name}
-        initialLat={reportTargetFeature ? reportTargetFeature.geometry.coordinates[1] : (userLocation?.lat || 34.8195)}
-        initialLng={reportTargetFeature ? reportTargetFeature.geometry.coordinates[0] : (userLocation?.lng || 128.552)}
+        initialLat={reportLat}
+        initialLng={reportLng}
         adminConfig={config.admin}
+        onUpdateAdminEmail={updateAdminEmail}
+        onPickLocationOnMap={() => {
+          setIsReportModalOpen(false);
+          setIsReportPickMode(true);
+        }}
       />
 
-      {/* 모달 4: 상괭이 관찰기록 (신규/수정) */}
+      {/* 모달 4: 상괭이 관찰기록 (key로 대상 변경 시 상태 즉시 동기화) */}
       {(porpoiseModalCoords || selectedPorpoise) && (
         <PorpoiseObservationModal
+          key={
+            selectedPorpoise?.id ??
+            `new-${porpoiseModalCoords?.lat.toFixed(5)}-${porpoiseModalCoords?.lng.toFixed(5)}`
+          }
           isOpen={Boolean(porpoiseModalCoords || selectedPorpoise)}
           onClose={() => {
             setPorpoiseModalCoords(null);
             setSelectedPorpoise(null);
           }}
-          lat={selectedPorpoise ? selectedPorpoise.lat : (porpoiseModalCoords?.lat || 34.8195)}
-          lng={selectedPorpoise ? selectedPorpoise.lng : (porpoiseModalCoords?.lng || 128.552)}
+          lat={
+            selectedPorpoise
+              ? selectedPorpoise.lat
+              : (porpoiseModalCoords?.lat ?? 34.8195)
+          }
+          lng={
+            selectedPorpoise
+              ? selectedPorpoise.lng
+              : (porpoiseModalCoords?.lng ?? 128.552)
+          }
           existingRecord={selectedPorpoise}
           onSave={addPorpoise}
           onUpdate={updatePorpoise}
@@ -626,8 +964,21 @@ export function App() {
         />
       )}
 
-      {/* 모달 5: 해상기상 기준치 설정 */}
+      {/* 모달 5: 항포구·접안지 검색 및 선택 모달 */}
+      <PortSelectModal
+        key={portSelectorTarget?.waypointId ?? 'port-closed'}
+        isOpen={Boolean(portSelectorTarget)}
+        onClose={() => setPortSelectorTarget(null)}
+        targetLabel={portSelectorTarget?.label ?? '위치'}
+        ports={portsList}
+        userLocation={userLocation}
+        onSelectPort={handleSelectPortForWaypoint}
+        onSelectUserGps={handleSelectUserGpsForWaypoint}
+      />
+
+      {/* 모달 6: 해상기상 기준치 설정 */}
       <WeatherThresholdSettings
+        key={`weather-settings-${isWeatherSettingsOpen ? 'open' : 'closed'}`}
         isOpen={isWeatherSettingsOpen}
         onClose={() => setIsWeatherSettingsOpen(false)}
         thresholds={marineWeather.thresholds}

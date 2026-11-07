@@ -1,97 +1,61 @@
-# 바다꼼꼬미 [Beta 0.1] — 비개발자 운영자용 무료 자동 배포 & 운영 가이드 (`DEPLOY_GUIDE.md`)
+# 바다꼼꼬미 [Beta 0.3] — 비개발자 운영자용 무료 자동 배포 & 데이터 운영 가이드 (`DEPLOY_GUIDE.md`)
 
-이 문서는 코딩이나 서버 지식이 전혀 없는 현장 운영자도 **월 비용 0원(Zero-cost)**으로 **바다꼼꼬미 PWA 앱**을 인터넷에 배포하고, 접안 포인트 데이터(`docking_points.geojson`)와 현장 사진(`public/images/docking/`)만 교체하여 **자동 업데이트**할 수 있도록 안내하는 1~5단계 실전 매뉴얼입니다.
+이 문서는 코딩이나 서버 지식이 전혀 없는 현장 운영자도 **월 비용 0원(Zero-cost)**으로 **바다꼼꼬미 PWA 앱**을 운영하고, 코드는 단 한 줄도 수정하지 않은 채 **정적 데이터 파일(`GeoJSON`, `JSON`, 현장 사진)**만 교체하여 **자동 업데이트**할 수 있도록 안내하는 실전 매뉴얼입니다.
 
 ---
 
 ## 전체 자동 배포 흐름 한눈에 보기
 
-```
-[운영자: 사진 추가 또는 GeoJSON 메모장 수정]
-          ↓ (GitHub 웹 화면에서 파일 업로드 / Commit 클릭)
-[GitHub 저장소 (무료 코드·데이터 보관소)]
-          ↓ (변경 감지 후 약 40초간 자동 빌드)
-[Cloudflare Pages (무료 글로벌 CDN & HTTPS 호스팅)]
-          ↓ (_headers + Workbox 서비스 워커 자동 갱신)
-[현장 작업자 스마트폰 PWA 앱 즉시 업데이트 완료!]
-```
-
----
-
-## [1단계] GitHub 무료 계정 만들기 및 프로젝트 올리기
-
-1. **[GitHub 공식 홈페이지](https://github.com)** 에 접속하여 무료 회원가입 및 로그인을 진행합니다.
-2. 우측 상단 **`+`** 아이콘 클릭 ➔ **`New repository`**(새 저장소 만들기)를 클릭합니다.
-3. 아래 항목만 입력합니다:
-   - **Repository name**: `bada-kkomkkomi`
-   - **Public / Private**: `Private`(비공개 권장 — Cloudflare Pages 무료 플랜에서도 비공개 저장소 자동 배포를 완벽히 지원합니다)
-4. 하단 초록색 **`Create repository`** 버튼을 클릭합니다.
-5. 내 PC의 `bada-kkomkkomi` 폴더에서 아래 명령어를 한 번만 실행하거나 **GitHub Desktop** 프로그램으로 폴더를 업로드합니다:
-
-```bash
-git init
-git add .
-git commit -m "feat: 바다꼼꼬미 Beta 0.1 초기 구축"
-git branch -M main
-git remote add origin https://github.com/<내-깃허브-아이디>/bada-kkomkkomi.git
-git push -u origin main
+```text
+[운영자: 사진 업로드 또는 GeoJSON / JSON 파일 웹 편집]
+          ↓ (GitHub 웹 화면에서 Commit changes 클릭)
+[GitHub 저장소 (gunnysis/bada-kkomkkomi)]
+          ↓ (GitHub Actions / Cloudflare Pages 자동 빌드 ~40초)
+[Workbox 서비스 워커 리비전 해시 갱신 + Cache-Control 헤더 적용]
+          ↓ (skipWaiting + clientsClaim + visibilitychange 체크)
+[현장 작업자 스마트폰 PWA 앱 즉시 최신 데이터 반영 완료!]
 ```
 
 ---
 
-## [2단계] Cloudflare Pages에 GitHub 저장소 연결하기 (최초 1회)
+## [1단계] 배포 주소 및 스마트폰 PWA 앱 설치 방법
 
-1. **[Cloudflare 대시보드](https://dash.cloudflare.com)** 에 무료 가입 후 로그인합니다.
-2. 왼쪽 메뉴에서 **`Workers & Pages`** (또는 **`Compute (Workers) > Pages`**)를 클릭합니다.
-3. **`Create`** 버튼 클릭 ➔ 상단 탭에서 **`Pages`** 선택 ➔ **`Connect to Git`**(Git에 연결)을 클릭합니다.
-4. **`GitHub`** 계정을 연결하고 방금 만든 **`bada-kkomkkomi`** 저장소를 선택한 뒤 **`Begin setup`**을 클릭합니다.
+- **현재 운영 배포 주소**: `https://gunnysis.github.io/bada-kkomkkomi/`
 
----
+### 1. 상단 헤더 `앱 설치` 버튼 활용
+- Android Chrome, Edge, Samsung Internet 또는 iPhone/iPad Safari로 접속한 뒤, 화면 우측 상단 에메랄드색 **`앱 설치`** 버튼을 누르면 즉시 설치 프롬프트 또는 iOS 설치 안내 화면이 열립니다.
 
-## [3단계] 빌드 설정 입력 및 첫 배포 실행하기
+### 2. Android (갤럭시 · Chrome 브라우저)
+1. Chrome 앱으로 배포 주소에 접속합니다.
+2. 상단 **`앱 설치`** 버튼을 탭하거나 브라우저 우측 상단 메뉴(`⋮`) ➔ **`앱 설치`**를 탭합니다.
 
-Cloudflare Pages의 **Set up builds and deployments** 화면에서 아래 표와 **똑같이** 입력합니다.
-
-| 설정 항목 (항목명) | 입력할 값 (복사해서 붙여넣기) | 설명 |
-| :--- | :--- | :--- |
-| **Project name** | `bada-kkomkkomi` | 배포 주소가 `https://bada-kkomkkomi.pages.dev`가 됩니다 |
-| **Production branch** | `main` | `main` 브랜치에 파일을 올릴 때마다 자동 배포됩니다 |
-| **Framework preset** | `Vite` | 선택 시 아래 두 항목이 자동으로 채워집니다 |
-| **Build command** | `npm run build` | 앱을 빌드하고 오프라인 서비스 워커(`sw.js`)를 생성합니다 |
-| **Build output directory** | `dist` | 최종 생성된 정적 파일 폴더입니다 |
-
-1. 입력을 확인한 후 하단 **`Save and Deploy`** 버튼을 클릭합니다.
-2. 약 **40초~1분** 뒤 `Success! Your site is live!` 메시지와 함께 무료 HTTPS 주소(`https://bada-kkomkkomi.pages.dev`)가 발급됩니다.
-
----
-
-## [4단계] 스마트폰 홈 화면에 '바다꼼꼬미' PWA 앱 설치하기
-
-현장 출항 전 스마트폰에서 아래 방법으로 설치하면, 바다 한가운데(통신 음영지역·오프라인)에서도 앱이 실행됩니다.
-
-### Android (갤럭시 · Chrome 브라우저)
-1. Chrome 앱으로 배포 주소(`https://bada-kkomkkomi.pages.dev`)에 접속합니다.
-2. 화면 하단 **`홈 화면에 바다꼼꼬미 추가`** 배너를 누르거나, 우측 상단 메뉴(`⋮`) ➔ **`앱 설치`**를 탭합니다.
-
-### iPhone / iPad (Safari 브라우저)
+### 3. iPhone / iPad (Safari 브라우저)
 1. Safari 앱으로 배포 주소에 접속합니다.
-2. 하단 중앙 **`공유`** 버튼(네모 위 화살표)을 탭합니다.
-3. 메뉴를 아래로 내려 **`홈 화면에 추가`** ➔ 우측 상단 **`추가`**를 탭합니다.
+2. 하단 중앙 **`공유`** 버튼(네모 위 화살표) ➔ **`홈 화면에 추가`** ➔ 우측 상단 **`추가`**를 탭합니다.
 
 ---
 
-## [5단계] 비개발자 운영자의 일상 업데이트 방법 (코드 수정 0줄!)
+## [2단계] 비개발자 운영자의 4대 데이터 일상 관리 방법 (코드 수정 0줄!)
 
-새로운 접안 포인트를 추가하거나 위험 요소·사진을 바꿀 때는 **코드(`.tsx`)를 전혀 건드리지 않고** 아래 2개 폴더만 수정합니다.
+운영자가 관리하는 모든 데이터는 `public/` 폴더 아래에 위치합니다.
 
-### 작업 A. 현장 접안 사진 추가/교체하기
+| 관리 대상 | 파일 경로 | 용도 |
+| :--- | :--- | :--- |
+| **1. 접안 포인트 데이터** | `public/data/docking_points.geojson` | 갯바위 접안 포인트 좌표, 물때, 위험요소, 5색 표식, 사진 경로 |
+| **2. 현장 접안 사진** | `public/images/docking/` | 접안 포인트 상세창에 표시할 현장 사진 파일 |
+| **3. 주요 항구 사전** | `public/data/ports.json` | 바닷길 시간계산기에서 선택하거나 500m 자동 스냅될 주요 항구 목록 |
+| **4. 운영자 설정 & 레이어** | `public/config/app_config.json` | 현장 제보 수신 이메일 주소, 공간정보 레이어 목록, 기상 판정 기본 기준값 |
+
+---
+
+### 작업 A. 현장 접안 사진 추가/교체하기 (`public/images/docking/`)
 1. GitHub 저장소 웹 화면에서 **`public` ➔ `images` ➔ `docking`** 폴더로 이동합니다.
-2. 우측 상단 **`Add file` ➔ `Upload files`**를 클릭해 스마트폰으로 찍은 현장 사진(예: `ty-003-pier.jpg`)을 끌어다 놓습니다.
-   - **주의사항 (대소문자 일관성)**: 서버는 대소문자를 엄격히 구분하므로 파일명은 항상 **영문 소문자, 숫자, 하이픈(`-`)** 조합(예: `ty-003-pier.jpg`)으로 통일하세요.
+2. 우측 상단 **`Add file` ➔ `Upload files`**를 클릭해 현장 사진(예: `ty-004-rock.jpg`)을 업로드합니다.
+   - **주의사항**: 파일명은 항상 **영문 소문자, 숫자, 하이픈(`-`)** 조합으로 통일하세요.
 
-### 작업 B. 접안 포인트 정보(`docking_points.geojson`) 수정하기
-1. GitHub 저장소에서 **`public/data/docking_points.geojson`** 파일을 클릭한 뒤 우측 상단 **연필 아이콘(`Edit this file`)**을 클릭합니다.
-2. 아래 양식을 복사해 `"features": [ ... ]` 안에 붙여넣고 내용을 수정합니다:
+### 작업 B. 갯바위 접안 포인트 수정하기 (`public/data/docking_points.geojson`)
+1. `public/data/docking_points.geojson` 파일을 열고 우측 상단 **연필 아이콘(`Edit this file`)**을 클릭합니다.
+2. 아래 양식을 `"features": [ ... ]` 배열 안에 추가하거나 수정합니다:
 
 ```json
 {
@@ -101,7 +65,7 @@ Cloudflare Pages의 **Set up builds and deployments** 화면에서 아래 표와
     "coordinates": [128.4278, 34.8378]
   },
   "properties": {
-    "id": "TY-003",
+    "id": "TY-004",
     "name": "통영 산양읍 삼덕항 물양장",
     "purpose": "연안 어장 환경조사 및 잠수장비 하역",
     "tide_info": "간조 시 수심 1.8m 확보, 남서풍 유입 시 파랑 주의",
@@ -109,13 +73,33 @@ Cloudflare Pages의 **Set up builds and deployments** 화면에서 아래 표와
     "color": "amber",
     "verified_date": "2026-11-07",
     "photos": [
-      "/images/docking/ty-003-pier.jpg"
+      "/images/docking/ty-004-rock.jpg"
     ]
   }
 }
 ```
 
 > **꼭 기억할 3가지 핵심 규칙**
-> 1. **위경도 순서**: `"coordinates": [경도(128.xxxx), 위도(34.xxxx)]` 순서입니다. (128로 시작하는 숫자가 항상 앞!)
-> 2. **마커 색상(`color`) 5종**: `"red"`(위험주의), `"amber"`(조석주의), `"green"`(안전접안), `"blue"`(전용부두), `"purple"`(비상거점) 중 하나만 입력합니다.
-> 3. **저장 및 자동 배포**: 수정 후 우측 상단 초록색 **`Commit changes...`** 버튼을 누르면 **약 40초 뒤 전국 모든 현장 요원의 앱에 자동으로 최신 데이터가 반영**됩니다!
+> 1. **위경도 순서**: `"coordinates": [경도(128.xxxx), 위도(34.xxxx)]` 순서입니다.
+> 2. **마커 색상(`color`) 5종**: `"red"`, `"amber"`, `"green"`, `"blue"`, `"purple"` 중 하나만 입력합니다.
+> 3. **사진 경로**: `"photos"` 배열에는 `"/images/docking/파일명"` 형태로 입력하면 배포 환경(서브경로 포함)에 맞춰 자동 변환됩니다.
+
+### 작업 C. 바닷길 시간계산기용 항구 추가하기 (`public/data/ports.json`)
+`public/data/ports.json`의 `"ports"` 배열에 항구 정보를 추가하면, **바닷길 시간계산기**의 항구 검색 모달과 **지도 마커 드래그 500m 자동 스냅**에 즉시 반영됩니다:
+
+```json
+{
+  "id": "PORT-TY-007",
+  "name": "욕지도 동항 (여객선터미널)",
+  "region": "통영",
+  "category": "주요항포구",
+  "lat": 34.6368,
+  "lng": 128.2682,
+  "snap_radius_meters": 500,
+  "description": "욕지도 본섬 주항 · 연안 여객 및 조사선 계류지"
+}
+```
+
+### 작업 D. 제보 수신 이메일 및 QGIS 공간레이어 관리 (`public/config/app_config.json`)
+- **제보 수신 이메일 변경**: `"field_report"` 아래의 `"admin_email"` 값을 변경하면 모든 직원의 현장 제보 기본 수신처가 즉시 업데이트됩니다. (앱 내 현장 제보 창에서도 운영자가 직접 변경 가능)
+- **신규 QGIS 공간정보 레이어 추가**: QGIS에서 `EPSG:4326 (WGS84)` GeoJSON으로 내보낸 파일을 `public/data/layers/`에 업로드한 뒤, `public/config/app_config.json`의 `"spatial_layers"` 배열에 항목을 한 줄 추가하면 앱 코드 수정 없이 **공간정보 레이어 체크박스**에 자동 등록됩니다.

@@ -1,0 +1,132 @@
+{
+  "version": "0.3.0-beta",
+  "snap_radius_meters": 500,
+  "ports": [
+    {
+      "id": "TY-001",
+      "name": "통영 당동항 보조물양장",
+      "region": "통영",
+      "category": "docking",
+      "lat": 34.8378,
+      "lng": 128.4278,
+      "description": "해양조사선 정기 채수 및 관측장비 하역 (수중 폐로프 주의)"
+    },
+    {
+      "id": "TY-002",
+      "name": "한산도 제승당 부잔교",
+      "region": "통영",
+      "category": "docking",
+      "lat": 34.7735,
+      "lng": 128.4621,
+      "description": "상시 접안 가능 폰툰 · 여객선 항주파 주의"
+    },
+    {
+      "id": "GJ-001",
+      "name": "거제 저구항 남단 선착장",
+      "region": "거제",
+      "category": "docking",
+      "lat": 34.8012,
+      "lng": 128.5914,
+      "description": "소형 단정(RIB) 양륙 슬립웨이 · 양식장 부표줄 주의"
+    },
+    {
+      "id": "GJ-002",
+      "name": "거제 장승포 외항 관공선부두",
+      "region": "거제",
+      "category": "docking",
+      "lat": 34.8645,
+      "lng": 128.7265,
+      "description": "수심 5.2m 이상 · 50톤급 작업선 안전 접안"
+    },
+    {
+      "id": "PORT-TY-01",
+      "name": "통영항 여객선터미널(강구안)",
+      "region": "통영",
+      "category": "port",
+      "lat": 34.8412,
+      "lng": 128.4235,
+      "description": "통영 중심 항만 · 도서지역 출항 거점"
+    },
+    {
+      "id": "PORT-TY-02",
+      "name": "통영 삼덕항(산양읍)",
+      "region": "통영",
+      "category": "port",
+      "lat": 34.7968,
+      "lng": 128.3842,
+      "description": "욕지도·연화도 방면 외해 출항 주요 거점"
+    },
+    {
+      "id": "PORT-TY-03",
+      "name": "통영 미수항",
+      "region": "통영",
+      "category": "port",
+      "lat": 34.8285,
+      "lng": 128.4065,
+      "description": "통영운하 서측 입구 소형선 접안지"
+    },
+    {
+      "id": "PORT-TY-04",
+      "name": "사량도 금평항",
+      "region": "통영",
+      "category": "port",
+      "lat": 34.8391,
+      "lng": 128.2284,
+      "description": "사량도 상도 중심 항포구"
+    },
+    {
+      "id": "PORT-TY-05",
+      "name": "욕지도 동항",
+      "region": "통영",
+      "category": "port",
+      "lat": 34.6365,
+      "lng": 128.2638,
+      "description": "남해 외해 권역 전진 보급 및 대피항"
+    },
+    {
+      "id": "PORT-TY-06",
+      "name": "매물도 당금항",
+      "region": "통영",
+      "category": "port",
+      "lat": 34.6408,
+      "lng": 128.5728,
+      "description": "한려해상 동부 외해 도서 점검 거점"
+    },
+    {
+      "id": "PORT-GJ-01",
+      "name": "거제 구조라항",
+      "region": "거제",
+      "category": "port",
+      "lat": 34.8075,
+      "lng": 128.6912,
+      "description": "내도·외도 해역 현장 조사 출항 거점"
+    },
+    {
+      "id": "PORT-GJ-02",
+      "name": "거제 지세포항",
+      "region": "거제",
+      "category": "port",
+      "lat": 34.8289,
+      "lng": 128.7058,
+      "description": "만 지형 천연 대피항 · 기상 악화 시 안전 계류 가능"
+    },
+    {
+      "id": "PORT-GJ-03",
+      "name": "거제 다대항",
+      "region": "거제",
+      "category": "port",
+      "lat": 34.7422,
+      "lng": 128.6385,
+      "description": "거제 남부 해금강·우제봉 인근 항포구"
+    },
+    {
+      "id": "PORT-GJ-04",
+      "name": "거제 학동항",
+      "region": "거제",
+      "category": "port",
+      "lat": 34.7725,
+      "lng": 128.6368,
+      "description": "거제 남동 해안 소형 단정 접안지"
+    }
+  ]
+}

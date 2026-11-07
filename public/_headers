@@ -1,5 +1,5 @@
 # Cloudflare Pages Custom Headers for 바다꼼꼬미 (Bada-Kkomkkomi) PWA
-# 비개발자 운영자가 GeoJSON이나 사진을 교체해 Git Push 했을 때
+# 비개발자 운영자가 GeoJSON, 설정 JSON이나 사진을 교체해 Git Push 했을 때
 # CDN/브라우저 캐시 충돌 없이 즉시 최신 현장 데이터를 반영하기 위한 정책입니다.
 
 # 1. HTML 엔트리 및 서비스 워커 스크립트: 절대 장기 캐시 금지 (즉시 재검증)
@@ -15,8 +15,12 @@
 /manifest.webmanifest
   Cache-Control: public, max-age=0, must-revalidate
 
-# 2. 비개발자 운영 데이터 (GeoJSON 및 현장 이미지):
+# 2. 비개발자 운영 설정 및 공간 데이터 (JSON, GeoJSON 및 현장 이미지):
 # CDN 에지에서는 항상 원본 변경 여부를 재검증하고, 오프라인 폴백은 Workbox가 담당
+/config/*
+  Cache-Control: public, max-age=0, must-revalidate
+  Access-Control-Allow-Origin: *
+
 /data/*
   Cache-Control: public, max-age=0, must-revalidate
   Access-Control-Allow-Origin: *

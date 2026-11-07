@@ -17,12 +17,17 @@ export default defineConfig({
         'icons/pwa-192x192.png',
         'icons/pwa-512x512.png',
         'icons/apple-touch-icon.png',
+        'config/app_config.json',
         'data/docking_points.geojson',
+        'data/ports.json',
+        'data/layers/national_park.geojson',
+        'data/layers/protected_area.geojson',
       ],
       manifest: {
-        name: '바다꼼꼬미 — 해양 현장업무 접안 포인트 가이드',
+        name: '바다꼼꼬미 — 해양 현장업무 접안·항해 지원 PWA',
         short_name: '바다꼼꼬미',
-        description: '통영·거제 해역 해양 현장업무 지원 및 안전 접안 포인트 오프라인 PWA [Beta 0.1]',
+        description:
+          '통영·거제 해역 해양 현장업무 지원 (꼬미의 바다수첩 & 바닷길 콕콕) 오프라인 PWA [Beta 0.3]',
         lang: 'ko',
         start_url: base,
         scope: base,
@@ -47,23 +52,24 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,geojson,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,geojson,webmanifest}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: `${base}index.html`,
-        navigateFallbackDenylist: [/\/data\//, /\/images\//],
+        navigateFallbackDenylist: [/\/data\//, /\/images\//, /\/config\//],
         runtimeCaching: [
           {
-            // 1. GeoJSON 데이터: 온라인 시 3초 내 최신 파일 우선 조회(비개발자 Git Push 즉시 반영),
+            // 1. GeoJSON 및 JSON 설정 파일: 온라인 시 3초 내 최신 파일 우선 조회(비개발자 Git Push 즉시 반영),
             // 해상 음영지역(오프라인) 시 프리캐시/런타임 캐시 즉시 반환
-            urlPattern: ({ url }) => url.pathname.endsWith('.geojson'),
+            urlPattern: ({ url }) =>
+              url.pathname.endsWith('.geojson') || url.pathname.endsWith('.json'),
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'bada-geojson-data-v1',
+              cacheName: 'bada-geojson-and-config-v2',
               networkTimeoutSeconds: 3,
               expiration: {
-                maxEntries: 20,
+                maxEntries: 40,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
               },
               cacheableResponse: {
@@ -76,7 +82,7 @@ export default defineConfig({
             urlPattern: ({ url }) => url.pathname.includes('/images/'),
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'bada-field-images-v1',
+              cacheName: 'bada-field-images-v2',
               expiration: {
                 maxEntries: 150,
                 maxAgeSeconds: 60 * 60 * 24 * 60, // 60일
@@ -91,10 +97,26 @@ export default defineConfig({
             urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'bada-osm-tiles-v1',
+              cacheName: 'bada-osm-tiles-v2',
               expiration: {
                 maxEntries: 600,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // 4. Open-Meteo 해상기상 예보 API: 온라인 우선 조회(4초 타임아웃), 해상 음영지역 진입 시 최근 6시간 내 예보 폴백
+            urlPattern: /^https:\/\/(marine-)?api\.open-meteo\.com\/v1\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'bada-open-meteo-v1',
+              networkTimeoutSeconds: 4,
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 6, // 6시간
               },
               cacheableResponse: {
                 statuses: [0, 200],
