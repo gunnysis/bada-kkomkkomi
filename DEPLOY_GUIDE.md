@@ -10,7 +10,7 @@
 [운영자: 사진 업로드 또는 GeoJSON / JSON 파일 웹 편집]
           ↓ (GitHub 웹 화면에서 Commit changes 클릭)
 [GitHub 저장소 (gunnysis/bada-kkomkkomi)]
-          ↓ (GitHub Actions / Cloudflare Pages 자동 빌드 ~40초)
+          ↓ (GitHub Actions / Cloudflare Pages 자동 빌드 ~30초)
 [Workbox 서비스 워커 리비전 해시 갱신 + Cache-Control 헤더 적용]
           ↓ (skipWaiting + clientsClaim + visibilitychange 체크)
 [현장 작업자 스마트폰 PWA 앱 즉시 최신 데이터 반영 완료!]
@@ -43,7 +43,7 @@
 | :--- | :--- | :--- |
 | **1. 접안 포인트 데이터** | `public/data/docking_points.geojson` | 갯바위 접안 포인트 좌표, 물때, 위험요소, 5색 표식, 사진 경로 |
 | **2. 현장 접안 사진** | `public/images/docking/` | 접안 포인트 상세창에 표시할 현장 사진 파일 |
-| **3. 주요 항구 사전** | `public/data/ports.json` | 바닷길 시간계산기에서 선택하거나 500m 자동 스냅될 주요 항구 목록 |
+| **3. 주요 항구 사전** | `public/data/ports.json` | 바닷길 시간계산기에서 선택하거나 500m 자동 스냅될 항포구·접안지 목록 |
 | **4. 운영자 설정 & 레이어** | `public/config/app_config.json` | 현장 제보 수신 이메일 주소, 공간정보 레이어 목록, 기상 판정 기본 기준값 |
 
 ---
@@ -51,7 +51,9 @@
 ### 작업 A. 현장 접안 사진 추가/교체하기 (`public/images/docking/`)
 1. GitHub 저장소 웹 화면에서 **`public` ➔ `images` ➔ `docking`** 폴더로 이동합니다.
 2. 우측 상단 **`Add file` ➔ `Upload files`**를 클릭해 현장 사진(예: `ty-004-rock.jpg`)을 업로드합니다.
-   - **주의사항**: 파일명은 항상 **영문 소문자, 숫자, 하이픈(`-`)** 조합으로 통일하세요.
+   - **주의사항 (대소문자 일관성)**: 리눅스 서버는 대소문자를 엄격히 구분하므로 파일명은 항상 **영문 소문자, 숫자, 하이픈(`-`)** 조합으로 통일하세요.
+
+---
 
 ### 작업 B. 갯바위 접안 포인트 수정하기 (`public/data/docking_points.geojson`)
 1. `public/data/docking_points.geojson` 파일을 열고 우측 상단 **연필 아이콘(`Edit this file`)**을 클릭합니다.
@@ -80,26 +82,102 @@
 ```
 
 > **꼭 기억할 3가지 핵심 규칙**
-> 1. **위경도 순서**: `"coordinates": [경도(128.xxxx), 위도(34.xxxx)]` 순서입니다.
-> 2. **마커 색상(`color`) 5종**: `"red"`, `"amber"`, `"green"`, `"blue"`, `"purple"` 중 하나만 입력합니다.
+> 1. **위경도 순서**: `"coordinates": [경도(128.xxxx), 위도(34.xxxx)]` 순서입니다. (`128`로 시작하는 경도가 항상 앞!)
+> 2. **마커 색상(`color`) 5종**: `"red"`(위험·암초 주의), `"amber"`(조석·항로 주의), `"green"`(상시 안전 접안), `"blue"`(관공선·전용부두), `"purple"`(임시·비상 포인트) 중 하나만 입력합니다.
 > 3. **사진 경로**: `"photos"` 배열에는 `"/images/docking/파일명"` 형태로 입력하면 배포 환경(서브경로 포함)에 맞춰 자동 변환됩니다.
+
+---
 
 ### 작업 C. 바닷길 시간계산기용 항구 추가하기 (`public/data/ports.json`)
 `public/data/ports.json`의 `"ports"` 배열에 항구 정보를 추가하면, **바닷길 시간계산기**의 항구 검색 모달과 **지도 마커 드래그 500m 자동 스냅**에 즉시 반영됩니다:
 
 ```json
 {
-  "id": "PORT-TY-007",
+  "id": "PORT-TY-09",
   "name": "욕지도 동항 (여객선터미널)",
   "region": "통영",
-  "category": "주요항포구",
+  "category": "port",
   "lat": 34.6368,
   "lng": 128.2682,
-  "snap_radius_meters": 500,
   "description": "욕지도 본섬 주항 · 연안 여객 및 조사선 계류지"
 }
 ```
+- `region`: `"통영"` 또는 `"거제"`
+- `category`: `"port"`(주요 항포구) 또는 `"docking"`(공식 접안지)
+- 최상단의 `"snap_radius_meters": 500` 값을 조정하면 지도 위 마커 드래그 시 항구로 자동 흡착되는 반경(미터)을 변경할 수 있습니다.
+
+---
 
 ### 작업 D. 제보 수신 이메일 및 QGIS 공간레이어 관리 (`public/config/app_config.json`)
-- **제보 수신 이메일 변경**: `"field_report"` 아래의 `"admin_email"` 값을 변경하면 모든 직원의 현장 제보 기본 수신처가 즉시 업데이트됩니다. (앱 내 현장 제보 창에서도 운영자가 직접 변경 가능)
-- **신규 QGIS 공간정보 레이어 추가**: QGIS에서 `EPSG:4326 (WGS84)` GeoJSON으로 내보낸 파일을 `public/data/layers/`에 업로드한 뒤, `public/config/app_config.json`의 `"spatial_layers"` 배열에 항목을 한 줄 추가하면 앱 코드 수정 없이 **공간정보 레이어 체크박스**에 자동 등록됩니다.
+`public/config/app_config.json` 파일에서 운영자 이메일, 기본 해역 좌표, 선박 기본 속력, 기상 판정 기본 기준값, 공간정보 레이어 목록을 관리합니다:
+
+```json
+{
+  "admin": {
+    "report_recipient_email": "marine_admin@knps.or.kr",
+    "report_cc_email": "field_safety@knps.or.kr",
+    "department_name": "국립공원공단 해양조사팀"
+  },
+  "default_region": {
+    "name": "경상남도 통영·거제 해역",
+    "center": [34.8195, 128.552],
+    "zoom": 11
+  },
+  "route_defaults": {
+    "default_speed_knots": 15
+  },
+  "weather_defaults": {
+    "wind_threshold_knot": {
+      "good": 14,
+      "moderate": 20
+    },
+    "wave_threshold_meter": {
+      "good": 1.0,
+      "moderate": 1.8
+    }
+  },
+  "layers": [
+    {
+      "id": "docking",
+      "name": "갯바위 접안 포인트",
+      "visible": true,
+      "color": "#38bdf8",
+      "description": "5개 색상별 접안 안전도 및 현장 정보"
+    },
+    {
+      "id": "national_park",
+      "name": "한려해상국립공원 경계",
+      "visible": true,
+      "color": "#10b981",
+      "url": "/data/layers/national_park.geojson",
+      "description": "국립공원 관할 공원구역 경계선"
+    },
+    {
+      "id": "protected_area",
+      "name": "특별보호구역",
+      "visible": true,
+      "color": "#a855f7",
+      "url": "/data/layers/protected_area.geojson",
+      "description": "출입통제 및 해양생물 특별보호구역"
+    }
+  ]
+}
+```
+
+- **제보 수신 이메일 변경**: `"admin"` 아래의 `"report_recipient_email"` 및 `"report_cc_email"`을 수정하면 모든 직원의 현장 제보 기본 수신처가 업데이트됩니다. (앱 내 현장 제보 창에서도 운영자가 즉시 변경 가능)
+- **신규 QGIS 공간정보 레이어 추가**: QGIS에서 `EPSG:4326 (WGS84)` GeoJSON으로 내보낸 파일을 `public/data/layers/`에 업로드한 뒤, `"layers"` 배열에 항목을 한 줄 추가하면 앱 코드 수정 없이 **공간정보 레이어 체크박스**에 자동 등록됩니다.
+
+---
+
+## [3단계] Cloudflare Pages 또는 GitHub Pages 배포 설정 참고
+
+### A. GitHub Pages (현재 기본 활성화됨)
+- `.github/workflows/deploy-pages.yml` 워크플로가 `main` 브랜치 Push마다 자동으로 `npm run lint` 및 `npm run build`를 실행하고 GitHub Pages(`https://gunnysis.github.io/bada-kkomkkomi/`)에 배포합니다.
+
+### B. Cloudflare Pages로 이전/병행 배포 시
+| 설정 항목 | 입력할 값 | 설명 |
+| :--- | :--- | :--- |
+| **Production branch** | `main` | `main` 브랜치에 파일을 올릴 때마다 자동 배포 |
+| **Framework preset** | `Vite` | Vite 정적 빌드 프리셋 |
+| **Build command** | `npm run build` | 타입 검사, 번들링 및 Workbox `sw.js` 생성 |
+| **Build output directory** | `dist` | 최종 생성된 정적 파일 폴더 (`public/_headers` 자동 적용) |

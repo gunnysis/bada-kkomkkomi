@@ -4,59 +4,113 @@
 백엔드 서버나 외부 유료 DB 없이 **순수 정적 데이터(`GeoJSON`, `JSON`, 로컬 이미지) 교체와 Git Push만으로 무상(Zero-cost) 운영 및 자동 배포**되도록 설계되었습니다.
 
 - **라이브 배포 URL (GitHub Pages)**: https://gunnysis.github.io/bada-kkomkkomi/
-- **저장소**: https://github.com/gunnysis/bada-kkomkkomi
+- **GitHub 저장소**: https://github.com/gunnysis/bada-kkomkkomi
+- **비개발자 운영자 매뉴얼**: [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)
+- **아키텍처·구현 설계·트러블슈팅 문서**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
 
 ---
 
-## 주요 기능 아키텍처 (Beta 0.3)
+## 1. 기술 스택 (Tech Stack)
 
-### 1. 꼬미의 바다수첩 (`3.1`)
-- **A. 갯바위 접안정보**: QGIS에서 제작한 `public/data/docking_points.geojson` 포인트를 5색 전술 마커(`red`, `amber`, `green`, `blue`, `purple`)로 지도 위에 렌더링하고, 색상별 필터·하단 바텀시트·CSS Scroll Snap 현장 사진 캐러셀을 제공합니다.
-- **B. 공간정보 레이어**: `public/config/app_config.json`에 등록된 QGIS 폴리곤 레이어(국립공원 경계, 특별보호구역 등)를 동적 로드하고 개별 체크박스로 표시/숨김을 전환합니다.
-- **C. 현장정보 제보 (모듈형 이메일 디스패처)**: 접안지 상세 또는 지도 임의 위치 선택을 통해 현장 사진·위경도 좌표·메모를 담은 표준 제보 전문을 생성하고, 운영자 설정 이메일(`admin_email`)로 `mailto:` 발송 및 클립보드 복사를 수행합니다.
-- **D. 개인 상괭이 관찰 기록**: 지도 클릭 좌표에 관찰 일시·개체수(기본 1마리)를 기기 내부(`localStorage`)에 저장하고 전용 상괭이 마커로 표시/수정/삭제합니다.
-
-### 2. 바닷길 콕콕 (`3.2`)
-- **A/B. 듀얼 모드 상단 탭**: `시간계산`과 `기상상태판정` 독립 모드를 상단 탭으로 즉시 전환합니다.
-- **C. 바닷길 시간계산기 (항구 & 좌표 양방향 동기화 + 500m 스마트 스냅)**:
-  - **항구·접안지 검색 모달 (`PortSelectModal`)**: 통영·거제 주요 항구(`public/data/ports.json`) 및 공식 접안지(`docking_points.geojson`)를 검색·선택하거나 현재 선박 GPS 위치를 출발/경유/목적지로 1-Tap 지정합니다.
-  - **지도 마커 드래그 & 500m 스마트 스냅 (`resolveSmartWaypoint`)**: 지도 위 출발(`출발`)·경유(`경유N`)·도착(`도착`) 마커를 드래그하거나 지도를 탭하면 Haversine 거리 500m 이내의 공식 항구/접안지로 자동 스냅(`⚓ 항구 자동스냅`)되며, 반경 밖 해상은 `해상 지정점 (34.8125°N, 128.4312°E)`으로 양방향 실시간 동기화됩니다.
-  - **구간별 소요시간·거리·방위각(Bearing) 배지**: 지도 폴리라인 각 구간 중점에 `14분 · 3.5NM (142°SE)` 형태의 고대비 캡슐 배지를 표시합니다.
-  - **선박 속도 프리셋 & 패널 접기/펼치기**: `10kn`, `15kn`, `20kn`, `28kn` 원터치 프리셋과 하단 HUD 접기/펼치기 토글을 지원합니다.
-- **D. 해상 기상상태 판정**: Open-Meteo Marine & Forecast API를 연동하여 선택한 해역의 시간대별 풍속(`m/s`)·파고(`m`)를 조회하고 3단계(`좋음`/`보통`/`나쁨` + 데이터 결측 시 `판정불가`) 안전 등급을 판정합니다.
+| 영역 | 기술 및 버전 | 역할 |
+| :--- | :--- | :--- |
+| **Core** | Vite `8.3` + React `19.3` + TypeScript `7.0` | 초고속 번들링 및 엄격한 정적 타입 시스템 |
+| **Styling & Icons** | Tailwind CSS `4.3` + Lucide React `1.70` | 해상 직사광선 대비 고대비 다크/화이트 투톤 HUD |
+| **Map Engine** | Leaflet `1.9.4` + `react-leaflet` `5.0` | 오픈소스 타일 + 커스텀 `L.DivIcon` 캐시 + GeoJSON 공간레이어 |
+| **PWA / Offline** | `vite-plugin-pwa` `2.0` + Workbox `7.4` | 32개 정적 에셋 프리캐시 + Open-Meteo API/타일 런타임 캐시 |
+| **Linter** | Oxlint `1.90` (`react`, `typescript`, `oxc`) | 116개 규칙 기반 정적 분석 (`0 warnings, 0 errors`) |
+| **CI/CD & Hosting** | GitHub Actions (`deploy-pages.yml`) / Cloudflare Pages | `main` 브랜치 Push 시 무상 빌드 및 자동 배포 |
 
 ---
 
-## 비개발자 운영자용 데이터 폴더 구조
+## 2. 핵심 도메인 기능 (Beta 0.3)
+
+### 2.1. 꼬미의 바다수첩 (`3.1`)
+- **A. 갯바위 접안정보 (`docking_points.geojson`)**:
+  - QGIS에서 구축한 접안 포인트를 5가지 색상(`red` 위험주의, `amber` 조석주의, `green` 안전접안, `blue` 전용부두, `purple` 비상거점) 전술 마커로 표시합니다.
+  - 색상별 실시간 필터링, 하단 슬라이딩 상세 바텀시트(`DockingDetailSheet`), CSS Scroll Snap 기반 현장 사진 좌우 넘기기(`PhotoGallery`), 현재 GPS 위치 추적(실시간/시뮬레이션)을 제공합니다.
+- **B. 공간정보 레이어 (`app_config.json` + `public/data/layers/*.geojson`)**:
+  - 한려해상국립공원 경계(`national_park.geojson`), 특별보호구역(`protected_area.geojson`), 갯바위 접안 포인트(`docking`)를 체크박스로 개별 표시·숨김 전환합니다.
+  - `public/config/app_config.json`의 `layers` 배열에 항목만 추가하면 코드 변경 없이 신규 QGIS 폴리곤 레이어를 확장할 수 있습니다.
+- **C. 현장정보 제보 (`FieldReportModal` + `emailReportService`)**:
+  - 접안 포인트 상세창 또는 독립 제보 버튼(**`지도에서 위치 선택`** 지원)을 통해 위경도 좌표·현장 사진·자유 메모를 입력합니다.
+  - 운영자 수신 이메일(`admin.report_recipient_email`, 앱 내에서도 즉시 변경·저장 가능)로 규격화된 제보 메일(`mailto:`)을 발송하거나 클립보드에 전문을 복사합니다.
+- **D. 개인 상괭이 관찰 기록 (`PorpoiseObservationModal` + `usePorpoiseStorage`)**:
+  - 지도에서 상괭이 목격 위치를 탭하면 현재 일시와 기본 개체수(`1마리`)가 자동 입력되며, 기기 내부(`localStorage`)에 저장되어 전용 상괭이 표식으로 렌더링됩니다. (기획 명세에 따라 사진·메모·통계 기능 제외, 개별 조회·수정·삭제 및 레이어 표시/숨김 지원)
+
+### 2.2. 바닷길 콕콕 (`3.2`)
+- **A/B. 듀얼 모드 상단 탭**:
+  - `바닷길 콕콕` 진입 시 상단 탭에서 **`시간계산`**과 **`기상상태판정`** 독립 화면을 즉시 전환합니다.
+- **C. 바닷길 시간계산기 (`RouteTimeCalculator` + `PortSelectModal` + `routeGeoService`)**:
+  - **항구·접안지 검색 모달 (`PortSelectModal`)**: 통영·거제 주요 항포구(`public/data/ports.json`) 및 공식 접안지(`docking_points.geojson`)를 해역별(`전체`/`공식 접안지`/`통영`/`거제`) 또는 검색어로 선택하고, `내 선박 현재 GPS 위치`를 원터치로 지정합니다.
+  - **지도 마커 드래그 & 500m 스마트 스냅 (`resolveSmartWaypoint`)**: 지도 위 출발(`출발`)·경유(`경유N`)·도착(`도착`) 마커를 드래그하거나 지도를 탭하면 Haversine 거리 `500m` 이내의 공식 항구/접안지로 자동 스냅(`⚓ 항구 자동스냅`)되며, 반경 밖 해상은 `해상 지정점 (34.8125°N, 128.4312°E)`으로 양방향 실시간 동기화됩니다.
+  - **지도 항로 폴리라인 구간 배지**: 각 구간(Leg) 중점에 `14분 · 3.5NM (142°SE)` 형태의 소요시간·해리·방위각(8방위) 캡슐 배지를 표시합니다.
+  - **편의 제어**: 선박 속도 입력(기본 `15kn`) 및 원터치 프리셋(`10kn`, `15kn`, `20kn`, `28kn`), `출발↔도착 반전`, 하단 패널 `접기/펼치기` 토글을 지원합니다.
+- **D. 해상 기상상태 판정 (`MarineWeatherPanel` + `WeatherThresholdSettings` + `useMarineWeather`)**:
+  - Open-Meteo Forecast API(풍속 `knots`) 및 Marine API(파고 `m`)를 병렬 호출하여 선택한 해역의 KST(`Asia/Seoul`) 시간대별 기상 데이터를 제공합니다.
+  - 풍속·파고 중 더 나쁜 등급을 기준으로 최종 3단계(`좋음` 초록 / `보통` 노랑 / `나쁨` 빨강)를 판정하며, 연안 격자에서 파고 등 데이터가 결측(`null`)된 경우 허위 안전 판정을 막기 위해 `판정불가 (?)`로 정직하게 표시합니다.
+
+---
+
+## 3. 프로젝트 디렉터리 구조
 
 ```text
-public/
-├── config/
-│   └── app_config.json            # 운영자 수신 이메일, QGIS 공간레이어 목록, 기본 기상 임계치
-├── data/
-│   ├── docking_points.geojson     # 갯바위 접안 포인트 (5색 마커 및 현장 정보)
-│   ├── ports.json                 # 통영·거제 주요 항구 사전 (500m 자동 스냅 기준점)
-│   └── layers/
-│       ├── national_park_boundary.geojson  # 국립공원 경계 폴리곤
-│       └── special_protection_zone.geojson # 특별보호구역 폴리곤
-└── images/
-    └── docking/                   # 현장 접안지 사진 파일 보관 폴더
+bada-kkomkkomi/
+├── .github/workflows/
+│   └── deploy-pages.yml               # GitHub Pages 자동 빌드·배포 워크플로
+├── docs/
+│   └── ARCHITECTURE_AND_DESIGN.md     # 최종 구현 설계서 · 데이터 사전 · 트러블슈팅 리포트
+├── public/
+│   ├── _headers                       # Cloudflare Pages / 정적 서버 캐시 무효화 헤더 규칙
+│   ├── config/
+│   │   └── app_config.json            # 운영자 수신 이메일, 기본 해역, 속력·기상 기본값, 공간레이어 정의
+│   ├── data/
+│   │   ├── docking_points.geojson     # 갯바위 접안 포인트 (5색 마커 및 현장 정보)
+│   │   ├── ports.json                 # 통영·거제 주요 항포구 사전 (500m 자동 스냅 기준점)
+│   │   └── layers/
+│   │       ├── national_park.geojson  # 한려해상국립공원 경계 폴리곤
+│   │       └── protected_area.geojson # 특별보호구역 폴리곤
+│   ├── icons/                         # PWA 홈 화면 아이콘 (192x192, 512x512, apple-touch-icon)
+│   └── images/docking/                # 현장 접안지 사진/일러스트 에셋
+├── src/
+│   ├── components/
+│   │   ├── MapView.tsx                # Leaflet 지도, 5색 마커, 항로 구간 배지, 컨트롤 독
+│   │   ├── DockingDetailSheet.tsx     # 접안 포인트 하단 슬라이딩 상세 시트
+│   │   ├── PhotoGallery.tsx           # 현장 사진 전체화면 라이트박스 모달
+│   │   ├── notebook/
+│   │   │   ├── LayerControlModal.tsx        # 공간정보 레이어 & 5색 필터 드로어
+│   │   │   ├── FieldReportModal.tsx         # 현장정보 이메일 제보 & 지도 위치 선택 모달
+│   │   │   └── PorpoiseObservationModal.tsx # 개인 상괭이 관찰 기록 추가/수정/삭제 모달
+│   │   └── navigation/
+│   │       ├── RouteTimeCalculator.tsx      # 바닷길 시간계산기 패널 (접기/펼치기 지원)
+│   │       ├── PortSelectModal.tsx          # 항구·접안지 검색 및 선택 모달
+│   │       ├── MarineWeatherPanel.tsx       # 해상 기상상태 3단계 판정 패널
+│   │       └── WeatherThresholdSettings.tsx # 기상 판정 기준값(풍속·파고) 설정 모달
+│   ├── hooks/
+│   │   ├── useAppConfig.ts            # app_config.json 로드 및 운영자 이메일/기상 기준 로컬 오버라이드
+│   │   ├── useMarineWeather.ts        # Open-Meteo API 병렬 조회, KST 매칭 및 3단계 등급 연산
+│   │   └── usePorpoiseStorage.ts      # 상괭이 관찰 기록 localStorage 영속화
+│   ├── services/
+│   │   ├── emailReportService.ts      # 이메일 제보 전문 포맷팅, mailto URI 생성, 클립보드 복사
+│   │   └── routeGeoService.ts         # Haversine 거리(NM), 방위각(°/8방위), 500m 항구 스마트 스냅
+│   └── types/                         # 도메인별 TypeScript 엄격 타입 정의 (config, docking, port, route, weather, porpoise, report)
+├── DEPLOY_GUIDE.md                    # 비개발자 운영자용 데이터 교체 및 무상 배포 가이드
+├── README.md                          # 프로젝트 개요 문서
+└── vite.config.ts                     # Vite + Tailwind v4 + Workbox PWA 설정
 ```
-
-상세한 비개발자 운영 및 배포 절차는 [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)를 참고하세요.
 
 ---
 
-## 로컬 개발 및 빌드 검증
+## 4. 로컬 개발 및 검증 명령
 
 ```bash
 # 의존성 설치
 npm install
 
-# 린트 검사 (oxlint 116 rules)
+# 정적 린트 검사 (oxlint 116개 규칙)
 npm run lint
 
-# 프로덕션 빌드 (TypeScript 타입 검증 + Vite 번들링 + Workbox PWA 프리캐시)
+# 프로덕션 빌드 (TypeScript 타입 검증 + Vite 번들링 + Workbox 서비스 워커 생성)
 npm run build
 
 # 로컬 개발 서버 실행
