@@ -1,0 +1,54 @@
+{
+  "type": "FeatureCollection",
+  "name": "통영·거제 해양 특별보호구역",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "SPA-01",
+        "name": "홍도 괭이갈매기 번식지 특별보호구역",
+        "level": "절대보전",
+        "restriction": "일반인 및 선박 접안 절대 금지 (천연기념물 제335호)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [128.72, 34.56],
+            [128.76, 34.56],
+            [128.76, 34.52],
+            [128.72, 34.52],
+            [128.72, 34.56]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "SPA-02",
+        "name": "한산도 북측 해양생태계 복원 특별보호구역",
+        "level": "조건부 제한",
+        "restriction": "산란기(4월~8월) 동력 선박 진입 속력 5노트 이하 제한"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [128.45, 34.78],
+            [128.48, 34.78],
+            [128.48, 34.76],
+            [128.45, 34.76],
+            [128.45, 34.78]
+          ]
+        ]
+      }
+    }
+  ]
+}

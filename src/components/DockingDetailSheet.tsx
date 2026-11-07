@@ -9,6 +9,7 @@ import {
   Navigation,
   Waves,
   X,
+  Send,
 } from 'lucide-react';
 import type { DockingFeature } from '../types/docking';
 import { MARKER_COLOR_MAP } from '../types/docking';
@@ -19,6 +20,7 @@ interface DockingDetailSheetProps {
   userLocation: { lat: number; lng: number; accuracy?: number } | null;
   onClose: () => void;
   onFlyToPoint: (lat: number, lng: number) => void;
+  onRequestReport: (feature: DockingFeature) => void;
 }
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -39,6 +41,7 @@ export function DockingDetailSheet({
   userLocation,
   onClose,
   onFlyToPoint,
+  onRequestReport,
 }: DockingDetailSheetProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [copied, setCopied] = useState(false);
@@ -96,7 +99,7 @@ export function DockingDetailSheet({
         transition: touchStartY === null ? 'transform 0.22s ease-out' : 'none',
       }}
     >
-      {/* 상단 드래그 핸들 및 헤더 (장갑 착용 한 손 스와이프 다운 닫기 지원) */}
+      {/* 상단 드래그 핸들 및 헤더 */}
       <div
         className="sticky top-0 z-20 border-b border-slate-700/90 bg-[#0b192c]/95 px-5 pt-3 pb-4 backdrop-blur-md"
         onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
@@ -125,10 +128,7 @@ export function DockingDetailSheet({
               <span
                 className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-extrabold ${colorMeta.badgeBg} ${colorMeta.badgeText} ${colorMeta.borderClass}`}
               >
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: colorMeta.hex }}
-                />
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colorMeta.hex }} />
                 {colorMeta.label}
               </span>
               {distanceKm !== null && distanceNauticalMiles !== null && (
@@ -138,10 +138,7 @@ export function DockingDetailSheet({
               )}
             </div>
 
-            <h2
-              id="sheet-point-title"
-              className="text-xl leading-snug font-black tracking-tight text-white sm:text-2xl"
-            >
+            <h2 id="sheet-point-title" className="text-xl leading-snug font-black tracking-tight text-white sm:text-2xl">
               {properties.name}
             </h2>
           </div>
@@ -159,7 +156,7 @@ export function DockingDetailSheet({
 
       {/* 본문 영역 */}
       <div className="space-y-5 px-5 pt-4 pb-8">
-        {/* 1. 최우선 경고: 위험 요소 (Hazard) 고대비 카드 */}
+        {/* 1. 최우선 경고: 위험 요소 */}
         <div
           role="alert"
           className="rounded-2xl border-2 border-red-500 bg-gradient-to-br from-red-950/95 via-red-950/80 to-slate-950 p-4 shadow-lg"
@@ -169,28 +166,22 @@ export function DockingDetailSheet({
               <AlertTriangle className="h-6 w-6 stroke-[2.5]" aria-hidden="true" />
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-black tracking-wider text-slate-950 uppercase">
-                  접안 위험 요소 · 필독
-                </span>
-              </div>
-              <p className="text-base leading-relaxed font-extrabold text-red-100">
-                {properties.hazard}
-              </p>
+              <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-black tracking-wider text-slate-950 uppercase">
+                접안 위험 요소 · 필독
+              </span>
+              <p className="text-base leading-relaxed font-extrabold text-red-100">{properties.hazard}</p>
             </div>
           </div>
         </div>
 
-        {/* 2. 조석/수심 정보 및 접안 목적 2열 그리드 */}
+        {/* 2. 조석/수심 정보 및 접안 목적 */}
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           <div className="rounded-2xl border border-sky-500/40 bg-sky-950/40 p-4">
             <div className="mb-1.5 flex items-center gap-2 text-sky-300">
               <Waves className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="text-sm font-extrabold">조석 · 수심 · 조류 특성</span>
             </div>
-            <p className="text-base leading-relaxed font-bold text-slate-100">
-              {properties.tide_info}
-            </p>
+            <p className="text-base leading-relaxed font-bold text-slate-100">{properties.tide_info}</p>
           </div>
 
           <div className="rounded-2xl border border-amber-500/40 bg-amber-950/30 p-4">
@@ -198,9 +189,7 @@ export function DockingDetailSheet({
               <Anchor className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="text-sm font-extrabold">주요 현장 업무 · 접안 목적</span>
             </div>
-            <p className="text-base leading-relaxed font-bold text-slate-100">
-              {properties.purpose}
-            </p>
+            <p className="text-base leading-relaxed font-bold text-slate-100">{properties.purpose}</p>
           </div>
         </div>
 
@@ -212,13 +201,13 @@ export function DockingDetailSheet({
           pointId={properties.id}
         />
 
-        {/* 4. 좌표 및 현장 검증 일자 메타 정보 */}
+        {/* 4. 좌표 및 검증일 */}
         <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
                 <Compass className="h-4 w-4 text-sky-400" />
-                <span>WGS84 해상 좌표 (위도 / 경도)</span>
+                <span>WGS84 해상 좌표</span>
               </div>
               <p className="font-mono text-base font-extrabold text-sky-200">
                 {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
@@ -228,29 +217,27 @@ export function DockingDetailSheet({
             <div className="space-y-1 text-right">
               <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-slate-400">
                 <CalendarCheck2 className="h-4 w-4 text-emerald-400" />
-                <span>최근 현장 실측 검증일</span>
+                <span>최근 실측 검증일</span>
               </div>
-              <p className="font-mono text-sm font-extrabold text-emerald-300">
-                {properties.verified_date}
-              </p>
+              <p className="font-mono text-sm font-extrabold text-emerald-300">{properties.verified_date}</p>
             </div>
           </div>
 
-          {/* 하단 대형 액션 버튼 (장갑 조작 최적화: 높이 52px 이상) */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          {/* 액션 버튼 3종: 좌표복사 / 포인트정밀확대 / 현장제보 */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={handleCopyCoords}
-              className="flex min-h-13 items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3 text-sm font-extrabold text-white active:scale-95"
+              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-slate-600 bg-slate-800 px-2 py-3 text-xs font-extrabold text-white active:scale-95"
             >
               {copied ? (
                 <>
-                  <Check className="h-5 w-5 text-emerald-400" />
-                  <span className="text-emerald-300">좌표 복사됨</span>
+                  <Check className="h-4 w-4 text-emerald-400" />
+                  <span className="text-emerald-300">복사됨</span>
                 </>
               ) : (
                 <>
-                  <Copy className="h-5 w-5 text-sky-400" />
+                  <Copy className="h-4 w-4 text-sky-400" />
                   <span>좌표 복사</span>
                 </>
               )}
@@ -262,10 +249,23 @@ export function DockingDetailSheet({
                 onFlyToPoint(lat, lng);
                 onClose();
               }}
-              className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-black text-slate-950 shadow-lg active:scale-95"
+              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-2 py-3 text-xs font-black text-slate-950 shadow-lg active:scale-95"
             >
-              <Navigation className="h-5 w-5" />
-              <span>포인트 정밀 확대</span>
+              <Navigation className="h-4 w-4" />
+              <span>정밀 확대</span>
+            </button>
+
+            {/* [신규] 현장 제보 버튼 */}
+            <button
+              type="button"
+              onClick={() => {
+                onRequestReport(feature);
+                onClose();
+              }}
+              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-amber-400/80 bg-amber-500/20 px-2 py-3 text-xs font-black text-amber-300 shadow active:scale-95"
+            >
+              <Send className="h-4 w-4" />
+              <span>현장 제보</span>
             </button>
           </div>
         </div>
