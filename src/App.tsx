@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
   Anchor,
+  Download,
   RefreshCw,
   ShieldCheck,
   Wifi,
@@ -43,6 +44,58 @@ export function App() {
     zoom: number;
     nonce: number;
   } | null>(null);
+
+  // PWA 설치 프롬프트 이벤트 상태
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    );
+  });
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsStandalone(true);
+      setGpsStatusMsg('바다꼼꼬미 앱이 기기에 설치되었습니다!');
+      window.setTimeout(() => setGpsStatusMsg(null), 3000);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      // iOS Safari 또는 프롬프트 미지원 브라우저 안내
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        alert(
+          '아이폰/아이패드 설치 방법:\n하단 공유 버튼(네모+화살표)을 누른 후 "홈 화면에 추가"를 선택하세요.'
+        );
+      } else {
+        alert(
+          '브라우저 우측 상단 메뉴(점 3개)를 누르고 "앱 설치" 또는 "홈 화면에 추가"를 선택하세요.'
+        );
+      }
+    }
+  };
 
   // 온라인/오프라인 해상 음영지역 감지
   useEffect(() => {
@@ -244,6 +297,20 @@ export function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* PWA 앱 설치 버튼 (이미 앱으로 실행 중이면 숨김) */}
+            {!isStandalone && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                aria-label="바다꼼꼬미 앱 설치"
+                className="flex items-center gap-1.5 rounded-xl border-2 border-amber-400 bg-amber-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-md transition active:scale-95 animate-pulse"
+                title="스마트폰/PC에 앱으로 설치하기"
+              >
+                <Download className="h-4 w-4 stroke-[3]" />
+                <span>앱 설치</span>
+              </button>
+            )}
+
             {/* 온/오프라인 상태 배지 */}
             <div
               role="status"
