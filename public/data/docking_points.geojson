@@ -1,0 +1,92 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "version": "0.1.0-beta",
+    "region": "경상남도 통영·거제 해역",
+    "updated_at": "2026-11-07",
+    "operator_note": "비개발자 운영 가이드: coordinates는 [경도(lng), 위도(lat)] 순서입니다. 사진 파일은 public/images/docking/ 폴더에 넣고 경로만 수정하세요."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.4278, 34.8378]
+      },
+      "properties": {
+        "id": "TY-001",
+        "name": "통영 당동항 해양조사선 보조물양장",
+        "purpose": "해양환경 정기 채수 및 관측장비 하역",
+        "tide_info": "대조기 간조 시 수심 1.4m 주의 (만조 전후 2시간 접안 권장, 조차 최대 2.6m)",
+        "hazard": "물양장 남단 수중 폐로프 및 노출 암초 존재 — 우현 접안 시 프로펠러 감김 절대 주의",
+        "color": "red",
+        "verified_date": "2026-10-28",
+        "photos": [
+          "/images/docking/ty-001-overview.svg",
+          "/images/docking/ty-001-hazard.svg",
+          "/images/docking/ty-001-bitt.svg"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.4621, 34.7735]
+      },
+      "properties": {
+        "id": "TY-002",
+        "name": "한산도 제승당 북측 부잔교",
+        "purpose": "도서지역 긴급 방제자재 보급 및 인력 승하선",
+        "tide_info": "부잔교(폰툰) 설치 구역으로 상시 접안 가능 (평균 수심 3.8m, 창조류 유속 1.8kt)",
+        "hazard": "여객선 입출항 시간대(매시 15분·45분) 항주파 심함 — 계류색 2중 결속 필수",
+        "color": "green",
+        "verified_date": "2026-11-02",
+        "photos": [
+          "/images/docking/ty-002-pontoon.svg",
+          "/images/docking/ty-002-approach.svg"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.5914, 34.8012]
+      },
+      "properties": {
+        "id": "GJ-001",
+        "name": "거제 저구항 남단 작업선 선착장",
+        "purpose": "적조 예찰 드론 운용 및 소형 단정(RIB) 양륙",
+        "tide_info": "간조 시 슬립웨이 하단 청태 매우 미끄러움 (최저 수심 1.9m, 북동풍 시 너울 유입)",
+        "hazard": "선착장 진입항로 좌측 80m 지점 패류 양식장 부표줄 밀집 — 야간·해무 시 시인성 불량",
+        "color": "amber",
+        "verified_date": "2026-11-04",
+        "photos": [
+          "/images/docking/gj-001-slipway.svg",
+          "/images/docking/gj-001-buoy-line.svg"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [128.7265, 34.8645]
+      },
+      "properties": {
+        "id": "GJ-002",
+        "name": "거제 장승포 외항 관공선 전용부두",
+        "purpose": "해양기상 부이 점검선 정박 및 중량 크레인 작업",
+        "tide_info": "수심 5.2m 이상 확보, 전 조석 구간 50톤급 작업선 안전 접안 가능",
+        "hazard": "동풍 계열 강풍(12m/s 이상) 시 방파제 월파 비산 및 안벽 방충재(Fender) 일부 파손(3번 비트 인근)",
+        "color": "blue",
+        "verified_date": "2026-11-06",
+        "photos": [
+          "/images/docking/gj-002-berth.svg",
+          "/images/docking/gj-002-fender.svg"
+        ]
+      }
+    }
+  ]
+}

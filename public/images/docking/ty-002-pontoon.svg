@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0c4a6e"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#082f49"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#sky)"/>
+  <path d="M0 280 Q 200 260 400 280 T 800 275 L 800 500 L 0 500 Z" fill="url(#sea)"/>
+  <path d="M0 340 Q 180 325 360 340 T 800 335" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.35"/>
+  <rect x="460" y="210" width="340" height="95" rx="6" fill="#334155" stroke="#94a3b8" stroke-width="3"/>
+  <rect x="500" y="185" width="24" height="28" rx="4" fill="#fbbf24"/>
+  <rect x="640" y="185" width="24" height="28" rx="4" fill="#fbbf24"/>
+  <circle cx="210" cy="250" r="58" fill="none" stroke="#059669" stroke-width="4" stroke-dasharray="10 6"/>
+  <circle cx="210" cy="250" r="10" fill="#059669"/>
+  <rect x="32" y="28" width="160" height="42" rx="8" fill="#0f172a" fill-opacity="0.88" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="112" y="55" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="20" font-weight="800">TY-002 #1</text>
+  <rect x="540" y="28" width="228" height="42" rx="21" fill="#059669"/>
+  <text x="654" y="55" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="18" font-weight="800">안전 접안 (GREEN)</text>
+  <rect x="24" y="355" width="752" height="120" rx="16" fill="#020617" fill-opacity="0.9" stroke="#475569" stroke-width="1.5"/>
+  <text x="52" y="405" fill="#f8fafc" font-family="sans-serif" font-size="28" font-weight="800">한산도 제승당 북측 부잔교</text>
+  <text x="52" y="446" fill="#cbd5e1" font-family="sans-serif" font-size="20" font-weight="600">상시 접안 가능 폰툰 · 조석 무관 수심 3.8m 확보</text>
+</svg>

@@ -1,0 +1,152 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #0b192c;
+    color: #f8fafc;
+    /* 해상 야외 조작 중 당겨서 새로고침(Pull-to-refresh) 및 브라우저 좌우 스와이프 뒤로가기 오작동 차단 */
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+}
+
+/* 2D 지도 캔버스: modern-web-guidance `2d-panning` & `responsive-design` 적용 */
+.bada-map-viewport {
+  width: 100%;
+  height: 100dvh;
+  overflow: auto;
+  scroll-axis-lock: none;
+  overscroll-behavior: none;
+}
+
+.bada-map-viewport:focus-visible {
+  outline: 3px solid #38bdf8;
+  outline-offset: -3px;
+}
+
+/* Leaflet 컨테이너 야외 직사광선 대비 강화 필터 */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background-color: #0b192c !important;
+  font-family: inherit;
+}
+
+.leaflet-tile-pane {
+  filter: contrast(1.06) saturate(1.08);
+}
+
+/* 커스텀 마커: 장갑 착용 시에도 최소 52x52px 터치 영역 보장 */
+.bada-custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.bada-marker-hit-target {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bada-marker-hit-target:active {
+  transform: scale(0.92);
+}
+
+/* GPS 내 위치 펄스 마커 애니메이션 */
+@keyframes bada-gps-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.35);
+    opacity: 0;
+  }
+}
+
+.bada-gps-pulse-ring {
+  animation: bada-gps-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* 바텀 시트 모달 스크롤 체이닝 방지: modern-web-guidance `prevent-page-scroll-under-modal-dialog` */
+dialog.bada-bottom-sheet:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.bada-bottom-sheet::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: rgba(2, 6, 23, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+/* 사진 갤러리 캐러셀 스냅 하이라이트: modern-web-guidance `carousel-snap-highlights` */
+.bada-photo-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bada-photo-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.bada-photo-snap-item {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  container-type: scroll-state;
+  flex: 0 0 100%;
+}
+
+.bada-photo-card {
+  transition:
+    scale 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
+@supports (container-type: scroll-state) {
+  @media (prefers-reduced-motion: no-preference) {
+    @container scroll-state(snapped: x) {
+      .bada-photo-card {
+        border-color: #38bdf8;
+        box-shadow: 0 10px 28px rgba(56, 189, 248, 0.25);
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bada-photo-card,
+  .bada-gps-pulse-ring {
+    transition: none !important;
+    animation: none !important;
+    scale: 1 !important;
+  }
+}
