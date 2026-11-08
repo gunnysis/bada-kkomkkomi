@@ -79,7 +79,7 @@ export function PortSelectModal({
         className="flex max-h-[88dvh] w-full max-w-xl flex-col rounded-3xl border-2 border-slate-600 bg-[#0b192c] p-4 text-white shadow-2xl sm:p-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-2 border-b border-slate-700/90 pb-3">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700/90 pb-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400">
               <Anchor className="h-5 w-5" />
@@ -113,7 +113,7 @@ export function PortSelectModal({
             onSelectUserGps();
             onClose();
           }}
-          className="mt-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl border border-sky-400/60 bg-sky-950/60 px-3.5 py-2.5 text-left transition active:scale-[0.99] hover:border-sky-400"
+          className="mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border border-sky-400/60 bg-sky-950/60 px-3.5 py-2 text-left transition active:scale-[0.99] hover:border-sky-400"
         >
           <div className="flex min-w-0 items-center gap-2.5">
             <LocateFixed className="h-5 w-5 shrink-0 text-sky-400" />
@@ -134,19 +134,19 @@ export function PortSelectModal({
         </button>
 
         {/* 검색창 */}
-        <div className="relative mt-2.5">
+        <div className="relative mt-2 shrink-0">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="항구·선착장·섬·초성 검색 (예: ㅅㄷㅎ, 원항, 노대도, 부잔교, 제승당)"
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2.5 pr-4 pl-10 text-sm font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2 pr-4 pl-10 text-sm font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
           />
         </div>
 
         {/* 빠른 검색 추천 칩 */}
-        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+        <div className="mt-2 flex shrink-0 items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
           <span className="shrink-0 text-[10px] font-extrabold text-slate-400">추천:</span>
           {QUICK_SEARCH_CHIPS.map((chip) => (
             <button
@@ -165,7 +165,7 @@ export function PortSelectModal({
         </div>
 
         {/* 권역 및 시설 유형 필터 탭 */}
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="mt-2 flex shrink-0 gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {(
             [
               { key: 'all', label: `전체 (${counts.all})` },
@@ -192,7 +192,7 @@ export function PortSelectModal({
         </div>
 
         {/* 항포구 및 소규모 선착장 목록 */}
-        <div className="mt-2.5 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
           {filteredPorts.map((port) => {
             const isSmallBerth =
               port.subCategory === 'small_berth' || port.category === 'docking';

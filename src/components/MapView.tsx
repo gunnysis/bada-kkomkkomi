@@ -129,14 +129,34 @@ function getDockingMarkerIcon(
   });
 }
 
-// 1-B. 바닷길 콕콕용 항포구 / 소규모 선착장 마커 아이콘
-function getNavPortPinIcon(port: MarinePort): L.DivIcon {
+// 1-B. 바닷길 콕콕용 항포구 / 소규모 선착장 마커 아이콘 (줌 13 미만에서는 깔끔한 도트, 줌 13 이상에서 이름 라벨 표시)
+function getNavPortPinIcon(port: MarinePort, showLabel: boolean): L.DivIcon {
   const isSmallBerth = port.subCategory === 'small_berth' || port.category === 'docking';
   const shortName = port.name.length > 8 ? `${port.name.slice(0, 8)}…` : port.name;
-  const cacheKey = `navport:${port.id}:${isSmallBerth ? 'sb' : 'pt'}`;
+  const cacheKey = `navport:${port.id}:${isSmallBerth ? 'sb' : 'pt'}:${showLabel ? 'lbl' : 'dot'}`;
   return getCachedDivIcon(cacheKey, () => {
     const color = isSmallBerth ? '#f59e0b' : '#38bdf8';
     const bg = isSmallBerth ? '#451a03' : '#082f49';
+    if (!showLabel) {
+      const dotHtml = `
+        <div style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; cursor: pointer;" title="${port.name}">
+          <div style="
+            width: 11px;
+            height: 11px;
+            border-radius: 9999px;
+            background: ${bg};
+            border: 2px solid ${color};
+            box-shadow: 0 1px 4px rgba(0,0,0,0.8);
+          "></div>
+        </div>
+      `;
+      return L.divIcon({
+        className: 'bada-custom-marker',
+        html: dotHtml,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+    }
     const html = `
       <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
         <div style="
@@ -152,8 +172,8 @@ function getNavPortPinIcon(port: MarinePort): L.DivIcon {
           box-shadow: 0 2px 5px rgba(0,0,0,0.65);
         ">${shortName}</div>
         <div style="
-          width: 16px;
-          height: 16px;
+          width: 14px;
+          height: 14px;
           border-radius: 9999px;
           background: ${bg};
           border: 2.5px solid ${color};
@@ -164,8 +184,8 @@ function getNavPortPinIcon(port: MarinePort): L.DivIcon {
     return L.divIcon({
       className: 'bada-custom-marker',
       html,
-      iconSize: [44, 34],
-      iconAnchor: [22, 28],
+      iconSize: [44, 32],
+      iconAnchor: [22, 26],
     });
   });
 }
@@ -403,6 +423,7 @@ function MapClickHandler({
   onMapClickForReport,
   onMapClickForRoute,
   onUpdateWeatherCoords,
+  onZoomChange,
 }: {
   activeMainTab: 'notebook' | 'navigation';
   navSubTab: 'route' | 'weather';
@@ -412,8 +433,12 @@ function MapClickHandler({
   onMapClickForReport: (lat: number, lng: number) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
   onUpdateWeatherCoords: (lat: number, lng: number) => void;
+  onZoomChange: (zoom: number) => void;
 }) {
-  useMapEvents({
+  const map = useMapEvents({
+    zoomend() {
+      onZoomChange(map.getZoom());
+    },
     click(e) {
       const { lat, lng } = e.latlng;
       if (isReportPickMode) {
@@ -465,7 +490,7 @@ function MapCameraAndThumbControls({
 
   return (
     <div
-      className="fixed top-[10.5rem] right-3 z-[850] flex flex-col gap-2"
+      className="fixed top-[8.75rem] right-2.5 z-[850] flex flex-col gap-1.5 sm:top-[10.5rem] sm:right-3 sm:gap-2"
       aria-label="지도 확대·축소 및 GPS 위치 컨트롤"
     >
       <button
@@ -473,13 +498,13 @@ function MapCameraAndThumbControls({
         onClick={onRequestGps}
         aria-label="내 GPS 위치 찾기"
         title="실제 GPS 위치 조회"
-        className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 shadow-xl transition active:scale-95 ${
+        className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
           hasGps
             ? 'border-sky-300 bg-sky-500 text-slate-950'
             : 'border-slate-600 bg-[#0b192c]/95 text-sky-400'
         }`}
       >
-        <LocateFixed className="h-5 w-5 stroke-[2.4]" />
+        <LocateFixed className="h-4 w-4 stroke-[2.4] sm:h-5 sm:w-5" />
       </button>
 
       <button
@@ -487,10 +512,10 @@ function MapCameraAndThumbControls({
         onClick={onSimulateFieldGps}
         aria-label="통영·거제 해상 선박 GPS 시뮬레이션"
         title="통영·거제 해역 가상 선박 GPS 시뮬레이션"
-        className="flex h-11 w-11 flex-col items-center justify-center rounded-2xl border-2 border-amber-500/70 bg-[#0b192c]/95 text-amber-300 shadow-xl transition active:scale-95"
+        className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500/70 bg-[#0b192c]/95 text-amber-300 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
       >
-        <Compass className="h-4 w-4 stroke-[2.3]" />
-        <span className="text-[9px] leading-none font-black">현장GPS</span>
+        <Compass className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
+        <span className="text-[8px] leading-none font-black sm:text-[9px]">현장GPS</span>
       </button>
 
       <button
@@ -498,27 +523,27 @@ function MapCameraAndThumbControls({
         onClick={onResetBounds}
         aria-label="전체 해역 보기"
         title="통영·거제 전체 해역 보기"
-        className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-slate-600 bg-[#0b192c]/95 text-white shadow-xl transition active:scale-95"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 text-white shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
       >
-        <Maximize className="h-5 w-5 stroke-[2.3]" />
+        <Maximize className="h-4 w-4 stroke-[2.3] sm:h-5 sm:w-5" />
       </button>
 
-      <div className="flex flex-col overflow-hidden rounded-2xl border-2 border-slate-600 bg-[#0b192c]/95 shadow-xl">
+      <div className="flex flex-col overflow-hidden rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 shadow-xl sm:rounded-2xl">
         <button
           type="button"
           onClick={() => map.zoomIn()}
           aria-label="지도 확대"
-          className="flex h-11 w-11 items-center justify-center border-b border-slate-700 text-white active:bg-slate-800"
+          className="flex h-8 w-9 items-center justify-center border-b border-slate-700 text-white active:bg-slate-800 sm:h-11 sm:w-11"
         >
-          <Plus className="h-5 w-5 stroke-[2.6]" />
+          <Plus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
         </button>
         <button
           type="button"
           onClick={() => map.zoomOut()}
           aria-label="지도 축소"
-          className="flex h-11 w-11 items-center justify-center text-white active:bg-slate-800"
+          className="flex h-8 w-9 items-center justify-center text-white active:bg-slate-800 sm:h-11 sm:w-11"
         >
-          <Minus className="h-5 w-5 stroke-[2.6]" />
+          <Minus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
         </button>
       </div>
     </div>
@@ -555,8 +580,17 @@ export function MapView({
   onResetBounds,
 }: MapViewProps) {
   const gpsPulseIcon = useMemo(() => getGpsPulseIcon(), []);
+  const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
   const [geoJsonLayersData, setGeoJsonLayersData] = useState<Record<string, any>>({});
   const fetchedLayerIdsRef = useRef<Set<string>>(new Set());
+
+  const activeWaypointPortIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const wp of routeWaypoints) {
+      if (wp.matchedPortId) set.add(wp.matchedPortId);
+    }
+    return set;
+  }, [routeWaypoints]);
 
   // QGIS 공간정보 레이어 GeoJSON 1회 로드 (중복 요청 및 무한 재실행 방지)
   useEffect(() => {
@@ -639,6 +673,7 @@ export function MapView({
           onMapClickForReport={onMapClickForReport}
           onMapClickForRoute={onMapClickForRoute}
           onUpdateWeatherCoords={onUpdateWeatherCoords}
+          onZoomChange={setCurrentZoom}
         />
 
         {/* 1. QGIS 공간정보 레이어 (국립공원 경계, 특별보호구역) */}
@@ -701,19 +736,21 @@ export function MapView({
         {/* 4. [3.2 바닷길 콕콕 - 시간계산기] 소규모 선착장·항구 핀 + 경로 연결선 + 소요시간 배지 + 드래그 마커 */}
         {activeMainTab === 'navigation' && navSubTab === 'route' && (
           <>
-            {/* 지도 위 소규모 선착장 및 정규 항포구 빠른 탭 마커 */}
+            {/* 지도 위 소규모 선착장 및 정규 항포구 빠른 탭 마커 (이미 출발/경유/도착으로 선택된 항구는 중복 표시 제외) */}
             {showPortMarkersOnMap &&
-              portsList.map((port) => (
-                <Marker
-                  key={`nav-port-${port.id}`}
-                  position={[port.lat, port.lng]}
-                  icon={getNavPortPinIcon(port)}
-                  zIndexOffset={150}
-                  eventHandlers={{
-                    click: () => onMapClickForRoute(port.lat, port.lng),
-                  }}
-                />
-              ))}
+              portsList
+                .filter((port) => !activeWaypointPortIds.has(port.id))
+                .map((port) => (
+                  <Marker
+                    key={`nav-port-${port.id}`}
+                    position={[port.lat, port.lng]}
+                    icon={getNavPortPinIcon(port, currentZoom >= 13)}
+                    zIndexOffset={150}
+                    eventHandlers={{
+                      click: () => onMapClickForRoute(port.lat, port.lng),
+                    }}
+                  />
+                ))}
 
             {directPolylinePositions.length >= 2 && (
               <Polyline

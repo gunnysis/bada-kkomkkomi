@@ -58,79 +58,79 @@ export function MarineWeatherPanel({
 
   return (
     <section
-      className="pointer-events-auto w-full rounded-3xl border-2 border-slate-600/95 bg-[#0b192c]/95 p-3.5 text-white shadow-2xl backdrop-blur-md"
+      className="pointer-events-auto flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-slate-600/95 bg-[#0b192c]/95 p-2.5 text-white shadow-2xl backdrop-blur-md sm:p-3.5"
       aria-label="해상기상 상태판정 패널"
     >
       {/* 상단 기상 판정 결과 헤더 */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black tracking-wider text-sky-400 uppercase">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black tracking-wider text-sky-400 uppercase">
               해상기상 3단계 판정
             </span>
-            <span className="font-mono text-[11px] font-bold text-slate-400">
+            <span className="font-mono text-[10px] font-bold text-slate-400">
               ({weather.lat.toFixed(3)}°N, {weather.lng.toFixed(3)}°E)
             </span>
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-2">
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
             <span
-              className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-black text-white shadow"
+              className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-[10px] font-black text-white shadow"
               style={{ backgroundColor: gradeMeta.color }}
             >
               {current?.grade === 'unknown' || !current ? '?' : ''}
             </span>
-            <span className="text-2xl leading-none font-black tracking-tight text-white sm:text-3xl">
+            <span className="text-xl leading-none font-black tracking-tight text-white sm:text-2xl">
               {weather.isLoading ? '예보 조회 중...' : gradeMeta.label}
             </span>
             {current && (
               <span
-                className={`rounded-lg px-2 py-0.5 text-xs font-extrabold ${gradeMeta.pillClass}`}
+                className={`rounded-md px-1.5 py-0.5 text-[11px] font-extrabold ${gradeMeta.pillClass}`}
               >
                 {current.displayTime}
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs font-bold text-slate-300">{gradeMeta.desc}</p>
+          <p className="mt-0.5 truncate text-[11px] font-bold text-slate-300">{gradeMeta.desc}</p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={onRefresh}
             aria-label="기상 정보 새로고침"
             title="기상 예보 다시 불러오기"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-300 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-300 active:scale-95 sm:h-9 sm:w-9"
           >
-            <RefreshCw className={`h-4 w-4 ${weather.isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${weather.isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             type="button"
             onClick={onOpenSettings}
             aria-label="기준값 설정"
             title="풍속·파고 판정 기준치 설정"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-sky-400 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-sky-400 active:scale-95 sm:h-9 sm:w-9"
           >
-            <SlidersHorizontal className="h-4 w-4" />
+            <SlidersHorizontal className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={() => setIsCollapsed((v) => !v)}
             aria-label={isCollapsed ? '기상 패널 펼치기' : '기상 패널 접기'}
-            className="flex h-10 items-center gap-1 rounded-xl border border-sky-400/60 bg-sky-500/20 px-2.5 text-xs font-black text-sky-300 active:scale-95"
+            className="flex h-8 items-center gap-0.5 rounded-xl border border-sky-400/60 bg-sky-500/20 px-2 text-xs font-black text-sky-300 active:scale-95 sm:h-9 sm:px-2.5"
           >
             <span>{isCollapsed ? '펼치기' : '접기'}</span>
             {isCollapsed ? (
-              <ChevronUp className="h-4 w-4" />
+              <ChevronUp className="h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-3.5 w-3.5" />
             )}
           </button>
         </div>
       </div>
 
       {!isCollapsed && (
-        <div className="mt-3 space-y-3 border-t border-slate-700/80 pt-3">
+        <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto border-t border-slate-700/80 pt-2 pr-0.5">
           {/* 조회 실패 / 자료 없음 경고 배너 */}
           {weather.error && (
             <div

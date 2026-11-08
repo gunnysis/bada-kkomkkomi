@@ -103,10 +103,10 @@ flowchart TD
 
 | 번호 | 분류 | 근본 원인 (Root Cause) | 해결 및 재발 방지 조치 |
 | :--- | :--- | :--- | :--- |
-| **1** | **UX/UI 뷰포트 & Zero-Clipping** | 360px 모바일 화면에서 하단 패널과 우측 줌 컨트롤이 겹치거나 긴 항구명·수심 배지가 잘리는 현상 | 우측 컨트롤을 `top-[10.5rem] right-3` 독으로 분리하고, 모든 플렉스 자식에 `min-w-0`, 숫자 지표에 `tabular-nums`, 하단 패널 `접기/펼치기` 토글 적용 |
+| **1** | **UX/UI 모바일 레이아웃 간섭 제로 (`Zero-Overlap HUD`)** | 360px 모바일 화면에서 하단 패널(`RouteTimeCalculator`)이 확장될 때 상단 고정 `<header>`, 우측 지도 컨트롤(`MapCameraAndThumbControls`), 하단 `Leaflet` 출처 배지와 겹치거나 줌 11에서 135개 선착장 라벨이 겹치는 현상 | ① 상단 `<header>`(`~134px`), 우측 컨트롤(`top-[8.75rem]`, `h-9 w-9`), 하단 `<aside>`(`bottom-4`, `max-h-[calc(100dvh-10.5rem-...)]` 및 내부 스크롤 `overflow-y-auto`), 하단 다크 `.leaflet-control-attribution`을 수직 대역별로 분리하고, ② `zoom < 13`에서는 135개 항포구·선착장을 컬러 도트로, `zoom >= 13`에서만 이름 라벨을 표시하며 활성 경로 마커와 중복 핀을 자동 제외 |
 | **2** | **해상 항로 육지 관통 해결** | 기존 단순 Haversine 직선 연결 시 통영 당동항~삼덕항, 거제 저구항~장승포항 구간 등이 미륵도·거제도 육지를 가로지름 | 방파제 외측 진입점(`seaApproach`) + 35개 해상 변침점(`waypoints`) 기반 A* 최단 바닷길 우회 알고리즘 및 실항로/직선 이중 폴리라인 렌더링 도입 |
 | **3** | **동일 도서 인접 항구 과도 우회 방지** | 같은 섬(욕지도, 추도, 사량도 등) 내 인접 항구 이동 시 외해 변침점까지 나갔다 들어오며 우회 계수가 커지는 현상 | 공유 변침점 및 동일 도서(`islandName`)/읍면동(`eupmyeondong`) `6.0km` 이내 구간은 연안 직접 진입(`연안 직접 진입`)으로 분기 처리 |
-| **4** | **소규모 선착장 접안 안전성 시각화** | 소규모 선착장(슬립웨이·물양장·간조 노출 암초) 선택 시 수심 및 조석 위험도를 한눈에 알기 어려움 | `PortSelectModal` 및 `RouteTimeCalculator`에 시설유형(`부잔교`, `슬립웨이`), 최저수심(`m`), 최대 접안 톤수(`≤Xt`), 위험요소(`⚠️`) 배지 실시간 표출 |
+| **4** | **소규모 선착장 접안 안전성 시각화** | 소규모 선착장(슬립웨이·물양장·간조 노출 암초) 선택 시 수심 및 조석 위험도를 한눈에 알기 어려움 | `PortSelectModal` 및 `RouteTimeCalculator`에 시설유형(`부잔교`, `슬립웨이`), 최저수심(`m`), 최대 접안 톤수(`≤Xt`), 위험요소(`⚠️`) 최우선 표출로 텍스트 잘림 원천 차단 |
 | **5** | **기상 판정 안전 & KST 시간대** | 연안 격자에서 `wave_height: null` 반환 시 풍속만으로 `'좋음'` 판정하거나 UTC 기준 시각 비교로 9시간 오차 발생 | 결측 시 `'unknown'`(`판정불가 ?`) 반환 및 `Date.now() + 9 * 3600_000` 기반 `getKstCurrentHourPrefix()` 도입 |
 | **6** | **Leaflet 60fps & React 19 린트** | 렌더링마다 `L.divIcon()` 재생성 및 `useEffect` 내 동기 `setState` 경고 | 모듈 레벨 `iconCache` (`Map<string, L.DivIcon>`) 캐싱 및 지연 초기화 적용으로 `oxlint` 116개 규칙 `0 warnings, 0 errors` 달성 |
 | **7** | **DevOps / Git Credential 샌드박스 트러블슈팅** | 컨테이너 환경에서 `/opt/antigravity/bin/gh` 실행 시 `tar`의 `utime` 권한 오류로 `gh` 바이너리 압축 해제가 중단됨 | `tar --no-same-owner --no-same-permissions -m` 옵션으로 `~/.local/bin/gh`에 설치 및 `~/.local/bin/gh-cred-helper` 래퍼 구성으로 `git credential fill` 정상 동작 보장 |

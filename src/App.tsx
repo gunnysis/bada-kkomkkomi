@@ -567,24 +567,24 @@ export function App() {
     <div className="relative h-dvh w-full overflow-hidden bg-[#0b192c] text-white select-none">
       {/* 상단 고정 HUD 헤더 */}
       <header
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1.5 p-2.5 sm:p-3"
-        style={{ paddingTop: 'calc(var(--safe-top) + 0.5rem)' }}
+        className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3"
+        style={{ paddingTop: 'calc(var(--safe-top) + 0.375rem)' }}
       >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-3 py-2 shadow-2xl backdrop-blur-md">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-2.5 py-1.5 shadow-2xl backdrop-blur-md sm:px-3 sm:py-2">
           <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow">
-              <Anchor className="h-5 w-5 stroke-[2.6]" aria-hidden="true" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow sm:h-9 sm:w-9">
+              <Anchor className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="truncate text-base leading-none font-black tracking-tight text-white">
+                <h1 className="truncate text-sm leading-none font-black tracking-tight text-white sm:text-base">
                   바다꼼꼬미
                 </h1>
                 <span className="shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
                   v1.0
                 </span>
               </div>
-              <p className="mt-0.5 truncate text-[11px] font-bold tabular-nums text-slate-300">
+              <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-slate-300 sm:text-[11px]">
                 {activeMainTab === 'notebook'
                   ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개 접안·선착장)`
                   : `3.2 바닷길 콕콕 (항포구·선착장 ${portsList.length}개소)`}
@@ -592,12 +592,12 @@ export function App() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             {!isStandalone && (
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="flex h-9 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2.5 text-xs font-black text-slate-950 shadow-md transition active:scale-95"
+                className="flex h-8 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2 text-[11px] font-black text-slate-950 shadow-md transition active:scale-95 sm:h-9 sm:px-2.5 sm:text-xs"
                 title="앱 설치"
               >
                 <Download className="h-3.5 w-3.5 stroke-[2.8]" />
@@ -607,7 +607,7 @@ export function App() {
 
             <div
               role="status"
-              className={`flex h-9 items-center gap-1 rounded-xl border px-2 text-xs font-extrabold ${
+              className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-extrabold sm:h-9 ${
                 isOnline
                   ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300'
                   : 'border-amber-400 bg-amber-950/95 text-amber-200'
@@ -625,9 +625,9 @@ export function App() {
               type="button"
               onClick={handleManualReload}
               aria-label="데이터 새로고침"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95 sm:h-9 sm:w-9"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
@@ -641,13 +641,13 @@ export function App() {
               setIsPorpoiseAddMode(false);
               setIsReportPickMode(false);
             }}
-            className={`flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 py-1.5 text-xs font-black shadow-lg transition active:scale-95 ${
+            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
               activeMainTab === 'notebook'
                 ? 'border-sky-400 bg-sky-500 text-slate-950'
                 : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
             }`}
           >
-            <Anchor className="h-4 w-4" />
+            <Anchor className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>꼬미의 바다수첩</span>
           </button>
 
@@ -658,13 +658,13 @@ export function App() {
               setIsPorpoiseAddMode(false);
               setIsReportPickMode(false);
             }}
-            className={`flex min-h-10 items-center justify-center gap-1.5 rounded-xl border-2 py-1.5 text-xs font-black shadow-lg transition active:scale-95 ${
+            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
               activeMainTab === 'navigation'
                 ? 'border-sky-400 bg-sky-500 text-slate-950'
                 : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
             }`}
           >
-            <Navigation className="h-4 w-4" />
+            <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>바닷길 콕콕</span>
           </button>
         </div>
@@ -675,7 +675,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setIsLayerModalOpen(true)}
-              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-3 py-1 text-xs font-black text-emerald-300 shadow active:scale-95"
+              className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-2.5 py-1 text-[11px] font-black text-emerald-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
             >
               <Layers className="h-3.5 w-3.5" />
               <span>공간 레이어</span>
@@ -687,7 +687,7 @@ export function App() {
                 setReportTargetFeature(null);
                 setIsReportModalOpen(true);
               }}
-              className="flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-3 py-1 text-xs font-black text-amber-300 shadow active:scale-95"
+              className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-2.5 py-1 text-[11px] font-black text-amber-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
             >
               <Mail className="h-3.5 w-3.5" />
               <span>현장 제보</span>
@@ -703,7 +703,7 @@ export function App() {
                   showToast('지도에서 상괭이를 목격한 위치를 탭하세요 🐬');
                 }
               }}
-              className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-3 py-1 text-xs font-black shadow active:scale-95 ${
+              className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-[11px] font-black shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
                 isPorpoiseAddMode
                   ? 'border-teal-300 bg-teal-400 text-slate-950 animate-pulse'
                   : 'border-teal-500/80 bg-teal-950/90 text-teal-300'
@@ -718,7 +718,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setSelectedColor('all')}
-              className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-3 py-1 text-xs font-black tabular-nums shadow active:scale-95 ${
+              className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-[11px] font-black tabular-nums shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
                 selectedColor === 'all'
                   ? 'border-white bg-sky-400 text-slate-950'
                   : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
@@ -738,7 +738,7 @@ export function App() {
                   key={colorKey}
                   type="button"
                   onClick={() => setSelectedColor(isActive ? 'all' : colorKey)}
-                  className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-xs font-extrabold tabular-nums shadow active:scale-95 ${
+                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-[11px] font-extrabold tabular-nums shadow active:scale-95 sm:min-h-9 sm:text-xs ${
                     isActive
                       ? 'border-white bg-slate-100 text-slate-950'
                       : 'border-slate-600/90 bg-[#0b192c]/95 text-slate-100'
@@ -762,7 +762,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setNavSubTab('route')}
-              className={`flex min-h-9 items-center justify-center rounded-xl border-2 py-1 text-xs font-black transition active:scale-95 ${
+              className={`flex min-h-8 items-center justify-center rounded-xl border-2 py-1 text-[11px] font-black transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'route'
                   ? 'border-amber-400 bg-amber-400/20 text-amber-300'
                   : 'border-slate-700 bg-slate-900/90 text-slate-400'
@@ -773,7 +773,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setNavSubTab('weather')}
-              className={`flex min-h-9 items-center justify-center rounded-xl border-2 py-1 text-xs font-black transition active:scale-95 ${
+              className={`flex min-h-8 items-center justify-center rounded-xl border-2 py-1 text-[11px] font-black transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'weather'
                   ? 'border-amber-400 bg-amber-400/20 text-amber-300'
                   : 'border-slate-700 bg-slate-900/90 text-slate-400'
@@ -788,9 +788,9 @@ export function App() {
         {(gpsStatusMsg || isReportPickMode) && (
           <div
             role="status"
-            className="pointer-events-auto mx-auto flex items-center gap-2 rounded-xl border border-sky-400/80 bg-slate-950/95 px-3.5 py-1.5 text-xs font-extrabold text-sky-200 shadow-xl"
+            className="pointer-events-auto mx-auto flex items-center gap-1.5 rounded-xl border border-sky-400/80 bg-slate-950/95 px-3 py-1 text-[11px] font-extrabold text-sky-200 shadow-xl sm:text-xs"
           >
-            <ShieldCheck className="h-4 w-4 shrink-0 text-sky-400" />
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-sky-400" />
             <span>
               {isReportPickMode
                 ? '지도에서 제보할 위치를 직접 탭하세요 📍'
@@ -858,14 +858,14 @@ export function App() {
         onResetBounds={handleResetBounds}
       />
 
-      {/* 3.1 꼬미의 바다수첩: 하단 빠른 접안지 선택 바 (전체 폭 활용 & 레이어 가시성 연동) */}
+      {/* 3.1 꼬미의 바다수첩: 하단 빠른 접안지 선택 바 (하단 Leaflet 출처 배지 위 16px 여유 확보) */}
       {activeMainTab === 'notebook' && isDockingLayerVisible && (
         <aside
           aria-label="접안 포인트 빠른 선택 목록"
-          className="pointer-events-none fixed inset-x-3 bottom-3 z-[900] mx-auto max-w-2xl"
+          className="pointer-events-none fixed inset-x-2.5 bottom-4 z-[900] mx-auto max-w-2xl sm:inset-x-3"
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
-          <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1">
+          <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {filteredFeatures.map((feature) => {
               const meta = MARKER_COLOR_MAP[feature.properties.color] ?? MARKER_COLOR_MAP.blue;
               const isSelected = selectedFeature?.properties.id === feature.properties.id;
@@ -878,7 +878,7 @@ export function App() {
                     const [lng, lat] = feature.geometry.coordinates;
                     handleFlyToPoint(lat, lng, 14);
                   }}
-                  className={`flex min-h-12 shrink-0 flex-col justify-center rounded-2xl border-2 px-3.5 py-1.5 text-left shadow-xl backdrop-blur-md transition active:scale-95 ${
+                  className={`flex min-h-11 shrink-0 flex-col justify-center rounded-2xl border-2 px-3 py-1 text-left shadow-xl backdrop-blur-md transition active:scale-95 sm:min-h-12 sm:px-3.5 sm:py-1.5 ${
                     isSelected
                       ? 'border-white bg-sky-950/95'
                       : 'border-slate-600/90 bg-[#0b192c]/95'
@@ -906,10 +906,10 @@ export function App() {
         </aside>
       )}
 
-      {/* 3.2 바닷길 콕콕: 하단 전체폭 패널 (우측 컨트롤과 충돌 제로) */}
+      {/* 3.2 바닷길 콕콕: 하단 전체폭 패널 (상단 HUD·우측 컨트롤·하단 Leaflet 출처와 충돌 제로) */}
       {activeMainTab === 'navigation' && (
         <aside
-          className="pointer-events-none fixed inset-x-3 bottom-3 z-[900] mx-auto max-w-xl"
+          className="pointer-events-none fixed inset-x-2.5 bottom-4 z-[900] mx-auto max-w-xl sm:inset-x-3"
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
           {navSubTab === 'route' ? (

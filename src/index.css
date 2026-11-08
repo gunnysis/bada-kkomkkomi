@@ -51,6 +51,37 @@
   filter: contrast(1.06) saturate(1.08);
 }
 
+/* 하단 우측 Leaflet 출처 배지: 하단 플로팅 패널과 겹치지 않는 초슬림 다크 테마 */
+.leaflet-control-attribution {
+  background: rgba(11, 25, 44, 0.78) !important;
+  color: #94a3b8 !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+  padding: 1px 6px !important;
+  border-top-left-radius: 6px;
+  backdrop-filter: blur(4px);
+  z-index: 400 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #38bdf8 !important;
+  text-decoration: none;
+}
+
+.leaflet-control-attribution svg {
+  height: 8px !important;
+  width: auto !important;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* 커스텀 마커: 장갑 착용 시에도 최소 52x52px 터치 영역 보장 */
 .bada-custom-marker {
   background: transparent !important;

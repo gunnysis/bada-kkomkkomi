@@ -6,7 +6,13 @@
 - **라이브 배포 URL (GitHub Pages)**: https://gunnysis.github.io/bada-kkomkkomi/
 - **GitHub 저장소**: https://github.com/gunnysis/bada-kkomkkomi
 - **비개발자 운영자 매뉴얼**: [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)
-- **아키텍처·구현 설계·트러블슈팅 문서**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
+- **아키텍처·구현 설계·트러블슈팅 정본**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
+- **항포구·소규모 선착장 팩트체크 및 연구 보고서**:
+  - [`docs/factcheck_and_data_analysis.md`](./docs/factcheck_and_data_analysis.md) (통영·거제 81개 정규 어항 전수 검증)
+  - [`docs/small_berths_factcheck_analysis.md`](./docs/small_berths_factcheck_analysis.md) (통영·거제 50개 소규모 선착장·접안시설 팩트체크)
+  - [`docs/architecture_and_algorithm_review.md`](./docs/architecture_and_algorithm_review.md) (해상 변침점 A* 우회 및 초성 검색 알고리즘 설계)
+  - [`docs/app_design_ux_research.md`](./docs/app_design_ux_research.md) (해양 전자해도 UX/UI 및 Zero-Clipping 설계 연구)
+  - [`docs/ux_qa_troubleshooting_report.md`](./docs/ux_qa_troubleshooting_report.md) (QA/QC 전수 점검 및 트러블슈팅 리포트)
 
 ---
 
