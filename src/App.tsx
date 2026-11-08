@@ -32,7 +32,7 @@ import type {
 } from './types/docking';
 import { ALL_MARKER_COLORS, MARKER_COLOR_MAP } from './types/docking';
 import type { PorpoiseRecord } from './types/porpoise';
-import type { MarinePort, PortsDataset } from './types/port';
+import type { MarinePort, MarineWaypointNode, PortsDataset } from './types/port';
 import type { RouteWaypoint } from './types/route';
 
 import { useAppConfig } from './hooks/useAppConfig';
@@ -59,6 +59,12 @@ const INITIAL_WAYPOINTS: RouteWaypoint[] = [
     type: 'start',
     matchedPortId: 'TY-001',
     isCustomCoord: false,
+    subCategory: 'official_docking',
+    facilityLabel: '물양장 안벽',
+    minDepthMeters: 1.4,
+    tidalSensitivity: 'HIGH',
+    maxVesselTons: 15,
+    hazards: ['수중 폐로프 주의', '대조기 간조 수심 1.4m 주의'],
   },
   {
     id: 'wp_end',
@@ -68,6 +74,12 @@ const INITIAL_WAYPOINTS: RouteWaypoint[] = [
     type: 'end',
     matchedPortId: 'TY-002',
     isCustomCoord: false,
+    subCategory: 'official_docking',
+    facilityLabel: '부잔교(폰툰)',
+    minDepthMeters: 3.8,
+    tidalSensitivity: 'LOW',
+    maxVesselTons: 25,
+    hazards: ['여객선 항주파 주의', '창조류 유속 1.8kt'],
   },
 ];
 
@@ -84,10 +96,12 @@ export function App() {
   const [activeMainTab, setActiveMainTab] = useState<'notebook' | 'navigation'>('notebook');
   const [navSubTab, setNavSubTab] = useState<'route' | 'weather'>('route');
 
-  // 2. 정적 데이터 (접안 포인트 GeoJSON + 주요 항포구 JSON)
+  // 2. 정적 데이터 (접안 포인트 GeoJSON + 주요 항포구·소규모 선착장·변침점 JSON)
   const [collection, setCollection] = useState<DockingFeatureCollection | null>(null);
   const [portsList, setPortsList] = useState<MarinePort[]>([]);
+  const [marineWaypoints, setMarineWaypoints] = useState<MarineWaypointNode[]>([]);
   const [snapRadiusMeters, setSnapRadiusMeters] = useState<number>(500);
+  const [showPortMarkersOnMap, setShowPortMarkersOnMap] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
@@ -180,7 +194,7 @@ export function App() {
     };
   }, []);
 
-  // 정적 GeoJSON 및 항포구(ports.json) 비동기 로드 (Effect 내 동기 setState 제거)
+  // 정적 GeoJSON 및 항포구·소규모 선착장(ports.json) 비동기 로드
   useEffect(() => {
     const controller = new AbortController();
     const base = import.meta.env.BASE_URL;
@@ -211,6 +225,9 @@ export function App() {
           const portsData = (await portsRes.json()) as PortsDataset;
           if (Array.isArray(portsData.ports)) {
             setPortsList(portsData.ports);
+          }
+          if (Array.isArray(portsData.waypoints)) {
+            setMarineWaypoints(portsData.waypoints);
           }
           if (typeof portsData.snap_radius_meters === 'number') {
             setSnapRadiusMeters(portsData.snap_radius_meters);
@@ -249,10 +266,10 @@ export function App() {
     [layers],
   );
 
-  // 항해 경로 연산 결과
+  // 항해 경로 연산 결과 (해상 변침점 A* 우회 및 소규모 선착장 수심/위험도 반영)
   const routeCalculation = useMemo(() => {
-    return calculateRouteSummary(routeWaypoints, speedKnots);
-  }, [routeWaypoints, speedKnots]);
+    return calculateRouteSummary(routeWaypoints, speedKnots, portsList, marineWaypoints);
+  }, [routeWaypoints, speedKnots, portsList, marineWaypoints]);
 
   // GPS 위치 요청
   const handleRequestGps = useCallback(() => {
@@ -333,7 +350,7 @@ export function App() {
     }
   };
 
-  // [3.2.C 바닷길 시간계산기] 핀 드래그 시 항구 500m 스냅 및 해상 좌표 실시간 동기화
+  // [3.2.C 바닷길 시간계산기] 핀 드래그 시 항구/소규모 선착장 500m 스냅 및 해상 좌표 실시간 동기화
   const handleUpdateWaypointPos = useCallback(
     (id: string, lat: number, lng: number) => {
       setRouteWaypoints((prev) =>
@@ -349,7 +366,7 @@ export function App() {
             snapRadiusMeters,
           );
           if (resolved.matchedPortId) {
-            showToast(`항구 자동 스냅: ${resolved.name}`);
+            showToast(`자동 스냅: ${resolved.name}`);
           }
           return {
             ...wp,
@@ -358,6 +375,12 @@ export function App() {
             lng: resolved.lng,
             matchedPortId: resolved.matchedPortId,
             isCustomCoord: resolved.isCustomCoord,
+            subCategory: resolved.subCategory,
+            facilityLabel: resolved.facilityLabel,
+            minDepthMeters: resolved.minDepthMeters,
+            tidalSensitivity: resolved.tidalSensitivity,
+            maxVesselTons: resolved.maxVesselTons,
+            hazards: resolved.hazards,
           };
         }),
       );
@@ -395,6 +418,12 @@ export function App() {
         type: 'waypoint',
         matchedPortId: resolved.matchedPortId,
         isCustomCoord: resolved.isCustomCoord,
+        subCategory: resolved.subCategory,
+        facilityLabel: resolved.facilityLabel,
+        minDepthMeters: resolved.minDepthMeters,
+        tidalSensitivity: resolved.tidalSensitivity,
+        maxVesselTons: resolved.maxVesselTons,
+        hazards: resolved.hazards,
       };
       setRouteWaypoints((prev) => {
         const next = [...prev];
@@ -429,6 +458,12 @@ export function App() {
       type: 'waypoint',
       matchedPortId: resolved.matchedPortId,
       isCustomCoord: resolved.isCustomCoord,
+      subCategory: resolved.subCategory,
+      facilityLabel: resolved.facilityLabel,
+      minDepthMeters: resolved.minDepthMeters,
+      tidalSensitivity: resolved.tidalSensitivity,
+      maxVesselTons: resolved.maxVesselTons,
+      hazards: resolved.hazards,
     };
 
     setRouteWaypoints((prev) => {
@@ -459,7 +494,7 @@ export function App() {
     showToast('기본 항로(당동항 → 제승당)로 복원되었습니다.');
   }, [showToast]);
 
-  // 항구 선택 모달에서 항구 선택 시 반영
+  // 항구 선택 모달에서 항구·소규모 선착장 선택 시 반영
   const handleSelectPortForWaypoint = useCallback(
     (port: MarinePort) => {
       if (!portSelectorTarget) return;
@@ -473,6 +508,12 @@ export function App() {
                 lng: port.lng,
                 matchedPortId: port.id,
                 isCustomCoord: false,
+                subCategory: port.subCategory,
+                facilityLabel: port.facilityLabel,
+                minDepthMeters: port.minDepthMeters,
+                tidalSensitivity: port.tidalSensitivity,
+                maxVesselTons: port.maxVesselTons,
+                hazards: port.hazards,
               }
             : wp,
         ),
@@ -501,6 +542,12 @@ export function App() {
               lng,
               matchedPortId: undefined,
               isCustomCoord: true,
+              subCategory: undefined,
+              facilityLabel: undefined,
+              minDepthMeters: undefined,
+              tidalSensitivity: undefined,
+              maxVesselTons: undefined,
+              hazards: undefined,
             }
           : wp,
       ),
@@ -524,28 +571,28 @@ export function App() {
         style={{ paddingTop: 'calc(var(--safe-top) + 0.5rem)' }}
       >
         <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-3 py-2 shadow-2xl backdrop-blur-md">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow">
               <Anchor className="h-5 w-5 stroke-[2.6]" aria-hidden="true" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base leading-none font-black tracking-tight text-white">
+                <h1 className="truncate text-base leading-none font-black tracking-tight text-white">
                   바다꼼꼬미
                 </h1>
-                <span className="rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
-                  Beta 0.3
+                <span className="shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
+                  v1.0
                 </span>
               </div>
-              <p className="mt-0.5 text-[11px] font-bold text-slate-300">
+              <p className="mt-0.5 truncate text-[11px] font-bold tabular-nums text-slate-300">
                 {activeMainTab === 'notebook'
-                  ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개소)`
-                  : '3.2 바닷길 콕콕 (시간·기상)'}
+                  ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개 접안·선착장)`
+                  : `3.2 바닷길 콕콕 (항포구·선착장 ${portsList.length}개소)`}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             {!isStandalone && (
               <button
                 type="button"
@@ -671,7 +718,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setSelectedColor('all')}
-              className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-3 py-1 text-xs font-black shadow active:scale-95 ${
+              className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-3 py-1 text-xs font-black tabular-nums shadow active:scale-95 ${
                 selectedColor === 'all'
                   ? 'border-white bg-sky-400 text-slate-950'
                   : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
@@ -691,7 +738,7 @@ export function App() {
                   key={colorKey}
                   type="button"
                   onClick={() => setSelectedColor(isActive ? 'all' : colorKey)}
-                  className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-xs font-extrabold shadow active:scale-95 ${
+                  className={`flex min-h-9 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-xs font-extrabold tabular-nums shadow active:scale-95 ${
                     isActive
                       ? 'border-white bg-slate-100 text-slate-950'
                       : 'border-slate-600/90 bg-[#0b192c]/95 text-slate-100'
@@ -721,7 +768,7 @@ export function App() {
                   : 'border-slate-700 bg-slate-900/90 text-slate-400'
               }`}
             >
-              시간계산 (이동 소요시간)
+              시간계산 (실항로·소규모 선착장)
             </button>
             <button
               type="button"
@@ -797,6 +844,8 @@ export function App() {
         }}
         routeWaypoints={routeWaypoints}
         routeLegs={routeCalculation.legs}
+        portsList={portsList}
+        showPortMarkersOnMap={showPortMarkersOnMap}
         onUpdateWaypointPos={handleUpdateWaypointPos}
         onMapClickForRoute={handleMapClickForRoute}
         weatherCoords={{ lat: marineWeather.lat, lng: marineWeather.lng }}
@@ -879,6 +928,9 @@ export function App() {
               onChangeSpeed={setSpeedKnots}
               onResetRoute={handleResetRoute}
               onFlyToWaypoint={(lat, lng) => handleFlyToPoint(lat, lng, 13)}
+              showPortMarkersOnMap={showPortMarkersOnMap}
+              onTogglePortMarkersOnMap={() => setShowPortMarkersOnMap((v) => !v)}
+              totalPortsCount={portsList.length}
             />
           ) : (
             <MarineWeatherPanel

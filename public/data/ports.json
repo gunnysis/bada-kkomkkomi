@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0-beta",
+  "version": "1.0.0",
   "snap_radius_meters": 500,
   "ports": [
     {
@@ -7,126 +7,4767 @@
       "name": "통영 당동항 보조물양장",
       "region": "통영",
       "category": "docking",
+      "subCategory": "official_docking",
       "lat": 34.8378,
       "lng": 128.4278,
-      "description": "해양조사선 정기 채수 및 관측장비 하역 (수중 폐로프 주의)"
+      "seaApproachLat": 34.834,
+      "seaApproachLng": 128.4285,
+      "description": "해양조사선 정기 채수 및 관측장비 하역 (대조기 간조 수심 1.4m·수중 폐로프 주의)",
+      "aliases": [
+        "당동항",
+        "통영해양조사선부두",
+        "당동보조물양장"
+      ],
+      "eupmyeondong": "당동",
+      "islandName": null,
+      "portClassLabel": "공식 조사선 접안지(물양장)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.4,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 20,
+      "hazards": [
+        "물양장 남단 수중 폐로프 및 노출 암초 존재 — 우현 접안 시 프로펠러 감김 절대 주의",
+        "대조기 간조 시 수심 1.4m 주의 (만조 전후 2시간 접안 권장)"
+      ],
+      "connectedWaypointIds": [
+        "WP-TY-CANAL-E",
+        "WP-TY-BAY"
+      ],
+      "parentPortId": "KR-GN-TY-0001"
     },
     {
       "id": "TY-002",
       "name": "한산도 제승당 부잔교",
       "region": "통영",
       "category": "docking",
+      "subCategory": "official_docking",
       "lat": 34.7735,
       "lng": 128.4621,
-      "description": "상시 접안 가능 폰툰 · 여객선 항주파 주의"
+      "seaApproachLat": 34.7785,
+      "seaApproachLng": 128.459,
+      "description": "상시 접안 가능 폰툰 · 도서지역 긴급 방제자재 보급 및 인력 승하선 (여객선 항주파 주의)",
+      "aliases": [
+        "제승당항",
+        "한산제승당선착장",
+        "제승당폰툰"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "한산도",
+      "portClassLabel": "공식 조사선 접안지(부잔교)",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 3.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "여객선 입출항 시간대(매시 15분·45분) 항주파 심함 — 계류색 2중 결속 필수",
+        "창조류 유속 1.8kt 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N",
+        "WP-MIREUK-E"
+      ],
+      "parentPortId": "KR-GN-TY-0023"
     },
     {
       "id": "GJ-001",
       "name": "거제 저구항 남단 선착장",
       "region": "거제",
       "category": "docking",
+      "subCategory": "official_docking",
       "lat": 34.8012,
       "lng": 128.5914,
-      "description": "소형 단정(RIB) 양륙 슬립웨이 · 양식장 부표줄 주의"
+      "seaApproachLat": 34.7995,
+      "seaApproachLng": 128.5855,
+      "description": "적조 예찰 드론 운용 및 소형 단정(RIB) 양륙 슬립웨이 · 양식장 부표줄 주의",
+      "aliases": [
+        "저구항선착장",
+        "저구남단슬립웨이"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "공식 조사선 접안지(슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.9,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "선착장 진입항로 좌측 80m 지점 패류 양식장 부표줄 밀집 — 야간·해무 시 시인성 불량",
+        "간조 시 슬립웨이 하단 청태 매우 미끄러움"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE",
+        "WP-MAEMUL-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0013"
     },
     {
       "id": "GJ-002",
       "name": "거제 장승포 외항 관공선부두",
       "region": "거제",
       "category": "docking",
+      "subCategory": "official_docking",
       "lat": 34.8645,
       "lng": 128.7265,
-      "description": "수심 5.2m 이상 · 50톤급 작업선 안전 접안"
+      "seaApproachLat": 34.859,
+      "seaApproachLng": 128.735,
+      "description": "수심 5.2m 이상 · 50톤급 작업선 안전 접안 및 해양기상 부이 크레인 작업",
+      "aliases": [
+        "장승포관공선부두",
+        "장승포외항부두"
+      ],
+      "eupmyeondong": "장승포동",
+      "islandName": null,
+      "portClassLabel": "공식 조사선 전용부두",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 5.2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "동풍 계열 강풍(12m/s 이상) 시 방파제 월파 비산 주의",
+        "안벽 방충재(Fender) 일부 파손(3번 비트 인근)"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGSEUNGPO-E",
+        "WP-JISEPO-E"
+      ],
+      "parentPortId": "KR-GN-GJ-0001"
     },
     {
-      "id": "PORT-TY-01",
-      "name": "통영항 여객선터미널(강구안)",
+      "id": "KR-GN-TY-0001",
+      "name": "통영항",
       "region": "통영",
       "category": "port",
-      "lat": 34.8412,
+      "subCategory": "port",
+      "lat": 34.8394,
+      "lng": 128.4203,
+      "seaApproachLat": 34.834,
+      "seaApproachLng": 128.4235,
+      "description": "[무역/연안항] 통영 항남동 서호동 · 기상악화 대피 가능 · 연결도서: 한산도·비진도·욕지도",
+      "aliases": [
+        "통영여객선터미널",
+        "강구안",
+        "서호항",
+        "동호항"
+      ],
+      "eupmyeondong": "항남동",
+      "islandName": null,
+      "portClassLabel": "무역/연안항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 4.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 100,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-TY-BAY",
+        "WP-TY-CANAL-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0002",
+      "name": "삼덕항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7895,
+      "lng": 128.3888,
+      "seaApproachLat": 34.7862,
+      "seaApproachLng": 128.381,
+      "description": "[국가어항] 통영 산양읍 삼덕리 · 기상악화 대피 가능 · 연결도서: 욕지도·연화도·우도",
+      "aliases": [
+        "원항",
+        "삼덕여객선터미널",
+        "산양삼덕항"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-W",
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0003",
+      "name": "욕지항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6368,
+      "lng": 128.2672,
+      "seaApproachLat": 34.6385,
+      "seaApproachLng": 128.288,
+      "description": "[국가어항] 통영 욕지면 (욕지도) · 기상악화 대피 가능 · 연결도서: 욕지도·연화도·우도",
+      "aliases": [
+        "동항",
+        "욕지도항",
+        "욕지여객선터미널"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "욕지도",
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "욕지도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0004",
+      "name": "학림항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7492,
+      "lng": 128.3965,
+      "seaApproachLat": 34.7525,
+      "seaApproachLng": 128.3975,
+      "description": "[국가어항] 통영 산양읍 (학림도) · 기상악화 대피 가능 · 연결도서: 학림도·저도·송도",
+      "aliases": [
+        "학림도항",
+        "학림마을선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "학림도",
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "학림도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0005",
+      "name": "달아항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7615,
+      "lng": 128.4042,
+      "seaApproachLat": 34.758,
+      "seaApproachLng": 128.4015,
+      "description": "[국가어항] 통영 산양읍 미남리 · 기상악화 대피 가능 · 연결도서: 학림도·연대도·만지도",
+      "aliases": [
+        "달아선착장",
+        "달아마을항"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0006",
+      "name": "연명항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7825,
+      "lng": 128.4275,
+      "seaApproachLat": 34.784,
+      "seaApproachLng": 128.435,
+      "description": "[국가어항] 통영 산양읍 연화리 · 기상악화 대피 가능",
+      "aliases": [
+        "연명마을항",
+        "산양연명항"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-E",
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0007",
+      "name": "영운항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8012,
+      "lng": 128.4362,
+      "seaApproachLat": 34.8005,
+      "seaApproachLng": 128.4408,
+      "description": "[국가어항] 통영 산양읍 영운리 · 기상악화 대피 가능 · 연결도서: 한산도",
+      "aliases": [
+        "이운항",
+        "영운리항",
+        "이운마을선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-E",
+        "WP-HANSAN-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0008",
+      "name": "중화항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7738,
       "lng": 128.4235,
-      "description": "통영 중심 항만 · 도서지역 출항 거점"
+      "seaApproachLat": 34.773,
+      "seaApproachLng": 128.431,
+      "description": "[무역/연안항] 통영 산양읍 연화리 · 기상악화 대피 가능",
+      "aliases": [
+        "산양중화항",
+        "중화마을항"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "무역/연안항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 4.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 100,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-E",
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-TY-02",
-      "name": "통영 삼덕항(산양읍)",
+      "id": "KR-GN-TY-0009",
+      "name": "궁항",
       "region": "통영",
       "category": "port",
-      "lat": 34.7968,
-      "lng": 128.3842,
-      "description": "욕지도·연화도 방면 외해 출항 주요 거점"
+      "subCategory": "port",
+      "lat": 34.7975,
+      "lng": 128.3742,
+      "seaApproachLat": 34.795,
+      "seaApproachLng": 128.3715,
+      "description": "[지방어항] 통영 산양읍 풍화리 · 기상악화 대피 가능 · 연결도서: 오비도",
+      "aliases": [
+        "산양궁항",
+        "궁항어촌체험마을"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-W"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-TY-03",
-      "name": "통영 미수항",
+      "id": "KR-GN-TY-0010",
+      "name": "세포항",
       "region": "통영",
       "category": "port",
+      "subCategory": "port",
+      "lat": 34.812,
+      "lng": 128.3935,
+      "seaApproachLat": 34.8155,
+      "seaApproachLng": 128.389,
+      "description": "[지방어항] 통영 산양읍 신전리 · 기상악화 대피 가능",
+      "aliases": [
+        "산양세포항",
+        "세포마을선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-TY-CANAL-W",
+        "WP-MIREUK-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0011",
+      "name": "가오치항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8785,
+      "lng": 128.2772,
+      "seaApproachLat": 34.872,
+      "seaApproachLng": 128.269,
+      "description": "[어촌정주어항] 통영 도산면 오륜리 · 기상악화 대피 가능 · 연결도서: 사량도",
+      "aliases": [
+        "사량도여객선터미널",
+        "오륜리가오치항",
+        "도산가오치항"
+      ],
+      "eupmyeondong": "도산면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0012",
+      "name": "도산 저산항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.876,
+      "lng": 128.3295,
+      "seaApproachLat": 34.868,
+      "seaApproachLng": 128.334,
+      "description": "[지방어항] 통영 도산면 저산리 · 기상악화 대피 가능 · 연결도서: 수우도·사량도",
+      "aliases": [
+        "저산항",
+        "저산마을선착장"
+      ],
+      "eupmyeondong": "도산면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JARAN-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0013",
+      "name": "수월항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8645,
+      "lng": 128.352,
+      "seaApproachLat": 34.859,
+      "seaApproachLng": 128.3505,
+      "description": "[지방어항] 통영 도산면 수월리 · 기상악화 대피 가능",
+      "aliases": [
+        "도산수월항",
+        "수월마을항"
+      ],
+      "eupmyeondong": "도산면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JARAN-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0014",
+      "name": "광도 예포항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9362,
+      "lng": 128.431,
+      "seaApproachLat": 34.928,
+      "seaApproachLng": 128.4355,
+      "description": "[지방어항] 통영 광도면 안정리 · 기상악화 대피 가능 · 연결도서: 가조도",
+      "aliases": [
+        "예포항",
+        "예포마을선착장"
+      ],
+      "eupmyeondong": "광도면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0015",
+      "name": "죽림항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8852,
+      "lng": 128.4198,
+      "seaApproachLat": 34.892,
+      "seaApproachLng": 128.427,
+      "description": "[어촌정주어항] 통영 광도면 죽림리 · 기상악화 대피 가능",
+      "aliases": [
+        "광도죽림항",
+        "죽림만선착장"
+      ],
+      "eupmyeondong": "광도면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0016",
+      "name": "용남 화삼항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8685,
+      "lng": 128.4635,
+      "seaApproachLat": 34.8645,
+      "seaApproachLng": 128.4695,
+      "description": "[지방어항] 통영 용남면 화삼리 · 기상악화 대피 가능 · 연결도서: 해간도",
+      "aliases": [
+        "화삼항",
+        "삼화항",
+        "용남화삼선착장"
+      ],
+      "eupmyeondong": "용남면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GYEON-S",
+        "WP-TY-BAY"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0017",
+      "name": "원평항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8895,
+      "lng": 128.4585,
+      "seaApproachLat": 34.895,
+      "seaApproachLng": 128.465,
+      "description": "[지방어항] 통영 용남면 원평리 · 기상악화 대피 가능",
+      "aliases": [
+        "용남원평항",
+        "원평마을항"
+      ],
+      "eupmyeondong": "용남면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GYEON-N",
+        "WP-GYEON-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0018",
+      "name": "어의항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8415,
+      "lng": 128.481,
+      "seaApproachLat": 34.835,
+      "seaApproachLng": 128.475,
+      "description": "[지방어항] 통영 용남면 (어의도) · 기상악화 대피 가능 · 연결도서: 어의도·수도",
+      "aliases": [
+        "어의도항",
+        "용남어의항"
+      ],
+      "eupmyeondong": "용남면",
+      "islandName": "어의도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "어의도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N",
+        "WP-GYEON-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0019",
+      "name": "한산 제승당항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7918,
+      "lng": 128.4745,
+      "seaApproachLat": 34.7975,
+      "seaApproachLng": 128.471,
+      "description": "[소규모항포구] 통영 한산면 (한산도) · 기상악화 대피 가능 · 연결도서: 한산도·추봉도",
+      "aliases": [
+        "제승당항",
+        "한산도여객선터미널",
+        "소고포항",
+        "제승당선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "한산도",
+      "portClassLabel": "소규모항포구",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "한산도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0020",
+      "name": "진두항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7705,
+      "lng": 128.5042,
+      "seaApproachLat": 34.766,
+      "seaApproachLng": 128.512,
+      "description": "[지방어항] 통영 한산면 (한산도) · 기상악화 대피 가능 · 연결도서: 한산도·추봉도",
+      "aliases": [
+        "한산진두항",
+        "진두마을선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "한산도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "한산도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0021",
+      "name": "창좌항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7795,
+      "lng": 128.5085,
+      "seaApproachLat": 34.7735,
+      "seaApproachLng": 128.515,
+      "description": "[지방어항] 통영 한산면 (한산도) · 기상악화 대피 가능 · 연결도서: 한산도",
+      "aliases": [
+        "한산창좌항",
+        "창좌리항"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "한산도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "한산도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-E",
+        "WP-HANSAN-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0022",
+      "name": "비진항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7182,
+      "lng": 128.4665,
+      "seaApproachLat": 34.7145,
+      "seaApproachLng": 128.4655,
+      "description": "[지방어항] 통영 한산면 (비진도) · 기상악화 대피 가능 · 연결도서: 비진도",
+      "aliases": [
+        "비진도항",
+        "비진외항",
+        "비진내항",
+        "비진도선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "비진도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "비진도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0023",
+      "name": "사량 진촌항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
       "lat": 34.8285,
-      "lng": 128.4065,
-      "description": "통영운하 서측 입구 소형선 접안지"
+      "lng": 128.2512,
+      "seaApproachLat": 34.8235,
+      "seaApproachLng": 128.263,
+      "description": "[지방어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
+      "aliases": [
+        "진촌항",
+        "금평항",
+        "사량도항",
+        "사량면여객선터미널"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "사량도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-E",
+        "WP-SARYANG-N"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-TY-04",
-      "name": "사량도 금평항",
+      "id": "KR-GN-TY-0024",
+      "name": "사량 내지항",
       "region": "통영",
       "category": "port",
-      "lat": 34.8391,
-      "lng": 128.2284,
-      "description": "사량도 상도 중심 항포구"
+      "subCategory": "port",
+      "lat": 34.8465,
+      "lng": 128.2115,
+      "seaApproachLat": 34.855,
+      "seaApproachLng": 128.225,
+      "description": "[지방어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
+      "aliases": [
+        "내지항",
+        "사량내지선착장"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "사량도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-N",
+        "WP-SARYANG-W"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-TY-05",
-      "name": "욕지도 동항",
+      "id": "KR-GN-TY-0025",
+      "name": "사량 대항",
       "region": "통영",
       "category": "port",
-      "lat": 34.6365,
-      "lng": 128.2638,
-      "description": "남해 외해 권역 전진 보급 및 대피항"
+      "subCategory": "port",
+      "lat": 34.8425,
+      "lng": 128.2485,
+      "seaApproachLat": 34.851,
+      "seaApproachLng": 128.252,
+      "description": "[지방어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
+      "aliases": [
+        "대항",
+        "사량대항선착장",
+        "대항해수욕장항"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "사량도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-N",
+        "WP-SARYANG-E"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-TY-06",
+      "id": "KR-GN-TY-0026",
+      "name": "사량 외지항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7985,
+      "lng": 128.2155,
+      "seaApproachLat": 34.798,
+      "seaApproachLng": 128.204,
+      "description": "[어촌정주어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
+      "aliases": [
+        "외지항",
+        "사량하도외지항"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "사량도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0027",
+      "name": "사량 백학항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.819,
+      "lng": 128.252,
+      "seaApproachLat": 34.8185,
+      "seaApproachLng": 128.266,
+      "description": "[어촌정주어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
+      "aliases": [
+        "백학항",
+        "백학마을선착장"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "사량도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0028",
+      "name": "욕지 도동항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6525,
+      "lng": 128.2595,
+      "seaApproachLat": 34.664,
+      "seaApproachLng": 128.275,
+      "description": "[어촌정주어항] 통영 욕지면 (욕지도) · 기상악화 대피 가능 · 연결도서: 욕지도",
+      "aliases": [
+        "도동항",
+        "욕지도동항",
+        "도동해수욕장선착장"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "욕지도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "욕지도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0029",
+      "name": "욕지 유동항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6145,
+      "lng": 128.2665,
+      "seaApproachLat": 34.606,
+      "seaApproachLng": 128.2675,
+      "description": "[지방어항] 통영 욕지면 (욕지도) · 기상악화 대피 가능 · 연결도서: 욕지도",
+      "aliases": [
+        "유동항",
+        "욕지유동항",
+        "유동마을선착장"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "욕지도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "욕지도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-S",
+        "WP-YOKJI-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0030",
+      "name": "욕지 노대항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6695,
+      "lng": 128.2345,
+      "seaApproachLat": 34.677,
+      "seaApproachLng": 128.229,
+      "description": "[지방어항] 통영 욕지면 (노대도) · 기상악화 대피 가능 · 연결도서: 노대도·욕지도",
+      "aliases": [
+        "노대항",
+        "상노대항",
+        "하노대항",
+        "노대도선착장"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "노대도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "노대도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-W",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0031",
+      "name": "연화항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6462,
+      "lng": 128.3615,
+      "seaApproachLat": 34.6445,
+      "seaApproachLng": 128.352,
+      "description": "[지방어항] 통영 욕지면 (연화도) · 기상악화 대피 가능 · 연결도서: 연화도·우도·욕지도",
+      "aliases": [
+        "연화도항",
+        "연화도선착장",
+        "연화여객선터미널"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "연화도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "연화도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0032",
+      "name": "우도항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.652,
+      "lng": 128.342,
+      "seaApproachLat": 34.648,
+      "seaApproachLng": 128.3435,
+      "description": "[지방어항] 통영 욕지면 (우도) · 기상악화 대피 가능 · 연결도서: 우도·연화도",
+      "aliases": [
+        "통영우도항",
+        "우도선착장",
+        "욕지우도항"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "우도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "우도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0033",
       "name": "매물도 당금항",
       "region": "통영",
       "category": "port",
-      "lat": 34.6408,
-      "lng": 128.5728,
-      "description": "한려해상 동부 외해 도서 점검 거점"
+      "subCategory": "port",
+      "lat": 34.6415,
+      "lng": 128.5735,
+      "seaApproachLat": 34.651,
+      "seaApproachLng": 128.562,
+      "description": "[지방어항] 통영 한산면 (대매물도) · 기상악화 대피 가능 · 연결도서: 대매물도·소매물도",
+      "aliases": [
+        "당금항",
+        "대매물도당금항",
+        "매물도선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "대매물도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "대매물도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MAEMUL-N"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-GJ-01",
-      "name": "거제 구조라항",
+      "id": "KR-GN-TY-0034",
+      "name": "매물도 대항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6365,
+      "lng": 128.5665,
+      "seaApproachLat": 34.6475,
+      "seaApproachLng": 128.559,
+      "description": "[어촌정주어항] 통영 한산면 (대매물도) · 기상악화 대피 가능 · 연결도서: 대매물도",
+      "aliases": [
+        "대매물도대항",
+        "매물대항선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "대매물도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "대매물도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MAEMUL-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0035",
+      "name": "소매물도항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.6242,
+      "lng": 128.5485,
+      "seaApproachLat": 34.621,
+      "seaApproachLng": 128.5505,
+      "description": "[지방어항] 통영 한산면 (소매물도) · 기상악화 대피 가능 · 연결도서: 소매물도·대매물도",
+      "aliases": [
+        "소매물도선착장",
+        "소매물항",
+        "등대섬선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "소매물도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "소매물도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MAEMUL-S",
+        "WP-MAEMUL-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0036",
+      "name": "추도 대항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7565,
+      "lng": 128.2915,
+      "seaApproachLat": 34.764,
+      "seaApproachLng": 128.298,
+      "description": "[어촌정주어항] 통영 산양읍 (추도) · 기상악화 대피 가능 · 연결도서: 추도",
+      "aliases": [
+        "추도대항",
+        "추도선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "추도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "추도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-E",
+        "WP-YOKJI-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0037",
+      "name": "추도 미조항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7495,
+      "lng": 128.2825,
+      "seaApproachLat": 34.742,
+      "seaApproachLng": 128.274,
+      "description": "[어촌정주어항] 통영 산양읍 (추도) · 기상악화 대피 가능 · 연결도서: 추도",
+      "aliases": [
+        "미조항",
+        "추도미조항",
+        "미조마을선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "추도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "추도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-W",
+        "WP-SARYANG-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0038",
+      "name": "연대항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7295,
+      "lng": 128.3975,
+      "seaApproachLat": 34.738,
+      "seaApproachLng": 128.398,
+      "description": "[어촌정주어항] 통영 산양읍 (연대도) · 기상악화 대피 가능 · 연결도서: 연대도·만지도",
+      "aliases": [
+        "연대도항",
+        "연대도선착장",
+        "에코아일랜드연대항"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "연대도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "연대도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0039",
+      "name": "만지항",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7318,
+      "lng": 128.3902,
+      "seaApproachLat": 34.7405,
+      "seaApproachLng": 128.393,
+      "description": "[어촌정주어항] 통영 산양읍 (만지도) · 기상악화 대피 가능 · 연결도서: 만지도·연대도",
+      "aliases": [
+        "만지도항",
+        "만지도선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "만지도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "만지도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-0040",
+      "name": "좌이도선착장",
+      "region": "통영",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.772,
+      "lng": 128.442,
+      "seaApproachLat": 34.779,
+      "seaApproachLng": 128.4435,
+      "description": "[소규모항포구] 통영 한산면 (좌이도) · 연안 작업 거점 · 연결도서: 좌이도",
+      "aliases": [
+        "좌이항",
+        "좌이도항"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "좌이도",
+      "portClassLabel": "소규모항포구",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "좌이도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-E",
+        "WP-HANSAN-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0001",
+      "name": "장승포항",
       "region": "거제",
       "category": "port",
+      "subCategory": "port",
+      "lat": 34.8655,
+      "lng": 128.7265,
+      "seaApproachLat": 34.8595,
+      "seaApproachLng": 128.742,
+      "description": "[무역/연안항] 거제 장승포동 장승포동 · 기상악화 대피 가능 · 연결도서: 지심도·외도",
+      "aliases": [
+        "장승포여객선터미널",
+        "장승포유람선터미널"
+      ],
+      "eupmyeondong": "장승포동",
+      "islandName": null,
+      "portClassLabel": "무역/연안항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 4.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 100,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGSEUNGPO-E",
+        "WP-JISEPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0002",
+      "name": "옥포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8942,
+      "lng": 128.6985,
+      "seaApproachLat": 34.899,
+      "seaApproachLng": 128.732,
+      "description": "[무역/연안항] 거제 옥포동 옥포동 · 기상악화 대피 가능",
+      "aliases": [
+        "옥포무역항",
+        "옥포조항"
+      ],
+      "eupmyeondong": "옥포동",
+      "islandName": null,
+      "portClassLabel": "무역/연안항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 4.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 100,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-OKPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0003",
+      "name": "고현항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8955,
+      "lng": 128.6215,
+      "seaApproachLat": 34.922,
+      "seaApproachLng": 128.591,
+      "description": "[무역/연안항] 거제 고현동 고현동 · 기상악화 대피 가능 · 연결도서: 칠천도·가조도",
+      "aliases": [
+        "거제고현항",
+        "고현만항"
+      ],
+      "eupmyeondong": "고현동",
+      "islandName": null,
+      "portClassLabel": "무역/연안항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 4.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 100,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GOHYEON-BAY"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0004",
+      "name": "능포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8785,
+      "lng": 128.7365,
+      "seaApproachLat": 34.881,
+      "seaApproachLng": 128.748,
+      "description": "[국가어항] 거제 능포동 능포동 · 기상악화 대피 가능",
+      "aliases": [
+        "능포국가어항",
+        "능포방파제항"
+      ],
+      "eupmyeondong": "능포동",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGSEUNGPO-E",
+        "WP-OKPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0005",
+      "name": "지세포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8285,
+      "lng": 128.7055,
+      "seaApproachLat": 34.8225,
+      "seaApproachLng": 128.726,
+      "description": "[국가어항] 거제 일운면 지세포리 · 기상악화 대피 가능 · 연결도서: 지심도",
+      "aliases": [
+        "지세포국가어항",
+        "지세포유람선선착장",
+        "일운지세포항"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JISEPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0006",
+      "name": "다대다포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7375,
+      "lng": 128.6345,
+      "seaApproachLat": 34.725,
+      "seaApproachLng": 128.641,
+      "description": "[국가어항] 거제 남부면 다대리 · 기상악화 대피 가능 · 연결도서: 대매물도·소매물도",
+      "aliases": [
+        "다대항",
+        "다포항",
+        "다대포항",
+        "남부다대항"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE",
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0007",
+      "name": "외포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9465,
+      "lng": 128.7185,
+      "seaApproachLat": 34.949,
+      "seaApproachLng": 128.732,
+      "description": "[국가어항] 거제 장목면 외포리 · 기상악화 대피 가능 · 연결도서: 이수도",
+      "aliases": [
+        "장목외포항",
+        "외포대구항"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGMOK-E",
+        "WP-OKPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0008",
+      "name": "구조라항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8055,
+      "lng": 128.6905,
+      "seaApproachLat": 34.796,
+      "seaApproachLng": 128.694,
+      "description": "[국가어항] 거제 일운면 구조라리 · 기상악화 대피 가능 · 연결도서: 외도·내도",
+      "aliases": [
+        "구조라유람선터미널",
+        "일운구조라항"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": null,
+      "portClassLabel": "국가어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 3.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0009",
+      "name": "와현항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
       "lat": 34.8075,
-      "lng": 128.6912,
-      "description": "내도·외도 해역 현장 조사 출항 거점"
+      "lng": 128.7085,
+      "seaApproachLat": 34.7985,
+      "seaApproachLng": 128.707,
+      "description": "[지방어항] 거제 일운면 와현리 · 기상악화 대피 가능 · 연결도서: 외도·내도",
+      "aliases": [
+        "와현유람선선착장",
+        "예구와현항"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S",
+        "WP-JISEPO-E"
+      ],
+      "parentPortId": null
     },
     {
-      "id": "PORT-GJ-02",
-      "name": "거제 지세포항",
+      "id": "KR-GN-GJ-0010",
+      "name": "학동항",
       "region": "거제",
       "category": "port",
-      "lat": 34.8289,
-      "lng": 128.7058,
-      "description": "만 지형 천연 대피항 · 기상 악화 시 안전 계류 가능"
-    },
-    {
-      "id": "PORT-GJ-03",
-      "name": "거제 다대항",
-      "region": "거제",
-      "category": "port",
-      "lat": 34.7422,
-      "lng": 128.6385,
-      "description": "거제 남부 해금강·우제봉 인근 항포구"
-    },
-    {
-      "id": "PORT-GJ-04",
-      "name": "거제 학동항",
-      "region": "거제",
-      "category": "port",
+      "subCategory": "port",
       "lat": 34.7725,
-      "lng": 128.6368,
-      "description": "거제 남동 해안 소형 단정 접안지"
+      "lng": 128.6425,
+      "seaApproachLat": 34.769,
+      "seaApproachLng": 128.658,
+      "description": "[지방어항] 거제 동부면 학동리 · 기상악화 대피 가능 · 연결도서: 외도",
+      "aliases": [
+        "학동몽돌해변선착장",
+        "동부학동항"
+      ],
+      "eupmyeondong": "동부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S",
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0011",
+      "name": "도장포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7465,
+      "lng": 128.6635,
+      "seaApproachLat": 34.752,
+      "seaApproachLng": 128.674,
+      "description": "[지방어항] 거제 남부면 갈곶리 · 기상악화 대피 가능 · 연결도서: 외도",
+      "aliases": [
+        "바람의언덕항",
+        "도장포유람선선착장"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HAEGEUMGANG-SE",
+        "WP-GUJORA-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0012",
+      "name": "해금강항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7405,
+      "lng": 128.6745,
+      "seaApproachLat": 34.736,
+      "seaApproachLng": 128.685,
+      "description": "[지방어항] 거제 남부면 갈곶리 · 기상악화 대피 가능 · 연결도서: 외도",
+      "aliases": [
+        "갈곶항",
+        "해금강유람선선착장"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0013",
+      "name": "저구항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7245,
+      "lng": 128.5875,
+      "seaApproachLat": 34.716,
+      "seaApproachLng": 128.591,
+      "description": "[지방어항] 거제 남부면 저구리 · 기상악화 대피 가능 · 연결도서: 대매물도·소매물도·장사도",
+      "aliases": [
+        "저구여객선터미널",
+        "남부저구항",
+        "매물도여객선터미널(거제)"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE",
+        "WP-MAEMUL-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0014",
+      "name": "명사항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7165,
+      "lng": 128.5925,
+      "seaApproachLat": 34.712,
+      "seaApproachLng": 128.5935,
+      "description": "[지방어항] 거제 남부면 저구리 · 기상악화 대피 가능",
+      "aliases": [
+        "명사해수욕장항",
+        "남부명사항"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0015",
+      "name": "근포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7065,
+      "lng": 128.592,
+      "seaApproachLat": 34.7075,
+      "seaApproachLng": 128.5945,
+      "description": "[어촌정주어항] 거제 남부면 저구리 · 기상악화 대피 가능",
+      "aliases": [
+        "근포땅굴항",
+        "근포마을선착장"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0016",
+      "name": "대포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7015,
+      "lng": 128.5845,
+      "seaApproachLat": 34.705,
+      "seaApproachLng": 128.589,
+      "description": "[지방어항] 거제 남부면 저구리 · 기상악화 대피 가능 · 연결도서: 장사도·대매물도",
+      "aliases": [
+        "거제대포항",
+        "남부대포항"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE",
+        "WP-MAEMUL-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0017",
+      "name": "홍포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7125,
+      "lng": 128.5695,
+      "seaApproachLat": 34.7105,
+      "seaApproachLng": 128.562,
+      "description": "[어촌정주어항] 거제 남부면 저구리 · 기상악화 대피 가능 · 연결도서: 대병대도·소병대도",
+      "aliases": [
+        "남부홍포항",
+        "홍포마을선착장"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE",
+        "WP-GARAN-SW"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0018",
+      "name": "가배항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7695,
+      "lng": 128.5735,
+      "seaApproachLat": 34.7685,
+      "seaApproachLng": 128.559,
+      "description": "[지방어항] 거제 동부면 가배리 · 기상악화 대피 가능 · 연결도서: 한산도·추봉도",
+      "aliases": [
+        "동부가배항",
+        "가배량항"
+      ],
+      "eupmyeondong": "동부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GARAN-SW"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0019",
+      "name": "구영항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7895,
+      "lng": 128.5625,
+      "seaApproachLat": 34.782,
+      "seaApproachLng": 128.555,
+      "description": "[지방어항] 거제 동부면 구천리 · 기상악화 대피 가능",
+      "aliases": [
+        "동부구영항",
+        "구영마을항"
+      ],
+      "eupmyeondong": "동부면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GARAN-SW",
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0020",
+      "name": "성포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9185,
+      "lng": 128.5195,
+      "seaApproachLat": 34.938,
+      "seaApproachLng": 128.508,
+      "description": "[지방어항] 거제 사등면 성포리 · 기상악화 대피 가능 · 연결도서: 가조도",
+      "aliases": [
+        "사등성포항",
+        "성포부두"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-N",
+        "WP-GYEON-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0021",
+      "name": "가조도 창호항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9285,
+      "lng": 128.4685,
+      "seaApproachLat": 34.918,
+      "seaApproachLng": 128.452,
+      "description": "[지방어항] 거제 사등면 (가조도) · 기상악화 대피 가능 · 연결도서: 가조도",
+      "aliases": [
+        "창호항",
+        "가조창호항",
+        "창촌선착장"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": "가조도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "가조도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-W",
+        "WP-GYEON-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0022",
+      "name": "가조도 계도항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9615,
+      "lng": 128.4915,
+      "seaApproachLat": 34.96,
+      "seaApproachLng": 128.496,
+      "description": "[지방어항] 거제 사등면 (가조도) · 기상악화 대피 가능 · 연결도서: 가조도",
+      "aliases": [
+        "계도항",
+        "가조계도항",
+        "계도어촌체험마을"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": "가조도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "가조도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0023",
+      "name": "가조도 유교항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9485,
+      "lng": 128.4745,
+      "seaApproachLat": 34.9535,
+      "seaApproachLng": 128.482,
+      "description": "[어촌정주어항] 거제 사등면 (가조도) · 기상악화 대피 가능 · 연결도서: 가조도",
+      "aliases": [
+        "유교항",
+        "가조유교항",
+        "유교마을선착장"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": "가조도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "가조도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-N",
+        "WP-GAJO-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0024",
+      "name": "둔덕 학산항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8545,
+      "lng": 128.4985,
+      "seaApproachLat": 34.857,
+      "seaApproachLng": 128.481,
+      "description": "[어촌정주어항] 거제 둔덕면 학산리 · 기상악화 대피 가능",
+      "aliases": [
+        "학산항",
+        "둔덕학산선착장"
+      ],
+      "eupmyeondong": "둔덕면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GYEON-S",
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0025",
+      "name": "둔덕 시목항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8385,
+      "lng": 128.5165,
+      "seaApproachLat": 34.833,
+      "seaApproachLng": 128.5175,
+      "description": "[어촌정주어항] 거제 둔덕면 시목리 · 기상악화 대피 가능",
+      "aliases": [
+        "시목항",
+        "둔덕시목선착장"
+      ],
+      "eupmyeondong": "둔덕면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0026",
+      "name": "거제 법동항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8195,
+      "lng": 128.5455,
+      "seaApproachLat": 34.8235,
+      "seaApproachLng": 128.526,
+      "description": "[지방어항] 거제 거제면 법동리 · 기상악화 대피 가능 · 연결도서: 산달도",
+      "aliases": [
+        "법동항",
+        "거제면법동항"
+      ],
+      "eupmyeondong": "거제면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-DUNDEOK-W",
+        "WP-GARAN-SW"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0027",
+      "name": "거제 외간항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8325,
+      "lng": 128.5685,
+      "seaApproachLat": 34.8285,
+      "seaApproachLng": 128.535,
+      "description": "[어촌정주어항] 거제 거제면 외간리 · 기상악화 대피 가능 · 연결도서: 산달도",
+      "aliases": [
+        "외간항",
+        "거제면외간항"
+      ],
+      "eupmyeondong": "거제면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0028",
+      "name": "하청 유계항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 35.0015,
+      "lng": 128.6545,
+      "seaApproachLat": 35.012,
+      "seaApproachLng": 128.653,
+      "description": "[지방어항] 거제 하청면 유계리 · 기상악화 대피 가능 · 연결도서: 칠천도",
+      "aliases": [
+        "유계항",
+        "하청유계선착장"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0029",
+      "name": "칠천도 어온항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9765,
+      "lng": 128.5965,
+      "seaApproachLat": 34.9775,
+      "seaApproachLng": 128.586,
+      "description": "[지방어항] 거제 하청면 (칠천도) · 기상악화 대피 가능 · 연결도서: 칠천도",
+      "aliases": [
+        "어온항",
+        "칠천어온항"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": "칠천도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "칠천도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0030",
+      "name": "칠천도 연구항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 35.0085,
+      "lng": 128.6345,
+      "seaApproachLat": 35.0165,
+      "seaApproachLng": 128.644,
+      "description": "[지방어항] 거제 하청면 (칠천도) · 기상악화 대피 가능 · 연결도서: 칠천도·황덕도",
+      "aliases": [
+        "연구항",
+        "칠천연구항",
+        "황덕도인근항"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": "칠천도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "칠천도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N",
+        "WP-CHILCHEON-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0031",
+      "name": "칠천도 송포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9655,
+      "lng": 128.5945,
+      "seaApproachLat": 34.969,
+      "seaApproachLng": 128.584,
+      "description": "[어촌정주어항] 거제 하청면 (칠천도) · 기상악화 대피 가능 · 연결도서: 칠천도",
+      "aliases": [
+        "송포항",
+        "칠천송포선착장"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": "칠천도",
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "칠천도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-W"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0032",
+      "name": "장목항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 35.0025,
+      "lng": 128.6785,
+      "seaApproachLat": 35.015,
+      "seaApproachLng": 128.665,
+      "description": "[지방어항] 거제 장목면 장목리 · 기상악화 대피 가능",
+      "aliases": [
+        "장목진항",
+        "장목부두"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0033",
+      "name": "장목 궁농항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 35.0165,
+      "lng": 128.6985,
+      "seaApproachLat": 35.021,
+      "seaApproachLng": 128.685,
+      "description": "[지방어항] 거제 장목면 농소리 · 기상악화 대피 가능 · 연결도서: 저도",
+      "aliases": [
+        "궁농항",
+        "매미성인근항",
+        "저도유람선선착장"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N",
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0034",
+      "name": "장목 대금항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9785,
+      "lng": 128.7125,
+      "seaApproachLat": 34.975,
+      "seaApproachLng": 128.728,
+      "description": "[지방어항] 거제 장목면 대금리 · 기상악화 대피 가능 · 연결도서: 이수도",
+      "aliases": [
+        "대금항",
+        "장목대금선착장"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": null,
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0035",
+      "name": "장목 이수도항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9685,
+      "lng": 128.7275,
+      "seaApproachLat": 34.9705,
+      "seaApproachLng": 128.734,
+      "description": "[지방어항] 거제 장목면 (이수도) · 기상악화 대피 가능 · 연결도서: 이수도",
+      "aliases": [
+        "이수도항",
+        "이수도선착장",
+        "학섬항"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": "이수도",
+      "portClassLabel": "지방어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "이수도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0036",
+      "name": "지심도항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8195,
+      "lng": 128.7485,
+      "seaApproachLat": 34.819,
+      "seaApproachLng": 128.741,
+      "description": "[소규모항포구] 거제 일운면 (지심도) · 연안 작업 거점 · 연결도서: 지심도",
+      "aliases": [
+        "지심도선착장",
+        "동백섬지심도항"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": "지심도",
+      "portClassLabel": "소규모항포구",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "지심도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JISEPO-E",
+        "WP-JANGSEUNGPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0037",
+      "name": "내도항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7865,
+      "lng": 128.7145,
+      "seaApproachLat": 34.782,
+      "seaApproachLng": 128.707,
+      "description": "[소규모항포구] 거제 일운면 (내도) · 연안 작업 거점 · 연결도서: 내도·외도",
+      "aliases": [
+        "내도선착장",
+        "일운내도항"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": "내도",
+      "portClassLabel": "소규모항포구",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의",
+        "내도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0038",
+      "name": "외도선착장",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7695,
+      "lng": 128.7115,
+      "seaApproachLat": 34.772,
+      "seaApproachLng": 128.704,
+      "description": "[소규모항포구] 거제 일운면 (외도) · 연안 작업 거점 · 연결도서: 외도·내도",
+      "aliases": [
+        "외도항",
+        "외도보타니아선착장"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": "외도",
+      "portClassLabel": "소규모항포구",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "외도 도서 해역 수로 조류 및 어구 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S",
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0039",
+      "name": "덕포항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.9095,
+      "lng": 128.7095,
+      "seaApproachLat": 34.907,
+      "seaApproachLng": 128.732,
+      "description": "[어촌정주어항] 거제 옥포동 덕포동 · 기상악화 대피 가능",
+      "aliases": [
+        "옥포덕포항",
+        "덕포해수욕장항"
+      ],
+      "eupmyeondong": "옥포동",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "항내 어선 입출항 교차 및 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-OKPO-E",
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0040",
+      "name": "수양항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.7625,
+      "lng": 128.6595,
+      "seaApproachLat": 34.765,
+      "seaApproachLng": 128.672,
+      "description": "[어촌정주어항] 거제 동부면 학동리 · 기상악화 대피 가능",
+      "aliases": [
+        "동부수양항",
+        "수산선착장"
+      ],
+      "eupmyeondong": "동부면",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S",
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-GJ-0041",
+      "name": "아주항",
+      "region": "거제",
+      "category": "port",
+      "subCategory": "port",
+      "lat": 34.8765,
+      "lng": 128.6965,
+      "seaApproachLat": 34.892,
+      "seaApproachLng": 128.728,
+      "description": "[어촌정주어항] 거제 아주동 아주동 · 기상악화 대피 가능",
+      "aliases": [
+        "아주동항",
+        "아양항"
+      ],
+      "eupmyeondong": "아주동",
+      "islandName": null,
+      "portClassLabel": "어촌정주어항",
+      "facilityType": "PORT_QUAY",
+      "facilityLabel": "정규 항만/어항",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-OKPO-E"
+      ],
+      "parentPortId": null
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0001",
+      "name": "상노대 탄항 부잔교 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6708,
+      "lng": 128.2425,
+      "seaApproachLat": 34.6745,
+      "seaApproachLng": 128.2445,
+      "description": "[부잔교(폰툰)] 수심 2.2m · 최대 15t · 진입로 우측 150m 가두리 및 굴 수하식 양식장 주의",
+      "aliases": [
+        "탄항선착장",
+        "상노대 탄항포구"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "상노대도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 15,
+      "hazards": [
+        "진입로 우측 150m 가두리 및 굴 수하식 양식장 주의",
+        "상·하노대 협수로 조류 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-N",
+        "WP-YOKJI-W"
+      ],
+      "parentPortId": "KR-GN-TY-0030"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0002",
+      "name": "하노대 산등 도선 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6612,
+      "lng": 128.2455,
+      "seaApproachLat": 34.659,
+      "seaApproachLng": 128.251,
+      "description": "[경사식 슬립웨이] 수심 1.6m · 최대 30t · 간조 시 슬립웨이 하단부 수심 감소 주의",
+      "aliases": [
+        "하노대 산등선착장",
+        "하노대포구"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "하노대도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 30,
+      "hazards": [
+        "간조 시 슬립웨이 하단부 수심 감소 주의",
+        "노대수로 동측 가두리 양식장 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-W",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": "KR-GN-TY-0030"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0003",
+      "name": "두미도 북구 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7025,
+      "lng": 128.2085,
+      "seaApproachLat": 34.7055,
+      "seaApproachLng": 128.2125,
+      "description": "[물양장 안벽] 수심 2.4m · 최대 50t · 북서 계절풍 시 파랑 유입 주의",
+      "aliases": [
+        "두미북구항",
+        "두미도 북구포구"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "두미도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 2.4,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 50,
+      "hazards": [
+        "북서 계절풍 시 파랑 유입 주의",
+        "방파제 두부 우측 암초 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-W",
+        "WP-SARYANG-W"
+      ],
+      "parentPortId": "KR-GN-TY-0028"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0004",
+      "name": "두미도 남구 경사식 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6885,
+      "lng": 128.2115,
+      "seaApproachLat": 34.6855,
+      "seaApproachLng": 128.2165,
+      "description": "[경사식 슬립웨이] 수심 1.8m · 최대 40t · 남동풍 시 너울성 파도 주의",
+      "aliases": [
+        "두미남구항",
+        "두미도 남구슬립웨이"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "두미도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 40,
+      "hazards": [
+        "남동풍 시 너울성 파도 주의",
+        "접안 경사로 이끼 미끄럼 및 간조 수심 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-W"
+      ],
+      "parentPortId": "KR-GN-TY-0028"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0005",
+      "name": "초도 마을 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6558,
+      "lng": 128.2412,
+      "seaApproachLat": 34.6585,
+      "seaApproachLng": 128.2395,
+      "description": "[돌제식 선착장] 수심 2m · 최대 15t · 초도-욕지도 본섬 사이 협수로 간출암 주의",
+      "aliases": [
+        "욕지 초도포구",
+        "초도 도선장"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "초도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "초도-욕지도 본섬 사이 협수로 간출암 주의",
+        "강한 조류 시 횡압류 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-W",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": "KR-GN-TY-0028"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0006",
+      "name": "연화도 동두 마을 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6375,
+      "lng": 128.3785,
+      "seaApproachLat": 34.6345,
+      "seaApproachLng": 128.3845,
+      "description": "[방파제 내측] 수심 2.1m · 최대 20t · 용머리 해안 암초 지대 인접으로 야간 진입 시 우측 암초 주의",
+      "aliases": [
+        "동두항",
+        "연화 동두포구"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "연화도",
+      "portClassLabel": "소규모 선착장(방파제 내측)",
+      "facilityType": "BREAKWATER_INNER",
+      "facilityLabel": "방파제 내측",
+      "minDepthMeters": 2.1,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 20,
+      "hazards": [
+        "용머리 해안 암초 지대 인접으로 야간 진입 시 우측 암초 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E"
+      ],
+      "parentPortId": "KR-GN-TY-0031"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0007",
+      "name": "우도 구멍섬 부잔교",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6515,
+      "lng": 128.3422,
+      "seaApproachLat": 34.6485,
+      "seaApproachLng": 128.3435,
+      "description": "[부잔교(폰툰)] 수심 2.5m · 최대 15t · 우도-목섬 연도교 하부 통과 불가",
+      "aliases": [
+        "우도 도선 부잔교",
+        "구멍섬 피어"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "우도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 15,
+      "hazards": [
+        "우도-목섬 연도교 하부 통과 불가",
+        "북서측 수중여 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": "KR-GN-TY-0032"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0008",
+      "name": "욕지 동항 부잔교(레저·도선)",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6378,
+      "lng": 128.2682,
+      "seaApproachLat": 34.6385,
+      "seaApproachLng": 128.288,
+      "description": "[부잔교(폰툰)] 수심 3m · 최대 25t · 욕지 카페리 여객선 입출항 시간대 항주파 및 교차 항해 주의",
+      "aliases": [
+        "욕지 소형선 부잔교",
+        "동항 플로팅피어"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "욕지도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 3,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 25,
+      "hazards": [
+        "욕지 카페리 여객선 입출항 시간대 항주파 및 교차 항해 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": "KR-GN-TY-0003"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0009",
+      "name": "욕지 좌부랑개 물양장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.6402,
+      "lng": 128.2695,
+      "seaApproachLat": 34.6385,
+      "seaApproachLng": 128.288,
+      "description": "[물양장 안벽] 수심 2m · 최대 15t · 동항만 입구 양식장 작업선 왕래 빈번",
+      "aliases": [
+        "좌부랑개선착장",
+        "동항 좌부랑개포구"
+      ],
+      "eupmyeondong": "욕지면",
+      "islandName": "욕지도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "동항만 입구 양식장 작업선 왕래 빈번",
+        "소형 어선 겹접안 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-N"
+      ],
+      "parentPortId": "KR-GN-TY-0003"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0010",
+      "name": "사량도 외지 도선 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7982,
+      "lng": 128.2152,
+      "seaApproachLat": 34.7975,
+      "seaApproachLng": 128.2105,
+      "description": "[경사식 슬립웨이] 수심 1.5m · 최대 20t · 서풍·남서풍 시 외해 파랑 직접 유입 주의",
+      "aliases": [
+        "하도 외지선착장",
+        "외지 슬립웨이"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도(하도)",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.5,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 20,
+      "hazards": [
+        "서풍·남서풍 시 외해 파랑 직접 유입 주의",
+        "간조 시 선단 수심 1.5m 이하 얕음"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-W"
+      ],
+      "parentPortId": "KR-GN-TY-0026"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0011",
+      "name": "사량도 내촌 물양장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8262,
+      "lng": 128.2485,
+      "seaApproachLat": 34.8245,
+      "seaApproachLng": 128.2585,
+      "description": "[물양장 안벽] 수심 1.8m · 최대 15t · 사량대교 하부 동강(사량수로) 협수로 강조류 주의",
+      "aliases": [
+        "사량 내촌선착장",
+        "금평 내촌포구"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "사량도(상도)",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "사량대교 하부 동강(사량수로) 협수로 강조류 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-E"
+      ],
+      "parentPortId": "KR-GN-TY-0023"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0012",
+      "name": "사량 수우도 은박산 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8485,
+      "lng": 128.2025,
+      "seaApproachLat": 34.851,
+      "seaApproachLng": 128.2055,
+      "description": "[방파제 내측] 수심 2.2m · 최대 25t · 해골바위·매바위 인근 해안 수중 암초 주의",
+      "aliases": [
+        "수우도포구",
+        "은박산 도선장"
+      ],
+      "eupmyeondong": "사량면",
+      "islandName": "수우도",
+      "portClassLabel": "소규모 선착장(방파제 내측)",
+      "facilityType": "BREAKWATER_INNER",
+      "facilityLabel": "방파제 내측",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 25,
+      "hazards": [
+        "해골바위·매바위 인근 해안 수중 암초 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-W",
+        "WP-SARYANG-N"
+      ],
+      "parentPortId": "KR-GN-TY-0024"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0013",
+      "name": "한산도 의항 경사식 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7895,
+      "lng": 128.5015,
+      "seaApproachLat": 34.7925,
+      "seaApproachLng": 128.5065,
+      "description": "[경사식 슬립웨이] 수심 1.4m · 최대 15t · 전면 해역 굴 수하식 양식장 밀집으로 지정 진입 수로 준수 필수",
+      "aliases": [
+        "의항포구",
+        "한산 의항슬립웨이"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "한산도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.4,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 15,
+      "hazards": [
+        "전면 해역 굴 수하식 양식장 밀집으로 지정 진입 수로 준수 필수"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N",
+        "WP-HANSAN-E"
+      ],
+      "parentPortId": "KR-GN-TY-0021"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0014",
+      "name": "한산도 두억 마을 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7625,
+      "lng": 128.4655,
+      "seaApproachLat": 34.7615,
+      "seaApproachLng": 128.4585,
+      "description": "[물양장 안벽] 수심 1.6m · 최대 15t · 만 내측 얕은 수심 및 뗏목 계류줄 주의",
+      "aliases": [
+        "두억포구",
+        "한산 두억선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "한산도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "만 내측 얕은 수심 및 뗏목 계류줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N",
+        "WP-MIREUK-E"
+      ],
+      "parentPortId": "KR-GN-TY-0019"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0015",
+      "name": "한산 죽도 도선 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7565,
+      "lng": 128.5265,
+      "seaApproachLat": 34.7595,
+      "seaApproachLng": 128.5235,
+      "description": "[돌제식 선착장] 수심 2.1m · 최대 20t · 죽도-한산도 본섬 사이 수로 양식장 부표 주의",
+      "aliases": [
+        "한산 죽도항",
+        "죽도 도선장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "죽도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 2.1,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 20,
+      "hazards": [
+        "죽도-한산도 본섬 사이 수로 양식장 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-E"
+      ],
+      "parentPortId": "KR-GN-TY-0020"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0016",
+      "name": "한산 비산도 마을 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8125,
+      "lng": 128.4815,
+      "seaApproachLat": 34.8085,
+      "seaApproachLng": 128.4765,
+      "description": "[부잔교(폰툰)] 수심 2m · 최대 12t · 비산도 주변 사방 굴 수하식 양식장 극밀집 해역으로 야간 항해 엄금",
+      "aliases": [
+        "비산도포구",
+        "비산마을 도선장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "비산도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 12,
+      "hazards": [
+        "비산도 주변 사방 굴 수하식 양식장 극밀집 해역으로 야간 항해 엄금"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N",
+        "WP-GYEON-S"
+      ],
+      "parentPortId": "KR-GN-TY-0019"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0017",
+      "name": "한산 좌도 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7735,
+      "lng": 128.4545,
+      "seaApproachLat": 34.7775,
+      "seaApproachLng": 128.4555,
+      "description": "[경사식 슬립웨이] 수심 1.5m · 최대 15t · 좌도 북동측 간출암 및 양식장 뗏목 주의",
+      "aliases": [
+        "좌도포구",
+        "한산 좌도물양장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "좌도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.5,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 15,
+      "hazards": [
+        "좌도 북동측 간출암 및 양식장 뗏목 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-N",
+        "WP-MIREUK-E"
+      ],
+      "parentPortId": "KR-GN-TY-0040"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0018",
+      "name": "용초도 용초 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7445,
+      "lng": 128.4745,
+      "seaApproachLat": 34.7485,
+      "seaApproachLng": 128.4745,
+      "description": "[경사식 슬립웨이] 수심 1.9m · 최대 40t · 용초도 북측 해안 미역·다시마 양식장 로프 주의",
+      "aliases": [
+        "용초포구",
+        "용초마을 차도선장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "용초도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.9,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 40,
+      "hazards": [
+        "용초도 북측 해안 미역·다시마 양식장 로프 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-S",
+        "WP-HANSAN-E"
+      ],
+      "parentPortId": "KR-GN-TY-0022"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0019",
+      "name": "호두도 호두 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7438,
+      "lng": 128.4915,
+      "seaApproachLat": 34.7475,
+      "seaApproachLng": 128.4955,
+      "description": "[방파제 내측] 수심 2m · 최대 30t · 동측 한산수로 여객선 통항로 인접 항주파 주의",
+      "aliases": [
+        "호두포구",
+        "용호리 호두마을선착장"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "용초도(호두)",
+      "portClassLabel": "소규모 선착장(방파제 내측)",
+      "facilityType": "BREAKWATER_INNER",
+      "facilityLabel": "방파제 내측",
+      "minDepthMeters": 2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 30,
+      "hazards": [
+        "동측 한산수로 여객선 통항로 인접 항주파 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-E",
+        "WP-HANSAN-S"
+      ],
+      "parentPortId": "KR-GN-TY-0022"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0020",
+      "name": "비진도 내항 도선 부잔교",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7265,
+      "lng": 128.4642,
+      "seaApproachLat": 34.7255,
+      "seaApproachLng": 128.4585,
+      "description": "[부잔교(폰툰)] 수심 2.4m · 최대 20t · 내항만 입구 서측 간출암 및 정치망 어구 주의",
+      "aliases": [
+        "비진도 내항포구",
+        "비진내항 부잔교"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "비진도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.4,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 20,
+      "hazards": [
+        "내항만 입구 서측 간출암 및 정치망 어구 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-HANSAN-S",
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": "KR-GN-TY-0022"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0021",
+      "name": "산양 곤리도 도선 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7935,
+      "lng": 128.3565,
+      "seaApproachLat": 34.7915,
+      "seaApproachLng": 128.3625,
+      "description": "[경사식 슬립웨이] 수심 1.7m · 최대 25t · 삼덕-곤리도 구간 가두리 및 굴 양식장 밀집으로 유도 수로 준수",
+      "aliases": [
+        "곤리도선착장",
+        "곤리포구"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "곤리도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.7,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 25,
+      "hazards": [
+        "삼덕-곤리도 구간 가두리 및 굴 양식장 밀집으로 유도 수로 준수"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-W"
+      ],
+      "parentPortId": "KR-GN-TY-0002"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0022",
+      "name": "산양 저도 마을 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7425,
+      "lng": 128.4115,
+      "seaApproachLat": 34.7465,
+      "seaApproachLng": 128.4095,
+      "description": "[물양장 안벽] 수심 1.6m · 최대 12t · 학림도-저도-송도 사이 얕은 여밭 및 양식장 로프 주의",
+      "aliases": [
+        "산양 저도포구",
+        "저림리 저도선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "저도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 12,
+      "hazards": [
+        "학림도-저도-송도 사이 얕은 여밭 및 양식장 로프 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": "KR-GN-TY-0004"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0023",
+      "name": "산양 송도 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7385,
+      "lng": 128.4165,
+      "seaApproachLat": 34.7435,
+      "seaApproachLng": 128.4185,
+      "description": "[돌제식 선착장] 수심 1.9m · 최대 10t · 송도 북서측 암초 및 가두리 양식장 경계등 확인 필수",
+      "aliases": [
+        "산양 송도포구",
+        "저림리 송도선착장"
+      ],
+      "eupmyeondong": "산양읍",
+      "islandName": "송도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 1.9,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "송도 북서측 암초 및 가두리 양식장 경계등 확인 필수"
+      ],
+      "connectedWaypointIds": [
+        "WP-MIREUK-S"
+      ],
+      "parentPortId": "KR-GN-TY-0004"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0024",
+      "name": "도산 가오치 부잔교",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8778,
+      "lng": 128.2782,
+      "seaApproachLat": 34.8725,
+      "seaApproachLng": 128.2755,
+      "description": "[부잔교(폰툰)] 수심 2.3m · 최대 15t · 사량도 카페리 여객선 선회 구역 침범 금지",
+      "aliases": [
+        "가오치 어선 부잔교",
+        "도산 가오치 피어"
+      ],
+      "eupmyeondong": "도산면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.3,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 15,
+      "hazards": [
+        "사량도 카페리 여객선 선회 구역 침범 금지"
+      ],
+      "connectedWaypointIds": [
+        "WP-SARYANG-N"
+      ],
+      "parentPortId": "KR-GN-TY-0011"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0025",
+      "name": "광도 안정 황리 포구 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9525,
+      "lng": 128.4265,
+      "seaApproachLat": 34.9505,
+      "seaApproachLng": 128.4345,
+      "description": "[물양장 안벽] 수심 1.8m · 최대 15t · 안정만 LNG 기지 및 조선소 인접 보안 해역 항행 제한 구역 주의",
+      "aliases": [
+        "안정 황리선착장",
+        "황리포구"
+      ],
+      "eupmyeondong": "광도면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "안정만 LNG 기지 및 조선소 인접 보안 해역 항행 제한 구역 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-W",
+        "WP-GAJO-N"
+      ],
+      "parentPortId": "KR-GN-TY-0014"
+    },
+    {
+      "id": "KR-GN-TY-BERTH-0026",
+      "name": "용남 지도(종이섬) 도선 선착장",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9015,
+      "lng": 128.4585,
+      "seaApproachLat": 34.9045,
+      "seaApproachLng": 128.4635,
+      "description": "[경사식 슬립웨이] 수심 1.6m · 최대 35t · 견내량 북측 및 죽림만 입구 굴 양식장 수로 협소 구간 주의",
+      "aliases": [
+        "종이섬 선착장",
+        "용남 지도항",
+        "원동선착장"
+      ],
+      "eupmyeondong": "용남면",
+      "islandName": "지도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 35,
+      "hazards": [
+        "견내량 북측 및 죽림만 입구 굴 양식장 수로 협소 구간 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GYEON-N",
+        "WP-GAJO-W"
+      ],
+      "parentPortId": "KR-GN-TY-0017"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0001",
+      "name": "산달도 산전 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8125,
+      "lng": 128.5345,
+      "seaApproachLat": 34.8145,
+      "seaApproachLng": 128.5285,
+      "description": "[경사식 슬립웨이] 수심 1.7m · 최대 30t · 산달연륙교 교각 인근 통과 시 형하공간 및 조류 주의",
+      "aliases": [
+        "산달 산전항",
+        "산전포구"
+      ],
+      "eupmyeondong": "거제면",
+      "islandName": "산달도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.7,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 30,
+      "hazards": [
+        "산달연륙교 교각 인근 통과 시 형하공간 및 조류 주의",
+        "거제만 내 굴 양식장 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-DUNDEOK-W",
+        "WP-GARAN-SW"
+      ],
+      "parentPortId": "KR-GN-GJ-0026"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0002",
+      "name": "산달도 산후 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8055,
+      "lng": 128.5415,
+      "seaApproachLat": 34.8015,
+      "seaApproachLng": 128.5445,
+      "description": "[물양장 안벽] 수심 1.6m · 최대 15t · 산달도 동측 수로 수하식 양식장 밀집으로 주간 저속 진입 필수",
+      "aliases": [
+        "산달 산후항",
+        "산후포구"
+      ],
+      "eupmyeondong": "거제면",
+      "islandName": "산달도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "산달도 동측 수로 수하식 양식장 밀집으로 주간 저속 진입 필수"
+      ],
+      "connectedWaypointIds": [
+        "WP-GARAN-SW",
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": "KR-GN-GJ-0026"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0003",
+      "name": "산달도 실리 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8185,
+      "lng": 128.5295,
+      "seaApproachLat": 34.8225,
+      "seaApproachLng": 128.5245,
+      "description": "[방파제 내측] 수심 1.9m · 최대 15t · 산달도 북서측 굴 양식장 뗏목 및 작업선 왕래 주의",
+      "aliases": [
+        "산달 실리항",
+        "실리포구"
+      ],
+      "eupmyeondong": "거제면",
+      "islandName": "산달도",
+      "portClassLabel": "소규모 선착장(방파제 내측)",
+      "facilityType": "BREAKWATER_INNER",
+      "facilityLabel": "방파제 내측",
+      "minDepthMeters": 1.9,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "산달도 북서측 굴 양식장 뗏목 및 작업선 왕래 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": "KR-GN-GJ-0026"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0004",
+      "name": "화도 차도선 경사식 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8495,
+      "lng": 128.4875,
+      "seaApproachLat": 34.8535,
+      "seaApproachLng": 128.4825,
+      "description": "[경사식 슬립웨이] 수심 1.8m · 최대 80t · 견내량 남측 출구 조류 영향 및 호곡-화도 차도선 항로 중첩 주의",
+      "aliases": [
+        "둔덕 화도항",
+        "화도 차도선장"
+      ],
+      "eupmyeondong": "둔덕면",
+      "islandName": "화도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 80,
+      "hazards": [
+        "견내량 남측 출구 조류 영향 및 호곡-화도 차도선 항로 중첩 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GYEON-S",
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": "KR-GN-GJ-0024"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0005",
+      "name": "고개도 소형 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9185,
+      "lng": 128.4965,
+      "seaApproachLat": 34.9225,
+      "seaApproachLng": 128.4985,
+      "description": "[돌제식 선착장] 수심 1.8m · 최대 10t · 가조연륙교 남측 수로 협소 구간 및 양식장 부표 주의",
+      "aliases": [
+        "고개섬 포구",
+        "성포 고개도선착장"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": "고개도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 10,
+      "hazards": [
+        "가조연륙교 남측 수로 협소 구간 및 양식장 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-N",
+        "WP-GYEON-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0020"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0006",
+      "name": "칠천도 황덕도 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 35.0115,
+      "lng": 128.6225,
+      "seaApproachLat": 35.0165,
+      "seaApproachLng": 128.6245,
+      "description": "[물양장 안벽] 수심 2m · 최대 15t · 황덕교 교량 하부 소형선 외 통항 불가로 북단 외해 우회 필수",
+      "aliases": [
+        "황덕포구",
+        "칠천 황덕선착장"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": "황덕도(칠천도)",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "황덕교 교량 하부 소형선 외 통항 불가로 북단 외해 우회 필수"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N",
+        "WP-CHILCHEON-W"
+      ],
+      "parentPortId": "KR-GN-GJ-0030"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0007",
+      "name": "칠천도 대곡 마을 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9965,
+      "lng": 128.6095,
+      "seaApproachLat": 34.9985,
+      "seaApproachLng": 128.6015,
+      "description": "[물양장 안벽] 수심 1.7m · 최대 15t · 진해만 남부 해역 피조개·홍합 양식장 구역 주의",
+      "aliases": [
+        "칠천 대곡항",
+        "대곡포구"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": "칠천도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.7,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "진해만 남부 해역 피조개·홍합 양식장 구역 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-W",
+        "WP-CHILCHEON-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0029"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0008",
+      "name": "칠천도 금곡 부잔교",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9965,
+      "lng": 128.6365,
+      "seaApproachLat": 35.0045,
+      "seaApproachLng": 128.6425,
+      "description": "[부잔교(폰툰)] 수심 2.2m · 최대 15t · 칠천연륙교 북측 협수로 조류 및 양식 작업선 주의",
+      "aliases": [
+        "칠천 금곡포구",
+        "금곡 플로팅피어"
+      ],
+      "eupmyeondong": "하청면",
+      "islandName": "칠천도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 15,
+      "hazards": [
+        "칠천연륙교 북측 협수로 조류 및 양식 작업선 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0029"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0009",
+      "name": "가조도 실전 차도선 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9365,
+      "lng": 128.4922,
+      "seaApproachLat": 34.9385,
+      "seaApproachLng": 128.4985,
+      "description": "[경사식 슬립웨이] 수심 1.8m · 최대 40t · 성포-가조도 사이 구 도선 항로 해역 양식장 로프 주의",
+      "aliases": [
+        "가조 실전항",
+        "실전 슬립웨이"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": "가조도",
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.8,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 40,
+      "hazards": [
+        "성포-가조도 사이 구 도선 항로 해역 양식장 로프 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0021"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0010",
+      "name": "가조도 군령포 소형 물양장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9385,
+      "lng": 128.4712,
+      "seaApproachLat": 34.9385,
+      "seaApproachLng": 128.4625,
+      "description": "[물양장 안벽] 수심 1.6m · 최대 12t · 가조도 서측 죽림만 해역 굴 수하식 양식장 밀집 주의",
+      "aliases": [
+        "가조 군령포항",
+        "군령포포구"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": "가조도",
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 12,
+      "hazards": [
+        "가조도 서측 죽림만 해역 굴 수하식 양식장 밀집 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-W",
+        "WP-GAJO-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0023"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0011",
+      "name": "장목 저도(궁농) 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 35.0195,
+      "lng": 128.7165,
+      "seaApproachLat": 35.0165,
+      "seaApproachLng": 128.7125,
+      "description": "[돌제식 선착장] 수심 2.8m · 최대 50t · 거가대교 교각 보호구역 접근 제한 및 허가 선박 외 무단 접안 제한",
+      "aliases": [
+        "거제 저도항",
+        "청해대 저도선착장"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": "저도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 2.8,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 50,
+      "hazards": [
+        "거가대교 교각 보호구역 접근 제한 및 허가 선박 외 무단 접안 제한"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N",
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": "KR-GN-GJ-0033"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0012",
+      "name": "장목 시방 도선 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9625,
+      "lng": 128.7162,
+      "seaApproachLat": 34.9645,
+      "seaApproachLng": 128.721,
+      "description": "[경사식 슬립웨이] 수심 2m · 최대 35t · 시방-이수도 간 도선 왕복 항로 상시 횡단 주의",
+      "aliases": [
+        "시방선착장",
+        "이수도 도선터미널"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 2,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 35,
+      "hazards": [
+        "시방-이수도 간 도선 왕복 항로 상시 횡단 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": "KR-GN-GJ-0034"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0013",
+      "name": "장목 황포 마을 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 35.0125,
+      "lng": 128.6655,
+      "seaApproachLat": 35.0175,
+      "seaApproachLng": 128.6635,
+      "description": "[방파제 내측] 수심 1.9m · 최대 15t · 황포만 입구 북서측 수중 암초 및 양식장 부표 주의",
+      "aliases": [
+        "황포선착장",
+        "장목 황포포구"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(방파제 내측)",
+      "facilityType": "BREAKWATER_INNER",
+      "facilityLabel": "방파제 내측",
+      "minDepthMeters": 1.9,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "황포만 입구 북서측 수중 암초 및 양식장 부표 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-CHILCHEON-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0032"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0014",
+      "name": "이수도 북측 도선 부잔교",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9688,
+      "lng": 128.7268,
+      "seaApproachLat": 34.9715,
+      "seaApproachLng": 128.7295,
+      "description": "[부잔교(폰툰)] 수심 2.4m · 최대 25t · 이수도 주변 정치망 어장 그물 및 낚시어선 밀집 주의",
+      "aliases": [
+        "이수도 플로팅피어",
+        "이수도 내항 부잔교"
+      ],
+      "eupmyeondong": "장목면",
+      "islandName": "이수도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.4,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 25,
+      "hazards": [
+        "이수도 주변 정치망 어장 그물 및 낚시어선 밀집 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JANGMOK-E"
+      ],
+      "parentPortId": "KR-GN-GJ-0035"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0015",
+      "name": "지심도 마끝 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8182,
+      "lng": 128.7488,
+      "seaApproachLat": 34.8175,
+      "seaApproachLng": 128.7425,
+      "description": "[돌제식 선착장] 수심 2.5m · 최대 30t · 남동풍·남서풍 시 외해 너울 유입 및 해안 절벽 암초 주의",
+      "aliases": [
+        "지심도 도선 부잔교",
+        "마끝포구"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": "지심도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 2.5,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 30,
+      "hazards": [
+        "남동풍·남서풍 시 외해 너울 유입 및 해안 절벽 암초 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-JISEPO-E",
+        "WP-JANGSEUNGPO-E"
+      ],
+      "parentPortId": "KR-GN-GJ-0036"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0016",
+      "name": "내도 도선 부잔교",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7868,
+      "lng": 128.7142,
+      "seaApproachLat": 34.7855,
+      "seaApproachLng": 128.7095,
+      "description": "[부잔교(폰툰)] 수심 2.3m · 최대 20t · 구조라-내도 협수로 조류 및 유람선 항로 교차 주의",
+      "aliases": [
+        "내도 도선장",
+        "내도 플로팅피어"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": "내도",
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.3,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 20,
+      "hazards": [
+        "구조라-내도 협수로 조류 및 유람선 항로 교차 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S"
+      ],
+      "parentPortId": "KR-GN-GJ-0037"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0017",
+      "name": "외도 보타니아 동측 접안장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7698,
+      "lng": 128.7118,
+      "seaApproachLat": 34.7725,
+      "seaApproachLng": 128.7075,
+      "description": "[돌제식 선착장] 수심 3.2m · 최대 60t · 외해 파랑 노출 구역으로 기상 악화 시 접안 통제",
+      "aliases": [
+        "외도 동측 잔교",
+        "외도 보타니아 제2선착장"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": "외도",
+      "portClassLabel": "소규모 선착장(돌제식 선착장)",
+      "facilityType": "PIER_JETTY",
+      "facilityLabel": "돌제식 선착장",
+      "minDepthMeters": 3.2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 60,
+      "hazards": [
+        "외해 파랑 노출 구역으로 기상 악화 시 접안 통제",
+        "서관도 암초 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S",
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": "KR-GN-GJ-0038"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0018",
+      "name": "일운 윤돌도 인근 구조라 내항 부잔교",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8042,
+      "lng": 128.6895,
+      "seaApproachLat": 34.7985,
+      "seaApproachLng": 128.6925,
+      "description": "[부잔교(폰툰)] 수심 2.4m · 최대 15t · 윤돌도 주변 암초 및 서측 해수욕장 수상레저 구역 주의",
+      "aliases": [
+        "윤돌도 인근 부잔교",
+        "구조라 레저·어선 피어"
+      ],
+      "eupmyeondong": "일운면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.4,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 15,
+      "hazards": [
+        "윤돌도 주변 암초 및 서측 해수욕장 수상레저 구역 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GUJORA-S"
+      ],
+      "parentPortId": "KR-GN-GJ-0008"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0019",
+      "name": "남부 다대 소형 부잔교",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7368,
+      "lng": 128.6335,
+      "seaApproachLat": 34.7295,
+      "seaApproachLng": 128.6365,
+      "description": "[부잔교(폰툰)] 수심 2.2m · 최대 15t · 다대만 입구 수하식 양식장 및 정치망 어장 줄 주의",
+      "aliases": [
+        "다대마을 부잔교",
+        "다대 어촌체험 피어"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.2,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 15,
+      "hazards": [
+        "다대만 입구 수하식 양식장 및 정치망 어장 줄 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GEOJE-S-DADAE",
+        "WP-HAEGEUMGANG-SE"
+      ],
+      "parentPortId": "KR-GN-GJ-0006"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0020",
+      "name": "남부 쌍근 마을 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7495,
+      "lng": 128.5752,
+      "seaApproachLat": 34.7495,
+      "seaApproachLng": 128.5665,
+      "description": "[물양장 안벽] 수심 1.7m · 최대 15t · 쌍근-왕조도 사이 협수로 굴 양식장 뗏목 밀집 주의",
+      "aliases": [
+        "쌍근선착장",
+        "남부 쌍근포구"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.7,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "쌍근-왕조도 사이 협수로 굴 양식장 뗏목 밀집 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GARAN-SW",
+        "WP-GEOJE-S-DADAE"
+      ],
+      "parentPortId": "KR-GN-GJ-0013"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0021",
+      "name": "남부 탑포 소형 물양장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7415,
+      "lng": 128.5755,
+      "seaApproachLat": 34.7415,
+      "seaApproachLng": 128.5655,
+      "description": "[물양장 안벽] 수심 1.6m · 최대 15t · 탑포만 내측 간조 시 수심 급감 및 양식장 작업선 주의",
+      "aliases": [
+        "탑포선착장",
+        "남부 탑포포구"
+      ],
+      "eupmyeondong": "남부면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(물양장 안벽)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "물양장 안벽",
+      "minDepthMeters": 1.6,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 15,
+      "hazards": [
+        "탑포만 내측 간조 시 수심 급감 및 양식장 작업선 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GARAN-SW",
+        "WP-GEOJE-S-DADAE"
+      ],
+      "parentPortId": "KR-GN-GJ-0013"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0022",
+      "name": "동부 산양(가배) 함박 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.7615,
+      "lng": 128.5725,
+      "seaApproachLat": 34.7615,
+      "seaApproachLng": 128.5625,
+      "description": "[방파제 내측] 수심 1.9m · 최대 15t · 가배만 입구 어구 및 굴 수하식 양식장 밀집 해역 주의",
+      "aliases": [
+        "함박항",
+        "가배 함박포구"
+      ],
+      "eupmyeondong": "동부면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(방파제 내측)",
+      "facilityType": "BREAKWATER_INNER",
+      "facilityLabel": "방파제 내측",
+      "minDepthMeters": 1.9,
+      "tidalSensitivity": "MEDIUM",
+      "maxVesselTons": 15,
+      "hazards": [
+        "가배만 입구 어구 및 굴 수하식 양식장 밀집 해역 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GARAN-SW"
+      ],
+      "parentPortId": "KR-GN-GJ-0018"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0023",
+      "name": "둔덕 방하 마을 선착장",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.8415,
+      "lng": 128.5285,
+      "seaApproachLat": 34.8355,
+      "seaApproachLng": 128.5245,
+      "description": "[경사식 슬립웨이] 수심 1.4m · 최대 12t · 둔덕만 내측 간조 시 수심 매우 얕음(1.4m)",
+      "aliases": [
+        "둔덕 방하포구",
+        "방하선착장"
+      ],
+      "eupmyeondong": "둔덕면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(경사식 슬립웨이)",
+      "facilityType": "SLIPWAY_RAMP",
+      "facilityLabel": "경사식 슬립웨이",
+      "minDepthMeters": 1.4,
+      "tidalSensitivity": "HIGH",
+      "maxVesselTons": 12,
+      "hazards": [
+        "둔덕만 내측 간조 시 수심 매우 얕음(1.4m)",
+        "굴 패각 작업선 진출입 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-DUNDEOK-W"
+      ],
+      "parentPortId": "KR-GN-GJ-0025"
+    },
+    {
+      "id": "KR-GN-GJ-BERTH-0024",
+      "name": "사등 성포 도선 부잔교",
+      "region": "거제",
+      "category": "docking",
+      "subCategory": "small_berth",
+      "lat": 34.9192,
+      "lng": 128.5188,
+      "seaApproachLat": 34.9265,
+      "seaApproachLng": 128.5165,
+      "description": "[부잔교(폰툰)] 수심 2.6m · 최대 25t · 가조연륙교 동측 수로 조류 및 소형 조선소 수리선박 계류 주의",
+      "aliases": [
+        "성포 부잔교 선착장",
+        "성포 플로팅피어"
+      ],
+      "eupmyeondong": "사등면",
+      "islandName": null,
+      "portClassLabel": "소규모 선착장(부잔교(폰툰))",
+      "facilityType": "FLOATING_PONTOON",
+      "facilityLabel": "부잔교(폰툰)",
+      "minDepthMeters": 2.6,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 25,
+      "hazards": [
+        "가조연륙교 동측 수로 조류 및 소형 조선소 수리선박 계류 주의"
+      ],
+      "connectedWaypointIds": [
+        "WP-GAJO-N",
+        "WP-GYEON-N"
+      ],
+      "parentPortId": "KR-GN-GJ-0020"
+    }
+  ],
+  "waypoints": [
+    {
+      "id": "WP-TY-BAY",
+      "name": "통영만 중앙 수로",
+      "lat": 34.828,
+      "lng": 128.438,
+      "description": "통영항(강구안·서호만·동호만) 앞바다와 한산만·견내량을 연결하는 통영만 중심 해역 변침점",
+      "neighbors": [
+        "WP-TY-CANAL-E",
+        "WP-GYEON-S",
+        "WP-HANSAN-N",
+        "WP-MIREUK-E"
+      ]
+    },
+    {
+      "id": "WP-TY-CANAL-E",
+      "name": "통영운하 동측 진입부",
+      "lat": 34.8315,
+      "lng": 128.4215,
+      "description": "통영항 서호만 외곽 및 통영대교·충무교 동측 통영운하 진입 수로",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-TY-CANAL-W"
+      ]
+    },
+    {
+      "id": "WP-TY-CANAL-W",
+      "name": "통영운하 서측 판데목 출구",
+      "lat": 34.8275,
+      "lng": 128.396,
+      "description": "통영운하(판데목) 서측 출구 해역으로 미륵도 서측(산양), 광도(죽림), 도산 해역으로 분기하는 요충지",
+      "neighbors": [
+        "WP-TY-CANAL-E",
+        "WP-MIREUK-W",
+        "WP-GAJO-W",
+        "WP-JARAN-E"
+      ]
+    },
+    {
+      "id": "WP-MIREUK-E",
+      "name": "미륵도 동측 영운·연명 수로",
+      "lat": 34.798,
+      "lng": 128.442,
+      "description": "미륵도 동부 영운항(이운항)·연명항·중화항 앞바다와 한산만을 잇는 연안 수로",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-HANSAN-N",
+        "WP-MIREUK-S"
+      ]
+    },
+    {
+      "id": "WP-MIREUK-W",
+      "name": "미륵도 서측 산양·삼덕 해역",
+      "lat": 34.792,
+      "lng": 128.372,
+      "description": "산양읍 삼덕항(원항)·궁항·세포항 외곽 해역으로 사량도·학림도·욕지도 항로가 교차하는 수로",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-JARAN-E",
+        "WP-SARYANG-E",
+        "WP-MIREUK-S"
+      ]
+    },
+    {
+      "id": "WP-MIREUK-S",
+      "name": "미륵도 남단 달아·학림 해역",
+      "lat": 34.756,
+      "lng": 128.398,
+      "description": "미륵도 최남단 달아항·학림도·연대도·만지도 인근 해역으로 한산만과 욕지 해역을 연결하는 변침점",
+      "neighbors": [
+        "WP-MIREUK-W",
+        "WP-MIREUK-E",
+        "WP-HANSAN-N",
+        "WP-HANSAN-S",
+        "WP-YOKJI-N",
+        "WP-SARYANG-E"
+      ]
+    },
+    {
+      "id": "WP-HANSAN-N",
+      "name": "한산만 북측 제승당 수로",
+      "lat": 34.802,
+      "lng": 128.468,
+      "description": "한산도 제승당항·어의항·화삼항 사이 한산만 북측 중심 수로",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-MIREUK-E",
+        "WP-MIREUK-S",
+        "WP-GYEON-S",
+        "WP-HANSAN-E",
+        "WP-GARAN-SW"
+      ]
+    },
+    {
+      "id": "WP-HANSAN-E",
+      "name": "한산도 동측 진두·추봉 수로",
+      "lat": 34.762,
+      "lng": 128.518,
+      "description": "한산도 동남측 진두항·창좌항 및 추봉도 동측 해역으로 거제 남서부(가배·저구)와 비진도를 연결",
+      "neighbors": [
+        "WP-HANSAN-N",
+        "WP-HANSAN-S",
+        "WP-GARAN-SW",
+        "WP-GEOJE-S-DADAE"
+      ]
+    },
+    {
+      "id": "WP-HANSAN-S",
+      "name": "한산도 남단 비진도 해역",
+      "lat": 34.712,
+      "lng": 128.465,
+      "description": "비진도 내항·외항 인근 해역으로 통영항~비진도~매물도 항로의 중간 변침점",
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-HANSAN-E",
+        "WP-YOKJI-N",
+        "WP-MAEMUL-N",
+        "WP-GEOJE-S-DADAE"
+      ]
+    },
+    {
+      "id": "WP-JARAN-E",
+      "name": "도산·자란만 동측 수로",
+      "lat": 34.856,
+      "lng": 128.348,
+      "description": "통영시 도산면 저산항·수월항 앞바다와 사량도 북측 해역을 잇는 연안 수로",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-MIREUK-W",
+        "WP-SARYANG-N"
+      ]
+    },
+    {
+      "id": "WP-SARYANG-N",
+      "name": "사량도 북측 가오치 항로",
+      "lat": 34.862,
+      "lng": 128.255,
+      "description": "도산면 가오치항(사량도여객선터미널)과 사량도 북측(내지항·대항)을 연결하는 주 항로 변침점",
+      "neighbors": [
+        "WP-JARAN-E",
+        "WP-SARYANG-E",
+        "WP-SARYANG-W"
+      ]
+    },
+    {
+      "id": "WP-SARYANG-E",
+      "name": "사량도 동측 금평(진촌) 수로",
+      "lat": 34.818,
+      "lng": 128.272,
+      "description": "사량도 상도·하도 사이 사량대교 동측 해역(진촌항·백학항 진입부) 및 삼덕·욕지 방면 연결 수로",
+      "neighbors": [
+        "WP-SARYANG-N",
+        "WP-SARYANG-W",
+        "WP-MIREUK-W",
+        "WP-MIREUK-S",
+        "WP-YOKJI-N",
+        "WP-YOKJI-W"
+      ]
+    },
+    {
+      "id": "WP-SARYANG-W",
+      "name": "사량도 서남단 외지·추도 북서 해역",
+      "lat": 34.798,
+      "lng": 128.202,
+      "description": "사량도 서남단 외지항 및 추도 북서측 외해 변침점",
+      "neighbors": [
+        "WP-SARYANG-N",
+        "WP-SARYANG-E",
+        "WP-YOKJI-W"
+      ]
+    },
+    {
+      "id": "WP-YOKJI-W",
+      "name": "욕지도 서북단 추도·노대 해역",
+      "lat": 34.685,
+      "lng": 128.225,
+      "description": "추도(대항·미조항) 및 욕지도 서측 노대항 인근 해역 변침점",
+      "neighbors": [
+        "WP-SARYANG-E",
+        "WP-SARYANG-W",
+        "WP-YOKJI-N",
+        "WP-YOKJI-S"
+      ]
+    },
+    {
+      "id": "WP-YOKJI-N",
+      "name": "욕지도 북측 연화·우도 수로",
+      "lat": 34.678,
+      "lng": 128.315,
+      "description": "욕지도 북측(도동항) 및 연화도·우도 북서측을 연결하는 다도해 핵심 분기 변침점",
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-SARYANG-E",
+        "WP-HANSAN-S",
+        "WP-YOKJI-W",
+        "WP-YOKJI-E",
+        "WP-YOKJI-S"
+      ]
+    },
+    {
+      "id": "WP-YOKJI-E",
+      "name": "욕지항·연화항 동측 수로",
+      "lat": 34.642,
+      "lng": 128.345,
+      "description": "욕지항(동항) 입구와 연화도(연화항)·우도(우도항) 사이 주 여객선 항로 변침점",
+      "neighbors": [
+        "WP-YOKJI-N",
+        "WP-YOKJI-S",
+        "WP-MAEMUL-N",
+        "WP-MAEMUL-S"
+      ]
+    },
+    {
+      "id": "WP-YOKJI-S",
+      "name": "욕지도 남단 유동 외해",
+      "lat": 34.602,
+      "lng": 128.268,
+      "description": "욕지도 최남단 유동항 외곽 해역으로 욕지도 남측 우회 항로를 형성하는 변침점",
+      "neighbors": [
+        "WP-YOKJI-W",
+        "WP-YOKJI-N",
+        "WP-YOKJI-E"
+      ]
+    },
+    {
+      "id": "WP-MAEMUL-N",
+      "name": "매물도 북서 당금·대항 해역",
+      "lat": 34.658,
+      "lng": 128.555,
+      "description": "대매물도(당금항·대항) 북서측 진입 해역으로 한산도(비진도)·거제 남단(저구/다대)과 매물도를 연결",
+      "neighbors": [
+        "WP-HANSAN-S",
+        "WP-YOKJI-E",
+        "WP-GEOJE-S-DADAE",
+        "WP-HAEGEUMGANG-SE",
+        "WP-MAEMUL-S"
+      ]
+    },
+    {
+      "id": "WP-MAEMUL-S",
+      "name": "소매물도 남동 외해",
+      "lat": 34.618,
+      "lng": 128.552,
+      "description": "소매물도항 및 등대섬 인근 해역 변침점",
+      "neighbors": [
+        "WP-MAEMUL-N",
+        "WP-YOKJI-E",
+        "WP-HAEGEUMGANG-SE"
+      ]
+    },
+    {
+      "id": "WP-GYEON-S",
+      "name": "견내량 남측 원평·화삼 입구",
+      "lat": 34.862,
+      "lng": 128.472,
+      "description": "통영 용남면(화삼항·원평항)과 거제 둔덕면(학산항) 사이 견내량 협수로 남측 진입점",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-HANSAN-N",
+        "WP-GYEON-N",
+        "WP-DUNDEOK-W"
+      ]
+    },
+    {
+      "id": "WP-GYEON-N",
+      "name": "견내량 북측 거제대교 출구",
+      "lat": 34.908,
+      "lng": 128.468,
+      "description": "신거제대교·거제대교 북측 해역으로 광도만(죽림·예포) 및 가조도 서측·성포 해역으로 이어지는 변침점",
+      "neighbors": [
+        "WP-GYEON-S",
+        "WP-GAJO-W",
+        "WP-GAJO-N"
+      ]
+    },
+    {
+      "id": "WP-GAJO-W",
+      "name": "광도·죽림만 및 가조도 서측 수로",
+      "lat": 34.905,
+      "lng": 128.432,
+      "description": "통영시 광도면(죽림항·예포항)과 거제 가조도 서측(창호항) 사이 내만 수로",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-GYEON-N",
+        "WP-GAJO-N"
+      ]
+    },
+    {
+      "id": "WP-GAJO-N",
+      "name": "가조도 북단 성포·계도 해역",
+      "lat": 34.958,
+      "lng": 128.498,
+      "description": "거제 사등면 성포항과 가조도 북단(계도항·유교항)을 아우르며 고현만·칠천도로 연결되는 변침점",
+      "neighbors": [
+        "WP-GYEON-N",
+        "WP-GAJO-W",
+        "WP-GOHYEON-BAY",
+        "WP-CHILCHEON-W"
+      ]
+    },
+    {
+      "id": "WP-DUNDEOK-W",
+      "name": "거제 서부 둔덕·거제만 해역",
+      "lat": 34.828,
+      "lng": 128.518,
+      "description": "거제시 둔덕면(시목항·학산항) 및 거제면(법동항·외간항) 서측 거제만 입구 수로",
+      "neighbors": [
+        "WP-GYEON-S",
+        "WP-GARAN-SW"
+      ]
+    },
+    {
+      "id": "WP-GARAN-SW",
+      "name": "거제 남서단 가배·구영 해역",
+      "lat": 34.768,
+      "lng": 128.552,
+      "description": "거제시 동부면 가배항·구영항 및 남부면 홍포항 북서측 해역 변침점",
+      "neighbors": [
+        "WP-DUNDEOK-W",
+        "WP-HANSAN-N",
+        "WP-HANSAN-E",
+        "WP-GEOJE-S-DADAE"
+      ]
+    },
+    {
+      "id": "WP-GOHYEON-BAY",
+      "name": "고현만 입구 수로",
+      "lat": 34.935,
+      "lng": 128.575,
+      "description": "거제 고현항 및 삼성중공업 조선소 해역 진입 수로",
+      "neighbors": [
+        "WP-GAJO-N",
+        "WP-CHILCHEON-W"
+      ]
+    },
+    {
+      "id": "WP-CHILCHEON-W",
+      "name": "칠천도 서측 하청·어온 수로",
+      "lat": 34.978,
+      "lng": 128.582,
+      "description": "칠천도 서측(어온항·송포항) 및 하청면 해역을 연결하는 진해만 남부 수로",
+      "neighbors": [
+        "WP-GAJO-N",
+        "WP-GOHYEON-BAY",
+        "WP-CHILCHEON-N"
+      ]
+    },
+    {
+      "id": "WP-CHILCHEON-N",
+      "name": "칠천도 북단 황덕·궁농 우회 수로",
+      "lat": 35.022,
+      "lng": 128.652,
+      "description": "칠천도 북단(연구항·유계항)과 장목면(장목항·궁농항)을 연결하는 북부 해역 변침점",
+      "neighbors": [
+        "WP-CHILCHEON-W",
+        "WP-JANGMOK-E"
+      ]
+    },
+    {
+      "id": "WP-JANGMOK-E",
+      "name": "장목 동측 대금·외포·이수도 해역",
+      "lat": 34.972,
+      "lng": 128.738,
+      "description": "거제 북동부 장목면 대금항·외포항·이수도항 앞바다로 거제 동해안 남북 항로의 북측 기점",
+      "neighbors": [
+        "WP-CHILCHEON-N",
+        "WP-OKPO-E"
+      ]
+    },
+    {
+      "id": "WP-OKPO-E",
+      "name": "옥포만·덕포 동측 외해",
+      "lat": 34.902,
+      "lng": 128.745,
+      "description": "옥포항·아주항·덕포항이 위치한 옥포만 입구 동측 해상 변침점",
+      "neighbors": [
+        "WP-JANGMOK-E",
+        "WP-JANGSEUNGPO-E"
+      ]
+    },
+    {
+      "id": "WP-JANGSEUNGPO-E",
+      "name": "장승포·능포 동측 해역",
+      "lat": 34.862,
+      "lng": 128.758,
+      "description": "능포항과 장승포항 동측 외해로 거제 동부 해안 항로의 중심 변침점",
+      "neighbors": [
+        "WP-OKPO-E",
+        "WP-JISEPO-E"
+      ]
+    },
+    {
+      "id": "WP-JISEPO-E",
+      "name": "지세포·지심도 수로",
+      "lat": 34.818,
+      "lng": 128.735,
+      "description": "지세포항 입구와 지심도항, 와현항 북동측을 연결하는 해상 변침점",
+      "neighbors": [
+        "WP-JANGSEUNGPO-E",
+        "WP-GUJORA-S"
+      ]
+    },
+    {
+      "id": "WP-GUJORA-S",
+      "name": "구조라·외도·학동 해역",
+      "lat": 34.775,
+      "lng": 128.698,
+      "description": "구조라항·와현항·내도항·외도선착장·학동항·수양항을 연결하는 거제 동남부 핵심 유람선/어선 해역",
+      "neighbors": [
+        "WP-JISEPO-E",
+        "WP-HAEGEUMGANG-SE"
+      ]
+    },
+    {
+      "id": "WP-HAEGEUMGANG-SE",
+      "name": "해금강(갈곶도) 남동단 우회점",
+      "lat": 34.732,
+      "lng": 128.692,
+      "description": "거제 해금강(갈곶도) 및 도장포항·해금강항 남동단 외해 우회 변침점으로 동해안과 남부(다대·저구) 해역을 연결",
+      "neighbors": [
+        "WP-GUJORA-S",
+        "WP-GEOJE-S-DADAE",
+        "WP-MAEMUL-N",
+        "WP-MAEMUL-S"
+      ]
+    },
+    {
+      "id": "WP-GEOJE-S-DADAE",
+      "name": "거제 남부 다대·저구·대포 해역",
+      "lat": 34.708,
+      "lng": 128.595,
+      "description": "거제 남부면 다대다포항·저구항·명사항·근포항·대포항·홍포항 외곽을 아우르는 거제 남단 해역 변침점",
+      "neighbors": [
+        "WP-HAEGEUMGANG-SE",
+        "WP-GARAN-SW",
+        "WP-HANSAN-E",
+        "WP-HANSAN-S",
+        "WP-MAEMUL-N"
+      ]
     }
   ]
 }

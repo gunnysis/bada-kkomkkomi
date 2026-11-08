@@ -14,6 +14,7 @@ import { Compass, LocateFixed, Maximize, Minus, Plus } from 'lucide-react';
 import type { DockingFeature, MarkerColor } from '../types/docking';
 import { MARKER_COLOR_MAP } from '../types/docking';
 import type { PorpoiseRecord } from '../types/porpoise';
+import type { MarinePort } from '../types/port';
 import type { RouteLeg, RouteWaypoint } from '../types/route';
 import type { MapLayerConfig } from '../types/config';
 
@@ -41,9 +42,11 @@ interface MapViewProps {
   onMapClickForPorpoise: (lat: number, lng: number) => void;
   onMapClickForReport: (lat: number, lng: number) => void;
 
-  // 3.2 바닷길 콕콕 (경로 계산)
+  // 3.2 바닷길 콕콕 (경로 계산 & 소규모 선착장/항포구 마커)
   routeWaypoints: RouteWaypoint[];
   routeLegs: RouteLeg[];
+  portsList?: MarinePort[];
+  showPortMarkersOnMap?: boolean;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
 
@@ -122,6 +125,47 @@ function getDockingMarkerIcon(
       html,
       iconSize: [52, 58],
       iconAnchor: [26, 54],
+    });
+  });
+}
+
+// 1-B. 바닷길 콕콕용 항포구 / 소규모 선착장 마커 아이콘
+function getNavPortPinIcon(port: MarinePort): L.DivIcon {
+  const isSmallBerth = port.subCategory === 'small_berth' || port.category === 'docking';
+  const shortName = port.name.length > 8 ? `${port.name.slice(0, 8)}…` : port.name;
+  const cacheKey = `navport:${port.id}:${isSmallBerth ? 'sb' : 'pt'}`;
+  return getCachedDivIcon(cacheKey, () => {
+    const color = isSmallBerth ? '#f59e0b' : '#38bdf8';
+    const bg = isSmallBerth ? '#451a03' : '#082f49';
+    const html = `
+      <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+        <div style="
+          padding: 1px 5px;
+          border-radius: 5px;
+          background: rgba(2, 6, 23, 0.9);
+          border: 1px solid ${color};
+          color: #f8fafc;
+          font-size: 9px;
+          font-weight: 800;
+          white-space: nowrap;
+          margin-bottom: 2px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.65);
+        ">${shortName}</div>
+        <div style="
+          width: 16px;
+          height: 16px;
+          border-radius: 9999px;
+          background: ${bg};
+          border: 2.5px solid ${color};
+          box-shadow: 0 2px 6px rgba(0,0,0,0.75);
+        "></div>
+      </div>
+    `;
+    return L.divIcon({
+      className: 'bada-custom-marker',
+      html,
+      iconSize: [44, 34],
+      iconAnchor: [22, 28],
     });
   });
 }
@@ -497,6 +541,8 @@ export function MapView({
   onMapClickForReport,
   routeWaypoints,
   routeLegs,
+  portsList = [],
+  showPortMarkersOnMap = true,
   onUpdateWaypointPos,
   onMapClickForRoute,
   weatherCoords,
@@ -527,15 +573,37 @@ export function MapView({
             setGeoJsonLayersData((prev) => ({ ...prev, [layer.id]: data }));
           })
           .catch(() => {
-            // 실패 시 다음 토글에서 재시도 가능하도록 제거
             fetchedLayerIdsRef.current.delete(layer.id);
           });
       }
     });
   }, [layers]);
 
-  // 바닷길 콕콕 경로 좌표선
+  // 바닷길 콕콕 실항로 좌표선 (변침점을 경유한 해상 우회 라인)
   const polylinePositions = useMemo(() => {
+    if (routeLegs.length > 0 && routeLegs.some((leg) => leg.pathPositions && leg.pathPositions.length >= 2)) {
+      const merged: [number, number][] = [];
+      for (const leg of routeLegs) {
+        const pts =
+          leg.pathPositions && leg.pathPositions.length >= 2
+            ? leg.pathPositions
+            : ([
+                [leg.from.lat, leg.from.lng],
+                [leg.to.lat, leg.to.lng],
+              ] as [number, number][]);
+        for (let i = 0; i < pts.length; i++) {
+          if (merged.length === 0 || i > 0) {
+            merged.push(pts[i]);
+          }
+        }
+      }
+      return merged;
+    }
+    return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
+  }, [routeLegs, routeWaypoints]);
+
+  // 직선 대권 참고선 (우회 항로와 비교용 얇은 점선)
+  const directPolylinePositions = useMemo(() => {
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
   }, [routeWaypoints]);
 
@@ -591,7 +659,7 @@ export function MapView({
           );
         })}
 
-        {/* 2. [3.1 꼬미의 바다수첩] 갯바위 접안 마커 */}
+        {/* 2. [3.1 꼬미의 바다수첩] 갯바위 접안 및 소규모 선착장 마커 */}
         {activeMainTab === 'notebook' &&
           layers.find((l) => l.id === 'docking')?.visible !== false &&
           features.map((feature) => {
@@ -630,9 +698,35 @@ export function MapView({
             />
           ))}
 
-        {/* 4. [3.2 바닷길 콕콕 - 시간계산기] 경로 연결선 + 구간 선 위 소요시간 배지 + 드래그 마커 */}
+        {/* 4. [3.2 바닷길 콕콕 - 시간계산기] 소규모 선착장·항구 핀 + 경로 연결선 + 소요시간 배지 + 드래그 마커 */}
         {activeMainTab === 'navigation' && navSubTab === 'route' && (
           <>
+            {/* 지도 위 소규모 선착장 및 정규 항포구 빠른 탭 마커 */}
+            {showPortMarkersOnMap &&
+              portsList.map((port) => (
+                <Marker
+                  key={`nav-port-${port.id}`}
+                  position={[port.lat, port.lng]}
+                  icon={getNavPortPinIcon(port)}
+                  zIndexOffset={150}
+                  eventHandlers={{
+                    click: () => onMapClickForRoute(port.lat, port.lng),
+                  }}
+                />
+              ))}
+
+            {directPolylinePositions.length >= 2 && (
+              <Polyline
+                positions={directPolylinePositions}
+                pathOptions={{
+                  color: '#64748b',
+                  weight: 1.5,
+                  dashArray: '4 6',
+                  opacity: 0.45,
+                }}
+              />
+            )}
+
             {polylinePositions.length >= 2 && (
               <>
                 {/* 외곽 대비 라인 */}
@@ -641,17 +735,17 @@ export function MapView({
                   pathOptions={{
                     color: '#020617',
                     weight: 8,
-                    opacity: 0.75,
+                    opacity: 0.8,
                   }}
                 />
-                {/* 메인 시안 항로 라인 */}
+                {/* 메인 시안 해상 실항로 라인 */}
                 <Polyline
                   positions={polylinePositions}
                   pathOptions={{
                     color: '#38bdf8',
                     weight: 4,
                     dashArray: '10 6',
-                    opacity: 0.95,
+                    opacity: 0.96,
                   }}
                 />
               </>

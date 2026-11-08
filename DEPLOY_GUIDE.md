@@ -1,4 +1,4 @@
-# 바다꼼꼬미 [Beta 0.3] — 비개발자 운영자용 무료 자동 배포 & 데이터 운영 가이드 (`DEPLOY_GUIDE.md`)
+# 바다꼼꼬미 [v1.0] — 비개발자 운영자용 무료 자동 배포 & 데이터 운영 가이드 (`DEPLOY_GUIDE.md`)
 
 이 문서는 코딩이나 서버 지식이 전혀 없는 현장 운영자도 **월 비용 0원(Zero-cost)**으로 **바다꼼꼬미 PWA 앱**을 운영하고, 코드는 단 한 줄도 수정하지 않은 채 **정적 데이터 파일(`GeoJSON`, `JSON`, 현장 사진)**만 교체하여 **자동 업데이트**할 수 있도록 안내하는 실전 매뉴얼입니다.
 
@@ -41,9 +41,9 @@
 
 | 관리 대상 | 파일 경로 | 용도 |
 | :--- | :--- | :--- |
-| **1. 접안 포인트 데이터** | `public/data/docking_points.geojson` | 갯바위 접안 포인트 좌표, 물때, 위험요소, 5색 표식, 사진 경로 |
+| **1. 접안 포인트 & 소규모 선착장 데이터 (55개소)** | `public/data/docking_points.geojson` | 갯바위 접안 포인트 및 소규모 선착장 좌표, 물때, 위험요소, 5색 표식, 사진 경로 |
 | **2. 현장 접안 사진** | `public/images/docking/` | 접안 포인트 상세창에 표시할 현장 사진 파일 |
-| **3. 주요 항구 사전** | `public/data/ports.json` | 바닷길 시간계산기에서 선택하거나 500m 자동 스냅될 항포구·접안지 목록 |
+| **3. 통합 항구·소규모 선착장 사전 (135개소 + 변침점 35개소)** | `public/data/ports.json` | 바닷길 시간계산기에서 초성/별칭/섬 검색, 500m 자동 스냅, A* 해상 실항로 우회 연산에 사용되는 항포구·선착장 목록 |
 | **4. 운영자 설정 & 레이어** | `public/config/app_config.json` | 현장 제보 수신 이메일 주소, 공간정보 레이어 목록, 기상 판정 기본 기준값 |
 
 ---
@@ -55,7 +55,7 @@
 
 ---
 
-### 작업 B. 갯바위 접안 포인트 수정하기 (`public/data/docking_points.geojson`)
+### 작업 B. 갯바위 접안 포인트 및 소규모 선착장 수정하기 (`public/data/docking_points.geojson`)
 1. `public/data/docking_points.geojson` 파일을 열고 우측 상단 **연필 아이콘(`Edit this file`)**을 클릭합니다.
 2. 아래 양식을 `"features": [ ... ]` 배열 안에 추가하거나 수정합니다:
 
@@ -73,7 +73,7 @@
     "tide_info": "간조 시 수심 1.8m 확보, 남서풍 유입 시 파랑 주의",
     "hazard": "물양장 북측 끝단 수중 콘크리트 블록 돌출 — 선수 접안 금지",
     "color": "amber",
-    "verified_date": "2026-11-07",
+    "verified_date": "2026-11-08",
     "photos": [
       "/images/docking/ty-004-rock.jpg"
     ]
@@ -88,23 +88,38 @@
 
 ---
 
-### 작업 C. 바닷길 시간계산기용 항구 추가하기 (`public/data/ports.json`)
-`public/data/ports.json`의 `"ports"` 배열에 항구 정보를 추가하면, **바닷길 시간계산기**의 항구 검색 모달과 **지도 마커 드래그 500m 자동 스냅**에 즉시 반영됩니다:
+### 작업 C. 바닷길 시간계산기용 항구·소규모 선착장 추가하기 (`public/data/ports.json`)
+`public/data/ports.json`의 `"ports"` 배열에 항구 또는 소규모 선착장 정보를 추가하면, **바닷길 시간계산기**의 항구 검색 모달(초성·별칭·섬 이름 검색), 지도 위 **선착장핀 표시**, 그리고 **지도 마커 드래그 500m 자동 스냅** 및 **A* 실항로 우회 계산**에 즉시 반영됩니다:
 
 ```json
 {
-  "id": "PORT-TY-09",
-  "name": "욕지도 동항 (여객선터미널)",
+  "id": "KR-GN-TY-BERTH-0031",
+  "name": "산양 삼덕 원항 부잔교",
   "region": "통영",
-  "category": "port",
-  "lat": 34.6368,
-  "lng": 128.2682,
-  "description": "욕지도 본섬 주항 · 연안 여객 및 조사선 계류지"
+  "category": "docking",
+  "subCategory": "small_berth",
+  "lat": 34.7968,
+  "lng": 128.3842,
+  "seaApproachLat": 34.7945,
+  "seaApproachLng": 128.3812,
+  "description": "소형 조사선 상시 접안 부잔교 · 간조 수심 2.8m",
+  "aliases": ["원항선착장", "삼덕부잔교"],
+  "eupmyeondong": "산양읍",
+  "islandName": null,
+  "portClassLabel": "소규모 선착장(부잔교)",
+  "facilityType": "FLOATING_PONTOON",
+  "facilityLabel": "부잔교(폰툰)",
+  "minDepthMeters": 2.8,
+  "tidalSensitivity": "LOW",
+  "maxVesselTons": 20,
+  "hazards": ["여객선 입출항 항주파 주의"],
+  "connectedWaypointIds": ["WP-SAMDEOK-APPROACH"]
 }
 ```
 - `region`: `"통영"` 또는 `"거제"`
-- `category`: `"port"`(주요 항포구) 또는 `"docking"`(공식 접안지)
-- 최상단의 `"snap_radius_meters": 500` 값을 조정하면 지도 위 마커 드래그 시 항구로 자동 흡착되는 반경(미터)을 변경할 수 있습니다.
+- `category`: `"port"`(정규 어항) 또는 `"docking"`(공식 접안지 및 소규모 선착장)
+- `subCategory`: `"port"`, `"small_berth"`, `"official_docking"`
+- 최상단의 `"snap_radius_meters": 500` 값을 조정하면 지도 위 마커 드래그 시 항구·선착장으로 자동 흡착되는 반경(미터)을 변경할 수 있습니다.
 
 ---
 
