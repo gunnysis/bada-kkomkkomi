@@ -14,7 +14,10 @@ import {
   updateOperationalSyncMetadata,
 } from '../services/layerStorageService';
 import { commitLayersToGitHubRepository } from '../services/githubLayerSyncService';
-import { reprojectAndNormalizeFeatureCollection } from '../services/spatialFileParser';
+import {
+  normalizeWgs84FeatureCollection,
+  type Wgs84NormalizedMeta,
+} from '../utils/geojsonMeta';
 
 const DEFAULT_LAYERS: MapLayerConfig[] = [
   {
@@ -119,12 +122,16 @@ export function useAppConfig() {
       const mergedMap: Record<string, SpatialFeatureCollection> = {
         ...existingGeoJsonMap,
       };
+      const metaById: Record<string, Wgs84NormalizedMeta> = {};
       const failedIds: string[] = [];
 
       await Promise.all(
         targetLayers.map(async (layer) => {
           if (layer.id === 'docking' || layer.isSystemLayer) return;
-          if (mergedMap[layer.id]) return;
+          if (mergedMap[layer.id]) {
+            metaById[layer.id] = normalizeWgs84FeatureCollection(mergedMap[layer.id]);
+            return;
+          }
           if (!layer.url) return;
 
           const fullUrl = `${import.meta.env.BASE_URL}${layer.url.replace(/^\/+/, '')}`;
@@ -132,12 +139,9 @@ export function useAppConfig() {
             const res = await fetch(fullUrl);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const rawData = await res.json();
-            const normalized = reprojectAndNormalizeFeatureCollection(
-              rawData,
-              'EPSG:4326',
-              false,
-            );
+            const normalized = normalizeWgs84FeatureCollection(rawData);
             mergedMap[layer.id] = normalized.featureCollection;
+            metaById[layer.id] = normalized;
           } catch {
             failedIds.push(layer.id);
           }
@@ -147,12 +151,12 @@ export function useAppConfig() {
       setGeoJsonLayersData(mergedMap);
       setLayerLoadErrorIds(failedIds);
 
-      // 피처 개수 및 BBox 자동 보강
+      // 피처 개수 및 BBox 자동 보강 (중복 정규화 제거)
       setLayers((prev) =>
         prev.map((l) => {
           const fc = mergedMap[l.id];
           if (!fc) return l;
-          const norm = reprojectAndNormalizeFeatureCollection(fc, 'EPSG:4326', false);
+          const norm = metaById[l.id] ?? normalizeWgs84FeatureCollection(fc);
           return {
             ...l,
             featureCount: fc.features.length,
@@ -175,19 +179,29 @@ export function useAppConfig() {
     const configUrl = `${import.meta.env.BASE_URL}config/app_config.json`;
 
     async function bootstrap() {
-      let staticConfig: AppConfig = DEFAULT_CONFIG;
+      let staticConfig: AppConfig = {
+        ...DEFAULT_CONFIG,
+        admin: { ...DEFAULT_CONFIG.admin },
+      };
       try {
         const res = await fetch(configUrl, { signal: controller.signal });
         if (res.ok) {
           const data = (await res.json()) as AppConfig;
-          const savedEmail = localStorage.getItem(STORAGE_KEY_ADMIN_EMAIL);
-          if (savedEmail) {
-            data.admin.report_recipient_email = savedEmail;
-          }
           staticConfig = data;
         }
       } catch {
         // 정적 파일 실패 시 기본 설정 사용
+      }
+
+      const savedEmail = localStorage.getItem(STORAGE_KEY_ADMIN_EMAIL);
+      if (savedEmail) {
+        staticConfig = {
+          ...staticConfig,
+          admin: {
+            ...staticConfig.admin,
+            report_recipient_email: savedEmail,
+          },
+        };
       }
 
       if (!isMounted) return;
@@ -245,28 +259,26 @@ export function useAppConfig() {
     }));
   }, []);
 
-  // 빠른 레이어 표시/숨김 토글 (즉시 로컬 운영 상태에도 반영하여 새로고침 시 유지)
+  // 빠른 레이어 표시/숨김 토글 (StrictMode 이중 실행 방지를 위해 상태 업데이터 외부에서 영속 저장 수행)
   const toggleLayer = useCallback(
     (layerId: string) => {
-      setLayers((prev) => {
-        const next = prev.map((l) =>
-          l.id === layerId ? { ...l, visible: !l.visible } : l,
-        );
-        void saveOperationalLayerState({
-          layers: next,
-          geoJsonById: geoJsonLayersData,
-          summary: `레이어 표시 여부 변경 (${layerId})`,
-          remoteSyncStatus,
-          remoteCommitUrl,
-        }).then((saved) => {
-          setReleaseId(saved.releaseId);
-          setLastSavedAt(saved.updatedAt);
-          void listReleaseSnapshots().then(setSnapshots);
-        });
-        return next;
+      const next = layers.map((l) =>
+        l.id === layerId ? { ...l, visible: !l.visible } : l,
+      );
+      setLayers(next);
+      void saveOperationalLayerState({
+        layers: next,
+        geoJsonById: geoJsonLayersData,
+        summary: `레이어 표시 여부 변경 (${layerId})`,
+        remoteSyncStatus,
+        remoteCommitUrl,
+      }).then((saved) => {
+        setReleaseId(saved.releaseId);
+        setLastSavedAt(saved.updatedAt);
+        void listReleaseSnapshots().then(setSnapshots);
       });
     },
-    [geoJsonLayersData, remoteSyncStatus, remoteCommitUrl],
+    [layers, geoJsonLayersData, remoteSyncStatus, remoteCommitUrl],
   );
 
   /**

@@ -28,6 +28,8 @@ export interface RouteLeg {
   durationMinutes: number;
   bearingDeg: number;
   cardinal: string;
+  directBearingDeg?: number;
+  directCardinal?: string;
   pathPositions?: [number, number][];
   waypointNames?: string[];
   safetyLevel?: 'safe' | 'caution' | 'danger';

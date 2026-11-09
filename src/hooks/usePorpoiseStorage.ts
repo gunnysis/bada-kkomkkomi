@@ -16,15 +16,21 @@ export function usePorpoiseStorage() {
   });
   const [isLoaded] = useState(true);
 
-  // 저장소 쓰기 헬퍼
-  const persistRecords = useCallback((newRecords: PorpoiseRecord[]) => {
-    setRecords(newRecords);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newRecords));
-    } catch (e) {
-      console.error('Failed to persist porpoise records to localStorage:', e);
-    }
-  }, []);
+  // 저장소 쓰기 헬퍼 (함수형 상태 업데이터 지원으로 참조 안정성 및 동시 호출 정합성 보장)
+  const updateAndPersist = useCallback(
+    (updater: (prev: PorpoiseRecord[]) => PorpoiseRecord[]) => {
+      setRecords((prev) => {
+        const next = updater(prev);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch (e) {
+          console.error('Failed to persist porpoise records to localStorage:', e);
+        }
+        return next;
+      });
+    },
+    [],
+  );
 
   // 생성
   const addRecord = useCallback(
@@ -34,29 +40,28 @@ export function usePorpoiseStorage() {
         id: `finless_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         createdAt: Date.now(),
       };
-      const updated = [newEntry, ...records];
-      persistRecords(updated);
+      updateAndPersist((prev) => [newEntry, ...prev]);
       return newEntry;
     },
-    [records, persistRecords]
+    [updateAndPersist],
   );
 
   // 수정
   const updateRecord = useCallback(
     (id: string, updates: Partial<Omit<PorpoiseRecord, 'id' | 'createdAt'>>) => {
-      const updated = records.map((r) => (r.id === id ? { ...r, ...updates } : r));
-      persistRecords(updated);
+      updateAndPersist((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+      );
     },
-    [records, persistRecords]
+    [updateAndPersist],
   );
 
   // 삭제
   const deleteRecord = useCallback(
     (id: string) => {
-      const updated = records.filter((r) => r.id !== id);
-      persistRecords(updated);
+      updateAndPersist((prev) => prev.filter((r) => r.id !== id));
     },
-    [records, persistRecords]
+    [updateAndPersist],
   );
 
   return {

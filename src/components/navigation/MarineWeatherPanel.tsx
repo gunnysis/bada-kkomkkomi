@@ -6,25 +6,43 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronUp,
+  MapPin,
+  Plus,
   WifiOff,
   Wind,
   Waves,
 } from 'lucide-react';
-import type { MarineWeatherStatusResult } from '../../types/weather';
+import type { MarineWeatherStatusResult, WeatherThresholds } from '../../types/weather';
+import type { RouteWaypoint } from '../../types/route';
 
 interface MarineWeatherPanelProps {
   weather: MarineWeatherStatusResult;
+  thresholds?: WeatherThresholds;
+  waypoints?: RouteWaypoint[];
+  nearestAreaLabel?: string;
+  onSelectWaypointWeather?: (lat: number, lng: number, name: string) => void;
+  onAddCurrentWeatherAsWaypoint?: () => void;
   onOpenSettings: () => void;
   onRefresh: () => void;
 }
 
 export function MarineWeatherPanel({
   weather,
+  thresholds,
+  waypoints = [],
+  nearestAreaLabel,
+  onSelectWaypointWeather,
+  onAddCurrentWeatherAsWaypoint,
   onOpenSettings,
   onRefresh,
 }: MarineWeatherPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const current = weather.current;
+  const isCurrentMatchingWaypoint = waypoints.some(
+    (wp) =>
+      Math.abs(weather.lat - wp.lat) < 0.002 &&
+      Math.abs(weather.lng - wp.lng) < 0.002,
+  );
 
   // 신호등 색상 및 텍스트 매핑 (3단계: 좋음-초록, 보통-회색, 나쁨-빨강, 실패/미확인-'?')
   const gradeMeta = {
@@ -70,6 +88,11 @@ export function MarineWeatherPanel({
             <span className="text-[10px] font-black tracking-wider text-sky-400 uppercase">
               ECMWF 해상기상 3단계 판정
             </span>
+            {nearestAreaLabel && (
+              <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[10px] font-extrabold text-sky-300">
+                📍 {nearestAreaLabel}
+              </span>
+            )}
             <span className="font-mono text-[10px] font-bold text-slate-400">
               ({weather.lat.toFixed(3)}°N, {weather.lng.toFixed(3)}°E)
             </span>
@@ -109,7 +132,14 @@ export function MarineWeatherPanel({
               </div>
             )}
           </div>
-          <p className="mt-0.5 truncate text-[11px] font-bold text-slate-300">{gradeMeta.desc}</p>
+          <p className="mt-0.5 truncate text-[11px] font-bold text-slate-300">
+            {gradeMeta.desc}
+            {thresholds && (
+              <span className="ml-1 font-mono text-[10px] text-slate-400">
+                (양호 &lt;{thresholds.windKnot.good}kn·&lt;{thresholds.waveMeter.good}m / 주의 &lt;{thresholds.windKnot.moderate}kn·&lt;{thresholds.waveMeter.moderate}m)
+              </span>
+            )}
+          </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
@@ -149,6 +179,58 @@ export function MarineWeatherPanel({
 
       {!isCollapsed && (
         <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto border-t border-slate-700/80 pt-2 pr-0.5">
+          {/* 바닷길 시간계산 항로(출발·경유·도착) 해역 원터치 기상 연동 칩 */}
+          {waypoints.length > 0 && onSelectWaypointWeather && (
+            <div
+              role="group"
+              aria-label="현재 항로 지점별 기상 빠른 조회"
+              className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-700/90 bg-slate-900/90 px-2 py-1.5 scrollbar-none"
+            >
+              <span className="flex shrink-0 items-center gap-1 text-[10px] font-black text-sky-400">
+                <MapPin className="h-3 w-3" />
+                항로 해역:
+              </span>
+              {waypoints.map((wp, idx) => {
+                const roleLabel =
+                  wp.type === 'start'
+                    ? '출발'
+                    : wp.type === 'end'
+                      ? '도착'
+                      : `경유${idx}`;
+                const isNearCurrent =
+                  Math.abs(weather.lat - wp.lat) < 0.002 &&
+                  Math.abs(weather.lng - wp.lng) < 0.002;
+                return (
+                  <button
+                    key={wp.id}
+                    type="button"
+                    onClick={() => onSelectWaypointWeather(wp.lat, wp.lng, wp.name)}
+                    className={`flex shrink-0 items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-extrabold transition active:scale-95 ${
+                      isNearCurrent
+                        ? 'border-sky-300 bg-sky-400 text-slate-950 shadow'
+                        : 'border-slate-700 bg-slate-800 text-slate-200 hover:border-sky-400'
+                    }`}
+                  >
+                    <span className="opacity-80">[{roleLabel}]</span>
+                    <span className="max-w-[115px] truncate">{wp.name}</span>
+                  </button>
+                );
+              })}
+
+              {!isCurrentMatchingWaypoint && onAddCurrentWeatherAsWaypoint && (
+                <button
+                  type="button"
+                  onClick={onAddCurrentWeatherAsWaypoint}
+                  className="ml-auto flex shrink-0 items-center gap-0.5 rounded-lg border border-amber-400/80 bg-amber-500/25 px-2 py-0.5 text-[11px] font-black text-amber-200 shadow transition active:scale-95"
+                  title="현재 기상 조회 중인 해역을 항로 경유지로 추가"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>이 해역 경유지 추가</span>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* 조회 실패 / 자료 없음 경고 배너 */}
           {weather.error && (
             <div
@@ -164,13 +246,24 @@ export function MarineWeatherPanel({
 
           {/* 날짜/시간 좌우 타임라인 슬라이더 (API가 제공하는 예보 시각만 선택 가능) */}
           <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-xs font-extrabold text-slate-300">
-                예보 날짜·시각 선택 (48시간 KST 타임스탬프 정합)
+            <div className="mb-1.5 flex items-center justify-between gap-1.5">
+              <span className="truncate text-xs font-extrabold text-slate-300">
+                예보 날짜·시각 선택 (48시간 KST)
               </span>
-              <span className="font-mono text-xs font-bold text-sky-300">
-                {current?.displayTime ?? '자료 없음'}
-              </span>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {weather.selectedIndex !== 0 && weather.hourly.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => weather.setSelectedIndex(0)}
+                    className="rounded-md border border-sky-400/60 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300 active:scale-95"
+                  >
+                    현재시각으로
+                  </button>
+                )}
+                <span className="font-mono text-xs font-bold text-sky-300">
+                  {current?.displayTime ?? '자료 없음'}
+                </span>
+              </div>
             </div>
 
             {weather.hourly.length > 0 ? (
@@ -183,13 +276,23 @@ export function MarineWeatherPanel({
                       : item.grade === 'moderate'
                         ? '#94a3b8'
                         : item.grade === 'bad'
-                           ? '#ef4444'
+                          ? '#ef4444'
                           : '#64748b';
+                  const itemGradeLabel =
+                    item.grade === 'good'
+                      ? '좋음'
+                      : item.grade === 'moderate'
+                        ? '보통'
+                        : item.grade === 'bad'
+                          ? '나쁨'
+                          : '미확인';
 
                   return (
                     <button
                       key={`forecast-${item.time}`}
                       type="button"
+                      aria-pressed={isSelected}
+                      aria-label={`${item.datePart} ${item.hourPart} 기상 판정 ${itemGradeLabel}`}
                       onClick={() => weather.setSelectedIndex(idx)}
                       className={`flex min-h-14 w-16 shrink-0 flex-col items-center justify-center rounded-xl border-2 px-1 py-1.5 transition active:scale-95 ${
                         isSelected

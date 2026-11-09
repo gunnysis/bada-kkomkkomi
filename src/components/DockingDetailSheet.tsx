@@ -23,6 +23,7 @@ interface DockingDetailSheetProps {
   onFlyToPoint: (lat: number, lng: number) => void;
   onRequestReport: (feature: DockingFeature) => void;
   onRequestRoadview?: (feature: DockingFeature) => void;
+  onRequestNavigateRoute?: (feature: DockingFeature) => void;
 }
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -45,6 +46,7 @@ export function DockingDetailSheet({
   onFlyToPoint,
   onRequestReport,
   onRequestRoadview,
+  onRequestNavigateRoute,
 }: DockingDetailSheetProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [copied, setCopied] = useState(false);
@@ -90,6 +92,11 @@ export function DockingDetailSheet({
     <dialog
       ref={dialogRef}
       onClose={onClose}
+      onCancel={(e) => {
+        if (document.querySelector('[data-photo-lightbox="true"]')) {
+          e.preventDefault();
+        }
+      }}
       onClick={(e) => {
         if (e.target === dialogRef.current) {
           onClose();
@@ -226,8 +233,23 @@ export function DockingDetailSheet({
             </div>
           </div>
 
+          {/* 원터치 브릿지: 이 접안지로 바닷길 시간·기상 계산하기 */}
+          {onRequestNavigateRoute && (
+            <button
+              type="button"
+              onClick={() => {
+                onRequestNavigateRoute(feature);
+                onClose();
+              }}
+              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-teal-300 bg-gradient-to-r from-teal-500 to-sky-500 px-3 py-3 text-xs font-black text-slate-950 shadow-lg transition active:scale-[0.99] sm:text-sm"
+            >
+              <Navigation className="h-4 w-4 stroke-[2.6]" />
+              <span>🧭 이 접안지를 목적지로 바닷길 시간·기상 계산하기</span>
+            </button>
+          )}
+
           {/* 액션 버튼 4종: 좌표복사 / 포인트정밀확대 / 3D 현장뷰 / 현장제보 */}
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
               type="button"
               onClick={handleCopyCoords}

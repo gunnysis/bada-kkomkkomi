@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Check,
@@ -36,8 +36,17 @@ import {
   type KakaoSdkErrorCode,
 } from '../services/kakaoMapLoader';
 import { KakaoMapCanvas } from './map/KakaoMapCanvas';
-import { LegacyLeafletCanvas } from './map/LegacyLeafletCanvas';
-import { Roadview3DModal } from './map/Roadview3DModal';
+
+const LegacyLeafletCanvas = lazy(() =>
+  import('./map/LegacyLeafletCanvas').then((m) => ({
+    default: m.LegacyLeafletCanvas,
+  })),
+);
+const Roadview3DModal = lazy(() =>
+  import('./map/Roadview3DModal').then((m) => ({
+    default: m.Roadview3DModal,
+  })),
+);
 
 const MAP_TYPE_PREFS_STORAGE_KEY = 'bada_kkomkkomi_map_type_prefs_v1';
 
@@ -105,6 +114,7 @@ export interface MapViewProps {
   portsList?: MarinePort[];
   showPortMarkersOnMap?: boolean;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
+  onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
 
   // 3.2 바닷길 콕콕 (해상기상)
@@ -144,6 +154,7 @@ export function MapView({
   portsList = [],
   showPortMarkersOnMap = true,
   onUpdateWaypointPos,
+  onRemoveWaypoint,
   onMapClickForRoute,
   weatherCoords,
   weatherGrade,
@@ -273,8 +284,8 @@ export function MapView({
   const fetchedLayerIdsRef = useRef<Set<string>>(new Set());
 
   const fetchMissingGeoJsonLayers = useCallback(() => {
+    if (externalGeoJsonLayersData !== undefined) return;
     layers.forEach((layer) => {
-      if (externalGeoJsonLayersData?.[layer.id]) return;
       if (layer.url && !fetchedLayerIdsRef.current.has(layer.id)) {
         fetchedLayerIdsRef.current.add(layer.id);
         const fullUrl = `${import.meta.env.BASE_URL}${layer.url.replace(/^\/+/, '')}`;
@@ -447,6 +458,7 @@ export function MapView({
           portsList={portsList}
           showPortMarkersOnMap={showPortMarkersOnMap}
           onUpdateWaypointPos={onUpdateWaypointPos}
+          onRemoveWaypoint={onRemoveWaypoint}
           onMapClickForRoute={onMapClickForRoute}
           weatherCoords={weatherCoords}
           weatherGrade={weatherGrade}
@@ -458,38 +470,47 @@ export function MapView({
           zoomStepTrigger={zoomStepTrigger}
         />
       ) : (
-        <LegacyLeafletCanvas
-          baseMapType={baseMapType}
-          overlayMapTypes={overlayMapTypes}
-          activeMainTab={activeMainTab}
-          navSubTab={navSubTab}
-          features={features}
-          selectedFeature={selectedFeature}
-          onSelectFeature={onSelectFeature}
-          layers={layers}
-          geoJsonLayersData={geoJsonLayersData}
-          showPorpoiseLayer={showPorpoiseLayer}
-          isPorpoiseAddMode={isPorpoiseAddMode}
-          isReportPickMode={isReportPickMode}
-          porpoiseRecords={porpoiseRecords}
-          onSelectPorpoise={onSelectPorpoise}
-          onMapClickForPorpoise={onMapClickForPorpoise}
-          onMapClickForReport={onMapClickForReport}
-          routeWaypoints={routeWaypoints}
-          routeLegs={routeLegs}
-          portsList={portsList}
-          showPortMarkersOnMap={showPortMarkersOnMap}
-          onUpdateWaypointPos={onUpdateWaypointPos}
-          onMapClickForRoute={onMapClickForRoute}
-          weatherCoords={weatherCoords}
-          weatherGrade={weatherGrade}
-          onUpdateWeatherCoords={onUpdateWeatherCoords}
-          userLocation={userLocation}
-          viewport={viewport}
-          onViewportChange={handleViewportChange}
-          flyTarget={effectiveFlyTarget}
-          zoomStepTrigger={zoomStepTrigger}
-        />
+        <Suspense
+          fallback={
+            <div className="flex h-full w-full items-center justify-center bg-[#0b192c] text-xs font-bold text-slate-300">
+              해양 보조 지도 엔진 불러오는 중...
+            </div>
+          }
+        >
+          <LegacyLeafletCanvas
+            baseMapType={baseMapType}
+            overlayMapTypes={overlayMapTypes}
+            activeMainTab={activeMainTab}
+            navSubTab={navSubTab}
+            features={features}
+            selectedFeature={selectedFeature}
+            onSelectFeature={onSelectFeature}
+            layers={layers}
+            geoJsonLayersData={geoJsonLayersData}
+            showPorpoiseLayer={showPorpoiseLayer}
+            isPorpoiseAddMode={isPorpoiseAddMode}
+            isReportPickMode={isReportPickMode}
+            porpoiseRecords={porpoiseRecords}
+            onSelectPorpoise={onSelectPorpoise}
+            onMapClickForPorpoise={onMapClickForPorpoise}
+            onMapClickForReport={onMapClickForReport}
+            routeWaypoints={routeWaypoints}
+            routeLegs={routeLegs}
+            portsList={portsList}
+            showPortMarkersOnMap={showPortMarkersOnMap}
+            onUpdateWaypointPos={onUpdateWaypointPos}
+            onRemoveWaypoint={onRemoveWaypoint}
+            onMapClickForRoute={onMapClickForRoute}
+            weatherCoords={weatherCoords}
+            weatherGrade={weatherGrade}
+            onUpdateWeatherCoords={onUpdateWeatherCoords}
+            userLocation={userLocation}
+            viewport={viewport}
+            onViewportChange={handleViewportChange}
+            flyTarget={effectiveFlyTarget}
+            zoomStepTrigger={zoomStepTrigger}
+          />
+        </Suspense>
       )}
 
       {/* 1-B. 공간정보 GeoJSON 레이어 로드 오류 발생 시 재시도 배너 */}
@@ -924,17 +945,17 @@ export function MapView({
       )}
 
       {/* 3-E. 360° 3D 구면 현장 로드뷰 모달 */}
-      <Roadview3DModal
-        key={
-          activeRoadviewTarget
-            ? `${activeRoadviewTarget.lat.toFixed(5)}:${activeRoadviewTarget.lng.toFixed(5)}:${activeRoadviewTarget.pointId ?? ''}`
-            : 'roadview-closed'
-        }
-        kakaoMaps={kakaoNamespace}
-        target={activeRoadviewTarget}
-        onClose={handleCloseRoadviewModal}
-        onFallbackToSatelliteTerrain={handleFallbackToSatelliteTerrain}
-      />
+      {activeRoadviewTarget && (
+        <Suspense fallback={null}>
+          <Roadview3DModal
+            key={`${activeRoadviewTarget.lat.toFixed(5)}:${activeRoadviewTarget.lng.toFixed(5)}:${activeRoadviewTarget.pointId ?? ''}`}
+            kakaoMaps={kakaoNamespace}
+            target={activeRoadviewTarget}
+            onClose={handleCloseRoadviewModal}
+            onFallbackToSatelliteTerrain={handleFallbackToSatelliteTerrain}
+          />
+        </Suspense>
+      )}
 
       {/* 4. Kakao Map GIS 진단 & 도메인 등록 안내 모달 */}
       {isDiagModalOpen && (

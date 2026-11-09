@@ -52,6 +52,7 @@ import {
   loadGitHubSyncConfig,
   saveGitHubSyncConfig,
 } from '../../services/githubLayerSyncService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface LayerControlModalProps {
   isOpen: boolean;
@@ -810,6 +811,8 @@ export function LayerControlModal({
     setGitHubConfigSavedMsg('원격 GitHub 자동 배포 설정이 기기에 저장되었습니다.');
     window.setTimeout(() => setGitHubConfigSavedMsg(null), 2500);
   }, [gitHubConfig]);
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

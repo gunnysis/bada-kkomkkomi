@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { MarinePort } from '../../types/port';
 import { searchMarinePorts } from '../../services/routeGeoService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface PortSelectModalProps {
   isOpen: boolean;
@@ -48,6 +49,8 @@ export function PortSelectModal({
 }: PortSelectModalProps) {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTabKey>('all');
+
+  useEscapeKey(isOpen, onClose);
 
   const counts = useMemo(() => {
     return {

@@ -53,6 +53,7 @@ export interface LegacyLeafletCanvasProps {
   portsList: MarinePort[];
   showPortMarkersOnMap: boolean;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
+  onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
 
   // 3.2 바닷길 콕콕 (해상기상)
@@ -137,11 +138,12 @@ function getRouteWaypointIcon(
   type: 'start' | 'waypoint' | 'end',
   label: string,
   orderIdx: number,
+  waypointId?: string,
 ): L.DivIcon {
   const shortLabel = label.length > 12 ? `${label.slice(0, 12)}…` : label;
-  const cacheKey = `wp:${type}:${orderIdx}:${shortLabel}`;
+  const cacheKey = `wp:${type}:${orderIdx}:${shortLabel}:${waypointId ?? ''}`;
   return getCachedDivIcon(cacheKey, () => {
-    const spec = buildRouteWaypointSpec(type, label, orderIdx);
+    const spec = buildRouteWaypointSpec(type, label, orderIdx, waypointId);
     return L.divIcon({
       className: 'bada-custom-marker',
       html: spec.html,
@@ -301,6 +303,7 @@ export function LegacyLeafletCanvas({
   portsList,
   showPortMarkersOnMap,
   onUpdateWaypointPos,
+  onRemoveWaypoint,
   onMapClickForRoute,
   weatherCoords,
   weatherGrade,
@@ -586,10 +589,20 @@ export function LegacyLeafletCanvas({
             <Marker
               key={wp.id}
               position={[wp.lat, wp.lng]}
-              icon={getRouteWaypointIcon(wp.type, wp.name, idx)}
+              icon={getRouteWaypointIcon(wp.type, wp.name, idx, wp.id)}
               draggable={true}
               zIndexOffset={700}
               eventHandlers={{
+                click: (e) => {
+                  const origTarget = e.originalEvent?.target as HTMLElement | null;
+                  const removeBtn = origTarget?.closest(
+                    '[data-remove-waypoint-id]',
+                  ) as HTMLElement | null;
+                  if (removeBtn && onRemoveWaypoint) {
+                    e.originalEvent?.stopPropagation();
+                    onRemoveWaypoint(wp.id);
+                  }
+                },
                 dragend: (e) => {
                   const latlng = e.target.getLatLng();
                   onUpdateWaypointPos(wp.id, latlng.lat, latlng.lng);

@@ -1,24 +1,41 @@
 import { useEffect, useRef } from 'react';
-import { Download, Wifi, WifiOff } from 'lucide-react';
+import { ArrowRight, Download, Layers, Navigation, Waves, Wifi, WifiOff } from 'lucide-react';
+import type { NavPanelType } from '../../hooks/useAppRoute';
+
+export type NotebookLaunchPreset = 'hazard' | 'all' | 'layers';
 
 export interface HomeScreenProps {
   lastTriggeredCardId: 'notebook' | 'navigation' | null;
   onSelectFeatureCard: (target: 'notebook' | 'navigation') => void;
+  onSelectNotebookPreset?: (preset: NotebookLaunchPreset) => void;
+  onSelectNavigationPanel?: (panel: NavPanelType) => void;
+  hasActiveWorkspace?: boolean;
+  activeWorkspaceSummary?: string;
+  onResumeWorkspace?: () => void;
+  hazardCount?: number;
+  totalDockingCount?: number;
+  totalPortsCount?: number;
   isOnline: boolean;
   isStandalone: boolean;
   onInstallClick: () => void;
 }
 
 /**
- * 초기 접속 인트로 허브 (HomeScreen)
- * - docs/intro_hub_ux_proposal.md 및 public/dev/intro_design.png 시안(2x2 4개 카드) 100% 정합 구현
- * - '꼬미의 바다수첩', '바닷길 콕콕'은 클릭 시 즉시 해당 워크스페이스로 진입하며,
- *   '꼬미의 달력', '설정'은 시안과 동일하게 2x2 그리드에 표시하되 현재는 비활성(disabled, 클릭 무시) 상태로 두고
- *   추후 기능 개발 시 활성화하여 바로 접속할 수 있도록 구조화했습니다.
+ * 초기 접속 인트로 허브 (HomeScreen v1.5)
+ * - 시안(2x2 4개 카드)을 유지하면서 '꼬미의 바다수첩'과 '바닷길 콕콕'의 세부 기능으로 원터치 직행(Quick-Jump)할 수 있는 런처 칩을 제공합니다.
+ * - 중첩 <button> 금지 웹 표준을 준수하기 위해 각 활성 카드는 <article> 컨테이너 내부에 대표 진입 <button>과 하단 직행 <button> 그룹을 분리 배치했습니다.
  */
 export function HomeScreen({
   lastTriggeredCardId,
   onSelectFeatureCard,
+  onSelectNotebookPreset,
+  onSelectNavigationPanel,
+  hasActiveWorkspace = false,
+  activeWorkspaceSummary,
+  onResumeWorkspace,
+  hazardCount = 9,
+  totalDockingCount = 55,
+  totalPortsCount = 136,
   isOnline,
   isStandalone,
   onInstallClick,
@@ -26,14 +43,30 @@ export function HomeScreen({
   const notebookBtnRef = useRef<HTMLButtonElement | null>(null);
   const navigationBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  // Workspace에서 Home으로 복귀했을 때 마지막 실행 카드로 초점(Focus) 복원 (proposal 2.3 계약)
+  // Workspace에서 Home으로 복귀했을 때 마지막 실행 카드로 초점(Focus) 복원
   useEffect(() => {
     if (lastTriggeredCardId === 'notebook') {
-      notebookBtnRef.current?.focus();
+      notebookBtnRef.current?.focus({ preventScroll: true });
     } else if (lastTriggeredCardId === 'navigation') {
-      navigationBtnRef.current?.focus();
+      navigationBtnRef.current?.focus({ preventScroll: true });
     }
   }, [lastTriggeredCardId]);
+
+  const handleLaunchNotebook = (preset: NotebookLaunchPreset) => {
+    if (onSelectNotebookPreset) {
+      onSelectNotebookPreset(preset);
+      return;
+    }
+    onSelectFeatureCard('notebook');
+  };
+
+  const handleLaunchNavigation = (panel: NavPanelType) => {
+    if (onSelectNavigationPanel) {
+      onSelectNavigationPanel(panel);
+      return;
+    }
+    onSelectFeatureCard('navigation');
+  };
 
   return (
     <div
@@ -129,7 +162,7 @@ export function HomeScreen({
         {/* 히어로 영역: 타이틀 + 부제 + 꼬미 캐릭터 일러스트 */}
         <section
           aria-labelledby="home-hero-title"
-          className="relative mt-4 flex items-end justify-between gap-2 pt-2 pb-4 sm:mt-6"
+          className="relative mt-3 flex items-end justify-between gap-2 pt-1 pb-3 sm:mt-5"
         >
           <div className="z-10 flex-1">
             <p className="inline-block rounded-full bg-[#0369a1] px-2.5 py-0.5 text-[11px] font-black text-white shadow-sm">
@@ -151,7 +184,7 @@ export function HomeScreen({
           {/* 망원경을 든 꼬미 마스코트 벡터 일러스트 (장식용, aria-hidden="true") */}
           <div aria-hidden="true" className="relative z-10 shrink-0">
             <svg
-              className="h-32 w-32 drop-shadow-xl sm:h-36 sm:w-36"
+              className="h-28 w-28 drop-shadow-xl sm:h-34 sm:w-34"
               viewBox="0 0 160 160"
               fill="none"
             >
@@ -252,131 +285,227 @@ export function HomeScreen({
           </div>
         </section>
 
-        {/* 4대 주요 기능 카드 컨테이너 (시안과 동일한 2x2 배치, 초소형 320px/텍스트 확대 시 자동 재배치) */}
+        {/* 이전 작업 세션이 열려 있을 때 원터치 복귀 배너 */}
+        {hasActiveWorkspace && onResumeWorkspace && (
+          <button
+            type="button"
+            onClick={onResumeWorkspace}
+            className="mb-3 flex w-full items-center justify-between gap-2 rounded-2xl border-2 border-white/90 bg-[#0b192c]/95 px-3.5 py-2.5 text-left text-white shadow-xl transition active:scale-[0.99]"
+          >
+            <div className="min-w-0">
+              <span className="block text-[10px] font-black tracking-wider text-amber-300 uppercase">
+                진행 중인 작업 공간 보존됨
+              </span>
+              <span className="block truncate text-xs font-extrabold text-sky-100 sm:text-sm">
+                {activeWorkspaceSummary || '직전 지도 화면으로 이어서 돌아가기'}
+              </span>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-sky-400 px-2.5 py-1 text-xs font-black text-slate-950">
+              <span>이어서 보기</span>
+              <ArrowRight className="h-3.5 w-3.5 stroke-[2.8]" />
+            </span>
+          </button>
+        )}
+
+        {/* 4대 주요 기능 카드 컨테이너 (시안과 동일한 2x2 배치 + 세부 기능 원터치 직행 칩) */}
         <nav
           aria-label="주요 기능"
           className="rounded-[2rem] border-4 border-white/95 bg-white/95 p-3.5 shadow-2xl backdrop-blur-md sm:p-5"
         >
           <div className="grid grid-cols-1 gap-3.5 min-[350px]:grid-cols-2 sm:gap-4">
-            {/* 카드 1 (활성): 꼬미의 바다수첩 */}
-            <button
-              ref={notebookBtnRef}
-              type="button"
-              onClick={() => onSelectFeatureCard('notebook')}
-              className="group relative flex min-h-[156px] w-full flex-col items-center justify-center rounded-3xl border-2 border-sky-200 bg-gradient-to-b from-[#e0f2fe] to-[#bae6fd] p-3.5 text-center shadow-md transition hover:-translate-y-0.5 hover:border-sky-500 hover:shadow-lg active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0369a1] sm:p-4"
+            {/* 카드 1 (활성): 꼬미의 바다수첩 + 원터치 직행 칩 */}
+            <article
+              aria-label="꼬미의 바다수첩"
+              className="flex min-h-[192px] w-full flex-col justify-between overflow-hidden rounded-3xl border-2 border-sky-200 bg-gradient-to-b from-[#e0f2fe] to-[#bae6fd] p-2.5 shadow-md transition hover:border-sky-500 hover:shadow-lg sm:p-3.5"
             >
-              <svg
-                aria-hidden="true"
-                className="mb-2 h-15 w-18 transition-transform group-hover:scale-105 sm:h-16 sm:w-20"
-                viewBox="0 0 96 76"
-                fill="none"
+              <button
+                ref={notebookBtnRef}
+                type="button"
+                onClick={() => handleLaunchNotebook('hazard')}
+                className="group flex flex-1 flex-col items-center justify-center rounded-2xl px-1.5 pt-1 pb-2 text-center transition active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0369a1]"
               >
-                <path
-                  d="M12 18L36 12L60 18L84 12V62L60 68L36 62L12 68V18Z"
-                  fill="#ffffff"
-                  stroke="#0c4a6e"
-                  strokeWidth="4"
-                  strokeLinejoin="round"
-                />
-                <path d="M16 21L35 16V58L16 63V21Z" fill="#86efac" />
-                <path d="M37 16L59 21V63L37 58V16Z" fill="#38bdf8" />
-                <path d="M61 21L80 16V58L61 63V21Z" fill="#bbf7d0" />
-                <path d="M36 12V62M60 18V68" stroke="#0c4a6e" strokeWidth="3" />
-                <path
-                  d="M68 6C59.7 6 53 12.7 53 21C53 32 68 46 68 46C68 46 83 32 83 21C83 12.7 76.3 6 68 6Z"
-                  fill="#f97316"
-                  stroke="#ffffff"
-                  strokeWidth="3"
-                />
-                <circle cx="68" cy="21" r="5.5" fill="#ffffff" />
-              </svg>
-              <span className="text-base font-black tracking-tight text-[#082f49] sm:text-xl">
-                꼬미의 바다수첩
-              </span>
-              <span className="mt-1 text-[11px] leading-snug font-bold text-slate-700 sm:text-xs">
-                해양지도 · 갯바위 접안정보 · 현장정보
-              </span>
-            </button>
+                <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-red-600/90 px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
+                  🚨 위험주의 {hazardCount}곳 우선 표시
+                </span>
+                <svg
+                  aria-hidden="true"
+                  className="mb-1.5 h-13 w-16 transition-transform group-hover:scale-105 sm:h-15 sm:w-18"
+                  viewBox="0 0 96 76"
+                  fill="none"
+                >
+                  <path
+                    d="M12 18L36 12L60 18L84 12V62L60 68L36 62L12 68V18Z"
+                    fill="#ffffff"
+                    stroke="#0c4a6e"
+                    strokeWidth="4"
+                    strokeLinejoin="round"
+                  />
+                  <path d="M16 21L35 16V58L16 63V21Z" fill="#86efac" />
+                  <path d="M37 16L59 21V63L37 58V16Z" fill="#38bdf8" />
+                  <path d="M61 21L80 16V58L61 63V21Z" fill="#bbf7d0" />
+                  <path d="M36 12V62M60 18V68" stroke="#0c4a6e" strokeWidth="3" />
+                  <path
+                    d="M68 6C59.7 6 53 12.7 53 21C53 32 68 46 68 46C68 46 83 32 83 21C83 12.7 76.3 6 68 6Z"
+                    fill="#ef4444"
+                    stroke="#ffffff"
+                    strokeWidth="3"
+                  />
+                  <circle cx="68" cy="21" r="5.5" fill="#ffffff" />
+                </svg>
+                <span className="text-base font-black tracking-tight text-[#082f49] sm:text-xl">
+                  꼬미의 바다수첩
+                </span>
+                <span className="mt-0.5 text-[11px] leading-snug font-bold text-slate-700 sm:text-xs">
+                  해양지도 · 갯바위 접안 · 현장정보
+                </span>
+              </button>
 
-            {/* 카드 2 (활성): 바닷길 콕콕 */}
-            <button
-              ref={navigationBtnRef}
-              type="button"
-              onClick={() => onSelectFeatureCard('navigation')}
-              className="group relative flex min-h-[156px] w-full flex-col items-center justify-center rounded-3xl border-2 border-teal-200 bg-gradient-to-b from-[#ccfbf1] to-[#99f6e4] p-3.5 text-center shadow-md transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow-lg active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e] sm:p-4"
-            >
-              <svg
-                aria-hidden="true"
-                className="mb-2 h-15 w-18 transition-transform group-hover:scale-105 sm:h-16 sm:w-20"
-                viewBox="0 0 96 76"
-                fill="none"
+              <div
+                role="group"
+                aria-label="꼬미의 바다수첩 세부 기능 바로가기"
+                className="grid grid-cols-3 gap-1 border-t border-sky-300/80 pt-2"
               >
-                <circle cx="68" cy="20" r="9" fill="#f59e0b" />
-                <path
-                  d="M54 34H78C83.5 34 88 29.5 88 24C88 18.8 84 14.5 78.9 14.1C76.8 9.3 72 6 66.5 6C59 6 53 12 53 19.5"
-                  fill="#ffffff"
-                  stroke="#0c4a6e"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-                <rect
-                  x="30"
-                  y="8"
-                  width="14"
-                  height="6"
-                  rx="2"
-                  fill="#0284c7"
-                  stroke="#0c4a6e"
-                  strokeWidth="3"
-                />
-                <circle
-                  cx="37"
-                  cy="40"
-                  r="24"
-                  fill="#ffffff"
-                  stroke="#0c4a6e"
-                  strokeWidth="5"
-                />
-                <path
-                  d="M37 40L48 30"
-                  stroke="#0c4a6e"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="37" cy="40" r="4" fill="#0c4a6e" />
-                <path
-                  d="M52 52C58 47 66 47 72 52C78 57 86 57 90 52"
-                  stroke="#06b6d4"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M52 62C58 57 66 57 72 62C78 67 86 67 90 62"
-                  stroke="#06b6d4"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="text-base font-black tracking-tight text-[#082f49] sm:text-xl">
-                바닷길 콕콕
-              </span>
-              <span className="mt-1 text-[11px] leading-snug font-bold text-slate-700 sm:text-xs">
-                시간계산 · 기상상태판정
-              </span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => handleLaunchNotebook('hazard')}
+                  title="위험·암초 주의 9개소 집중 표시로 바로 이동"
+                  className="flex min-h-8 items-center justify-center rounded-xl bg-red-600 px-1 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-red-700 active:scale-95"
+                >
+                  🚨위험 {hazardCount}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLaunchNotebook('all')}
+                  title="전체 55개 접안지 모두 보기로 바로 이동"
+                  className="flex min-h-8 items-center justify-center rounded-xl border border-sky-400 bg-white/90 px-1 py-1 text-[10px] font-black whitespace-nowrap text-[#082f49] shadow-sm transition hover:bg-sky-50 active:scale-95"
+                >
+                  전체 {totalDockingCount}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLaunchNotebook('layers')}
+                  title="공간정보 레이어 관리 창 바로 열기"
+                  className="flex min-h-8 items-center justify-center gap-0.5 rounded-xl border border-emerald-500/70 bg-emerald-950/90 px-1 py-1 text-[10px] font-black whitespace-nowrap text-emerald-200 shadow-sm transition hover:bg-emerald-900 active:scale-95"
+                >
+                  <Layers className="h-2.5 w-2.5 shrink-0" />
+                  <span>레이어</span>
+                </button>
+              </div>
+            </article>
+
+            {/* 카드 2 (활성): 바닷길 콕콕 + 원터치 직행 칩 */}
+            <article
+              aria-label="바닷길 콕콕"
+              className="flex min-h-[192px] w-full flex-col justify-between overflow-hidden rounded-3xl border-2 border-teal-200 bg-gradient-to-b from-[#ccfbf1] to-[#99f6e4] p-2.5 shadow-md transition hover:border-teal-600 hover:shadow-lg sm:p-3.5"
+            >
+              <button
+                ref={navigationBtnRef}
+                type="button"
+                onClick={() => handleLaunchNavigation('route')}
+                className="group flex flex-1 flex-col items-center justify-center rounded-2xl px-1.5 pt-1 pb-2 text-center transition active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
+              >
+                <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#0f766e] px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
+                  ⚓ 항포구 {totalPortsCount}곳 · ECMWF 기상
+                </span>
+                <svg
+                  aria-hidden="true"
+                  className="mb-1.5 h-13 w-16 transition-transform group-hover:scale-105 sm:h-15 sm:w-18"
+                  viewBox="0 0 96 76"
+                  fill="none"
+                >
+                  <circle cx="68" cy="20" r="9" fill="#f59e0b" />
+                  <path
+                    d="M54 34H78C83.5 34 88 29.5 88 24C88 18.8 84 14.5 78.9 14.1C76.8 9.3 72 6 66.5 6C59 6 53 12 53 19.5"
+                    fill="#ffffff"
+                    stroke="#0c4a6e"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+                  <rect
+                    x="30"
+                    y="8"
+                    width="14"
+                    height="6"
+                    rx="2"
+                    fill="#0284c7"
+                    stroke="#0c4a6e"
+                    strokeWidth="3"
+                  />
+                  <circle
+                    cx="37"
+                    cy="40"
+                    r="24"
+                    fill="#ffffff"
+                    stroke="#0c4a6e"
+                    strokeWidth="5"
+                  />
+                  <path
+                    d="M37 40L48 30"
+                    stroke="#0c4a6e"
+                    strokeWidth="4.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="37" cy="40" r="4" fill="#0c4a6e" />
+                  <path
+                    d="M52 52C58 47 66 47 72 52C78 57 86 57 90 52"
+                    stroke="#06b6d4"
+                    strokeWidth="4.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M52 62C58 57 66 57 72 62C78 67 86 67 90 62"
+                    stroke="#06b6d4"
+                    strokeWidth="4.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="text-base font-black tracking-tight text-[#082f49] sm:text-xl">
+                  바닷길 콕콕
+                </span>
+                <span className="mt-0.5 text-[11px] leading-snug font-bold text-slate-700 sm:text-xs">
+                  실항로 시간계산 · 기상상태판정
+                </span>
+              </button>
+
+              <div
+                role="group"
+                aria-label="바닷길 콕콕 세부 기능 바로가기"
+                className="grid grid-cols-2 gap-1 border-t border-teal-300/80 pt-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => handleLaunchNavigation('route')}
+                  title="실항로 시간계산기로 바로 이동"
+                  className="flex min-h-8 items-center justify-center gap-1 rounded-xl bg-[#0f766e] px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#115e59] active:scale-95"
+                >
+                  <Navigation className="h-2.5 w-2.5 shrink-0" />
+                  <span>시간계산</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleLaunchNavigation('weather')}
+                  title="ECMWF 해상기상 판정 화면으로 바로 이동"
+                  className="flex min-h-8 items-center justify-center gap-1 rounded-xl border border-teal-500 bg-white/95 px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-[#082f49] shadow-sm transition hover:bg-teal-50 active:scale-95"
+                >
+                  <Waves className="h-2.5 w-2.5 shrink-0 text-sky-600" />
+                  <span>기상판정</span>
+                </button>
+              </div>
+            </article>
 
             {/* 카드 3 (추후 기능 개발 시 연결 예정 - 현재 클릭 무시/disabled): 꼬미의 달력 */}
             <button
               type="button"
               disabled
-              className="relative flex min-h-[156px] w-full cursor-not-allowed flex-col items-center justify-center rounded-3xl border-2 border-indigo-200/80 bg-gradient-to-b from-[#e0e7ff] to-[#c7d2fe] p-3.5 text-center opacity-85 shadow-sm sm:p-4"
+              aria-disabled="true"
+              className="relative flex min-h-[142px] w-full cursor-not-allowed flex-col items-center justify-center rounded-3xl border-2 border-indigo-200/80 bg-gradient-to-b from-[#e0e7ff] to-[#c7d2fe] p-3 text-center opacity-75 saturate-50 shadow-sm sm:p-4"
             >
               <span className="absolute top-2.5 right-2.5 rounded-full bg-slate-700/90 px-2 py-0.5 text-[10px] font-black text-amber-200">
                 출시 예정
               </span>
               <svg
                 aria-hidden="true"
-                className="mb-2 h-15 w-18 sm:h-16 sm:w-20"
+                className="mb-1.5 h-13 w-16 sm:h-15 sm:w-18"
                 viewBox="0 0 96 76"
                 fill="none"
               >
@@ -413,14 +542,15 @@ export function HomeScreen({
             <button
               type="button"
               disabled
-              className="relative flex min-h-[156px] w-full cursor-not-allowed flex-col items-center justify-center rounded-3xl border-2 border-slate-300 bg-gradient-to-b from-[#e2e8f0] to-[#cbd5e1] p-3.5 text-center opacity-85 shadow-sm sm:p-4"
+              aria-disabled="true"
+              className="relative flex min-h-[142px] w-full cursor-not-allowed flex-col items-center justify-center rounded-3xl border-2 border-slate-300 bg-gradient-to-b from-[#e2e8f0] to-[#cbd5e1] p-3 text-center opacity-75 saturate-50 shadow-sm sm:p-4"
             >
               <span className="absolute top-2.5 right-2.5 rounded-full bg-slate-700/90 px-2 py-0.5 text-[10px] font-black text-amber-200">
                 출시 예정
               </span>
               <svg
                 aria-hidden="true"
-                className="mb-2 h-15 w-18 sm:h-16 sm:w-20"
+                className="mb-1.5 h-13 w-16 sm:h-15 sm:w-18"
                 viewBox="0 0 96 76"
                 fill="none"
               >
@@ -444,8 +574,8 @@ export function HomeScreen({
         </nav>
 
         {/* 하단 안내 푸터 */}
-        <footer className="mt-4 text-center text-xs font-bold text-sky-100 drop-shadow">
-          통영·거제 해역 55개 접안지 · 135개 항포구/선착장 오프라인 지원 [v1.1]
+        <footer className="mt-3.5 text-center text-xs font-bold text-sky-100 drop-shadow">
+          통영·거제 해역 {totalDockingCount}개 접안지 · {totalPortsCount}개 항포구/선착장 오프라인 지원 [v1.7]
         </footer>
       </main>
     </div>

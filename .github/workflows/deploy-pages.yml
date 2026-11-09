@@ -33,13 +33,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate static config & spatial GeoJSON integrity
+      - name: Validate static config, docking GeoJSON & ports dataset integrity
         run: |
           node -e "
             const fs = require('fs');
             const path = require('path');
             const cfg = JSON.parse(fs.readFileSync('public/config/app_config.json', 'utf8'));
             if (!Array.isArray(cfg.layers)) throw new Error('Invalid app_config.json: layers must be an array');
+            const dockingFc = JSON.parse(fs.readFileSync('public/data/docking_points.geojson', 'utf8'));
+            if (dockingFc.type !== 'FeatureCollection' || !Array.isArray(dockingFc.features) || dockingFc.features.length < 55) {
+              throw new Error('Invalid docking_points.geojson: expected >=55 features');
+            }
+            const portsData = JSON.parse(fs.readFileSync('public/data/ports.json', 'utf8'));
+            if (!Array.isArray(portsData.ports) || portsData.ports.length < 136 || !Array.isArray(portsData.waypoints)) {
+              throw new Error('Invalid ports.json: expected >=136 ports and waypoints array');
+            }
+            const portIdSet = new Set(portsData.ports.map((p) => p.id));
+            for (const f of dockingFc.features) {
+              if (!portIdSet.has(f.properties.id)) {
+                throw new Error('Missing docking feature ID in ports.json: ' + f.properties.id);
+              }
+            }
             const layersDir = 'public/data/layers';
             for (const file of fs.readdirSync(layersDir)) {
               if (file.endsWith('.geojson') || file.endsWith('.json')) {
@@ -49,7 +63,7 @@ jobs:
                 }
               }
             }
-            console.log('Verified app_config.json and spatial layer files.');
+            console.log('Verified app_config.json, docking_points.geojson (55), ports.json (136), and spatial layer files.');
           "
 
       - name: Lint & Build PWA (with GitHub Pages base path)

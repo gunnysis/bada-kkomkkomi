@@ -96,12 +96,14 @@ export function useMarineWeather(
 
     fetchEcmwfMarineWeatherSeries(coords.lat, coords.lng, controller.signal)
       .then((alignedSeries) => {
+        if (controller.signal.aborted) return;
         setRawHourly(alignedSeries);
         setSelectedIndex(0);
         setError(null);
         setLastFetchedAt(Date.now());
       })
       .catch((err: unknown) => {
+        if (controller.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const msg =
           err instanceof Error ? err.message : 'ECMWF 기상 정보를 불러오지 못했습니다.';
@@ -128,6 +130,7 @@ export function useMarineWeather(
     setError(null);
     setRawHourly([]); // 새 위치 조회 중에는 '?'(unknown)로 초기화하여 오판 방지
     setCoords({ lat, lng });
+    setFetchNonce((n) => n + 1); // 동일 좌표 재호출 시에도 무한 로딩 없이 즉시 재조회 보장
   }, []);
 
   const refresh = useCallback(() => {

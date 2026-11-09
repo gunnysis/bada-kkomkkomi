@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Plus, Minus, Trash2, Calendar, Compass, X } from 'lucide-react';
 import type { PorpoiseRecord } from '../../types/porpoise';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface PorpoiseObservationModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export function PorpoiseObservationModal({
     return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
   });
   const [count, setCount] = useState(() => existingRecord?.count ?? 1);
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

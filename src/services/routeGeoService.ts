@@ -100,6 +100,8 @@ export function searchMarinePorts(
         score = 75;
       } else if (islandClean && extractChosung(islandClean).includes(q)) {
         score = 65;
+      } else if (eupClean && extractChosung(eupClean).includes(q)) {
+        score = 60;
       }
     } else {
       if (nameClean === q) {
@@ -181,7 +183,7 @@ export function calculateBearingDegrees(
     Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
 
   const theta = Math.atan2(y, x);
-  return Math.round(((theta * 180) / Math.PI + 360) % 360);
+  return Math.round(((theta * 180) / Math.PI + 360) % 360) % 360;
 }
 
 /**
@@ -258,6 +260,49 @@ export function resolveSmartWaypoint(
     matchedPortId: undefined,
     isCustomCoord: true,
   };
+}
+
+/**
+ * 해상기상 조회 좌표(lat, lng) 기준으로 가장 가까운 항포구·선착장 또는 해역 설명 문자열 생성
+ */
+export function describeNearestPortArea(
+  lat: number,
+  lng: number,
+  ports: MarinePort[],
+): string {
+  if (!ports || ports.length === 0) {
+    return `통영·거제 해역 (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`;
+  }
+
+  let closestPort: MarinePort | null = null;
+  let minKm = Infinity;
+
+  for (const port of ports) {
+    const dKm = calculateHaversineKm(lat, lng, port.lat, port.lng);
+    if (dKm < minKm) {
+      minKm = dKm;
+      closestPort = port;
+    }
+  }
+
+  if (!closestPort) {
+    return `통영·거제 해역 (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`;
+  }
+
+  if (minKm <= 0.6) {
+    return `${closestPort.name} 전면 해역`;
+  }
+  if (minKm <= 5.0) {
+    const bearingFromPort = calculateBearingDegrees(
+      closestPort.lat,
+      closestPort.lng,
+      lat,
+      lng,
+    );
+    const dir = bearingToCardinal8(bearingFromPort);
+    return `${closestPort.name} ${dir} ${minKm.toFixed(1)}km 해역`;
+  }
+  return `통영·거제 외해 (${closestPort.name} 인근 ${minKm.toFixed(1)}km)`;
 }
 
 /**
@@ -426,15 +471,18 @@ function computeSeaRouteSegment(
     for (let i = 0; i < pts.length - 1; i++) {
       distKm += calculateHaversineKm(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
     }
-    const midIdx = Math.floor(pts.length / 2);
+    const midIdx = Math.floor((pts.length - 1) / 2);
+    const nextIdx = Math.min(pts.length - 1, midIdx + 1);
+    const midLat = (pts[midIdx][0] + pts[nextIdx][0]) / 2;
+    const midLng = (pts[midIdx][1] + pts[nextIdx][1]) / 2;
     return {
       distanceKm: Math.max(distKm, directDistanceKm),
       directDistanceKm,
       detourFactor: directDistanceKm > 0 ? Math.max(1.0, distKm / directDistanceKm) : 1.0,
       pathPositions: pts,
       waypointNames: ['연안 직접 진입'],
-      midLat: pts[midIdx][0],
-      midLng: pts[midIdx][1],
+      midLat,
+      midLng,
     };
   }
 
@@ -527,7 +575,21 @@ export function calculateRouteSummary(
     const distanceNm = kmToNauticalMiles(distanceKm);
     const directDistanceNm = kmToNauticalMiles(seg.directDistanceKm);
     const durationMinutes = calculateDurationMinutes(distanceNm, speedKnots);
-    const bearingDeg = calculateBearingDegrees(from.lat, from.lng, to.lat, to.lng);
+    const directBearingDeg = calculateBearingDegrees(from.lat, from.lng, to.lat, to.lng);
+    const directCardinal = bearingToCardinal8(directBearingDeg);
+
+    // A* 우회 수로가 있는 경우 출발지에서 첫 유효 해상 변침점(50m 이상 이격)으로 향하는 실제 출항 침로 산출
+    let bearingDeg = directBearingDeg;
+    if (seg.pathPositions.length >= 2) {
+      for (let pIdx = 1; pIdx < seg.pathPositions.length; pIdx++) {
+        const [targetLat, targetLng] = seg.pathPositions[pIdx];
+        const stepKm = calculateHaversineKm(from.lat, from.lng, targetLat, targetLng);
+        if (stepKm >= 0.05 || pIdx === seg.pathPositions.length - 1) {
+          bearingDeg = calculateBearingDegrees(from.lat, from.lng, targetLat, targetLng);
+          break;
+        }
+      }
+    }
     const cardinal = bearingToCardinal8(bearingDeg);
 
     const toPort = to.matchedPortId ? portMap.get(to.matchedPortId) : undefined;
@@ -560,6 +622,8 @@ export function calculateRouteSummary(
       durationMinutes,
       bearingDeg,
       cardinal,
+      directBearingDeg,
+      directCardinal,
       pathPositions: seg.pathPositions,
       waypointNames: seg.waypointNames,
       safetyLevel,

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.7.0",
   "snap_radius_meters": 500,
   "ports": [
     {
@@ -135,6 +135,40 @@
         "WP-JISEPO-E"
       ],
       "parentPortId": "KR-GN-GJ-0001"
+    },
+    {
+      "id": "TY-003",
+      "name": "통영 매물도 당금항 비상 대피 계류지",
+      "region": "통영",
+      "category": "docking",
+      "subCategory": "official_docking",
+      "lat": 34.6408,
+      "lng": 128.5728,
+      "seaApproachLat": 34.6445,
+      "seaApproachLng": 128.5715,
+      "description": "외해 돌풍·기상 악화 시 소형 조사선 긴급 피항 및 임시 계류 (방파제 내측 평균 수심 2.9m)",
+      "aliases": [
+        "매물도당금항비상계류지",
+        "당금항피항지",
+        "매물도대피거점"
+      ],
+      "eupmyeondong": "한산면",
+      "islandName": "대매물도",
+      "portClassLabel": "공식 조사선 비상거점(물양장)",
+      "facilityType": "QUAY_WALL",
+      "facilityLabel": "비상 피항 안벽",
+      "minDepthMeters": 2.9,
+      "tidalSensitivity": "LOW",
+      "maxVesselTons": 25,
+      "hazards": [
+        "어선 밀집 시간대(일몰 직전) 내항 선회 공간 협소 — 입항 전 어촌계장/선장 채널 교신 권장",
+        "남동풍 너울 유입 시 내항 안쪽 계류 권장"
+      ],
+      "connectedWaypointIds": [
+        "WP-MAEMUL-N",
+        "WP-SOMAEMUL-W"
+      ],
+      "parentPortId": "KR-GN-TY-0026"
     },
     {
       "id": "KR-GN-TY-0001",

@@ -177,6 +177,16 @@ export async function saveOperationalLayerState(params: {
         remoteCommitUrl: state.remoteCommitUrl,
       }),
     );
+    const activeLayerIdSet = new Set(state.layers.map((l) => l.id));
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(LS_KEY_OPERATIONAL_GEOJSON_PREFIX)) {
+        const lid = k.slice(LS_KEY_OPERATIONAL_GEOJSON_PREFIX.length);
+        if (!activeLayerIdSet.has(lid) || !state.geoJsonById[lid]) {
+          localStorage.removeItem(k);
+        }
+      }
+    }
     for (const [layerId, fc] of Object.entries(state.geoJsonById)) {
       if (fc) {
         try {

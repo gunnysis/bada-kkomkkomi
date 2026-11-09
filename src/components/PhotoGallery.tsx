@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from 'lucide-react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface PhotoGalleryProps {
   photos: string[];
@@ -19,6 +20,12 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+
+  const handleCloseExpanded = useCallback(() => {
+    setExpandedPhoto(null);
+  }, []);
+
+  useEscapeKey(Boolean(expandedPhoto), handleCloseExpanded, true);
 
   // IntersectionObserver로 스냅된 슬라이드 인덱스를 모든 브라우저에서 정확히 추적
   useEffect(() => {
@@ -203,6 +210,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
         <div
           role="dialog"
           aria-modal="true"
+          data-photo-lightbox="true"
           aria-label={`${pointName} 현장 사진 확대 보기`}
           className="fixed inset-0 z-[2000] flex flex-col justify-between bg-slate-950/95 p-4 backdrop-blur-md"
           onClick={() => setExpandedPhoto(null)}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, SlidersHorizontal, Check } from 'lucide-react';
 import type { WeatherThresholds } from '../../types/weather';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface WeatherThresholdSettingsProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export function WeatherThresholdSettings({
   const [windMod, setWindMod] = useState(thresholds.windKnot.moderate);
   const [waveGood, setWaveGood] = useState(thresholds.waveMeter.good);
   const [waveMod, setWaveMod] = useState(thresholds.waveMeter.moderate);
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type ScreenType = 'home' | 'notebook' | 'navigation';
 export type NavPanelType = 'route' | 'weather';
@@ -51,17 +51,30 @@ export function useAppRoute() {
     return parseRouteFromUrl(window.location.search);
   });
 
+  /**
+   * 인앱 드릴다운 깊이(Depth) 추적 (stack-drill-down 표준 정합):
+   * - 인트로 홈('/')에서 카드를 눌러 진입한 경우 depth = 1이 되며, [< 홈] 버튼 클릭 시 history.back()으로 히스토리 루프 없이 복귀합니다.
+   * - 외부 딥링크(?screen=notebook 등)로 직접 진입한 경우 depth = 0이므로, [< 홈] 클릭 시 replaceState('/')로 안전하게 루트로 전환합니다.
+   */
+  const inAppDepthRef = useRef<number>(0);
+
   // 초기 부팅 시 잘못된 쿼리가 있으면 정규화(replaceState) 및 popstate 리스너 등록
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const initialParsed = parseRouteFromUrl(window.location.search);
     const canonicalUrl = buildUrlForRoute(initialParsed);
+    const initialDepth =
+      typeof window.history.state?.depth === 'number' ? window.history.state.depth : 0;
+    inAppDepthRef.current = initialDepth;
+
     if (`${window.location.pathname}${window.location.search}` !== canonicalUrl) {
-      window.history.replaceState(initialParsed, '', canonicalUrl);
+      window.history.replaceState({ ...initialParsed, depth: initialDepth }, '', canonicalUrl);
     }
 
-    const handlePopState = () => {
+    const handlePopState = (event: PopStateEvent) => {
+      inAppDepthRef.current =
+        typeof event.state?.depth === 'number' ? event.state.depth : 0;
       setRoute(parseRouteFromUrl(window.location.search));
     };
 
@@ -81,12 +94,55 @@ export function useAppRoute() {
       if (typeof window !== 'undefined') {
         const nextUrl = buildUrlForRoute(next);
         if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
-          window.history.pushState(next, '', nextUrl);
+          const nextDepth = screen === 'home' ? 0 : inAppDepthRef.current + 1;
+          inAppDepthRef.current = nextDepth;
+          window.history.pushState({ ...next, depth: nextDepth }, '', nextUrl);
         }
       }
     },
     [],
   );
+
+  /**
+   * 작업공간 내부에서 '꼬미의 바다수첩' <-> '바닷길 콕콕' 페이지 간 교차 전환 시
+   * 불필요한 History 누적을 막기 위해 replaceState 적용
+   */
+  const switchWorkspaceScreen = useCallback(
+    (screen: 'notebook' | 'navigation', panel: NavPanelType = 'route') => {
+      const next: AppRouteState = { screen, panel };
+      setRoute(next);
+      if (typeof window !== 'undefined') {
+        const nextUrl = buildUrlForRoute(next);
+        if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
+          window.history.replaceState(
+            { ...next, depth: inAppDepthRef.current },
+            '',
+            nextUrl,
+          );
+        }
+      }
+    },
+    [],
+  );
+
+  /**
+   * 상단 [< 홈] 버튼 클릭 시:
+   * - 인앱에서 진입한 이력이 있으면 history.back()을 호출해 히스토리 스택을 깔끔하게 되돌림
+   * - 딥링크로 직행 진입한 경우에는 replaceState로 루트('/') 복원
+   */
+  const navigateHome = useCallback((fallbackPanel: NavPanelType = 'route') => {
+    if (typeof window !== 'undefined' && inAppDepthRef.current > 0) {
+      inAppDepthRef.current = Math.max(0, inAppDepthRef.current - 1);
+      window.history.back();
+      return;
+    }
+    const next: AppRouteState = { screen: 'home', panel: fallbackPanel };
+    setRoute(next);
+    if (typeof window !== 'undefined') {
+      const nextUrl = buildUrlForRoute(next);
+      window.history.replaceState({ ...next, depth: 0 }, '', nextUrl);
+    }
+  }, []);
 
   /**
    * 바닷길 콕콕 내부 서브탭(route <-> weather) 전환 시 불필요한 History 누적을 막기 위해 replaceState 적용
@@ -99,7 +155,11 @@ export function useAppRoute() {
       };
       if (typeof window !== 'undefined') {
         const nextUrl = buildUrlForRoute(next);
-        window.history.replaceState(next, '', nextUrl);
+        window.history.replaceState(
+          { ...next, depth: inAppDepthRef.current },
+          '',
+          nextUrl,
+        );
       }
       return next;
     });
@@ -108,6 +168,8 @@ export function useAppRoute() {
   return {
     route,
     navigateToScreen,
+    switchWorkspaceScreen,
+    navigateHome,
     replaceNavPanel,
   };
 }

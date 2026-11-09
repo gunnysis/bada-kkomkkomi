@@ -13,6 +13,7 @@ import {
 import type { FieldReportData } from '../../types/report';
 import type { AdminConfig } from '../../types/config';
 import { sendFieldReport } from '../../services/emailReportService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface FieldReportModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function FieldReportModal({
   onPickLocationOnMap,
 }: FieldReportModalProps) {
   const [memo, setMemo] = useState('');
+  useEscapeKey(isOpen, onClose);
   const [reporterName, setReporterName] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);

@@ -28,7 +28,10 @@
       "name": "갯바위 접안 포인트",
       "visible": true,
       "color": "#38bdf8",
-      "description": "5개 색상별 접안 안전도 및 현장 정보"
+      "description": "5개 색상별 접안 안전도 및 현장 정보",
+      "isSystemLayer": true,
+      "geometryTypes": ["Point"],
+      "featureCount": 55
     },
     {
       "id": "national_park",
@@ -36,7 +39,8 @@
       "visible": true,
       "color": "#10b981",
       "url": "/data/layers/national_park.geojson",
-      "description": "국립공원 관할 공원구역 경계선"
+      "description": "국립공원 관할 공원구역 경계선",
+      "geometryTypes": ["Polygon"]
     },
     {
       "id": "protected_area",
@@ -44,7 +48,8 @@
       "visible": true,
       "color": "#a855f7",
       "url": "/data/layers/protected_area.geojson",
-      "description": "출입통제 및 해양생물 특별보호구역"
+      "description": "출입통제 및 해양생물 특별보호구역",
+      "geometryTypes": ["Polygon"]
     }
   ]
 }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Compass,
-   Eye,
+  Eye,
   LocateFixed,
   RotateCcw,
   RotateCw,
@@ -14,6 +14,7 @@ import type {
   KakaoRoadview,
   RoadviewTargetLocation,
 } from '../../types/kakao';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 export interface Roadview3DModalProps {
   kakaoMaps: KakaoMapsNamespace | null;
@@ -44,10 +45,15 @@ export function Roadview3DModal({
   const [currentPan, setCurrentPan] = useState<number>(0);
   const [currentTilt, setCurrentTilt] = useState<number>(0);
 
+  useEscapeKey(Boolean(target), onClose, true);
+
   useEffect(() => {
     if (!target || !kakaoMaps || !isSdkAvailable) return;
 
     let cancelled = false;
+    let mountTimerId: number | null = null;
+    let activeRv: KakaoRoadview | null = null;
+    let viewpointHandler: (() => void) | null = null;
 
     const position = new kakaoMaps.LatLng(target.lat, target.lng);
     const client = new kakaoMaps.RoadviewClient();
@@ -57,7 +63,7 @@ export function Roadview3DModal({
       setMatchedRadiusMeters(resolvedRadius);
       setStatus('ready');
 
-      window.setTimeout(() => {
+      mountTimerId = window.setTimeout(() => {
         if (cancelled || !containerRef.current) return;
         try {
           const rv = new kakaoMaps.Roadview(containerRef.current, {
@@ -65,12 +71,13 @@ export function Roadview3DModal({
             tilt: 0,
             zoom: 0,
           });
+          activeRv = rv;
           roadviewRef.current = rv;
           rv.setPanoId(panoId, position);
           setCurrentPan(0);
           setCurrentTilt(0);
 
-          kakaoMaps.event.addListener(rv, 'viewpoint_changed', () => {
+          viewpointHandler = () => {
             try {
               const vp = rv.getViewpoint();
               if (vp) {
@@ -80,7 +87,8 @@ export function Roadview3DModal({
             } catch {
               // ignore viewpoint read error
             }
-          });
+          };
+          kakaoMaps.event.addListener(rv, 'viewpoint_changed', viewpointHandler);
         } catch {
           setStatus('not_found');
         }
@@ -108,6 +116,16 @@ export function Roadview3DModal({
 
     return () => {
       cancelled = true;
+      if (mountTimerId !== null) {
+        window.clearTimeout(mountTimerId);
+      }
+      if (activeRv && viewpointHandler) {
+        try {
+          kakaoMaps.event.removeListener(activeRv, 'viewpoint_changed', viewpointHandler);
+        } catch {
+          // ignore
+        }
+      }
       roadviewRef.current = null;
     };
   }, [kakaoMaps, target, isSdkAvailable]);

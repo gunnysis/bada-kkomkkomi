@@ -252,11 +252,13 @@ export function buildPorpoiseSpec(count: number): MarkerTemplateSpec {
 
 /**
  * 3. 항해 경로 드래그 마커 (출발 🟢 / 경유 🟡 / 도착 🔴)
+ * - 경유지(type === 'waypoint') 마커에는 지도 위에서 즉시 취소(삭제)할 수 있는 [×] 인라인 버튼을 내장합니다.
  */
 export function buildRouteWaypointSpec(
   type: 'start' | 'waypoint' | 'end',
   label: string,
   orderIdx: number,
+  waypointId?: string,
 ): MarkerTemplateSpec {
   const rawShortLabel = label.length > 12 ? `${label.slice(0, 12)}…` : label;
   const shortLabel = escapeHtml(rawShortLabel);
@@ -264,11 +266,42 @@ export function buildRouteWaypointSpec(
     type === 'start' ? '#10b981' : type === 'waypoint' ? '#f59e0b' : '#ef4444';
   const roleTag =
     type === 'start' ? '출발' : type === 'end' ? '도착' : `경유${orderIdx}`;
+  const safeWpId = waypointId ? escapeHtml(waypointId) : '';
+  const removeBtnHtml =
+    type === 'waypoint' && safeWpId
+      ? `<button
+          type="button"
+          data-remove-waypoint-id="${safeWpId}"
+          aria-label="${roleTag} ${shortLabel} 경유지 취소"
+          title="이 경유지 취소(삭제)"
+          style="
+            margin-left: 5px;
+            min-width: 24px;
+            min-height: 24px;
+            padding: 0 5px;
+            border-radius: 6px;
+            background: #ef4444;
+            border: 1.5px solid #fecaca;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+          "
+        >✕</button>`
+      : '';
+
   const html = `
-    <div class="bada-draggable-overlay" style="display: flex; flex-direction: column; align-items: center; cursor: grab;">
+    <div class="bada-draggable-overlay" style="display: flex; flex-direction: column; align-items: center; cursor: grab; user-select: none; -webkit-user-select: none;">
       <div style="
+        display: inline-flex;
+        align-items: center;
         padding: 2px 7px;
-        border-radius: 7px;
+        border-radius: 8px;
         background: #020617;
         border: 2px solid ${bg};
         color: #ffffff;
@@ -277,7 +310,7 @@ export function buildRouteWaypointSpec(
         margin-bottom: 3px;
         white-space: nowrap;
         box-shadow: 0 3px 8px rgba(0,0,0,0.75);
-      ">[${roleTag}] ${shortLabel}</div>
+      "><span>[${roleTag}] ${shortLabel}</span>${removeBtnHtml}</div>
       <div style="
         width: 38px;
         height: 38px;

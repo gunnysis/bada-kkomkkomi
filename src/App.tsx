@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
   Anchor,
+  ArrowLeftRight,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -11,26 +12,61 @@ import {
   Mail,
   Navigation,
   RefreshCw,
+  Search,
   ShieldCheck,
   SlidersHorizontal,
+  Waves,
   Wifi,
   WifiOff,
   X,
 } from 'lucide-react';
 
-import { MapView } from './components/MapView';
-import { HomeScreen } from './components/home/HomeScreen';
-import { DockingDetailSheet } from './components/DockingDetailSheet';
-import { LayerControlModal } from './components/notebook/LayerControlModal';
-import { FieldReportModal } from './components/notebook/FieldReportModal';
-import { PorpoiseObservationModal } from './components/notebook/PorpoiseObservationModal';
-import {
-  RouteTimeCalculator,
-  type RouteMapTapMode,
-} from './components/navigation/RouteTimeCalculator';
-import { PortSelectModal } from './components/navigation/PortSelectModal';
-import { MarineWeatherPanel } from './components/navigation/MarineWeatherPanel';
-import { WeatherThresholdSettings } from './components/navigation/WeatherThresholdSettings';
+import { HomeScreen, type NotebookLaunchPreset } from './components/home/HomeScreen';
+import type { RouteMapTapMode } from './components/navigation/RouteTimeCalculator';
+
+const MapView = lazy(() =>
+  import('./components/MapView').then((m) => ({ default: m.MapView })),
+);
+const DockingDetailSheet = lazy(() =>
+  import('./components/DockingDetailSheet').then((m) => ({
+    default: m.DockingDetailSheet,
+  })),
+);
+const LayerControlModal = lazy(() =>
+  import('./components/notebook/LayerControlModal').then((m) => ({
+    default: m.LayerControlModal,
+  })),
+);
+const FieldReportModal = lazy(() =>
+  import('./components/notebook/FieldReportModal').then((m) => ({
+    default: m.FieldReportModal,
+  })),
+);
+const PorpoiseObservationModal = lazy(() =>
+  import('./components/notebook/PorpoiseObservationModal').then((m) => ({
+    default: m.PorpoiseObservationModal,
+  })),
+);
+const RouteTimeCalculator = lazy(() =>
+  import('./components/navigation/RouteTimeCalculator').then((m) => ({
+    default: m.RouteTimeCalculator,
+  })),
+);
+const PortSelectModal = lazy(() =>
+  import('./components/navigation/PortSelectModal').then((m) => ({
+    default: m.PortSelectModal,
+  })),
+);
+const MarineWeatherPanel = lazy(() =>
+  import('./components/navigation/MarineWeatherPanel').then((m) => ({
+    default: m.MarineWeatherPanel,
+  })),
+);
+const WeatherThresholdSettings = lazy(() =>
+  import('./components/navigation/WeatherThresholdSettings').then((m) => ({
+    default: m.WeatherThresholdSettings,
+  })),
+);
 
 import type {
   DockingFeature,
@@ -49,11 +85,12 @@ import type { RouteWaypoint } from './types/route';
 import type { RoadviewTargetLocation } from './types/kakao';
 
 import { useAppConfig } from './hooks/useAppConfig';
-import { useAppRoute } from './hooks/useAppRoute';
+import { useAppRoute, type NavPanelType } from './hooks/useAppRoute';
 import { usePorpoiseStorage } from './hooks/usePorpoiseStorage';
 import { useMarineWeather } from './hooks/useMarineWeather';
 import {
   calculateRouteSummary,
+  describeNearestPortArea,
   resolveSmartWaypoint,
 } from './services/routeGeoService';
 
@@ -77,7 +114,7 @@ const INITIAL_WAYPOINTS: RouteWaypoint[] = [
     facilityLabel: '물양장 안벽',
     minDepthMeters: 1.4,
     tidalSensitivity: 'HIGH',
-    maxVesselTons: 15,
+    maxVesselTons: 20,
     hazards: ['수중 폐로프 주의', '대조기 간조 수심 1.4m 주의'],
   },
   {
@@ -92,7 +129,7 @@ const INITIAL_WAYPOINTS: RouteWaypoint[] = [
     facilityLabel: '부잔교(폰툰)',
     minDepthMeters: 3.8,
     tidalSensitivity: 'LOW',
-    maxVesselTons: 25,
+    maxVesselTons: 30,
     hazards: ['여객선 항주파 주의', '창조류 유속 1.8kt'],
   },
 ];
@@ -121,15 +158,35 @@ export function App() {
   } = usePorpoiseStorage();
 
   // 1. 라우트(Home / Notebook / Navigation) 및 서브 탭 상태 (URL Query & History API 양방향 동기화)
-  const { route, navigateToScreen, replaceNavPanel } = useAppRoute();
+  const {
+    route,
+    navigateToScreen,
+    switchWorkspaceScreen,
+    navigateHome,
+    replaceNavPanel,
+  } = useAppRoute();
   const isHomeScreen = route.screen === 'home';
   const [hasEnteredWorkspace, setHasEnteredWorkspace] = useState<boolean>(
     () => route.screen !== 'home',
   );
   const [lastTriggeredCardId, setLastTriggeredCardId] = useState<
     'notebook' | 'navigation' | null
-  >(null);
+  >(() => (route.screen !== 'home' ? route.screen : null));
   const workspaceHeadingRef = useRef<HTMLHeadingElement | null>(null);
+
+  // 브라우저 앞으로/뒤로 가기(popstate)로 작업공간에 진입했을 때도 hasEnteredWorkspace 및 최근 카드 ID를 동기화
+  useEffect(() => {
+    const handlePopStateSync = () => {
+      const params = new URLSearchParams(window.location.search);
+      const screenParam = params.get('screen');
+      if (screenParam === 'notebook' || screenParam === 'navigation') {
+        setHasEnteredWorkspace(true);
+        setLastTriggeredCardId(screenParam);
+      }
+    };
+    window.addEventListener('popstate', handlePopStateSync);
+    return () => window.removeEventListener('popstate', handlePopStateSync);
+  }, []);
 
   const activeMainTab: 'notebook' | 'navigation' =
     route.screen === 'navigation' ? 'navigation' : 'notebook';
@@ -145,8 +202,10 @@ export function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
 
-  // '위험주의(red)' 우선 인지(Hazard-First) 기본값: 초기 진입 시 고위험 9개소만 단독 표시하며, 나머지 등급은 필요한 사용자만 다중 선택
+  // '위험주의(red)' 우선 인지(Hazard-First) 기본값 + 권역(전체/통영/거제) 및 검색어 필터
   const [selectedColors, setSelectedColors] = useState<MarkerColor[]>(['red']);
+  const [selectedRegion, setSelectedRegion] = useState<'all' | 'tongyeong' | 'geoje'>('all');
+  const [dockingSearchQuery, setDockingSearchQuery] = useState<string>('');
   const [isColorFilterOpen, setIsColorFilterOpen] = useState<boolean>(false);
   const colorFilterPopoverRef = useRef<HTMLDivElement | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<DockingFeature | null>(null);
@@ -177,14 +236,57 @@ export function App() {
       setHasEnteredWorkspace(true);
       navigateToScreen(target, 'route');
       window.setTimeout(() => {
-        workspaceHeadingRef.current?.focus();
+        workspaceHeadingRef.current?.focus({ preventScroll: true });
+      }, 60);
+    },
+    [navigateToScreen],
+  );
+
+  // 인트로 허브에서 '꼬미의 바다수첩' 세부 프리셋(위험주의 9 / 전체 55 / 공간 레이어)으로 직행
+  const handleOpenNotebookPresetFromHome = useCallback(
+    (preset: NotebookLaunchPreset) => {
+      setLastTriggeredCardId('notebook');
+      setHasEnteredWorkspace(true);
+      setIsPorpoiseAddMode(false);
+      setIsReportPickMode(false);
+      setIsColorFilterOpen(false);
+      if (preset === 'hazard') {
+        setSelectedColors(['red']);
+        setSelectedRegion('all');
+        setDockingSearchQuery('');
+      } else if (preset === 'all') {
+        setSelectedColors([...ALL_MARKER_COLORS]);
+        setSelectedRegion('all');
+        setDockingSearchQuery('');
+      } else if (preset === 'layers') {
+        setIsLayerModalOpen(true);
+      }
+      navigateToScreen('notebook', 'route');
+      window.setTimeout(() => {
+        workspaceHeadingRef.current?.focus({ preventScroll: true });
+      }, 60);
+    },
+    [navigateToScreen],
+  );
+
+  // 인트로 허브에서 '바닷길 콕콕' 세부 탭(시간계산 / 해상기상 판정)으로 직행
+  const handleOpenNavigationPanelFromHome = useCallback(
+    (panel: NavPanelType) => {
+      setLastTriggeredCardId('navigation');
+      setHasEnteredWorkspace(true);
+      setIsPorpoiseAddMode(false);
+      setIsReportPickMode(false);
+      setIsColorFilterOpen(false);
+      navigateToScreen('navigation', panel);
+      window.setTimeout(() => {
+        workspaceHeadingRef.current?.focus({ preventScroll: true });
       }, 60);
     },
     [navigateToScreen],
   );
 
   const handleReturnToHome = useCallback(() => {
-    // Home 복귀 시 일시적인 픽커 모드 및 모달은 종료하고 주요 작업 상태(항로/필터/카메라)는 보존 (proposal 2.2 계약)
+    // Home 복귀 시 일시적인 픽커 모드 및 모달은 종료하고 주요 작업 상태(항로/필터/카메라)는 보존
     setIsPorpoiseAddMode(false);
     setIsReportPickMode(false);
     setIsColorFilterOpen(false);
@@ -193,8 +295,8 @@ export function App() {
     setIsWeatherSettingsOpen(false);
     setExternalRoadviewTarget(null);
     setPortSelectorTarget(null);
-    navigateToScreen('home', navSubTab);
-  }, [navigateToScreen, navSubTab]);
+    navigateHome(navSubTab);
+  }, [navigateHome, navSubTab]);
 
   // 4. GPS, 온라인 상태 및 PWA 설치 프롬프트
   const [userLocation, setUserLocation] = useState<UserGpsState | null>(null);
@@ -217,19 +319,48 @@ export function App() {
     );
   });
 
-  // 5. 바닷길 콕콕 - 시간계산기 상태
+  // 5. 바닷길 콕콕 - 시간계산기 상태 & 최대 10단계 실행취소(Undo) 히스토리 스택
   const [speedKnots, setSpeedKnots] = useState<number>(
     config.route_defaults?.default_speed_knots || 15,
   );
   const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(INITIAL_WAYPOINTS);
+  const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
   const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('add_waypoint');
+
+  const commitRouteWaypoints = useCallback(
+    (updater: (prev: RouteWaypoint[]) => RouteWaypoint[]) => {
+      setRouteWaypoints((prev) => {
+        const next = updater(prev);
+        if (next === prev) return prev;
+        setRouteUndoStack((stack) => [...stack.slice(-9), prev]);
+        return next;
+      });
+    },
+    [],
+  );
 
   // 6. 바닷길 콕콕 - 해상기상 상태판정 훅 (ECMWF IFS HRES + WAM HRES 전용, app_config.json 단일 원천 연결)
   const marineWeather = useMarineWeather(34.8195, 128.552, config.weather_defaults);
+  const { updateCoordinates: updateWeatherCoordinates } = marineWeather;
 
+  const toastTimerRef = useRef<number | null>(null);
   const showToast = useCallback((msg: string, durationMs = 2800) => {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
     setGpsStatusMsg(msg);
-    window.setTimeout(() => setGpsStatusMsg(null), durationMs);
+    toastTimerRef.current = window.setTimeout(() => {
+      setGpsStatusMsg(null);
+      toastTimerRef.current = null;
+    }, durationMs);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
   }, []);
 
   // PWA 설치 이벤트 리스너
@@ -344,19 +475,44 @@ export function App() {
 
   const totalDockingCount = collection?.features.length ?? 0;
 
-  // 접안 포인트 다중 필터링 + 위험도 우선순위(red→amber→green→blue→purple) 자동 정렬
+  // 권역별(전체 / 통영권 / 거제권) 건수 사전 집계
+  const regionCounts = useMemo(() => {
+    const counts = { all: 0, tongyeong: 0, geoje: 0 };
+    if (!collection) return counts;
+    for (const f of collection.features) {
+      counts.all += 1;
+      if (f.properties.id.includes('GJ')) {
+        counts.geoje += 1;
+      } else {
+        counts.tongyeong += 1;
+      }
+    }
+    return counts;
+  }, [collection]);
+
+  // 접안 포인트 다중 필터링(등급 + 권역 + 검색어) + 위험도 우선순위(red→amber→green→blue→purple) 자동 정렬
   const filteredFeatures = useMemo(() => {
     if (!collection) return [];
     const activeSet = new Set<MarkerColor>(selectedColors);
+    const query = dockingSearchQuery.trim().toLowerCase();
     return collection.features
-      .filter((f) => activeSet.has(f.properties.color))
+      .filter((f) => {
+        if (!activeSet.has(f.properties.color)) return false;
+        if (selectedRegion === 'geoje' && !f.properties.id.includes('GJ')) return false;
+        if (selectedRegion === 'tongyeong' && f.properties.id.includes('GJ')) return false;
+        if (query) {
+          const hay = `${f.properties.id} ${f.properties.name} ${f.properties.purpose} ${f.properties.hazard}`.toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+        return true;
+      })
       .slice()
       .sort(
         (a, b) =>
           (MARKER_PRIORITY_ORDER[a.properties.color] ?? 99) -
           (MARKER_PRIORITY_ORDER[b.properties.color] ?? 99),
       );
-  }, [collection, selectedColors]);
+  }, [collection, selectedColors, selectedRegion, dockingSearchQuery]);
 
   const isRedOnly =
     selectedColors.length === 1 && selectedColors[0] === 'red';
@@ -536,7 +692,7 @@ export function App() {
   // [3.2.C 바닷길 시간계산기] 핀 드래그 시 항구/소규모 선착장 500m 스냅 및 해상 좌표 실시간 동기화
   const handleUpdateWaypointPos = useCallback(
     (id: string, lat: number, lng: number) => {
-      setRouteWaypoints((prev) =>
+      commitRouteWaypoints((prev) =>
         prev.map((wp, idx) => {
           if (wp.id !== id) return wp;
           const fallbackRole =
@@ -568,20 +724,31 @@ export function App() {
         }),
       );
     },
-    [portsList, snapRadiusMeters, showToast],
+    [commitRouteWaypoints, portsList, snapRadiusMeters, showToast],
   );
 
-  // [3.2.C] 지도 탭으로 포인트 지정 (경유지 추가 / 출발지 지정 / 목적지 지정)
+  // [3.2.C] 지도 탭으로 포인트 지정 (이동 잠금 / 경유지 추가 / 출발지 1회 지정 후 자동 잠금 / 목적지 1회 지정 후 자동 잠금)
   const handleMapClickForRoute = useCallback(
     (lat: number, lng: number) => {
+      if (routeMapTapMode === 'pan_only') {
+        return;
+      }
       if (routeMapTapMode === 'set_start') {
         const startWp = routeWaypoints[0];
-        if (startWp) handleUpdateWaypointPos(startWp.id, lat, lng);
+        if (startWp) {
+          handleUpdateWaypointPos(startWp.id, lat, lng);
+          setRouteMapTapMode('pan_only');
+          showToast('출발지 지정 완료 · 실수 방지를 위해 [✋이동만] 모드로 전환됨');
+        }
         return;
       }
       if (routeMapTapMode === 'set_end') {
         const endWp = routeWaypoints[routeWaypoints.length - 1];
-        if (endWp) handleUpdateWaypointPos(endWp.id, lat, lng);
+        if (endWp) {
+          handleUpdateWaypointPos(endWp.id, lat, lng);
+          setRouteMapTapMode('pan_only');
+          showToast('목적지 지정 완료 · 실수 방지를 위해 [✋이동만] 모드로 전환됨');
+        }
         return;
       }
       // 'add_waypoint': 목적지 바로 앞에 신규 경유지 삽입
@@ -594,7 +761,7 @@ export function App() {
         snapRadiusMeters,
       );
       const newWp: RouteWaypoint = {
-        id: `wp_${Date.now()}`,
+        id: `wp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         name: resolved.name,
         lat: resolved.lat,
         lng: resolved.lng,
@@ -608,33 +775,60 @@ export function App() {
         maxVesselTons: resolved.maxVesselTons,
         hazards: resolved.hazards,
       };
-      setRouteWaypoints((prev) => {
+      commitRouteWaypoints((prev) => {
         const next = [...prev];
         next.splice(next.length - 1, 0, newWp);
         return next;
       });
-      showToast(`경유지 추가됨: ${resolved.name}`);
+      showToast(`경유지 추가됨: ${resolved.name} ([실행취소] 또는 마커 [✕]로 취소 가능)`);
     },
-    [routeMapTapMode, routeWaypoints, handleUpdateWaypointPos, portsList, snapRadiusMeters, showToast],
+    [
+      routeMapTapMode,
+      routeWaypoints,
+      handleUpdateWaypointPos,
+      portsList,
+      snapRadiusMeters,
+      commitRouteWaypoints,
+      showToast,
+    ],
   );
 
-  // 버튼으로 경유지 추가 (마지막 구간 중간 지점)
+  // 버튼으로 경유지 추가 (중복 유령 구간 생성 방지를 위해 오프셋 분산 적용)
   const handleAddWaypointButton = useCallback(() => {
     const newIdx = routeWaypoints.length - 1;
     const prevWp = routeWaypoints[newIdx - 1] || routeWaypoints[0];
     const endWp = routeWaypoints[routeWaypoints.length - 1];
-    const midLat = (prevWp.lat + endWp.lat) / 2 + 0.008;
-    const midLng = (prevWp.lng + endWp.lng) / 2 + 0.008;
+    // 연속 추가 시 동일 항구 중복 스냅을 피하기 위해 경유지 순번에 따라 수직·수평 오프셋 분산
+    const stepOffset = 0.007 * ((newIdx % 3) + 1);
+    const dirSign = newIdx % 2 === 1 ? 1 : -1;
+    const midLat = (prevWp.lat + endWp.lat) / 2 + stepOffset * dirSign;
+    const midLng = (prevWp.lng + endWp.lng) / 2 + stepOffset;
 
-    const resolved = resolveSmartWaypoint(
+    let resolved = resolveSmartWaypoint(
       midLat,
       midLng,
       portsList,
       `경유지 ${newIdx}`,
       snapRadiusMeters,
     );
+
+    // 만약 직전 지점 또는 도착 지점과 동일한 항구로 스냅되었다면 순수 해상 중간 좌표로 보존하여 0.00 NM 유령 구간 방지
+    if (
+      resolved.matchedPortId &&
+      (resolved.matchedPortId === prevWp.matchedPortId ||
+        resolved.matchedPortId === endWp.matchedPortId)
+    ) {
+      resolved = {
+        name: `해상 경유지 ${newIdx} (${midLat.toFixed(3)}°N, ${midLng.toFixed(3)}°E)`,
+        lat: midLat,
+        lng: midLng,
+        matchedPortId: undefined,
+        isCustomCoord: true,
+      };
+    }
+
     const newWp: RouteWaypoint = {
-      id: `wp_${Date.now()}`,
+      id: `wp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       name: resolved.name,
       lat: resolved.lat,
       lng: resolved.lng,
@@ -649,19 +843,71 @@ export function App() {
       hazards: resolved.hazards,
     };
 
-    setRouteWaypoints((prev) => {
+    commitRouteWaypoints((prev) => {
       const next = [...prev];
       next.splice(next.length - 1, 0, newWp);
       return next;
     });
-  }, [routeWaypoints, portsList, snapRadiusMeters]);
+    handleFlyToPoint(resolved.lat, resolved.lng, 12);
+    showToast(`경유지 ${newIdx} 추가됨: ${resolved.name}`);
+  }, [routeWaypoints, portsList, snapRadiusMeters, commitRouteWaypoints, handleFlyToPoint, showToast]);
 
-  const handleRemoveWaypoint = useCallback((id: string) => {
-    setRouteWaypoints((prev) => prev.filter((wp) => wp.id !== id));
-  }, []);
+  const handleRemoveWaypoint = useCallback(
+    (id: string) => {
+      const target = routeWaypoints.find((wp) => wp.id === id);
+      commitRouteWaypoints((prev) =>
+        prev.filter((wp) => wp.id !== id || wp.type !== 'waypoint'),
+      );
+      if (target) {
+        showToast(`경유지 취소됨: ${target.name} ([실행취소]로 복구 가능)`);
+      }
+    },
+    [routeWaypoints, commitRouteWaypoints, showToast],
+  );
+
+  // 중간 경유지 일괄 비우기 (출발지와 목적지만 유지)
+  const handleClearWaypoints = useCallback(() => {
+    const intermediateCount = Math.max(0, routeWaypoints.length - 2);
+    if (intermediateCount === 0) return;
+    commitRouteWaypoints((prev) => prev.filter((wp) => wp.type !== 'waypoint'));
+    showToast(`중간 경유지 ${intermediateCount}곳이 모두 취소되었습니다 ([실행취소]로 복구 가능)`);
+  }, [routeWaypoints.length, commitRouteWaypoints, showToast]);
+
+  // 다중 경유지 순서 위/아래 이동
+  const handleMoveWaypoint = useCallback(
+    (id: string, direction: 'up' | 'down') => {
+      commitRouteWaypoints((prev) => {
+        const idx = prev.findIndex((wp) => wp.id === id && wp.type === 'waypoint');
+        if (idx < 1 || idx >= prev.length - 1) return prev;
+        const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (targetIdx < 1 || targetIdx >= prev.length - 1) return prev;
+        const next = [...prev];
+        const [moved] = next.splice(idx, 1);
+        next.splice(targetIdx, 0, moved);
+        return next;
+      });
+      showToast(
+        direction === 'up'
+          ? '경유지 순서를 앞으로 이동했습니다.'
+          : '경유지 순서를 뒤로 이동했습니다.',
+      );
+    },
+    [commitRouteWaypoints, showToast],
+  );
+
+  // 직전 경로 변경 실행취소(Undo)
+  const handleUndoRoute = useCallback(() => {
+    setRouteUndoStack((stack) => {
+      if (stack.length === 0) return stack;
+      const previousWaypoints = stack[stack.length - 1];
+      setRouteWaypoints(previousWaypoints);
+      return stack.slice(0, -1);
+    });
+    showToast('↩ 직전 항로 상태로 되돌렸습니다.');
+  }, [showToast]);
 
   const handleReverseRoute = useCallback(() => {
-    setRouteWaypoints((prev) => {
+    commitRouteWaypoints((prev) => {
       if (prev.length < 2) return prev;
       const reversed = [...prev].reverse();
       return reversed.map((wp, idx) => ({
@@ -670,18 +916,19 @@ export function App() {
       }));
     });
     showToast('출발지와 목적지 경로가 반전되었습니다.');
-  }, [showToast]);
+  }, [commitRouteWaypoints, showToast]);
 
   const handleResetRoute = useCallback(() => {
-    setRouteWaypoints(INITIAL_WAYPOINTS);
+    commitRouteWaypoints(() => INITIAL_WAYPOINTS);
+    handleFlyToPoint(34.805, 128.445, 12);
     showToast('기본 항로(당동항 → 제승당)로 복원되었습니다.');
-  }, [showToast]);
+  }, [commitRouteWaypoints, handleFlyToPoint, showToast]);
 
   // 항구 선택 모달에서 항구·소규모 선착장 선택 시 반영
   const handleSelectPortForWaypoint = useCallback(
     (port: MarinePort) => {
       if (!portSelectorTarget) return;
-      setRouteWaypoints((prev) =>
+      commitRouteWaypoints((prev) =>
         prev.map((wp) =>
           wp.id === portSelectorTarget.waypointId
             ? {
@@ -704,7 +951,7 @@ export function App() {
       handleFlyToPoint(port.lat, port.lng, 13);
       showToast(`${portSelectorTarget.label}: ${port.name} 설정 완료`);
     },
-    [portSelectorTarget, handleFlyToPoint, showToast],
+    [portSelectorTarget, commitRouteWaypoints, handleFlyToPoint, showToast],
   );
 
   // 항구 선택 모달에서 '내 선박 현재 GPS 위치' 선택 시 반영
@@ -715,7 +962,7 @@ export function App() {
     if (!userLocation) {
       setUserLocation({ lat, lng, accuracy: 85, isSimulated: true });
     }
-    setRouteWaypoints((prev) =>
+    commitRouteWaypoints((prev) =>
       prev.map((wp) =>
         wp.id === portSelectorTarget.waypointId
           ? {
@@ -737,7 +984,176 @@ export function App() {
     );
     handleFlyToPoint(lat, lng, 13);
     showToast(`${portSelectorTarget.label}: 현재 선박 GPS 위치 적용`);
-  }, [portSelectorTarget, userLocation, handleFlyToPoint, showToast]);
+  }, [portSelectorTarget, userLocation, commitRouteWaypoints, handleFlyToPoint, showToast]);
+
+  // [교차 기능 브릿지] 3.1 꼬미의 바다수첩 상세 시트에서 선택한 접안지를 목적지(end)로 설정하고 3.2 바닷길 콕콕으로 즉시 이동
+  const handleNavigateToDockingPoint = useCallback(
+    (feature: DockingFeature) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      const p = feature.properties;
+      const matchedPort = portsList.find((port) => port.id === p.id);
+      commitRouteWaypoints((prev) => {
+        if (prev.length === 0) return prev;
+        return prev.map((wp, idx) =>
+          idx === prev.length - 1
+            ? {
+                ...wp,
+                name: p.name,
+                lat,
+                lng,
+                matchedPortId: p.id,
+                isCustomCoord: false,
+                subCategory: matchedPort?.subCategory ?? 'official_docking',
+                facilityLabel: matchedPort?.facilityLabel ?? (p.purpose || '접안시설'),
+                minDepthMeters: matchedPort?.minDepthMeters,
+                tidalSensitivity:
+                  matchedPort?.tidalSensitivity ??
+                  (p.color === 'red' || p.color === 'amber' ? 'HIGH' : 'MEDIUM'),
+                maxVesselTons: matchedPort?.maxVesselTons,
+                hazards:
+                  matchedPort?.hazards && matchedPort.hazards.length > 0
+                    ? matchedPort.hazards
+                    : p.hazard
+                      ? [p.hazard]
+                      : undefined,
+              }
+            : wp,
+        );
+      });
+      updateWeatherCoordinates(lat, lng);
+      setSelectedFeature(null);
+      setIsPorpoiseAddMode(false);
+      setIsReportPickMode(false);
+      setIsColorFilterOpen(false);
+      setLastTriggeredCardId('navigation');
+      switchWorkspaceScreen('navigation', 'route');
+      handleFlyToPoint(lat, lng, 13);
+      showToast(`🧭 '${p.name}' 목적지 설정 · 바닷길 시간·기상 계산 모드 전환`);
+    },
+    [
+      portsList,
+      commitRouteWaypoints,
+      updateWeatherCoordinates,
+      switchWorkspaceScreen,
+      handleFlyToPoint,
+      showToast,
+    ],
+  );
+
+  // [기상 -> 항로 역방향 브릿지] 해상기상 상태판정에서 조회 중인 해역을 항로 경유지로 즉시 추가
+  const handleAddWeatherCoordAsWaypoint = useCallback(() => {
+    const wpIndex = routeWaypoints.length - 1;
+    const resolved = resolveSmartWaypoint(
+      marineWeather.lat,
+      marineWeather.lng,
+      portsList,
+      `기상확인 해역 ${wpIndex}`,
+      snapRadiusMeters,
+    );
+    const newWp: RouteWaypoint = {
+      id: `wp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: resolved.name,
+      lat: resolved.lat,
+      lng: resolved.lng,
+      type: 'waypoint',
+      matchedPortId: resolved.matchedPortId,
+      isCustomCoord: resolved.isCustomCoord,
+      subCategory: resolved.subCategory,
+      facilityLabel: resolved.facilityLabel,
+      minDepthMeters: resolved.minDepthMeters,
+      tidalSensitivity: resolved.tidalSensitivity,
+      maxVesselTons: resolved.maxVesselTons,
+      hazards: resolved.hazards,
+    };
+    commitRouteWaypoints((prev) => {
+      const next = [...prev];
+      next.splice(next.length - 1, 0, newWp);
+      return next;
+    });
+    replaceNavPanel('route');
+    handleFlyToPoint(resolved.lat, resolved.lng, 12);
+    showToast(`🧭 '${resolved.name}' 경유지 추가 및 시간계산 탭 전환`);
+  }, [
+    routeWaypoints.length,
+    marineWeather.lat,
+    marineWeather.lng,
+    portsList,
+    snapRadiusMeters,
+    commitRouteWaypoints,
+    replaceNavPanel,
+    handleFlyToPoint,
+    showToast,
+  ]);
+
+  const nearestWeatherAreaLabel = useMemo(
+    () => describeNearestPortArea(marineWeather.lat, marineWeather.lng, portsList),
+    [marineWeather.lat, marineWeather.lng, portsList],
+  );
+
+  // MapView 및 하위 컴포넌트에 전달되는 핸들러/좌표 객체 참조 안정화 (불필요한 Kakao CustomOverlay 재렌더링 방지)
+  const handleSelectFeatureOnMap = useCallback(
+    (feature: DockingFeature) => {
+      setSelectedFeature(feature);
+      const [lng, lat] = feature.geometry.coordinates;
+      handleFlyToPoint(lat, lng, 14);
+    },
+    [handleFlyToPoint],
+  );
+
+  const handleSelectPorpoiseOnMap = useCallback((record: PorpoiseRecord) => {
+    setSelectedPorpoise(record);
+  }, []);
+
+  const handleMapClickForPorpoise = useCallback((lat: number, lng: number) => {
+    setPorpoiseModalCoords({ lat, lng });
+    setSelectedPorpoise(null);
+    setIsPorpoiseAddMode(false);
+  }, []);
+
+  const handleMapClickForReport = useCallback((lat: number, lng: number) => {
+    setCustomReportCoords({ lat, lng });
+    setReportTargetFeature(null);
+    setIsReportPickMode(false);
+    setIsReportModalOpen(true);
+  }, []);
+
+  const handleClearExternalRoadviewTarget = useCallback(() => {
+    setExternalRoadviewTarget(null);
+  }, []);
+
+  const weatherCoordsMemo = useMemo(
+    () => ({ lat: marineWeather.lat, lng: marineWeather.lng }),
+    [marineWeather.lat, marineWeather.lng],
+  );
+
+  const handleCheckWeatherAtRoutePoint = useCallback(
+    (lat: number, lng: number, name: string) => {
+      updateWeatherCoordinates(lat, lng);
+      replaceNavPanel('weather');
+      handleFlyToPoint(lat, lng, 13);
+      showToast(`🌊 '${name}' 해역 기상상태판정 탭으로 전환되었습니다.`);
+    },
+    [updateWeatherCoordinates, replaceNavPanel, handleFlyToPoint, showToast],
+  );
+
+  // 인트로 복귀 시 상단 이어하기 배너 요약 문구
+  const activeWorkspaceSummary = useMemo(() => {
+    const startWp = routeWaypoints[0]?.name ?? '출발지';
+    const endWp = routeWaypoints[routeWaypoints.length - 1]?.name ?? '목적지';
+    if (lastTriggeredCardId === 'navigation') {
+      return `바닷길 콕콕 · ${startWp} → ${endWp} (${Math.round(routeCalculation.totalDurationMinutes)}분)`;
+    }
+    return isRedOnly
+      ? `꼬미의 바다수첩 · 위험주의 ${filteredFeatures.length}개소 집중 표시 중`
+      : `꼬미의 바다수첩 · ${filteredFeatures.length}/${totalDockingCount || 55}개소 표시 중`;
+  }, [
+    lastTriggeredCardId,
+    routeWaypoints,
+    routeCalculation.totalDurationMinutes,
+    isRedOnly,
+    filteredFeatures.length,
+    totalDockingCount,
+  ]);
 
   const reportLat = reportTargetFeature
     ? reportTargetFeature.geometry.coordinates[1]
@@ -754,6 +1170,16 @@ export function App() {
         <HomeScreen
           lastTriggeredCardId={lastTriggeredCardId}
           onSelectFeatureCard={handleOpenWorkspaceFromHome}
+          onSelectNotebookPreset={handleOpenNotebookPresetFromHome}
+          onSelectNavigationPanel={handleOpenNavigationPanelFromHome}
+          hasActiveWorkspace={hasEnteredWorkspace}
+          activeWorkspaceSummary={activeWorkspaceSummary}
+          onResumeWorkspace={() =>
+            handleOpenWorkspaceFromHome(lastTriggeredCardId ?? 'notebook')
+          }
+          hazardCount={colorCounts.red || 9}
+          totalDockingCount={totalDockingCount || 55}
+          totalPortsCount={portsList.length || 136}
           isOnline={isOnline}
           isStandalone={isStandalone}
           onInstallClick={handleInstallClick}
@@ -765,14 +1191,19 @@ export function App() {
         <div
           aria-hidden={isHomeScreen}
           inert={isHomeScreen ? true : undefined}
-          className={`relative h-dvh w-full ${isHomeScreen ? 'pointer-events-none invisible' : ''}`}
+          className={`relative h-dvh w-full ${
+            isHomeScreen
+              ? 'pointer-events-none invisible [content-visibility:hidden]'
+              : ''
+          }`}
         >
-          {/* 상단 고정 HUD 헤더 */}
+          {/* 상단 고정 2단 슬림 HUD 헤더 (페이지 전용 타이틀 + 원터치 교차 전환 스위치) */}
           <header
-            className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3"
-            style={{ paddingTop: 'calc(var(--safe-top) + 0.375rem)' }}
+            className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1 px-2 py-1 sm:gap-1.5 sm:p-3"
+            style={{ paddingTop: 'calc(var(--safe-top) + 0.25rem)' }}
           >
-            <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-2.5 py-1.5 shadow-2xl backdrop-blur-md sm:px-3 sm:py-2">
+            {/* Row 1: 홈 복귀 + 현재 페이지 전용 정체성 타이틀 + 상대 페이지 원터치 스위치 + 상태 유틸 */}
+            <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-1.5 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-2 py-1 shadow-2xl backdrop-blur-md sm:gap-2 sm:px-3 sm:py-2">
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
@@ -784,38 +1215,81 @@ export function App() {
                   <ChevronLeft className="h-4 w-4 stroke-[2.6]" aria-hidden="true" />
                   <span>홈</span>
                 </button>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow sm:h-9 sm:w-9">
-                  <Anchor className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow sm:h-9 sm:w-9 ${
+                    activeMainTab === 'notebook'
+                      ? 'bg-sky-400 text-slate-950'
+                      : 'bg-amber-400 text-slate-950'
+                  }`}
+                >
+                  {activeMainTab === 'notebook' ? (
+                    <Anchor className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
+                  ) : (
+                    <Navigation className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
+                  )}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
                     <h1
                       ref={workspaceHeadingRef}
                       tabIndex={-1}
-                      className="truncate text-sm leading-none font-black tracking-tight text-white outline-none sm:text-base"
+                      className="truncate text-xs leading-none font-black tracking-tight text-white outline-none sm:text-base"
                     >
-                      바다꼼꼬미
+                      {activeMainTab === 'notebook' ? '꼬미의 바다수첩' : '바닷길 콕콕'}
                     </h1>
-                    <span className="shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
-                      v1.3
+                    <span className="hidden shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300 sm:inline">
+                      v1.7
                     </span>
                   </div>
                   <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-slate-300 sm:text-[11px]">
                     {activeMainTab === 'notebook'
-                      ? isRedOnly
-                        ? `3.1 꼬미의 바다수첩 (🚨 위험주의 ${filteredFeatures.length}개소 집중 표시)`
-                        : `3.1 꼬미의 바다수첩 (${filteredFeatures.length}/${totalDockingCount}개 접안·선착장 표시)`
-                      : `3.2 바닷길 콕콕 (항포구·선착장 ${portsList.length}개소)`}
+                      ? isRedOnly && selectedRegion === 'all' && !dockingSearchQuery
+                        ? `🚨 위험주의 ${filteredFeatures.length}개소 집중 표시`
+                        : `${
+                            selectedRegion === 'tongyeong'
+                              ? '통영권 '
+                              : selectedRegion === 'geoje'
+                                ? '거제권 '
+                                : ''
+                          }${filteredFeatures.length}/${totalDockingCount}개 접안지 표시`
+                      : `실항로 ${routeCalculation.totalDistanceKm.toFixed(1)}km · 약 ${Math.round(routeCalculation.totalDurationMinutes)}분`}
                   </p>
                 </div>
               </div>
 
               <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                {/* 교차 작업공간 원터치 스위치 버튼 (기존 2행 대메뉴 바를 대체하여 지도 시야 44px 확보) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const targetScreen =
+                      activeMainTab === 'notebook' ? 'navigation' : 'notebook';
+                    setLastTriggeredCardId(targetScreen);
+                    setIsPorpoiseAddMode(false);
+                    setIsReportPickMode(false);
+                    setIsColorFilterOpen(false);
+                    switchWorkspaceScreen(targetScreen, navSubTab);
+                  }}
+                  title={
+                    activeMainTab === 'notebook'
+                      ? '바닷길 콕콕(항로·기상)으로 전환'
+                      : '꼬미의 바다수첩(접안지·레이어)으로 전환'
+                  }
+                  className={`flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black shadow-md transition active:scale-95 sm:h-9 sm:px-2.5 sm:text-xs ${
+                    activeMainTab === 'notebook'
+                      ? 'border-amber-400/90 bg-amber-950/90 text-amber-200 hover:bg-amber-900/90'
+                      : 'border-sky-400/90 bg-sky-950/90 text-sky-200 hover:bg-sky-900/90'
+                  }`}
+                >
+                  <ArrowLeftRight className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+                  <span>{activeMainTab === 'notebook' ? '바닷길 콕콕' : '바다수첩'}</span>
+                </button>
+
                 {!isStandalone && (
                   <button
                     type="button"
                     onClick={handleInstallClick}
-                    className="flex h-8 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2 text-[11px] font-black text-slate-950 shadow-md transition active:scale-95 sm:h-9 sm:px-2.5 sm:text-xs"
+                    className="hidden h-8 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2 text-[11px] font-black text-slate-950 shadow-md transition active:scale-95 sm:flex sm:h-9 sm:px-2.5 sm:text-xs"
                     title="앱 설치"
                   >
                     <Download className="h-3.5 w-3.5 stroke-[2.8]" />
@@ -825,7 +1299,8 @@ export function App() {
 
                 <div
                   role="status"
-                  className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-extrabold sm:h-9 ${
+                  title={isOnline ? '온라인 연결됨' : '오프라인 캐시 모드'}
+                  className={`flex h-8 items-center gap-1 rounded-xl border px-1.5 text-xs font-extrabold sm:h-9 sm:px-2 ${
                     isOnline
                       ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300'
                       : 'border-amber-400 bg-amber-950/95 text-amber-200'
@@ -836,7 +1311,7 @@ export function App() {
                   ) : (
                     <WifiOff className="h-3.5 w-3.5 text-amber-400" />
                   )}
-                  <span className="hidden sm:inline">{isOnline ? '온라인' : '오프라인'}</span>
+                  <span className="hidden md:inline">{isOnline ? '온라인' : '오프라인'}</span>
                 </div>
 
                 <button
@@ -850,54 +1325,13 @@ export function App() {
               </div>
             </div>
 
-            {/* 대메뉴 2종 탭 전환 바 (3.1 꼬미의 바다수첩 vs 3.2 바닷길 콕콕) */}
-            <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setLastTriggeredCardId('notebook');
-                  navigateToScreen('notebook', navSubTab);
-                  setIsPorpoiseAddMode(false);
-                  setIsReportPickMode(false);
-                  setIsColorFilterOpen(false);
-                }}
-                className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
-                  activeMainTab === 'notebook'
-                    ? 'border-sky-400 bg-sky-500 text-slate-950'
-                    : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
-                }`}
-              >
-                <Anchor className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>꼬미의 바다수첩</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setLastTriggeredCardId('navigation');
-                  navigateToScreen('navigation', navSubTab);
-                  setIsPorpoiseAddMode(false);
-                  setIsReportPickMode(false);
-                  setIsColorFilterOpen(false);
-                }}
-                className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
-                  activeMainTab === 'navigation'
-                    ? 'border-sky-400 bg-sky-500 text-slate-950'
-                    : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
-                }`}
-              >
-                <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>바닷길 콕콕</span>
-              </button>
-            </div>
-
         {/* 3.1 꼬미의 바다수첩 서브 컨트롤 바 (모바일 가로 잘림 제로 · '위험주의' 고정 + 선택형 다중 등급 확장) */}
         {activeMainTab === 'notebook' && (
           <div
             ref={colorFilterPopoverRef}
             className="pointer-events-auto relative mx-auto flex w-full max-w-3xl flex-col gap-1.5"
           >
-            <div className="flex w-full items-center justify-between gap-1 sm:gap-1.5">
+            <div className="flex w-full items-center justify-between gap-1 overflow-x-auto scrollbar-none sm:gap-1.5">
               {/* 좌측 유틸리티 버튼 3종 */}
               <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
                 <button
@@ -989,7 +1423,7 @@ export function App() {
                   className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow transition active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
                     isColorFilterOpen
                       ? 'border-sky-300 bg-sky-400 text-slate-950'
-                      : isAllColorsSelected
+                      : isAllColorsSelected || selectedRegion !== 'all' || dockingSearchQuery
                         ? 'border-sky-400/90 bg-sky-950/95 text-sky-200'
                         : extraSelectedCount > 0
                           ? 'border-amber-400/90 bg-amber-950/95 text-amber-200'
@@ -999,17 +1433,17 @@ export function App() {
                   <SlidersHorizontal className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
                   <span className="sm:hidden">
                     {isAllColorsSelected
-                      ? `전체(${totalDockingCount})`
+                      ? `전체(${filteredFeatures.length})`
                       : extraSelectedCount > 0
                         ? `+${extraSelectedCount}등급`
                         : '+등급'}
                   </span>
                   <span className="hidden sm:inline">
                     {isAllColorsSelected
-                      ? `전체 (${totalDockingCount})`
+                      ? `전체 (${filteredFeatures.length})`
                       : extraSelectedCount > 0
-                        ? `+${extraSelectedCount}등급`
-                        : '+등급 선택'}
+                        ? `+${extraSelectedCount}등급·권역`
+                        : '+등급·권역'}
                   </span>
                   <ChevronDown
                     className={`h-3 w-3 shrink-0 transition-transform sm:h-3.5 sm:w-3.5 ${
@@ -1020,18 +1454,18 @@ export function App() {
               </div>
             </div>
 
-            {/* 온디맨드 다중 등급 확장 팝오버 (필요한 사용자만 열어서 조석주의·안전접안·전용부두·비상거점 추가 선택) */}
+            {/* 온디맨드 다중 등급 + 권역·검색 통합 팝오버 (필요한 사용자만 열어서 조석주의·안전접안·전용부두·비상거점·권역 선택) */}
             {isColorFilterOpen && (
               <section
                 id="docking-color-filter-popover"
-                aria-label="접안지 등급 표시 설정"
+                aria-label="접안지 등급 및 권역 표시 설정"
                 className="w-full rounded-2xl border-2 border-sky-400/70 bg-[#0b192c]/98 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.85)] backdrop-blur-xl"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2">
                   <div className="flex items-center gap-1.5">
                     <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" />
                     <span className="text-xs font-black text-white sm:text-sm">
-                      접안지 등급 선택
+                      접안지 등급 · 권역 필터
                     </span>
                     <span className="rounded-md border border-sky-400/40 bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-300">
                       복수 선택 가능 · {filteredFeatures.length}곳 표시 중
@@ -1041,9 +1475,13 @@ export function App() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={handleResetToHazardOnly}
+                      onClick={() => {
+                        setSelectedRegion('all');
+                        setDockingSearchQuery('');
+                        handleResetToHazardOnly();
+                      }}
                       className={`rounded-lg border px-2 py-1 text-[11px] font-black transition active:scale-95 ${
-                        isRedOnly
+                        isRedOnly && selectedRegion === 'all' && !dockingSearchQuery
                           ? 'border-red-400 bg-red-500/25 text-red-200'
                           : 'border-slate-600 bg-slate-800/90 text-slate-200 hover:border-red-400'
                       }`}
@@ -1052,9 +1490,13 @@ export function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={handleSelectAllColors}
+                      onClick={() => {
+                        setSelectedRegion('all');
+                        setDockingSearchQuery('');
+                        handleSelectAllColors();
+                      }}
                       className={`rounded-lg border px-2 py-1 text-[11px] font-black transition active:scale-95 ${
-                        isAllColorsSelected
+                        isAllColorsSelected && selectedRegion === 'all' && !dockingSearchQuery
                           ? 'border-sky-300 bg-sky-400 text-slate-950'
                           : 'border-slate-600 bg-slate-800/90 text-slate-200 hover:border-sky-400'
                       }`}
@@ -1069,6 +1511,60 @@ export function App() {
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
+                  </div>
+                </div>
+
+                {/* 권역 퀵 필터 + 접안지 빠른 검색 */}
+                <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div
+                    role="group"
+                    aria-label="해역 권역 필터"
+                    className="grid grid-cols-3 gap-1"
+                  >
+                    {(
+                      [
+                        { id: 'all', label: `전체 (${regionCounts.all || 55})` },
+                        { id: 'tongyeong', label: `통영권 (${regionCounts.tongyeong || 29})` },
+                        { id: 'geoje', label: `거제권 (${regionCounts.geoje || 26})` },
+                      ] as const
+                    ).map((reg) => {
+                      const active = selectedRegion === reg.id;
+                      return (
+                        <button
+                          key={reg.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedRegion(reg.id);
+                            if (reg.id === 'tongyeong') {
+                              handleFlyToPoint(34.812, 128.435, 11);
+                            } else if (reg.id === 'geoje') {
+                              handleFlyToPoint(34.835, 128.625, 11);
+                            } else {
+                              handleResetBounds();
+                            }
+                          }}
+                          className={`rounded-xl border px-2 py-1 text-[11px] font-black transition active:scale-95 ${
+                            active
+                              ? 'border-sky-300 bg-sky-500/30 text-sky-200'
+                              : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500'
+                          }`}
+                        >
+                          {reg.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="relative flex-1 sm:max-w-[230px]">
+                    <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="search"
+                      value={dockingSearchQuery}
+                      onChange={(e) => setDockingSearchQuery(e.target.value)}
+                      placeholder="접안지명·코드·위험요소 검색"
+                      aria-label="접안지명 또는 코드 검색"
+                      className="w-full rounded-xl border border-slate-700 bg-slate-900/90 py-1 pr-2.5 pl-8 text-xs font-bold text-white placeholder-slate-400 focus:border-sky-400 focus:outline-none"
+                    />
                   </div>
                 </div>
 
@@ -1191,30 +1687,56 @@ export function App() {
           </div>
         )}
 
-        {/* 3.2 바닷길 콕콕 서브 탭 (시간계산 vs 기상상태판정) */}
+        {/* 3.2 바닷길 콕콕 서브 탭 (시간계산 vs 기상상태판정 · 실시간 요약 포함) */}
         {activeMainTab === 'navigation' && (
           <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
             <button
               type="button"
               onClick={() => replaceNavPanel('route')}
-              className={`flex min-h-8 items-center justify-center rounded-xl border-2 py-1 text-[11px] font-black transition active:scale-95 sm:min-h-9 sm:text-xs ${
+              className={`flex min-h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'route'
-                  ? 'border-amber-400 bg-amber-400/20 text-amber-300'
-                  : 'border-slate-700 bg-slate-900/90 text-slate-400'
+                  ? 'border-amber-400 bg-amber-400/20 text-amber-200 shadow-lg'
+                  : 'border-slate-700 bg-slate-900/90 text-slate-300 hover:border-slate-500'
               }`}
             >
-              시간계산 (실항로·소규모 선착장)
+              <Navigation className="hidden h-3.5 w-3.5 shrink-0 sm:inline" aria-hidden="true" />
+              <span>시간계산</span>
+              <span className="rounded bg-amber-400/20 px-1.5 py-0.2 text-[10px] font-extrabold text-amber-300">
+                {Math.round(routeCalculation.totalDurationMinutes)}분 · {routeCalculation.totalDistanceKm.toFixed(1)}km
+              </span>
             </button>
             <button
               type="button"
               onClick={() => replaceNavPanel('weather')}
-              className={`flex min-h-8 items-center justify-center rounded-xl border-2 py-1 text-[11px] font-black transition active:scale-95 sm:min-h-9 sm:text-xs ${
+              className={`flex min-h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'weather'
-                  ? 'border-amber-400 bg-amber-400/20 text-amber-300'
-                  : 'border-slate-700 bg-slate-900/90 text-slate-400'
+                  ? 'border-amber-400 bg-amber-400/20 text-amber-200 shadow-lg'
+                  : 'border-slate-700 bg-slate-900/90 text-slate-300 hover:border-slate-500'
               }`}
             >
-              기상상태판정 (풍속·파고 3단계)
+              <Waves className="hidden h-3.5 w-3.5 shrink-0 sm:inline" aria-hidden="true" />
+              <span>기상상태판정</span>
+              <span
+                className={`rounded px-1.5 py-0.2 text-[10px] font-extrabold ${
+                  marineWeather.current?.grade === 'bad'
+                    ? 'bg-red-500/30 text-red-200'
+                    : marineWeather.current?.grade === 'moderate'
+                      ? 'bg-amber-500/30 text-amber-200'
+                      : marineWeather.current?.grade === 'good'
+                        ? 'bg-emerald-500/30 text-emerald-200'
+                        : 'bg-slate-600/40 text-slate-300'
+                }`}
+              >
+                {marineWeather.current?.grade === 'bad'
+                  ? '출항보류'
+                  : marineWeather.current?.grade === 'moderate'
+                    ? '주의운항'
+                    : marineWeather.current?.grade === 'good'
+                      ? '정상운항'
+                      : marineWeather.isLoading
+                        ? '조회중…'
+                        : '미확인(?)'}
+              </span>
             </button>
           </div>
         )}
@@ -1248,55 +1770,49 @@ export function App() {
       </header>
 
       {/* 메인 100dvh 지도 */}
-      <MapView
-        activeMainTab={activeMainTab}
-        navSubTab={navSubTab}
-        features={filteredFeatures}
-        selectedFeature={selectedFeature}
-        onSelectFeature={(feature) => {
-          setSelectedFeature(feature);
-          const [lng, lat] = feature.geometry.coordinates;
-          handleFlyToPoint(lat, lng, 14);
-        }}
-        layers={layers}
-        geoJsonLayersData={geoJsonLayersData}
-        layerLoadErrorIds={layerLoadErrorIds}
-        onRetryGeoJsonLayers={retryFailedGeoJsonLayers}
-        showPorpoiseLayer={showPorpoiseLayer}
-        isPorpoiseAddMode={isPorpoiseAddMode}
-        isReportPickMode={isReportPickMode}
-        porpoiseRecords={porpoiseRecords}
-        onSelectPorpoise={(record) => {
-          setSelectedPorpoise(record);
-        }}
-        onMapClickForPorpoise={(lat, lng) => {
-          setPorpoiseModalCoords({ lat, lng });
-          setSelectedPorpoise(null);
-          setIsPorpoiseAddMode(false);
-        }}
-        onMapClickForReport={(lat, lng) => {
-          setCustomReportCoords({ lat, lng });
-          setReportTargetFeature(null);
-          setIsReportPickMode(false);
-          setIsReportModalOpen(true);
-        }}
-        routeWaypoints={routeWaypoints}
-        routeLegs={routeCalculation.legs}
-        portsList={portsList}
-        showPortMarkersOnMap={showPortMarkersOnMap}
-        onUpdateWaypointPos={handleUpdateWaypointPos}
-        onMapClickForRoute={handleMapClickForRoute}
-        weatherCoords={{ lat: marineWeather.lat, lng: marineWeather.lng }}
-        weatherGrade={marineWeather.current?.grade || 'unknown'}
-        onUpdateWeatherCoords={(lat, lng) => marineWeather.updateCoordinates(lat, lng)}
-        userLocation={userLocation}
-        onRequestGps={handleRequestGps}
-        onSimulateFieldGps={handleSimulateFieldGps}
-        flyTarget={flyTarget}
-        onResetBounds={handleResetBounds}
-        externalRoadviewTarget={externalRoadviewTarget}
-        onClearExternalRoadviewTarget={() => setExternalRoadviewTarget(null)}
-      />
+      <Suspense
+        fallback={
+          <div className="flex h-dvh w-full items-center justify-center bg-[#0b192c] text-xs font-black text-sky-300">
+            해상 전자지도 엔진 준비 중...
+          </div>
+        }
+      >
+        <MapView
+          activeMainTab={activeMainTab}
+          navSubTab={navSubTab}
+          features={filteredFeatures}
+          selectedFeature={selectedFeature}
+          onSelectFeature={handleSelectFeatureOnMap}
+          layers={layers}
+          geoJsonLayersData={geoJsonLayersData}
+          layerLoadErrorIds={layerLoadErrorIds}
+          onRetryGeoJsonLayers={retryFailedGeoJsonLayers}
+          showPorpoiseLayer={showPorpoiseLayer}
+          isPorpoiseAddMode={isPorpoiseAddMode}
+          isReportPickMode={isReportPickMode}
+          porpoiseRecords={porpoiseRecords}
+          onSelectPorpoise={handleSelectPorpoiseOnMap}
+          onMapClickForPorpoise={handleMapClickForPorpoise}
+          onMapClickForReport={handleMapClickForReport}
+          routeWaypoints={routeWaypoints}
+          routeLegs={routeCalculation.legs}
+          portsList={portsList}
+          showPortMarkersOnMap={showPortMarkersOnMap}
+          onUpdateWaypointPos={handleUpdateWaypointPos}
+          onRemoveWaypoint={handleRemoveWaypoint}
+          onMapClickForRoute={handleMapClickForRoute}
+          weatherCoords={weatherCoordsMemo}
+          weatherGrade={marineWeather.current?.grade || 'unknown'}
+          onUpdateWeatherCoords={marineWeather.updateCoordinates}
+          userLocation={userLocation}
+          onRequestGps={handleRequestGps}
+          onSimulateFieldGps={handleSimulateFieldGps}
+          flyTarget={flyTarget}
+          onResetBounds={handleResetBounds}
+          externalRoadviewTarget={externalRoadviewTarget}
+          onClearExternalRoadviewTarget={handleClearExternalRoadviewTarget}
+        />
+      </Suspense>
 
       {/* 3.1 꼬미의 바다수첩: 하단 빠른 접안지 선택 바 (하단 Leaflet 출처 배지 위 16px 여유 확보) */}
       {activeMainTab === 'notebook' && isDockingLayerVisible && (
@@ -1345,11 +1861,7 @@ export function App() {
                 <button
                   key={feature.properties.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedFeature(feature);
-                    const [lng, lat] = feature.geometry.coordinates;
-                    handleFlyToPoint(lat, lng, 14);
-                  }}
+                  onClick={() => handleSelectFeatureOnMap(feature)}
                   className={`flex min-h-11 shrink-0 flex-col justify-center rounded-2xl border-2 px-3 py-1 text-left shadow-xl backdrop-blur-md transition active:scale-95 sm:min-h-12 sm:px-3.5 sm:py-1.5 ${
                     isSelected
                       ? 'border-white bg-sky-950/95'
@@ -1390,154 +1902,193 @@ export function App() {
           className="pointer-events-none fixed inset-x-2.5 bottom-4 z-[900] mx-auto max-w-xl sm:inset-x-3"
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
-          {navSubTab === 'route' ? (
-            <RouteTimeCalculator
-              waypoints={routeWaypoints}
-              speedKnots={speedKnots}
-              calculation={routeCalculation}
-              mapTapMode={routeMapTapMode}
-              onChangeMapTapMode={setRouteMapTapMode}
-              onOpenPortSelector={(waypointId, label) =>
-                setPortSelectorTarget({ waypointId, label })
-              }
-              onAddWaypoint={handleAddWaypointButton}
-              onRemoveWaypoint={handleRemoveWaypoint}
-              onReverseRoute={handleReverseRoute}
-              onChangeSpeed={setSpeedKnots}
-              onResetRoute={handleResetRoute}
-              onFlyToWaypoint={(lat, lng) => handleFlyToPoint(lat, lng, 13)}
-              showPortMarkersOnMap={showPortMarkersOnMap}
-              onTogglePortMarkersOnMap={() => setShowPortMarkersOnMap((v) => !v)}
-              totalPortsCount={portsList.length}
-            />
-          ) : (
-            <MarineWeatherPanel
-              weather={marineWeather}
-              onOpenSettings={() => setIsWeatherSettingsOpen(true)}
-              onRefresh={marineWeather.refresh}
-            />
-          )}
+          <Suspense fallback={null}>
+            {navSubTab === 'route' ? (
+              <RouteTimeCalculator
+                waypoints={routeWaypoints}
+                speedKnots={speedKnots}
+                calculation={routeCalculation}
+                mapTapMode={routeMapTapMode}
+                onChangeMapTapMode={setRouteMapTapMode}
+                onOpenPortSelector={(waypointId, label) =>
+                  setPortSelectorTarget({ waypointId, label })
+                }
+                onAddWaypoint={handleAddWaypointButton}
+                onRemoveWaypoint={handleRemoveWaypoint}
+                onClearWaypoints={handleClearWaypoints}
+                onMoveWaypoint={handleMoveWaypoint}
+                canUndoRoute={routeUndoStack.length > 0}
+                onUndoRoute={handleUndoRoute}
+                onReverseRoute={handleReverseRoute}
+                onChangeSpeed={setSpeedKnots}
+                onResetRoute={handleResetRoute}
+                onFlyToWaypoint={(lat, lng) => handleFlyToPoint(lat, lng, 13)}
+                onCheckWeatherAtPoint={handleCheckWeatherAtRoutePoint}
+                showPortMarkersOnMap={showPortMarkersOnMap}
+                onTogglePortMarkersOnMap={() => setShowPortMarkersOnMap((v) => !v)}
+                totalPortsCount={portsList.length || 136}
+              />
+            ) : (
+              <MarineWeatherPanel
+                weather={marineWeather}
+                thresholds={marineWeather.thresholds}
+                waypoints={routeWaypoints}
+                nearestAreaLabel={nearestWeatherAreaLabel}
+                onSelectWaypointWeather={(lat, lng, name) => {
+                  marineWeather.updateCoordinates(lat, lng);
+                  handleFlyToPoint(lat, lng, 13);
+                  showToast(`🌊 '${name}' 해역 기상 조회 완료`);
+                }}
+                onAddCurrentWeatherAsWaypoint={handleAddWeatherCoordAsWaypoint}
+                onOpenSettings={() => setIsWeatherSettingsOpen(true)}
+                onRefresh={marineWeather.refresh}
+              />
+            )}
+          </Suspense>
         </aside>
       )}
 
-      {/* 모달 1: 접안 상세 시트 */}
-      <DockingDetailSheet
-        key={selectedFeature?.properties.id ?? 'closed'}
-        feature={selectedFeature}
-        userLocation={userLocation}
-        onClose={() => setSelectedFeature(null)}
-        onFlyToPoint={(lat, lng) => handleFlyToPoint(lat, lng, 15)}
-        onRequestRoadview={(feat) => {
-          setExternalRoadviewTarget({
-            lat: feat.geometry.coordinates[1],
-            lng: feat.geometry.coordinates[0],
-            title: feat.properties.name,
-            pointId: feat.properties.id,
-          });
-        }}
-        onRequestReport={(feat) => {
-          setReportTargetFeature(feat);
-          setCustomReportCoords(null);
-          setIsReportModalOpen(true);
-        }}
-      />
+      {/* 모달 1: 접안 상세 시트 (선택된 포인트가 있을 때만 지연 로드) */}
+      {selectedFeature && (
+        <Suspense fallback={null}>
+          <DockingDetailSheet
+            key={selectedFeature.properties.id}
+            feature={selectedFeature}
+            userLocation={userLocation}
+            onClose={() => setSelectedFeature(null)}
+            onFlyToPoint={(lat, lng) => handleFlyToPoint(lat, lng, 15)}
+            onRequestNavigateRoute={handleNavigateToDockingPoint}
+            onRequestRoadview={(feat) => {
+              setExternalRoadviewTarget({
+                lat: feat.geometry.coordinates[1],
+                lng: feat.geometry.coordinates[0],
+                title: feat.properties.name,
+                pointId: feat.properties.id,
+              });
+            }}
+            onRequestReport={(feat) => {
+              setReportTargetFeature(feat);
+              setCustomReportCoords(null);
+              setIsReportModalOpen(true);
+            }}
+          />
+        </Suspense>
+      )}
 
-      {/* 모달 2: 공간정보 레이어 관리 (직원용 통합 워크스페이스 · [저장] 즉시 운영 반영) */}
-      <LayerControlModal
-        key={isLayerModalOpen ? 'layer-modal-open' : 'layer-modal-closed'}
-        isOpen={isLayerModalOpen}
-        onClose={() => setIsLayerModalOpen(false)}
-        layers={layers}
-        geoJsonLayersData={geoJsonLayersData}
-        onToggleLayer={toggleLayer}
-        onSaveOperationalLayers={async (params) => {
-          const res = await saveOperationalLayers(params);
-          showToast(`[${res.releaseId}] 공간정보 레이어 운영 반영 완료!`);
-          return res;
-        }}
-        onFlyToPoint={(lat, lng, zoom) => {
-          handleFlyToPoint(lat, lng, zoom ?? 13);
-          setIsLayerModalOpen(false);
-        }}
-        releaseId={releaseId}
-        lastSavedAt={lastSavedAt}
-        remoteSyncStatus={remoteSyncStatus}
-        remoteCommitUrl={remoteCommitUrl}
-        snapshots={snapshots}
-        showPorpoiseLayer={showPorpoiseLayer}
-        onTogglePorpoiseLayer={() => setShowPorpoiseLayer(!showPorpoiseLayer)}
-        porpoiseCount={porpoiseRecords.length}
-      />
+      {/* 모달 2: 공간정보 레이어 관리 (열릴 때만 SHP/GeoJSON 파서 번들과 함께 지연 로드) */}
+      {isLayerModalOpen && (
+        <Suspense fallback={null}>
+          <LayerControlModal
+            key="layer-modal-open"
+            isOpen={isLayerModalOpen}
+            onClose={() => setIsLayerModalOpen(false)}
+            layers={layers}
+            geoJsonLayersData={geoJsonLayersData}
+            onToggleLayer={toggleLayer}
+            onSaveOperationalLayers={async (params) => {
+              const res = await saveOperationalLayers(params);
+              showToast(`[${res.releaseId}] 공간정보 레이어 운영 반영 완료!`);
+              return res;
+            }}
+            onFlyToPoint={(lat, lng, zoom) => {
+              handleFlyToPoint(lat, lng, zoom ?? 13);
+              setIsLayerModalOpen(false);
+            }}
+            releaseId={releaseId}
+            lastSavedAt={lastSavedAt}
+            remoteSyncStatus={remoteSyncStatus}
+            remoteCommitUrl={remoteCommitUrl}
+            snapshots={snapshots}
+            showPorpoiseLayer={showPorpoiseLayer}
+            onTogglePorpoiseLayer={() => setShowPorpoiseLayer(!showPorpoiseLayer)}
+            porpoiseCount={porpoiseRecords.length}
+          />
+        </Suspense>
+      )}
 
-      {/* 모달 3: 현장정보 이메일 제보 (key로 타겟/좌표 변경 시 폼 상태 초기화) */}
-      <FieldReportModal
-        key={`report-${reportTargetFeature?.properties.id ?? 'custom'}-${reportLat.toFixed(4)}-${reportLng.toFixed(4)}`}
-        isOpen={isReportModalOpen}
-        onClose={() => {
-          setIsReportModalOpen(false);
-          setReportTargetFeature(null);
-        }}
-        pointId={reportTargetFeature?.properties.id}
-        pointName={reportTargetFeature?.properties.name}
-        initialLat={reportLat}
-        initialLng={reportLng}
-        adminConfig={config.admin}
-        onUpdateAdminEmail={updateAdminEmail}
-        onPickLocationOnMap={() => {
-          setIsReportModalOpen(false);
-          setIsReportPickMode(true);
-        }}
-      />
+      {/* 모달 3: 현장정보 이메일 제보 */}
+      {isReportModalOpen && (
+        <Suspense fallback={null}>
+          <FieldReportModal
+            key={`report-${reportTargetFeature?.properties.id ?? 'custom'}-${reportLat.toFixed(4)}-${reportLng.toFixed(4)}`}
+            isOpen={isReportModalOpen}
+            onClose={() => {
+              setIsReportModalOpen(false);
+              setReportTargetFeature(null);
+            }}
+            pointId={reportTargetFeature?.properties.id}
+            pointName={reportTargetFeature?.properties.name}
+            initialLat={reportLat}
+            initialLng={reportLng}
+            adminConfig={config.admin}
+            onUpdateAdminEmail={updateAdminEmail}
+            onPickLocationOnMap={() => {
+              setIsReportModalOpen(false);
+              setIsReportPickMode(true);
+            }}
+          />
+        </Suspense>
+      )}
 
-      {/* 모달 4: 상괭이 관찰기록 (key로 대상 변경 시 상태 즉시 동기화) */}
+      {/* 모달 4: 상괭이 관찰기록 */}
       {(porpoiseModalCoords || selectedPorpoise) && (
-        <PorpoiseObservationModal
-          key={
-            selectedPorpoise?.id ??
-            `new-${porpoiseModalCoords?.lat.toFixed(5)}-${porpoiseModalCoords?.lng.toFixed(5)}`
-          }
-          isOpen={Boolean(porpoiseModalCoords || selectedPorpoise)}
-          onClose={() => {
-            setPorpoiseModalCoords(null);
-            setSelectedPorpoise(null);
-          }}
-          lat={
-            selectedPorpoise
-              ? selectedPorpoise.lat
-              : (porpoiseModalCoords?.lat ?? 34.8195)
-          }
-          lng={
-            selectedPorpoise
-              ? selectedPorpoise.lng
-              : (porpoiseModalCoords?.lng ?? 128.552)
-          }
-          existingRecord={selectedPorpoise}
-          onSave={addPorpoise}
-          onUpdate={updatePorpoise}
-          onDelete={deletePorpoise}
-        />
+        <Suspense fallback={null}>
+          <PorpoiseObservationModal
+            key={
+              selectedPorpoise?.id ??
+              `new-${porpoiseModalCoords?.lat.toFixed(5)}-${porpoiseModalCoords?.lng.toFixed(5)}`
+            }
+            isOpen={Boolean(porpoiseModalCoords || selectedPorpoise)}
+            onClose={() => {
+              setPorpoiseModalCoords(null);
+              setSelectedPorpoise(null);
+            }}
+            lat={
+              selectedPorpoise
+                ? selectedPorpoise.lat
+                : (porpoiseModalCoords?.lat ?? 34.8195)
+            }
+            lng={
+              selectedPorpoise
+                ? selectedPorpoise.lng
+                : (porpoiseModalCoords?.lng ?? 128.552)
+            }
+            existingRecord={selectedPorpoise}
+            onSave={addPorpoise}
+            onUpdate={updatePorpoise}
+            onDelete={deletePorpoise}
+          />
+        </Suspense>
       )}
 
       {/* 모달 5: 항포구·접안지 검색 및 선택 모달 */}
-      <PortSelectModal
-        key={portSelectorTarget?.waypointId ?? 'port-closed'}
-        isOpen={Boolean(portSelectorTarget)}
-        onClose={() => setPortSelectorTarget(null)}
-        targetLabel={portSelectorTarget?.label ?? '위치'}
-        ports={portsList}
-        userLocation={userLocation}
-        onSelectPort={handleSelectPortForWaypoint}
-        onSelectUserGps={handleSelectUserGpsForWaypoint}
-      />
+      {portSelectorTarget && (
+        <Suspense fallback={null}>
+          <PortSelectModal
+            key={portSelectorTarget.waypointId}
+            isOpen={Boolean(portSelectorTarget)}
+            onClose={() => setPortSelectorTarget(null)}
+            targetLabel={portSelectorTarget.label}
+            ports={portsList}
+            userLocation={userLocation}
+            onSelectPort={handleSelectPortForWaypoint}
+            onSelectUserGps={handleSelectUserGpsForWaypoint}
+          />
+        </Suspense>
+      )}
 
       {/* 모달 6: 해상기상 기준치 설정 */}
-      <WeatherThresholdSettings
-        key={`weather-settings-${isWeatherSettingsOpen ? 'open' : 'closed'}`}
-        isOpen={isWeatherSettingsOpen}
-        onClose={() => setIsWeatherSettingsOpen(false)}
-        thresholds={marineWeather.thresholds}
-        onSave={marineWeather.updateThresholds}
-      />
+      {isWeatherSettingsOpen && (
+        <Suspense fallback={null}>
+          <WeatherThresholdSettings
+            key="weather-settings-open"
+            isOpen={isWeatherSettingsOpen}
+            onClose={() => setIsWeatherSettingsOpen(false)}
+            thresholds={marineWeather.thresholds}
+            onSave={marineWeather.updateThresholds}
+          />
+        </Suspense>
+      )}
         </div>
       )}
     </div>

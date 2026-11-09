@@ -1,9 +1,9 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "version": "1.0.0",
+    "version": "1.7.0",
     "region": "경상남도 통영·거제 해역 (공식 조사선 거점 5개소 + 소규모 선착장·부잔교·슬립웨이 50개소)",
-    "updated_at": "2026-11-08",
+    "updated_at": "2026-11-09",
     "operator_note": "비개발자 운영 가이드: coordinates는 [경도(lng), 위도(lat)] 순서입니다. 사진 파일은 public/images/docking/ 폴더에 넣고 경로만 수정하세요."
   },
   "features": [
