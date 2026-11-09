@@ -25,6 +25,8 @@ import {
   buildPorpoiseSpec,
   buildRouteLegBadgeSpec,
   buildRouteWaypointSpec,
+  buildSpatialLayerLabelSpec,
+  buildSpatialLayerPointSpec,
   buildWeatherPinSpec,
   type MarkerTemplateSpec,
 } from './mapMarkerTemplates';
@@ -195,40 +197,115 @@ function attachDraggableToCustomOverlay(
   el.addEventListener('pointercancel', finishDrag);
 }
 
+interface ParsedKakaoLayerPrimitives {
+  polygons: { rings: KakaoLatLng[][]; label?: string; center?: KakaoLatLng }[];
+  polylines: { path: KakaoLatLng[]; label?: string; center?: KakaoLatLng }[];
+  points: { position: KakaoLatLng; label: string }[];
+}
+
 /**
- * GeoJSON FeatureCollection 내의 Polygon / MultiPolygon 좌표를
- * Kakao LatLng 배열로 파싱하는 헬퍼
+ * GeoJSON FeatureCollection 내의 모든 도형(Polygon, MultiPolygon, LineString, MultiLineString, Point, MultiPoint)을
+ * Kakao Map 프리미티브 배열로 파싱하는 헬퍼
  */
-function parseGeoJsonToKakaoPolygonPaths(
+function parseGeoJsonToKakaoPrimitives(
   kakaoMaps: KakaoMapsNamespace,
   geojson: any,
-): KakaoLatLng[][][] {
-  if (!geojson || !Array.isArray(geojson.features)) return [];
-  const polygons: KakaoLatLng[][][] = [];
+  labelField = 'name',
+): ParsedKakaoLayerPrimitives {
+  const result: ParsedKakaoLayerPrimitives = {
+    polygons: [],
+    polylines: [],
+    points: [],
+  };
+  if (!geojson || !Array.isArray(geojson.features)) return result;
 
-  const convertRing = (ring: number[][]): KakaoLatLng[] =>
-    ring
+  const convertCoords = (coords: number[][]): KakaoLatLng[] =>
+    coords
       .filter((pt) => Array.isArray(pt) && pt.length >= 2)
       .map(([lng, lat]) => new kakaoMaps.LatLng(lat, lng));
+
+  const computeCenter = (pts: KakaoLatLng[]): KakaoLatLng | undefined => {
+    if (pts.length === 0) return undefined;
+    let sumLat = 0;
+    let sumLng = 0;
+    for (const p of pts) {
+      sumLat += p.getLat();
+      sumLng += p.getLng();
+    }
+    return new kakaoMaps.LatLng(sumLat / pts.length, sumLng / pts.length);
+  };
 
   for (const feature of geojson.features) {
     const geom = feature?.geometry;
     if (!geom) continue;
+    const props = feature?.properties ?? {};
+    const rawLabel =
+      props[labelField] ?? props.name ?? props.명칭 ?? props.이름 ?? props.id ?? '';
+    const labelStr = rawLabel ? String(rawLabel) : '';
 
     if (geom.type === 'Polygon' && Array.isArray(geom.coordinates)) {
-      const rings = geom.coordinates.map(convertRing).filter((r: KakaoLatLng[]) => r.length >= 3);
-      if (rings.length > 0) polygons.push(rings);
+      const rings = geom.coordinates.map(convertCoords).filter((r: KakaoLatLng[]) => r.length >= 3);
+      if (rings.length > 0) {
+        result.polygons.push({
+          rings,
+          label: labelStr,
+          center: computeCenter(rings[0]),
+        });
+      }
     } else if (geom.type === 'MultiPolygon' && Array.isArray(geom.coordinates)) {
       for (const polyCoords of geom.coordinates) {
         if (Array.isArray(polyCoords)) {
-          const rings = polyCoords.map(convertRing).filter((r: KakaoLatLng[]) => r.length >= 3);
-          if (rings.length > 0) polygons.push(rings);
+          const rings = polyCoords.map(convertCoords).filter((r: KakaoLatLng[]) => r.length >= 3);
+          if (rings.length > 0) {
+            result.polygons.push({
+              rings,
+              label: labelStr,
+              center: computeCenter(rings[0]),
+            });
+          }
+        }
+      }
+    } else if (geom.type === 'LineString' && Array.isArray(geom.coordinates)) {
+      const path = convertCoords(geom.coordinates);
+      if (path.length >= 2) {
+        result.polylines.push({
+          path,
+          label: labelStr,
+          center: path[Math.floor(path.length / 2)],
+        });
+      }
+    } else if (geom.type === 'MultiLineString' && Array.isArray(geom.coordinates)) {
+      for (const lineCoords of geom.coordinates) {
+        if (Array.isArray(lineCoords)) {
+          const path = convertCoords(lineCoords);
+          if (path.length >= 2) {
+            result.polylines.push({
+              path,
+              label: labelStr,
+              center: path[Math.floor(path.length / 2)],
+            });
+          }
+        }
+      }
+    } else if (geom.type === 'Point' && Array.isArray(geom.coordinates) && geom.coordinates.length >= 2) {
+      const [lng, lat] = geom.coordinates;
+      result.points.push({
+        position: new kakaoMaps.LatLng(lat, lng),
+        label: labelStr,
+      });
+    } else if (geom.type === 'MultiPoint' && Array.isArray(geom.coordinates)) {
+      for (const pt of geom.coordinates) {
+        if (Array.isArray(pt) && pt.length >= 2) {
+          result.points.push({
+            position: new kakaoMaps.LatLng(pt[1], pt[0]),
+            label: labelStr,
+          });
         }
       }
     }
   }
 
-  return polygons;
+  return result;
 }
 
 export function KakaoMapCanvas({
@@ -276,6 +353,8 @@ export function KakaoMapCanvas({
 
   // 각 레이어별 오버레이/도형 인스턴스 Ref (메모리 누수 및 좀비 마커 원천 방지)
   const polygonsRef = useRef<KakaoPolygon[]>([]);
+  const spatialPolylinesRef = useRef<KakaoPolyline[]>([]);
+  const spatialOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
   const dockingOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
   const porpoiseOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
   const portOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
@@ -419,48 +498,145 @@ export function KakaoMapCanvas({
     map.setLevel(nextLevel, { animate: true });
   }, [zoomStepTrigger]);
 
-  // 5. QGIS 공간정보 폴리곤 레이어 (국립공원 경계, 특별보호구역) 렌더링 & 클릭 브릿징
+  // 5. QGIS 공간정보 전 도형(Polygon, LineString, Point) 및 라벨 렌더링 & 클릭 브릿징
   useEffect(() => {
     const map = mapRef.current;
     polygonsRef.current.forEach((p) => p.setMap(null));
     polygonsRef.current = [];
+    spatialPolylinesRef.current.forEach((l) => l.setMap(null));
+    spatialPolylinesRef.current = [];
+    spatialOverlaysRef.current.forEach((o) => o.setMap(null));
+    spatialOverlaysRef.current = [];
     if (!map) return;
 
-    const created: KakaoPolygon[] = [];
+    const createdPolygons: KakaoPolygon[] = [];
+    const createdLines: KakaoPolyline[] = [];
+    const createdOverlays: KakaoCustomOverlay[] = [];
+
     for (const layer of layers) {
-      if (!layer.visible) continue;
+      if (!layer.visible || layer.id === 'docking' || layer.isSystemLayer) continue;
       const rawGeoJson = geoJsonLayersData[layer.id];
       if (!rawGeoJson) continue;
 
-      const pathsList = parseGeoJsonToKakaoPolygonPaths(kakaoMaps, rawGeoJson);
-      for (const rings of pathsList) {
+      const strokeColor = layer.style?.strokeColor || layer.color || '#10b981';
+      const strokeWeight =
+        layer.style?.strokeWidth ?? (layer.id === 'national_park' ? 2.5 : 3);
+      const strokeOpacity = layer.style?.strokeOpacity ?? 0.92;
+      const strokeStyle =
+        layer.style?.strokeDash ??
+        (layer.id === 'protected_area' ? 'shortdash' : 'solid');
+      const fillColor = layer.style?.fillColor || layer.color || '#10b981';
+      const fillOpacity =
+        layer.style?.fillOpacity ?? (layer.id === 'national_park' ? 0.08 : 0.16);
+      const pointRadius = layer.style?.pointRadius ?? 7;
+      const labelField = layer.style?.labelField || 'name';
+      const showLabels = layer.style?.showLabels !== false;
+      const zIndex = layer.style?.zIndex ?? 15;
+
+      const primitives = parseGeoJsonToKakaoPrimitives(
+        kakaoMaps,
+        rawGeoJson,
+        labelField,
+      );
+
+      for (const polyItem of primitives.polygons) {
         const polygon = new kakaoMaps.Polygon({
           map,
-          path: rings,
-          strokeWeight: layer.id === 'national_park' ? 2.5 : 3,
-          strokeColor: layer.color,
-          strokeOpacity: 0.92,
-          strokeStyle: layer.id === 'protected_area' ? 'shortdash' : 'solid',
-          fillColor: layer.color,
-          fillOpacity: layer.id === 'national_park' ? 0.08 : 0.16,
-          zIndex: 10,
+          path: polyItem.rings,
+          strokeWeight,
+          strokeColor,
+          strokeOpacity,
+          strokeStyle,
+          fillColor,
+          fillOpacity,
+          zIndex,
         });
 
-        // 트러블슈팅 #5: 폴리곤 내부 해역 클릭 시에도 지도 클릭 동작 브릿징
         kakaoMaps.event.addListener(polygon, 'click', (mouseEvent: KakaoMouseEvent) => {
           if (!mouseEvent?.latLng) return;
           handleCoordinateClick(mouseEvent.latLng.getLat(), mouseEvent.latLng.getLng());
         });
 
-        created.push(polygon);
+        createdPolygons.push(polygon);
+
+        if (showLabels && polyItem.label && polyItem.center && currentLeafletZoom >= 11) {
+          const lblSpec = buildSpatialLayerLabelSpec(strokeColor, polyItem.label);
+          const lblEl = createOverlayElement(kakaoMaps, lblSpec);
+          createdOverlays.push(
+            new kakaoMaps.CustomOverlay({
+              map,
+              position: polyItem.center,
+              content: lblEl,
+              xAnchor: lblSpec.xAnchorRatio,
+              yAnchor: lblSpec.yAnchorRatio,
+              zIndex: zIndex + 5,
+              clickable: false,
+            }),
+          );
+        }
+      }
+
+      for (const lineItem of primitives.polylines) {
+        const polyline = new kakaoMaps.Polyline({
+          map,
+          path: lineItem.path,
+          strokeWeight,
+          strokeColor,
+          strokeOpacity,
+          strokeStyle,
+          zIndex: zIndex + 2,
+        });
+        createdLines.push(polyline);
+
+        if (showLabels && lineItem.label && lineItem.center && currentLeafletZoom >= 11) {
+          const lblSpec = buildSpatialLayerLabelSpec(strokeColor, lineItem.label);
+          const lblEl = createOverlayElement(kakaoMaps, lblSpec);
+          createdOverlays.push(
+            new kakaoMaps.CustomOverlay({
+              map,
+              position: lineItem.center,
+              content: lblEl,
+              xAnchor: lblSpec.xAnchorRatio,
+              yAnchor: lblSpec.yAnchorRatio,
+              zIndex: zIndex + 6,
+              clickable: false,
+            }),
+          );
+        }
+      }
+
+      for (const ptItem of primitives.points) {
+        const ptSpec = buildSpatialLayerPointSpec(
+          fillColor,
+          ptItem.label,
+          pointRadius,
+          showLabels,
+        );
+        const ptEl = createOverlayElement(kakaoMaps, ptSpec);
+        createdOverlays.push(
+          new kakaoMaps.CustomOverlay({
+            map,
+            position: ptItem.position,
+            content: ptEl,
+            xAnchor: ptSpec.xAnchorRatio,
+            yAnchor: ptSpec.yAnchorRatio,
+            zIndex: zIndex + 10,
+            clickable: false,
+          }),
+        );
       }
     }
 
-    polygonsRef.current = created;
+    polygonsRef.current = createdPolygons;
+    spatialPolylinesRef.current = createdLines;
+    spatialOverlaysRef.current = createdOverlays;
+
     return () => {
-      created.forEach((p) => p.setMap(null));
+      createdPolygons.forEach((p) => p.setMap(null));
+      createdLines.forEach((l) => l.setMap(null));
+      createdOverlays.forEach((o) => o.setMap(null));
     };
-  }, [kakaoMaps, layers, geoJsonLayersData, handleCoordinateClick]);
+  }, [kakaoMaps, layers, geoJsonLayersData, currentLeafletZoom, handleCoordinateClick]);
 
   // 6. [3.1 꼬미의 바다수첩] 55개 갯바위 접안 및 소규모 선착장 5색 마커
   useEffect(() => {

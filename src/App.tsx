@@ -87,7 +87,21 @@ const INITIAL_WAYPOINTS: RouteWaypoint[] = [
 ];
 
 export function App() {
-  const { config, layers, toggleLayer, updateAdminEmail } = useAppConfig();
+  const {
+    config,
+    layers,
+    geoJsonLayersData,
+    layerLoadErrorIds,
+    releaseId,
+    lastSavedAt,
+    remoteSyncStatus,
+    remoteCommitUrl,
+    snapshots,
+    toggleLayer,
+    saveOperationalLayers,
+    retryFailedGeoJsonLayers,
+    updateAdminEmail,
+  } = useAppConfig();
   const {
     records: porpoiseRecords,
     addRecord: addPorpoise,
@@ -192,8 +206,8 @@ export function App() {
   const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(INITIAL_WAYPOINTS);
   const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('add_waypoint');
 
-  // 6. 바닷길 콕콕 - 해상기상 상태판정 훅
-  const marineWeather = useMarineWeather(34.8195, 128.552);
+  // 6. 바닷길 콕콕 - 해상기상 상태판정 훅 (ECMWF IFS HRES + WAM HRES 전용, app_config.json 단일 원천 연결)
+  const marineWeather = useMarineWeather(34.8195, 128.552, config.weather_defaults);
 
   const showToast = useCallback((msg: string, durationMs = 2800) => {
     setGpsStatusMsg(msg);
@@ -896,6 +910,9 @@ export function App() {
           handleFlyToPoint(lat, lng, 14);
         }}
         layers={layers}
+        geoJsonLayersData={geoJsonLayersData}
+        layerLoadErrorIds={layerLoadErrorIds}
+        onRetryGeoJsonLayers={retryFailedGeoJsonLayers}
         showPorpoiseLayer={showPorpoiseLayer}
         isPorpoiseAddMode={isPorpoiseAddMode}
         isReportPickMode={isReportPickMode}
@@ -1028,12 +1045,28 @@ export function App() {
         }}
       />
 
-      {/* 모달 2: 공간정보 레이어 관리 */}
+      {/* 모달 2: 공간정보 레이어 관리 (직원용 통합 워크스페이스 · [저장] 즉시 운영 반영) */}
       <LayerControlModal
+        key={isLayerModalOpen ? 'layer-modal-open' : 'layer-modal-closed'}
         isOpen={isLayerModalOpen}
         onClose={() => setIsLayerModalOpen(false)}
         layers={layers}
+        geoJsonLayersData={geoJsonLayersData}
         onToggleLayer={toggleLayer}
+        onSaveOperationalLayers={async (params) => {
+          const res = await saveOperationalLayers(params);
+          showToast(`[${res.releaseId}] 공간정보 레이어 운영 반영 완료!`);
+          return res;
+        }}
+        onFlyToPoint={(lat, lng, zoom) => {
+          handleFlyToPoint(lat, lng, zoom ?? 13);
+          setIsLayerModalOpen(false);
+        }}
+        releaseId={releaseId}
+        lastSavedAt={lastSavedAt}
+        remoteSyncStatus={remoteSyncStatus}
+        remoteCommitUrl={remoteCommitUrl}
+        snapshots={snapshots}
         showPorpoiseLayer={showPorpoiseLayer}
         onTogglePorpoiseLayer={() => setShowPorpoiseLayer(!showPorpoiseLayer)}
         porpoiseCount={porpoiseRecords.length}

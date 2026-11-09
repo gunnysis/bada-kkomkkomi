@@ -1,6 +1,6 @@
-# 바다꼼꼬미 [v1.0] 아키텍처 · 최종 구현 설계 · 트러블슈팅 정본 (`ARCHITECTURE_AND_DESIGN.md`)
+# 바다꼼꼬미 [v1.2] 아키텍처 · 최종 구현 설계 · 트러블슈팅 정본 (`ARCHITECTURE_AND_DESIGN.md`)
 
-이 문서는 **'바다꼼꼬미' (Bada-Kkomkkomi) [v1.0]** 프로젝트의 전체 요구사항 명세 대조, 시스템 아키텍처, 통영·거제 135개 항포구·소규모 선착장 및 35개 해상 변침점(Waypoint) 데이터 사전, A* 실항로 우회 연산 및 양방향 동기화 알고리즘, PWA 캐시 무효화 설계 및 다중 에이전트 전수 감사(Audit) 기반 근본 원인(Root Cause) 해결 내역을 기록한 기술 문서입니다.
+이 문서는 **'바다꼼꼬미' (Bada-Kkomkkomi) [v1.2]** 프로젝트의 전체 요구사항 명세 대조, 시스템 아키텍처, 통영·거제 135개 항포구·소규모 선착장 및 35개 해상 변침점(Waypoint) 데이터 사전, A* 실항로 우회 연산, **직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 시스템(`[저장]` = 즉시 운영 반영)**, **ECMWF(`ecmwf_ifs` + `ecmwf_wam`) 전용 해상기상 예보 판정 엔진**, PWA 캐시 무효화 설계 및 다중 에이전트 전수 감사(Audit) 기반 근본 원인(Root Cause) 해결 내역을 기록한 기술 문서입니다.
 
 ---
 
@@ -11,7 +11,7 @@
 | 구분 | 기획 요구사항 | 구현 컴포넌트 및 모듈 | 정합성 |
 | :--- | :--- | :--- | :--- |
 | **A. 갯바위 접안정보 및 소규모 선착장** | 포인트명, WGS84 좌표, 접안 목적, 물때·수심 안내, 위험 요소, 복수 현장 사진, 5색 표식(빨강·주황·초록·파랑·보라), 최종 확인일, 하단 슬라이딩 시트, 사진 좌우 스와이프, 색상 필터, GPS 확인 | `public/data/docking_points.geojson` (**55개소**), `src/types/docking.ts`, `src/components/MapView.tsx`, `src/components/DockingDetailSheet.tsx`, `src/components/PhotoGallery.tsx` | **100% 충족** (공식 접안지 5개소 + 통영·거제 소규모 선착장 50개소 = 총 **55개소** 완비) |
-| **B. 공간정보 레이어** | 국립공원 경계, 특별보호구역, 갯바위 접안 포인트 중첩 표시, 체크박스 개별 표시·숨김, 향후 레이어 무코드 확장 구조 | `public/config/app_config.json` (`layers` 배열), `public/data/layers/*.geojson`, `src/components/notebook/LayerControlModal.tsx`, `MapView.tsx` 동적 GeoJSON 로더 | **100% 충족** |
+| **B. 공간정보 레이어 운영 관리 (Full-Service)** | 국립공원 경계, 특별보호구역, 갯바위 접안 포인트 및 **QGIS 실무 포맷(`.gpkg`, `.zip/.shp`, `.geojson`, `.kml`) 직접 반입**, **한국 좌표계(`EPSG:5179`/`5186` 등) & `CP949` 자동 변환**, 전 도형(`Polygon`/`LineString`/`Point`) 스타일·속성 편집, **`[저장]` 클릭 시 즉시 운영 반영(기기 영속 저장소 + GitHub 자동 커밋)**, 버전 스냅샷 롤백 | `src/services/spatialFileParser.ts`, `src/services/layerStorageService.ts`, `src/services/githubLayerSyncService.ts`, `src/components/notebook/LayerControlModal.tsx`, `src/hooks/useAppConfig.ts`, `KakaoMapCanvas.tsx`, `LegacyLeafletCanvas.tsx` | **100% 충족** (MVP 제약 없는 직원용 풀서비스 아키텍처 완비) |
 | **C. 현장정보 제보** | 위치·사진·자유 메모 입력, 접안지 상세 연동 제보 및 독립 제보(지도 임의 위치 선택), 운영자 설정 이메일(`mailto:` + 클립보드 복사) 모듈화 전송 | `src/components/notebook/FieldReportModal.tsx`, `src/services/emailReportService.ts`, `src/hooks/useAppConfig.ts` | **100% 충족** |
 | **D. 개인 상괭이 관찰 기록** | 지도 클릭 위치 선택, 현재 날짜·시간 자동 입력, 기본 개체수 `1마리`, 조회·수정·삭제, 단일 디자인 마커, 체크박스 표시·숨김, 기기 내부(`localStorage`) 저장, 사진·메모·통계 제외 | `src/types/porpoise.ts`, `src/hooks/usePorpoiseStorage.ts`, `src/components/notebook/PorpoiseObservationModal.tsx` | **100% 충족** |
 
@@ -21,7 +21,7 @@
 | :--- | :--- | :--- | :--- |
 | **A/B. 화면 구성** | 상단 탭(`시간계산` \| `기상상태판정`)을 통한 두 독립 화면 전환 | `src/App.tsx` (`activeMainTab === 'navigation'`, `navSubTab`) | **100% 충족** |
 | **C. 시간계산 (실항로·소규모 선착장)** | 지도에서 출발지·경유지(복수)·목적지 선택, 선박 속도 입력(기본 `15kn`), 구간별/전체 해리(`NM`)·소요시간(분)·침로(방위각) 계산, 마커 드래그 수정, **통영·거제 135개 항포구·소규모 선착장 사전(초성·별칭·섬 검색)**, **35개 해상 변침점 기반 A* 육지 우회 실항로 계산**, 500m 자동 스냅 양방향 동기화 | `public/data/ports.json` (**135개 항구·선착장 + 35개 변침점**), `src/services/routeGeoService.ts`, `src/components/navigation/RouteTimeCalculator.tsx`, `src/components/navigation/PortSelectModal.tsx`, `MapView.tsx` | **100% 충족** |
-| **D. 기상상태 판정** | 지도 해역 선택, 시간대별 풍속(`kn`)·파고(`m`) 조회, 더 나쁜 등급 기준 3단계(`좋음`/`보통`/`나쁨` + 결측 시 `판정불가`) 판정, 기준값 설정(`WeatherThresholdSettings`) | `src/hooks/useMarineWeather.ts`, `src/components/navigation/MarineWeatherPanel.tsx`, `src/components/navigation/WeatherThresholdSettings.tsx` | **100% 충족** |
+| **D. ECMWF 전용 기상상태 판정** | 지도 해역 선택, **ECMWF IFS HRES(`ecmwf_ifs`) 풍속(`kn`) + ECMWF WAM HRES(`ecmwf_wam`) 파고(`m`) 고정 조회**, 동일 KST 타임스탬프 `Map` 결합, 더 나쁜 등급 기준 3단계(`좋음`/`보통`/`나쁨` + 한쪽이라도 결측 시 `판정불가 ?`) 판정, 기상 런타임 캐시 배제, 기준값 설정(`WeatherThresholdSettings`) | `src/services/ecmwfWeatherService.ts`, `src/hooks/useMarineWeather.ts`, `src/components/navigation/MarineWeatherPanel.tsx`, `src/components/navigation/WeatherThresholdSettings.tsx` | **100% 충족** |
 
 ---
 

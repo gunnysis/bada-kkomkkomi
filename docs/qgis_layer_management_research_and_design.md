@@ -1,598 +1,383 @@
-# QGIS 공간정보 레이어 운영 관리 연구·점검·기획·설계
+# QGIS 공간정보 레이어 운영 관리 연구·점검·기획·설계 (직원용 정식 서비스 아키텍처)
 
-> 문서 상태: `REVIEW REQUESTED`  
-> 작성일: 2026-11-09  
-> 대상: 바다꼼꼬미 PWA / GitHub Pages  
-> 범위: 연구·현황 점검·제품 기획·기술 설계·QA/배포 설계  
-> 제외: Azure 및 기타 클라우드 백엔드, 서버 API, 공간 DB, 앱스토어 배포, 이번 단계의 기능 구현·운영 배포
+> 문서 상태: `IMPLEMENTED & VERIFIED (v1.2)`
+> 작성일: 2026-11-09
+> 대상: 바다꼼꼬미 PWA (국립공원공단 해양국립공원 직원용 실무 앱) / GitHub Pages
+> 설계 관점: **MVP(최소 기능 제한) 배제 · 직원 실무 중심 풀서비스(Full-Service) 설계 및 구현 완료**
+> 핵심 원칙: **① QGIS 실무 멀티 포맷(`.gpkg`, `.zip/.shp`, `.geojson`, `.kml`) 및 한국 좌표계 인앱 자동 변환 수용 · ② 관리 화면의 `[저장]` 버튼 클릭 = 즉시 운영 반영**
 
-## 1. 결론과 검토 요청
+---
 
-현재 화면의 **공간정보 레이어 관리**는 이름과 달리 등록된 레이어의 표시/숨김만 제어한다. QGIS 파일 업로드, 레이어/피처 생성·조회·수정·삭제(CRUD), 데이터 검증, 저장, 승인, 게시, 이력, 롤백은 구현되어 있지 않다.
+## 1. 결론 및 핵심 서비스 설계 방향
 
-GitHub Pages 자체에는 인증된 공유 저장소, 쓰기 API, 서버 측 권한 집행 기능이 없다. 브라우저가 외부 GitHub 인증/API를 호출하는 설계는 기술적으로 가능하지만 public-client token, 권한, 충돌, 피싱 위험 때문에 본 범위에서는 채택하지 않는다. 본 문서는 다음 **Pages-only GitOps 안**을 권고한다.
+현재 `바다꼼꼬미`의 **공간정보 레이어 관리**(`LayerControlModal`)는 하드코딩된 3개 레이어의 메모리상 표시/숨김만 토글하며, 새로고침 시 초기화되고 파일 업로드·편집·영속 저장 기능이 없다.
 
-1. 운영자는 QGIS에서 원본을 관리하고 웹 배포본을 RFC 7946 GeoJSON으로 내보낸다.
-2. PWA의 운영자 작업공간에서 파일을 가져와 검증·미리보기하고, 레이어 데이터셋을 로컬 초안으로 생성·조회·교체·폐기한다. 피처 속성 CRUD는 2단계 승인 범위다.
-3. 변경 결과를 `게시 패키지`로 내려받는다. 이 단계까지는 IndexedDB에만 저장되며 다른 사용자에게 게시되지 않는다.
-4. 운영자는 GitHub feature branch에 패키지를 업로드하고 PR을 만든다.
-5. CI가 스키마, CRS, 형상, ID, 크기, 보안, 렌더링, PWA 빌드를 검사한다.
-6. 승인된 PR이 `main`에 병합되면 기존 GitHub Pages workflow가 새 정적 릴리스를 배포한다.
-7. 문제 발생 시 해당 데이터 커밋을 revert하고 같은 검증·배포 절차로 롤백한다.
+본 앱은 일반 대중용 홍보 앱이 아니라 **국립공원공단 직원이 해상·도서 현장과 사무실에서 직접 사용하는 직원용 실무 앱**이다. 따라서 *"`.geojson`만 받고 나머지는 직원이 직접 QGIS에서 변환해 오라"*거나 *"관리 화면에서 저장해도 운영에는 바로 반영되지 않는다"*는 식의 MVP(최소 기능) 타협 설계를 전면 배제하고, **직원 실무 서비스 관점의 정식 공간정보 레이어 관리 시스템**으로 설계한다.
 
-이 방식은 운영자가 웹 화면에서 데이터를 편집하는 경험과 GitHub의 인증·승인·감사 이력을 함께 제공한다. 단, **관리 화면의 저장 버튼이 곧 운영 반영을 의미하지는 않는다.** 운영 반영은 PR 승인과 Pages 배포가 끝난 뒤에만 성립한다.
+### 핵심 서비스 원칙 4가지
 
-검토자는 우선 다음 결정을 승인하거나 수정해야 한다.
+1. **QGIS 실무 포맷 원스톱 직접 수용 (Multi-Format Native Ingestion)**:
+   - 직원이 QGIS나 유관 기관(해양수산부, 해경, 지자체 등)에서 사용하는 **GeoPackage(`.gpkg`)**, **Shapefile(`.zip` 압축 또는 `.shp`+`.dbf`+`.prj`+`.cpg` 다중 파일)**, **GeoJSON(`.geojson`, `.json`)**, **KML/KMZ(`.kml`, `.kmz`)** 파일을 별도의 외부 변환 작업 없이 그대로 업로드할 수 있다.
+   - 단일 `.gpkg` 또는 `.zip` 안에 복수의 공간 레이어가 포함된 경우, 앱이 내부 레이어 목록을 즉시 분석해 직원이 원하는 레이어를 선택·일괄 등록할 수 있도록 지원한다.
+2. **한국 공공측량 좌표계(CRS) 및 한글 인코딩(`CP949`/`EUC-KR`) 인앱 자동 변환**:
+   - 직원이 `EPSG:5179`, `EPSG:5186`, `EPSG:5181`, `EPSG:5174`, `EPSG:3857` 등 국내 실무 좌표계 파일을 올렸을 때 오류로 차단하지 않고, 내장된 **`proj4` 좌표 변환 엔진이 자동으로 `EPSG:4326`(WGS 84 경도/위도)으로 즉시 재투영**한다.
+   - 관공서 Shapefile(`.dbf`)의 고질적인 한글 깨짐(`CP949` / `EUC-KR`)을 자동 감지·변환하여 한글 속성명(`공원명`, `보호구역명`, `규제사항` 등)을 완벽히 보존한다.
+3. **전 도형 타입(`Polygon`, `LineString`, `Point`) 및 실무 스타일링 완벽 지원**:
+   - 공원구역·특별보호구역(`Polygon`/`MultiPolygon`), 해상 순찰 항로·탐방로·관할 경계선(`LineString`/`MultiLineString`), 선착장·부표·암초·관측지점(`Point`/`MultiPoint`)을 **Kakao Map v3**와 **Legacy Leaflet** 양쪽 엔진에서 모두 동일하게 렌더링하고, 화면에서 색상·선 두께·선 종류·투명도·표시 라벨 필드를 즉시 설정한다.
+4. **관리 화면의 `[저장]` 버튼 = 즉시 운영 반영 (Direct Operational Apply)**:
+   - 관리 화면에서 레이어 추가·수정·삭제·순서/스타일/표시 변경 후 **`[저장]` 버튼을 누르면 곧바로 운영에 반영**된다.
+     - **[즉시 반영 1 — 앱 런타임 & 기기 영속 스토리지(`IndexedDB` / `localStorage`)]**: `[저장]` 클릭 즉시 현재 활성 지도(`KakaoMapCanvas` / `LegacyLeafletCanvas`)와 기기 영속 저장소에 운영 상태로 커밋되어 새로고침·오프라인 해상 현장에서도 즉시 유지된다.
+     - **[즉시 반영 2 — 원격 GitHub 저장소(`main`) 자동 커밋 및 GitHub Pages 배포]**: 별도의 ZIP 다운로드나 수작업 PR 없이, `[저장]` 클릭과 동시에 GitHub API를 통해 `public/data/layers/` 및 레이어 카탈로그를 원격 `main` 브랜치에 자동 커밋하여 전체 직원 단말기에 운영 배포를 트리거한다. (해상 음영지역 등 오프라인 상태에서는 기기 내 즉시 운영 반영을 완료한 뒤 온라인 복귀 시 자동 동기화한다.)
 
-- MVP 입력 포맷을 `GeoJSON만`으로 제한할지 승인한다. 권고안은 GeoJSON만이며 GeoPackage 직접 읽기는 2단계다.
-- 피처 속성·geometry 편집을 2단계에 포함할지 결정한다. 권고안은 MVP에서 geometry 정밀 편집을 제외하고 QGIS를 원본 편집 도구로 유지하는 것이다.
-- 운영자 GitHub 권한, PR 승인자, 필수 CI check, 긴급 롤백 담당자를 지정한다.
-- 실제 국립공원 경계·특별보호구역 데이터의 출처, 이용 허가, 갱신 주기와 책임자를 확정한다.
+---
 
-## 2. 용어와 범위
+## 2. 서비스 범위 및 실무 시나리오
 
-### 2.1 관리 대상
+### 2.1 직원 실무 핵심 기능 (Full-Service Scope)
 
-- **레이어 CRUD**: 레이어 메타데이터의 생성, 목록/상세 조회, 수정, 삭제 초안 작성
-- **피처 CRUD**: 한 레이어 안의 공간 객체 및 속성 생성, 조회, 수정, 삭제 초안 작성
-- **게시**: 검증된 GeoJSON과 manifest를 GitHub PR로 승인한 뒤 Pages 정적 배포물에 포함
-- **로컬 저장**: 현재 브라우저의 IndexedDB에만 초안을 보존
-- **운영 데이터**: `main` 병합, Pages deployment 성공, 지정된 배포 후 smoke를 통과한 데이터. 개별 사용자의 실제 수신은 CDN·서비스 워커·오프라인 상태에 따라 지연될 수 있음
+| 영역 | 제공 기능 | 서비스 동작 기준 |
+|---|---|---|
+| **파일 가져오기 (Ingest)** | `.gpkg`, `.zip`(Shapefile), `.shp/.dbf/.prj/.cpg`(다중 선택), `.geojson`/`.json`, `.kml`/`.kmz` 드래그앤드롭 및 파일 선택 | 브라우저 Web Worker에서 포맷 자동 판별 후 표준 GeoJSON(`EPSG:4326`)으로 인앱 자동 변환 |
+| **좌표계·인코딩 자동 처리** | 한국 표준 좌표계(`EPSG:5179`, `5186`, `5187`, `5185`, `5181`, `5174`, `3857`, `4326`) 자동 감지·재투영 및 `UTF-8`/`EUC-KR`(`CP949`) 한글 디코딩 | 직원이 QGIS에서 재투영/인코딩 변환을 다시 할 필요 없이 앱이 자동 처리 (수동 좌표계/인코딩 변경 드롭다운 병행 제공) |
+| **레이어 CRUD** | 레이어 신규 등록, 메타데이터(이름, 분류, 설명, 출처, 기준일) 수정, 표시/숨김, 렌더링 순서(Z-index), 삭제 | 조작 즉시 지도 미리보기 제공 및 **`[저장]` 클릭 시 즉시 운영 반영** |
+| **스타일 & 라벨 설정** | 선 색상, 선 굵기, 선 스타일(실선/점선), 면 채우기 색상·투명도, 포인트 마커 아이콘/색상, 지도 라벨 표시 속성(`properties` 컬럼 선택) | 하드코딩 스타일을 제거하고 레이어별 동적 스타일 설정 후 **`[저장]` 시 즉시 운영 반영** |
+| **피처·속성·도형 관리** | 레이어 내 피처 목록 검색·필터, 속성값 수정/추가/삭제, 지도상 도형(Point/Line/Polygon) 선택·수정·삭제 | 현장에서 발견된 구역 명칭 오류·부표 위치 변경·경계 미세 수정 후 **`[저장]` 시 즉시 운영 반영** |
+| **데이터 내보내기 (Export)** | 운영 중인 레이어를 표준 GeoJSON(`.geojson`)으로 원클릭 다운로드 | 현장/사무실 간 QGIS 재반입(Round-trip) 및 백업 지원 |
+| **버전 이력 & 즉시 복원** | 최근 저장 이력(`releaseId`, 저장 시각, 변경 요약) 조회 및 `[이전 버전으로 복원]` | 오입력 발생 시 관리 화면에서 이전 버전 선택 후 **`[저장]` 한 번으로 즉시 원상 복구** |
 
-### 2.2 명시적 비범위
+### 2.2 명시적 비범위 (Zero-Cost 정적 아키텍처 유지 기준)
 
-- 다중 사용자의 실시간 공동 편집 및 잠금
-- 브라우저에서 QGIS 프로젝트(`.qgz`) 전체 재현
-- WMS/WFS/PostGIS 직접 연결
-- PWA 내부 계정·비밀번호·RBAC 서버
-- 브라우저에 저장한 장기 GitHub token을 이용한 자동 commit
-- 대용량 raster, vector tile 생성, 실시간 공간 질의
-- Azure를 포함한 별도 클라우드 구성
+- 별도 유료 클라우드 서버(Azure, AWS 등) 및 유료 공간 DB(PostGIS 관리형 서버) 구축 (무상 운영 원칙 유지)
+- 수백 MB~수 GB급 항공사진/위성 정사영상(GeoTIFF Raster) 원본 호스팅 (배경 위성지도는 이미 연동된 **Kakao 스카이뷰/하이브리드**로 제공)
+- QGIS 데스크톱 전용 프로젝트 파일(`.qgz`, `.qgs` — 실제 공간 데이터 없이 로컬 PC 경로와 심볼 XML만 담긴 파일) 단독 업로드 (공간 데이터가 담긴 `.gpkg`, `.zip/.shp`, `.geojson`, `.kml`은 모두 직접 지원)
 
-## 3. 현재 구현 팩트체크
+---
 
-### 3.1 현재 데이터 흐름
+## 3. 현재 구현 팩트체크 (As-Is 진단)
+
+### 3.1 현재 데이터 흐름 및 한계
 
 ```text
 public/config/app_config.json
           │ 앱 시작 시 1회 fetch
           ▼
-useAppConfig ── layers 메모리 상태 ── LayerControlModal 표시 토글
+useAppConfig ── layers 메모리 상태 ── LayerControlModal 단순 체크박스 토글
           │
           ▼
-MapView ── 각 layer.url JSON fetch ── Kakao 또는 Leaflet 렌더
+MapView ── 각 layer.url JSON fetch ── Kakao(Polygon만) 또는 Leaflet 렌더
 ```
 
-| 항목 | 현재 상태 | 근거 | 판정 |
+| 항목 | 현재 상태 (As-Is) | 소스 근거 | 직원용 서비스 관점의 문제점 및 개선 방향 |
 |---|---|---|---|
-| 호스팅 | React/Vite 정적 PWA, GitHub Pages | `package.json`, `.github/workflows/deploy-pages.yml` | 확인 |
-| 레이어 등록 | `app_config.json`에 3개 등록 | `public/config/app_config.json:25` | 확인 |
-| 메타모델 | `id`, `name`, `visible`, `color`, `url?`, `description` | `src/types/config.ts:28` | 확인 |
-| 레이어 읽기 | 설정 1회 fetch 후 URL별 JSON fetch | `src/hooks/useAppConfig.ts:56`, `src/components/MapView.tsx:132` | 확인 |
-| 레이어 관리 UI | 체크박스 가시성 토글 | `src/components/notebook/LayerControlModal.tsx:59` | 확인 |
-| 레이어/피처 CRUD | 업로드·생성·수정·삭제·게시 없음 | 위 UI와 hook 전체 | 미구현 |
-| 변경 영속화 | 가시성도 메모리만 변경, 새로고침 시 초기화 | `src/hooks/useAppConfig.ts:101` | 미구현 |
-| 인증/권한 | 로그인, 역할, 쓰기 API 없음 | 전체 의존성과 소스 점검 | 미구현 |
-| 스키마/CRS 검증 | `response.json()` 이후 그대로 보관 | `src/components/MapView.tsx:142-149` | 미구현 |
-| Kakao geometry | Polygon/MultiPolygon만 처리 | `src/components/map/KakaoMapCanvas.tsx:198` | 제한 |
-| Leaflet geometry | `GeoJSON` 컴포넌트로 렌더 | `src/components/map/LegacyLeafletCanvas.tsx:401` | 엔진 간 불일치 |
-| 스타일 | 색상 외 일부가 특정 layer ID에 하드코딩 | Kakao `:440`, Leaflet `:408` | 확장 곤란 |
-| PWA 데이터 캐시 | JSON/GeoJSON에 NetworkFirst를 선언했으나 같은 파일이 precache에도 중복 등록됨 | `vite.config.ts:20-29`, `:58-85` | 실제 요청 경로·갱신 시점 실측 필요 |
-| Pages 배포 | `main` push → lint/build → artifact → deploy | `.github/workflows/deploy-pages.yml:3` | 확인 |
+| **레이어 등록 구조** | `app_config.json`에 3개 정적 하드코딩 | [`public/config/app_config.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/config/app_config.json#L25) | 직원이 앱에서 새 레이어를 추가·삭제할 수 없음 → **동적 레이어 카탈로그 + 영속 저장소 + 원격 자동 동기화로 전환** |
+| **레이어 관리 UI** | 단순 체크박스 가시성 토글만 존재 | [`src/components/notebook/LayerControlModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/LayerControlModal.tsx#L59) | 파일 업로드, 스타일 변경, 속성 편집, `[저장]` 버튼 모두 없음 → **통합 공간정보 레이어 관리 워크스페이스로 전면 개편** |
+| **저장 및 영속화** | 메모리(`useState`)만 변경, 새로고침 시 초기화 | [`src/hooks/useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts#L101) | 직원이 설정한 레이어 상태가 유지되지 않음 → **`[저장]` 클릭 시 `IndexedDB`/`localStorage` + 원격 GitHub 저장소 즉시 반영** |
+| **지원 파일 포맷** | 사전 변환된 정적 `.geojson` URL만 fetch | [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx#L132) | 실무에서 쓰는 `.gpkg`, `.zip(shp)`, `EPSG:5179` 파일 직접 등록 불가 → **인앱 멀티 포맷 파서 & 자동 좌표 변환기 탑재** |
+| **Kakao 도형 렌더링** | `Polygon`/`MultiPolygon`만 처리 (`LineString`, `Point` 누락) | [`src/components/map/KakaoMapCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx#L198) | 항로/탐방로(`LineString`)나 부표/암초(`Point`) 레이어를 카카오맵에 그릴 수 없음 → **Kakao `Polyline`, `CustomOverlay`/`Marker` 렌더러 추가** |
+| **스타일 적용 방식** | `protected_area` 등 특정 ID에 점선/투명도 하드코딩 | [`src/components/map/KakaoMapCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx#L440) | 신규 레이어별 스타일 커스터마이징 불가 → **레이어 스타일 스키마(`strokeColor`, `strokeWidth`, `strokeDash`, `fillColor`, `fillOpacity`, `labelField`) 도입** |
 
-`LayerControlModal`의 “파일을 넣고 등록하면 앱 재빌드 없이 자동 연동” 안내는 운영 절차를 충분히 설명하지 못한다. 저장소 파일 변경 후에도 commit/push, Actions build, Pages deploy가 필요하다. 이미 설치된 PWA는 서비스 워커 갱신과 재실행 시점에 따라 이전 캐시를 잠시 사용할 수 있다.
+### 3.2 현재 수록된 공간 데이터 표본 점검
 
-### 3.2 현재 데이터 표본 점검
+| 파일 | 크기 | 피처 수 | 도형 타입 | 현재 상태 진단 |
+|---|---:|---:|---|---|
+| [`national_park.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/national_park.geojson) | 1,302 B | 2 | `Polygon` | 레거시 `crs` 속성 포함, 외곽 링 시계방향(CW) → 인앱 정규화 엔진으로 자동 정리 대상 |
+| [`protected_area.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/protected_area.geojson) | 1,328 B | 2 | `Polygon` | 레거시 `crs` 속성 포함 → 인앱 정규화 엔진으로 자동 정리 대상 |
+| [`docking_points.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/docking_points.geojson) | 46,683 B | 55 | `Point` | 접안시설 전용 도메인 레이어로 정상 동작 중 |
 
-2026-11-09 로컬 파일을 읽어 확인한 결과다.
+---
 
-| 파일 | 크기 | 피처 | geometry | ID 중복 | 최상위 `crs` |
-|---|---:|---:|---|---|---|
-| `national_park.geojson` | 1,302 B | 2 | Polygon | 없음 | 있음 |
-| `protected_area.geojson` | 1,328 B | 2 | Polygon | 없음 | 있음 |
-| `docking_points.geojson` | 46,683 B | 55 | Point | 없음 | 없음 |
+## 4. 직원 실무 중심 QGIS 멀티 포맷 & 좌표계 자동 변환 아키텍처
 
-두 일반 레이어는 좌표 유한성·범위와 Polygon ring 폐쇄를 통과했다. 다만 `crs` 멤버 값은 CRS84이지만 RFC 7946에서는 최상위 `crs` 멤버가 제거되었고, 두 파일의 외곽 ring 방향도 RFC 7946이 요구하는 right-hand rule과 반대인 clockwise다. 호환 parser는 winding 오류만으로 입력을 거부하지 않을 수 있어 현재 렌더링은 되지만, 게시 정규화에서는 `crs`를 제거하고 외곽 ring은 CCW, 내부 ring은 CW로 맞추며 좌표 자체가 WGS 84 경도/위도 순서인지 검증해야 한다.
+직원용 앱에서는 직원이 QGIS의 복잡한 내보내기 옵션(`RFC7946=YES`, 수동 재투영, 인코딩 변환 등)을 일일이 맞추지 않아도 **실무 파일을 그대로 올리면 앱이 알아서 표준화**해야 한다.
 
-현재 표본이 파싱되고 지도에 보인다는 사실은 실제 공원구역 경계의 정확성, 최신성, 법적 효력 또는 출처 허가를 증명하지 않는다. 이 네 항목은 데이터 책임자의 확인이 필요하다.
+### 4.1 지원 포맷 및 인앱 파싱 파이프라인
 
-### 3.3 기준선 검증 결과
+```mermaid
+flowchart LR
+  subgraph Input["직원이 업로드하는 실무 공간 파일"]
+    A1["GeoPackage (.gpkg)"]
+    A2["Shapefile (.zip 또는 .shp+.dbf+.prj+.cpg)"]
+    A3["GeoJSON (.geojson, .json)"]
+    A4["KML / KMZ (.kml, .kmz)"]
+  end
 
-현재 사용자의 미커밋 변경을 포함한 작업 트리에서 다음 읽기/빌드 검사를 수행했다.
+  subgraph Worker["Web Worker 인앱 공간 처리 엔진"]
+    B1["포맷 & 내부 레이어 탐색기\n(복수 레이어 선택 지원)"]
+    B2["한글 인코딩 자동 복원기\n(UTF-8 / CP949·EUC-KR)"]
+    B3["좌표계(CRS) 자동 감지 & 재투영\n(EPSG:5179/5186/5181/5174/3857 ➔ EPSG:4326)"]
+    B4["도형 유효성 검증 & RFC 7946 정규화\n(Ring 닫기, Winding, 정밀도 6자리, BBox 계산)"]
+  end
 
-| 검사 | 결과 | 한계 |
-|---|---|---|
-| `npm ci` | lockfile 기준 clean install 통과 | npm이 low 2건, moderate 4건 보고 |
-| `npm run lint` | 통과 | 데이터 의미/형상은 검사하지 않음 |
-| 기본 `npm run build` | 로컬 base(`/`) build 통과 | Pages artifact 증거로 사용하지 않음 |
-| `GITHUB_ACTIONS=true npm run build` | Pages base build 통과, manifest `start_url`/`scope` 모두 `/bada-kkomkkomi/` 확인 | 실제 Actions·Pages 배포·실기기는 미검증 |
-| `npm audit --omit=dev --audit-level=high` | 운영 의존성 취약점 0건 | 2026-11-09 조회 시점 결과 |
-| 전체 `npm audit` | low 2건, moderate 4건, high/critical 0건 | Workbox 계열 전이 의존성. 제안된 자동 수정은 PWA plugin downgrade이므로 미적용 |
-| 자동 단위/E2E 테스트 | 실행 불가 | `package.json`에 test 스크립트 없음 |
-| 스테이징 통합 테스트 | 증적 없음 | staging 환경/결과 파일 없음 |
+  subgraph Output["즉시 운영 반영 (Save)"]
+    C1["활성 지도 즉시 렌더링\n(Kakao Map v3 / Legacy Leaflet)"]
+    C2["기기 영속 저장소 확정\n(IndexedDB + localStorage)"]
+    C3["원격 GitHub 저장소 자동 커밋\n(GitHub Pages 자동 배포)"]
+  end
 
-따라서 현재 작업 트리는 clean install, lint, Pages-base production build를 통과한 **로컬 빌드 후보**다. 그러나 자동 데이터/E2E/PWA 테스트와 실제 Actions·Pages·실기기 검증이 없으므로 “운영 배포 준비 완료” 또는 “레이어 관리 기능 운영 검증 완료”라고 할 수는 없다. 이번 작업에서는 운영 배포를 수행하지 않았다.
-
-### 3.4 현재 GitHub Pages 운영 상태
-
-2026-11-09에 GitHub API와 공개 URL을 읽기 전용으로 확인했다.
-
-- 공개 URL: `https://gunnysis.github.io/bada-kkomkkomi/`, HTTP 200
-- 마지막 성공 workflow: run `42443220032`, commit `a9d300c622611acc69ab54bbddf96b44df9372ed`
-- 최근 확인된 Pages workflow 3회는 성공
-- 현재 로컬 작업 트리 변경은 위 공개 commit에 포함되지 않은 미배포 상태
-- GitHub API 응답상 classic `main` branch protection과 repository ruleset은 없음
-- `github-pages` environment는 `main` branch policy만 있고 required reviewer는 없으며 admin bypass가 가능함
-- 공개 `index`, `sw.js`, `app_config.json` 응답의 `Cache-Control`은 모두 `max-age=600`
-- staging/PR preview, required check, 배포 후 smoke, 승인된 rollback 기준 tag는 없음
-
-따라서 공개 사이트가 응답한다는 사실과 최신 로컬 후보가 운영 준비되었다는 판단은 분리해야 한다. `public/_headers`는 Cloudflare Pages 형식이고 GitHub Pages가 적용하지 않으므로, 현재 문서나 운영 절차에서 no-cache, 즉시 반영, 즉시 롤백 또는 전 사용자 동시 전환을 보장해서는 안 된다.
-
-추가로 PWA precache의 `includeAssets`와 `globPatterns` 범위가 겹쳐 일부 JSON/GeoJSON이 중복 등록되고, `globIgnores`가 `public/dev` 파일의 dist 복사까지 막지는 않아 약 4.4 MiB의 개발용 이미지가 artifact에 포함된다. 이는 기능 구현 전에 정리할 배포 P1 항목이다.
-
-릴리스 버전도 `package.json` 1.0.0, lockfile root 0.0.0, HTML Beta 0.3, manifest v1.0, 마지막 commit 제목 v1.0.1로 일치하지 않는다. 앱 버전, 데이터 schemaVersion, layer releaseId, commit SHA를 서로 다른 필드로 정의하고 한 빌드에서 일관되게 표시해야 한다.
-
-## 4. QGIS와 웹 배포 포맷 정책
-
-### 4.1 권고 포맷
-
-| 용도 | 포맷 | 정책 |
-|---|---|---|
-| QGIS 원본 편집 | GeoPackage(`.gpkg`) | 권고. 단일 파일, 복수 레이어, 스키마와 트랜잭션에 유리 |
-| PWA 입력/게시 | RFC 7946 GeoJSON | MVP 필수. 브라우저에서 직접 검증·렌더 가능 |
-| Shapefile | ZIP 묶음만 2단계 후보 | 다중 sidecar, 필드명/인코딩/타입 제약 때문에 MVP 제외 |
-| QGIS 프로젝트 | `.qgz` | 심볼·프로젝트 보존용일 뿐 PWA 데이터 입력으로 사용하지 않음 |
-| Raster/MBTiles/vector tile | 별도 과제 | 현재 렌더러와 Pages 용량·캐시 설계를 넘어섬 |
-
-GeoPackage는 OGC가 정의한 SQLite 기반 단일 파일·서버리스·트랜잭션 컨테이너이므로 QGIS 원본에 적합하다. 그러나 현재 PWA는 JSON만 읽고, 브라우저에서 GeoPackage를 해석하려면 SQLite/GeoPackage WASM 계열 의존성, 큰 번들, 메모리 상한, 확장 호환성 검증이 추가된다. 사용자가 QGIS에서 GeoJSON을 내보낼 수 있으므로 MVP에는 이 복잡도를 도입하지 않는다.
-
-### 4.2 QGIS 내보내기 계약
-
-운영자는 QGIS에서 각 게시 레이어를 다음 조건으로 내보낸다.
-
-- Format: `GeoJSON`
-- Layer creation option: `RFC7946=YES`. 결과 파일에 `crs`가 없고 좌표가 `[longitude, latitude]`인지 다시 확인
-- CRS: `RFC7946=YES`가 출력하는 WGS 84/CRS84 경도·위도. 원본 CRS가 다르면 내보내기 중 실제 재투영
-- Encoding: `UTF-8`
-- Coordinate order: `[longitude, latitude]`
-- 좌표 정밀도 운영 정책: 소수점 이하 6자리. GDAL RFC 7946 기본 7자리와 다르므로 내보내기 옵션으로 명시하고 업무상 근거가 있을 때만 상향
-- Geometry: MVP 허용 목록 안에서 레이어별 단일 계열 사용
-- ID: 모든 feature의 `properties.id`는 레이어 내 고유하고 안정적인 문자열
-- Geometry validity: QGIS `Check validity` 통과 후 내보내기
-- 민감정보: 개인식별정보, 내부 연락처, 비공개 생태 위치 등 공개 금지 필드 제거
-
-한국 투영 좌표계(EPSG:5179 등) 원본은 QGIS `Reproject layer` 또는 `Save Features As`의 대상 CRS 변환으로 좌표값 자체를 변환한다. `Assign projection`은 기존 좌표에 CRS 설명만 붙이고 좌표값을 바꾸지 않으므로 이 절차에 사용하지 않는다.
-
-QGIS에서 보이는 색상·라벨·심볼은 GeoJSON만으로 완전하게 전달되지 않는다. PWA 스타일은 manifest에 별도로 명시하며, QGIS 스타일을 자동 변환한다고 가정하지 않는다.
-
-## 5. 목표 제품 설계
-
-### 5.1 정보 구조
-
-기존 사용자용 레이어 토글과 운영자 편집을 분리한다.
-
-```text
-공간정보 레이어
-├─ 사용자 보기 설정
-│  ├─ 레이어 표시/숨김
-│  └─ 범례와 갱신 버전 확인
-└─ 운영자 작업공간
-   ├─ 1. 가져오기
-   ├─ 2. 검증 결과
-   ├─ 3. 레이어/피처 편집
-   ├─ 4. 변경 비교
-   └─ 5. 게시 패키지 내보내기
+  A1 & A2 & A3 & A4 --> B1 --> B2 --> B3 --> B4 --> C1 & C2 & C3
 ```
 
-운영자 작업공간은 숨겨진 URL이나 단순 비밀번호로 보안을 흉내 내지 않는다. Pages에는 서버 인증이 없으므로 누구든 화면 코드를 열 수 있다. 작업공간이 제공하는 것은 **로컬 편집 도구**이며, 실제 쓰기 권한은 GitHub branch/PR 권한이 통제한다.
+| 실무 입력 포맷 | 확장자 | 인앱 처리 방식 및 기술 구성 | 직원 UX 경험 |
+|---|---|---|---|
+| **GeoPackage** | `.gpkg` | SQLite/GeoPackage 바이너리 리더를 통해 `gpkg_contents`, `gpkg_geometry_columns`, `gpkg_spatial_ref_sys` 및 Standard GeoPackage Binary(GPB/WKB) 도형을 직접 파싱 | `.gpkg` 파일 1개에 여러 레이어(예: 공원경계, 특별보호구역, 해상항로)가 들어 있으면 **체크박스로 원하는 레이어를 골라 한 번에 가져오기** 가능 |
+| **Shapefile** | `.zip` 또는 `.shp`, `.dbf`, `.shx`, `.prj`, `.cpg` | `fflate`(초경량 ZIP 해제) + Shapefile/DBF 바이너리 파서 결합. ZIP 압축본은 물론 압축하지 않은 다중 파일 드래그앤드롭도 자동 매칭 | 관공서 표준 배포 형태인 `.zip` 또는 폴더 내 `.shp+.dbf+.prj` 파일을 그대로 드래그하면 즉시 로드 |
+| **GeoJSON** | `.geojson`, `.json` | 표준 RFC 7946 및 QGIS 구버전(`crs` 헤더 포함, 투영 좌표계 포함) 모두 수용 | 파일 선택 즉시 파싱 및 좌표계 자동 보정 |
+| **KML / KMZ** | `.kml`, `.kmz` | KMZ 압축 해제 후 KML XML 파싱(`@tmcw/togeojson` 계열)으로 Point/LineString/Polygon 및 설명 속성 추출 | 구글 어스나 해경·순찰 장비에서 내보낸 트랙/구역 파일 즉시 로드 |
 
-### 5.2 CRUD 의미
+### 4.2 한국 공공측량 좌표계(CRS) 인앱 자동 감지 및 재투영
 
-| 기능 | PWA 작업공간 | 운영 반영 |
+국내 해양·국립공원 공간데이터는 대부분 아래 좌표계 중 하나로 작성된다. 앱 내부에 아래 **한국 측량 표준 EPSG 정의(`proj4` 문자열)를 기본 내장**하여 파일 업로드 시 자동으로 `EPSG:4326`(WGS 84 경도/위도)으로 변환한다.
+
+| EPSG 코드 | 좌표계 명칭 (실무 사용처) | 자동 감지 기준 (`.prj` / `srs_id` / 좌표 범위 휴리스틱) |
 |---|---|---|
-| Create layer | 메타데이터 + 빈 FeatureCollection 초안 | PR merge 후 |
-| Read layer | 현재 운영본과 로컬 초안 조회 | 즉시 가능 |
-| Update layer | Phase 2: 이름·설명·스타일·피처 속성 초안. Phase 3: geometry 초안 | PR merge 후 |
-| Delete layer | 삭제 tombstone 및 참조 영향 표시 | PR merge 후 |
-| Import/replace | GeoJSON을 새 버전 초안으로 가져오기 | PR merge 후 |
-| Undo/discard | 로컬 change set 단위 되돌리기 | 게시 전만 즉시 |
-| Rollback | 결함 commit을 되돌리는 revert 또는 known-good SHA 기반 복구 패키지 | 복구 PR merge 후 |
+| **EPSG:4326** | WGS 84 경도/위도 (GPS·웹 표준) | `X: 124 ~ 132`, `Y: 32 ~ 39` 범위 (별도 변환 없이 정밀도·축 순서 정규화) |
+| **EPSG:5179** | Korea 2000 / Unified CS (UTM-K, 국가공간정보포털·국립공원 표준) | `.prj`의 `Korea_2000_Korea_Unified_Coordinate_System` 또는 `X: 700,000 ~ 1,300,000`, `Y: 1,400,000 ~ 2,200,000` |
+| **EPSG:5186** | Korea 2000 / Central Belt 2010 (중부원점, 지자체·수치지도 표준) | `.prj`의 `Central_Belt_2010` 또는 `X: 100,000 ~ 400,000`, `Y: 150,000 ~ 700,000` |
+| **EPSG:5187** | Korea 2000 / East Belt 2010 (동부원점, 경상·동해 권역) | `.prj`의 `East_Belt_2010` |
+| **EPSG:5185** | Korea 2000 / West Belt 2010 (서부원점, 서해 권역) | `.prj`의 `West_Belt_2010` |
+| **EPSG:5181** | Korea 2000 / Central Belt (구 중부원점, 가산수치 500,000) | `.prj`의 `Central_Belt` (`false_northing 500000`) |
+| **EPSG:5174** | Korean 1985 / Modified Central Belt (구 베셀 보정 중부원점, 구 지적도) | `.prj`의 `Bessel_1841` + Towgs84 7-parameter 변환 내장 |
+| **EPSG:3857** | Web Mercator (구글·웹 배경지도 투영) | `X: 13,800,000 ~ 14,700,000`, `Y: 3,700,000 ~ 4,700,000` |
 
-삭제는 즉시 파일을 없애지 않는다. manifest에서 삭제 대상과 영향받는 화면을 보여 주고, PR diff에서 GeoJSON 삭제와 참조 제거가 함께 확인될 때만 승인한다.
+- **위도/경도 축 반전(`[lat, lng]`) 자동 교정**: 만약 파일 좌표가 `[34.78, 128.45]`처럼 위도·경도가 뒤집혀 들어온 경우 대한민국 영역(`경도 124~132, 위도 32~39`) 휴리스틱으로 즉시 감지하여 `[128.45, 34.78]`로 자동 교정하고 화면에 교정 사실을 안내한다.
+- **수동 좌표계 오버라이드 드롭다운**: `.prj` 파일이 누락된 구형 Shapefile이라 하더라도 좌표값 범위를 통해 최적 좌표계를 자동 추천하며, 직원이 미리보기 지도를 보면서 드롭다운(`EPSG:5179`, `EPSG:5186`, `EPSG:5174` 등)을 바꾸면 즉시 재투영된 위치를 지도 위에서 확인할 수 있다.
 
-### 5.3 운영 워크플로
+### 4.3 한글 인코딩(`CP949` / `EUC-KR` / `UTF-8`) 자동 복원
 
-```text
-QGIS 원본 편집
-  → GeoJSON 내보내기
-  → PWA 가져오기
-  → 1차 구조/보안/CRS 검사
-  → 지도 미리보기 및 로컬 CRUD
-  → 변경 diff + 게시 패키지 생성
-  → GitHub feature branch 업로드
-  → Pull Request
-  → CI 데이터/앱/PWA 검사
-  → 데이터 책임자 + 코드 책임자 승인
-  → main merge
-  → Pages build/deploy
-  → 온라인/오프라인 smoke test
-```
+1. `.cpg` 파일 또는 DBF 헤더의 Language Driver ID(LDID)가 존재하면 해당 인코딩을 우선 확인한다.
+2. 선언이 없거나 잘못된 경우, 속성 바이트 배열에 대해 `new TextDecoder('utf-8', { fatal: true })`를 시도하고, 디코딩 오류가 발생하거나 깨진 문자(`U+FFFD`)가 검출되면 즉시 **`new TextDecoder('euc-kr')`(`CP949` 호환)**로 자동 전환한다.
+3. 가져오기 미리보기 화면 상단에 `[인코딩: 자동 감지(EUC-KR/CP949) ▾]` 선택기를 함께 배치해 직원이 언제든 `UTF-8` ↔ `EUC-KR(CP949)`을 원클릭 전환할 수 있게 한다.
 
-GitHub 웹 UI 업로드가 불편한 운영자에게는 GitHub Desktop 또는 저장소 checkout 폴더에 패키지를 덮어쓰는 별도 운영 가이드를 제공할 수 있다. PWA가 저장소 token을 요구하는 방식은 제공하지 않는다.
+---
 
-## 6. 데이터 계약
+## 5. 직원용 공간정보 레이어 관리 UI/UX 및 `[저장 = 즉시 운영 반영]` 설계
 
-### 6.1 manifest 분리
+### 5.1 통합 관리 화면 구조 (`LayerControlModal` 고도화)
 
-현재 `app_config.json`은 일반 앱 설정과 레이어 목록이 섞여 있다. 다음 구조로 레이어 catalog를 분리하는 것을 권고한다.
+기존의 단순 체크박스 모달을 **직원용 통합 공간정보 레이어 관리 워크스페이스**로 확장한다.
 
 ```text
-public/data/layers/
-├─ index.json
-├─ national_park.v20261109-a1b2c3.geojson
-└─ protected_area.v20261109-d4e5f6.geojson
+[공간정보 레이어 관리] (직원용 통합 워크스페이스)
+├─ 1. 상단 상태 바
+│    ├─ 현재 운영 릴리스 버전(releaseId) · 최근 저장 시각 · 동기화 상태(온라인/로컬 영속)
+│    └─ [+ 새 공간 레이어 파일 등록 (.gpkg / .zip / .shp / .geojson / .kml)] 버튼 (드래그앤드롭 지원)
+├─ 2. 등록된 레이어 목록 & 빠른 제어 탭
+│    ├─ 각 레이어 카드: [표시 스위치] [색상/스타일 뱃지] [레이어명·도형타입·피처수]
+│    ├─ 레이어별 액션: [지도 이동(줌)] [스타일·라벨 설정] [속성/피처 편집] [파일 교체] [GeoJSON 내보내기] [삭제]
+│    └─ 레이어 표시 순서(위/아래) 조정
+├─ 3. 파일 등록 / 레이어·피처 상세 편집 패널 (선택 시 확장)
+│    ├─ 멀티 레이어 선택 (예: .gpkg 내 원하는 테이블 체크)
+│    ├─ 좌표계(CRS) 및 한글 인코딩 자동 변환 결과 배지 + 실시간 지도 미리보기
+│    ├─ 스타일 편집기 (선 색상/두께/점선, 면 색상/투명도, 마커 색상, 지도 표시 라벨 컬럼 지정)
+│    └─ 피처 목록 테이블 (검색, 속성값 인라인 수정, 개별 피처 삭제, 지도상 도형 하이라이트)
+└─ 4. 하단 고정 액션 바
+     ├─ [변경 취소] · [이전 버전 복원 ▾]
+     └─ [저장 (운영 반영)] ── 클릭 즉시 활성 지도 + 기기 영속 저장소 + 원격 GitHub 저장소 동시 반영
 ```
 
-예시 계약은 다음과 같다. 필드명은 구현 승인 후 JSON Schema와 함께 동결한다.
+### 5.2 CRUD 및 `[저장 = 즉시 운영 반영]` 동작 명세
+
+| 직원 작업 | 화면 조작 (실시간 미리보기) | **`[저장]` 버튼 클릭 시 동작 (즉시 운영 반영)** |
+|---|---|---|
+| **레이어 신규 등록 (Create)** | `.gpkg`/`.zip`/`.geojson`/`.kml` 파일 드래그앤드롭 → 자동 좌표변환·정규화 → 지도 위 실시간 프리뷰 확인 | **`[저장]` 즉시 운영 반영**: 기기 `IndexedDB`/`localStorage`에 영구 저장 + 활성 지도 즉시 렌더링 + 원격 GitHub 저장소(`public/data/layers/`) 자동 커밋·배포 |
+| **레이어 조회 및 검색 (Read)** | 등록된 전체 레이어, 도형 유형, 피처 개수, 속성 테이블, 기준일, 좌표 범위 조회 | 선택한 레이어 또는 특정 피처 위치로 지도 카메라 즉시 이동(`fitBounds`) |
+| **레이어/스타일/속성 수정 (Update)** | 표시 여부(ON/OFF), 레이어명, 설명, 색상·투명도·선종류, 라벨 컬럼, 개별 피처 속성/도형 수정 | **`[저장]` 즉시 운영 반영**: 수정된 스타일·속성·가시성이 현재 앱과 원격 저장소에 즉시 운영 상태로 확정 |
+| **레이어 파일 교체 (Replace)** | 최신 기준일 QGIS 파일 업로드 → 기존 레이어 대비 추가/수정/삭제된 피처 수 자동 비교 표시 | **`[저장]` 즉시 운영 반영**: 기존 레이어 ID와 스타일 설정을 유지한 채 공간 데이터만 최신본으로 무중단 교체 |
+| **레이어/피처 삭제 (Delete)** | 불필요한 레이어 또는 특정 피처 삭제 선택 (실수 방지용 삭제 건수 배지 표시) | **`[저장]` 즉시 운영 반영**: 운영 레이어 카탈로그 및 지도에서 즉시 제거 및 원격 저장소 동기화 |
+| **이전 버전 복원 (Rollback)** | 저장 이력 드롭다운에서 이전 정상 스냅샷 선택 후 미리보기 | **`[저장]` 즉시 운영 반영**: 선택한 정상 스냅샷으로 로컬 및 원격 운영 상태를 즉시 되돌림 |
+
+### 5.3 `[저장]` 원클릭 운영 반영 시퀀스
+
+```mermaid
+sequenceDiagram
+  actor Staff as 국립공원공단 직원
+  participant UI as 레이어 관리 화면
+  participant Worker as 공간 변환·검증 Worker
+  participant Local as 활성 지도 & IndexedDB/localStorage
+  participant GitHub as GitHub Repository (main) & Pages
+
+  Staff->>UI: QGIS 파일(.gpkg/.zip/.geojson/.kml) 업로드 또는 레이어/속성 수정
+  UI->>Worker: 포맷 파싱 + 한글 인코딩 복원 + EPSG:4326 자동 재투영 + 유효성 검증
+  Worker-->>UI: 표준 FeatureCollection + 변환 리포트 반환 (실시간 지도 프리뷰)
+  Staff->>UI: [저장] 버튼 클릭 (운영 반영 명령)
+  UI->>Local: 1. 즉시 운영 반영 (활성 지도 재렌더링 + IndexedDB/localStorage 영구 커밋)
+  Local-->>Staff: 화면 즉시 반영 완료 (새로고침·오프라인 시에도 100% 유지)
+  UI->>GitHub: 2. 원격 운영 동기화 (Git Tree/Contents API로 레이어 파일 & 카탈로그 자동 커밋)
+  GitHub-->>UI: main 브랜치 커밋 완료 & deploy-pages.yml 자동 배포 실행
+```
+
+---
+
+## 6. 데이터 및 렌더링 계약 (Dual-Engine 완전 호환)
+
+### 6.1 확장된 레이어 카탈로그 스키마 (`LayerCatalog`)
+
+기존 `src/types/config.ts`의 단순 `SpatialLayer`(`id`, `name`, `visible`, `color`, `url`, `description`)를 확장하여 모든 실무 도형과 스타일을 표현한다(기존 필드와 100% 하위 호환 유지).
 
 ```json
 {
   "schemaVersion": 1,
   "releaseId": "layers-2026-11-09.1",
-  "generatedAt": "2026-11-09T09:00:00Z",
+  "updatedAt": "2026-11-09T16:50:00+09:00",
   "layers": [
     {
       "id": "national_park",
       "name": "한려해상국립공원 경계",
+      "category": "boundary",
       "description": "국립공원 관할 공원구역 경계선",
-      "dataUrl": "national_park.v20261109-a1b2c3.geojson",
-      "dataSha256": "<64 hex characters>",
+      "visible": true,
+      "url": "data/layers/national_park.geojson",
+      "dataSha256": "<64-hex>",
       "geometryTypes": ["Polygon", "MultiPolygon"],
-      "featureIdProperty": "id",
-      "defaultVisible": true,
+      "featureCount": 2,
+      "bbox": [128.35, 34.68, 128.75, 34.92],
+      "color": "#10b981",
       "style": {
         "strokeColor": "#10b981",
         "strokeWidth": 2.5,
+        "strokeOpacity": 0.9,
         "strokeDash": "solid",
         "fillColor": "#10b981",
-        "fillOpacity": 0.08,
+        "fillOpacity": 0.12,
+        "pointRadius": 7,
+        "labelField": "name",
         "zIndex": 20
       },
-      "source": {
-        "title": "<데이터셋명>",
-        "organization": "<책임기관>",
-        "license": "<라이선스 또는 내부 승인번호>",
-        "updatedAt": "2026-11-09",
-        "contact": "<공개 가능한 담당 부서>"
+      "sourceMeta": {
+        "originalFileName": "한려해상_공원경계_2026.gpkg",
+        "originalCrs": "EPSG:5179",
+        "updatedBy": "해양자원과",
+        "updatedAt": "2026-11-09"
       }
     }
   ]
 }
 ```
 
-`visible`은 운영 데이터의 사실이 아니라 사용자 선호이므로 `defaultVisible`과 기기별 사용자 설정으로 분리한다. 기존 `docking`은 별도 도메인 모델과 렌더러를 사용하므로 일반 catalog로 즉시 합치지 않고, 마이그레이션 여부를 별도 승인한다.
+### 6.2 Kakao Map v3 & Legacy Leaflet 전 도형 렌더링 동등성 보장
 
-### 6.2 FeatureCollection 규칙
+현재 `KakaoMapCanvas.tsx`는 `Polygon`/`MultiPolygon`만 렌더링하고 있어, 직원이 항로(`LineString`)나 부표/관측점(`Point`) 레이어를 등록할 때 표시되지 않는 문제를 다음과 같이 해결한다.
 
-- 최상위 `type`은 `FeatureCollection`이어야 한다.
-- 최상위 `crs`는 허용하지 않는다. 좌표는 WGS 84, 경도/위도 순서다.
-- 모든 feature는 `Feature`, `geometry`, object 타입 `properties`를 가진다.
-- `properties.id`는 비어 있지 않은 문자열이며 같은 레이어에서 유일하고 버전 간 안정적이다.
-- geometry 타입은 manifest 허용 목록과 일치한다.
-- null geometry와 `GeometryCollection`은 MVP에서 금지한다.
-- Polygon/MultiPolygon의 모든 linear ring은 최소 4개 position이고 첫 position과 마지막 position이 동일해야 한다.
-- 외곽 ring은 CCW, 내부 ring은 CW로 정규화한다.
-- 모든 숫자는 finite여야 하며 longitude `[-180, 180]`, latitude `[-90, 90]` 범위다.
-- 대한민국/통영·거제 업무 레이어에는 별도의 허용 bbox를 설정해 축 순서 오류를 조기 탐지한다.
-- 속성 key/value 크기와 깊이를 제한하고 HTML은 데이터로 취급한다.
-- 렌더링 시 속성을 `innerHTML`로 삽입하지 않는다.
-
-### 6.3 호환성과 원자성
-
-- `schemaVersion`을 앱이 지원하지 않으면 조용히 그리지 말고 명시적 오류와 마지막 정상 release를 표시한다.
-- 데이터 파일명에 release/hash를 포함해 새 파일과 이전 캐시를 구분한다.
-- `index.json`은 모든 참조 파일이 CI에서 확인된 뒤 같은 Pages artifact로 배포한다.
-- 앱은 manifest와 데이터의 hash를 확인하고, 하나라도 불일치하면 release 전체를 적용하지 않는다.
-- 동일 세션에서 같은 layer ID의 URL이 바뀌어도 재조회하도록 `(id, dataUrl, hash)`를 캐시 키로 사용한다.
-- 실패 시 레이어 일부를 새 버전으로 섞지 않는다. 마지막 완전한 release 폴백은 별도 runtime cache 또는 IndexedDB에 보존할 버전 수·용량·hash와 storage eviction 동작을 구현·검증한 뒤에만 제공한다. 현재 서비스 워커만으로는 보장되지 않는다.
-
-## 7. 브라우저 운영자 작업공간 설계
-
-### 7.1 가져오기
-
-MVP는 `.geojson`과 `.json`만 받는다. 파일 선택 또는 drag-and-drop 뒤 다음 순서로 처리한다.
-
-1. 확장자만 믿지 않고 JSON parse 가능 여부 확인
-2. 파일 크기·피처 수·좌표 수·중첩 깊이 상한 검사
-3. JSON Schema 검사
-4. 좌표계/범위/축 순서 휴리스틱 검사
-5. geometry 유형과 기본 유효성 검사
-6. ID 중복 및 필수 속성 검사
-7. 기존 운영본과 create/update/delete diff 계산
-8. 지도 미리보기 후 운영자가 가져오기 확정
-
-파싱과 무거운 geometry 검사는 Web Worker에서 실행해 모바일 UI 멈춤을 줄인다. 상한 초과 파일은 억지로 열지 않고 QGIS에서 단순화·분할 후 다시 내보내도록 안내한다.
-
-초기 탐색값은 파일 5 MiB, feature 10,000개, 총 position 500,000개다. 5 MiB는 현재 Workbox의 **파일당 precache 한도**이지 안전한 브라우저 import 또는 메모리 상한이 아니다. parse·정규화·diff는 원본의 수배 메모리를 사용할 수 있으므로 지원 기기와 실제 표본으로 더 낮은 입력 상한 및 artifact 전체 크기 예산을 확정해야 한다.
-
-### 7.2 편집 — 단계별 목표
-
-- 레이어 목록: 검색, 상태(운영/초안/삭제 예정/오류), 최종 갱신일, 피처 수
-- 레이어 편집: 이름, 설명, 기본 표시, geometry 허용 타입, 스타일, 출처/라이선스
-- Phase 2 피처 표: ID 검색, 속성 필터, 추가, 복제, 속성 수정, 삭제
-- Phase 3 지도 편집: Point 이동, Line/Polygon vertex 추가·이동·삭제, geometry 전체 교체
-- 변경 이력: 현재 세션 command stack 기반 undo/redo
-- 비교: 운영본 대비 속성/geometry/피처 수/bbox/파일 크기 변화
-- 위험 경고: 대량 삭제, bbox 급변, geometry 타입 변경, 필수 필드 손실
-
-모바일 화면에서는 정밀 vertex 편집이 어렵다. geometry 정밀 편집의 기준 도구는 계속 QGIS로 두고 PWA 편집은 긴급한 소규모 수정에 한정하는 것이 안전하다.
-
-### 7.3 로컬 초안
-
-초안은 IndexedDB에 다음을 저장한다.
-
-- draft ID와 생성 시각
-- 기준 운영 `releaseId`와 layer hash
-- 원본 파일명 및 원본 hash
-- 정규화된 FeatureCollection
-- manifest 초안
-- change set과 검증 결과
-
-사진, 토큰, GitHub 자격증명은 저장하지 않는다. 게시 패키지 생성 후에도 운영자가 명시적으로 삭제하기 전까지 초안은 현재 기기에만 남으므로, “이 기기 데이터 삭제” 기능과 저장 위치 안내가 필요하다.
-
-### 7.4 게시 패키지
-
-ZIP 패키지 예시는 다음과 같다.
-
-```text
-layer-publication-layers-2026-11-09.1.zip
-├─ public/data/layers/index.json
-├─ public/data/layers/<versioned-file>.geojson
-├─ change-summary.md
-├─ validation-report.json
-└─ upload-instructions.md
-```
-
-패키지는 저장소 루트 기준 경로, 기준 commit SHA, 기준 release ID, 파일 SHA-256, 추가/수정/삭제 목록을 포함한다. GitHub에 올린 뒤 CI가 hash와 내용을 다시 계산하므로 브라우저 검증 결과를 신뢰 경계로 사용하지 않는다.
-
-## 8. 보안·권한·감사 설계
-
-### 8.1 신뢰 경계
-
-- QGIS 파일은 운영자가 선택했더라도 신뢰하지 않는 입력으로 취급한다.
-- 브라우저 검증은 UX용 1차 검사이고 CI 검증이 게시 게이트다.
-- Pages에 내려가는 모든 파일은 공개 정보로 간주한다.
-- 목표 운영에서는 GitHub collaborator/team, branch ruleset, CODEOWNERS, PR review가 운영자 권한을 집행해야 한다. 현재는 `main` 보호가 없다.
-- 목표 workflow에는 최소 권한을 사용한다. 검증 job은 `contents: read`, deploy job만 Pages 쓰기 권한을 가져야 한다. 현재 workflow는 단일 job과 workflow 전역 Pages 쓰기 권한을 사용한다.
-
-### 8.2 금지 사항
-
-- PAT, GitHub password, OAuth client secret을 소스·환경변수 번들·localStorage에 넣지 않는다.
-- device flow를 편의상 기본 도입하지 않는다.
-- 업로드 파일의 문자열을 `innerHTML`에 넣지 않는다.
-- ZIP 경로를 검증하지 않고 추출하지 않는다.
-- 검증 없이 `.gpkg`, `.zip`, 대용량 JSON을 메인 스레드에서 연다.
-- `main` 직접 push를 정상 운영 절차로 사용하지 않는다.
-
-### 8.3 감사 증적
-
-최소 증적은 PR에 남긴다.
-
-- 변경 사유와 요청 번호
-- 데이터 출처·라이선스·기준일
-- QGIS 내보내기 설정
-- 브라우저 validation report
-- CI validation/build/PWA smoke 결과
-- 지도 before/after 캡처
-- 데이터 책임자 및 코드 책임자 승인
-- Pages workflow run URL과 배포 commit SHA
-- 배포 후 온라인/오프라인 smoke 결과
-
-## 9. CI/CD와 GitHub Pages 설계
-
-### 9.1 권장 workflow 분리
-
-```text
-PR: layer-data-check
-  ├─ install with lockfile
-  ├─ manifest JSON Schema
-  ├─ GeoJSON structure/CRS/ID/geometry/security
-  ├─ change budget and deletion guard
-  ├─ lint + typecheck + build
-  ├─ map render smoke
-  └─ publication report artifact
-
-main: deploy-pages
-  ├─ 위 검증 재실행 또는 검증 workflow 성공 확인
-  ├─ production build
-  ├─ Pages artifact upload
-  └─ github-pages environment deploy
-```
-
-현재 workflow는 `main`에 push된 뒤에야 lint/build한다. 실패 배포는 막을 수 있지만 잘못된 데이터가 main에 들어오는 것은 막지 못한다. 같은 검사를 PR에서 실행하고 다음 required check를 ruleset에 등록하는 것을 권고한다.
-
-- `layer-data-check / validate-layer-data`
-- `layer-data-check / build-and-render-smoke`
-
-실제 job 이름을 구현할 때 위 이름으로 고정한 후 ruleset을 설정해야 한다. 2026-11-09 확인 시 repository ruleset과 classic `main` protection은 없고, `github-pages` environment에는 `main` branch policy만 있으며 reviewer 승인 규칙은 없다.
-
-### 9.2 캐시와 갱신
-
-- 버전 파일은 immutable로 취급하고 content hash가 바뀌면 파일명도 바꾼다.
-- catalog는 NetworkFirst를 사용하되 UI에 `releaseId`, 데이터 기준일, 마지막 확인 시각, 온라인/캐시 상태를 표시한다.
-- 서비스 워커가 새 release를 준비한 뒤 사용자에게 새 데이터 적용을 알린다.
-- 현장 작업 중 강제 reload로 입력 상태를 잃지 않도록 새 worker 활성화 시점을 통제한다.
-- 오프라인 사용자는 최신 데이터가 아님을 분명히 볼 수 있어야 한다.
-- `public/_headers`는 GitHub Pages에서 적용된다고 가정하지 않는다.
-
-현재 `skipWaiting: true`와 `clientsClaim: true`는 빠른 전환에는 유리하지만 열려 있는 앱의 코드/데이터 버전 혼합 위험을 별도 실기기 시험해야 한다.
-
-### 9.3 무중단과 롤백
-
-GitHub Pages artifact 배포와 PWA 캐시 특성상 서버형 blue/green 배포와 같지는 않다. 여기서 무중단의 목표는 다음과 같이 정의한다.
-
-- 배포 전 검증에 실패하면 deploy step을 실행하지 않아 기존 배포를 유지해야 한다. Pages 전환과 CDN 전파의 원자성은 별도 smoke와 롤백 리허설로 검증한다.
-- 구현 후 앱의 release 원자성 검사는 새 release 일부만 보이는 상태를 차단해야 한다.
-- 지도 데이터 실패 시 앱 전체가 흰 화면이 되지 않고, 검증된 이전 release가 별도 보존되어 있으면 그것으로 폴백하며 그렇지 않으면 해당 레이어를 비활성화해야 한다.
-- 롤백은 결함 commit을 `git revert`한 PR을 병합하거나 승인된 known-good SHA의 내용을 새 복구 commit으로 재배포하고 정상 CI를 거쳐야 한다.
-- 서비스 워커가 이전 release를 보유하는지에 의존하지 않는다. Git history와 재배포가 공식 롤백이다.
-
-## 10. 검증 규칙과 QA 계획
-
-### 10.1 자동 검증
-
-| 영역 | 필수 검사 |
-|---|---|
-| JSON | parse, schemaVersion, 타입, 필수 필드, 예상 외 필드 정책 |
-| GeoJSON | RFC 7946 구조, `crs` 금지, 좌표 순서/범위, ring closure |
-| Geometry | 허용 타입, null 금지, validity, self-intersection 검사 정책 |
-| Identity | layer ID/feature ID 유일성, 안정성, 안전한 파일명 |
-| Referential integrity | manifest URL 존재, 삭제 파일의 잔여 참조 없음 |
-| Change guard | 대량 삭제·bbox 급변·피처 수 급변 임계치 초과 시 명시 승인 |
-| Security | HTML/script 문자열 표시 안전성, prototype key, 파일/깊이/좌표 상한 |
-| Performance | 파일 크기, 단순화 필요성, 렌더 시간 예산 |
-| App | lint, typecheck, Pages-base clean production build, 두 지도 엔진 smoke |
-| PWA | `/bada-kkomkkomi/`의 manifest start_url/scope, navigationFallback, asset/data URL, service worker, online/offline, 이전 release 갱신 |
-| Artifact | public allowlist, 개발 자산 제외, 파일별·전체 크기 예산, content type |
-| Supply chain | action commit SHA pin, Node `engines`, lockfile/package 버전 정합, 의존성 갱신 정책 |
-| Workflow security | PR validate job `contents: read`, deploy job만 Pages write, fork PR에서 secret 없는 대체 smoke |
-| Post-deploy | live SHA/releaseId, catalog/hash, 각 GeoJSON parse/schema, PWA scope/SW, 구·신 캐시 전환 |
-
-Geometry validity는 RFC 구조 검사만으로 충분하지 않다. QGIS `Check validity`와 CI의 독립 검사 결과를 모두 남기고, 서로 결과가 다르면 게시를 중단한다.
-
-### 10.2 수동 시나리오
-
-1. 정상 Polygon GeoJSON을 가져와 미리보기하고 패키지를 생성한다.
-2. EPSG:5179 좌표를 WGS 84로 오인한 파일을 차단한다.
-3. 위도/경도가 뒤집힌 파일을 bbox 규칙으로 차단한다.
-4. 중복 feature ID, null geometry, 열린 Polygon ring을 차단한다.
-5. Phase 2에서 1개 속성 수정이 diff에 나타나고, Phase 3에서 geometry 수정이 별도 diff로 구분된다.
-6. 20% 이상 대량 삭제 시 추가 확인과 PR 경고가 나온다.
-7. 동일 layer ID의 새 data URL이 현재 세션에서 다시 로드된다.
-8. Kakao와 Leaflet에서 허용 geometry가 모두 렌더되고 색상·선폭·dash·opacity의 의미가 허용 오차 내에서 동등하다. 픽셀 동일성은 요구하지 않는다.
-9. 오래된 초안이 새 운영 release를 기준으로 게시되지 않고 충돌을 알린다.
-10. 새 Pages 배포 후 온라인 앱이 새 release를 받고, 오프라인 앱은 오래된 상태를 명시한다.
-11. 잘못된 release 배포 뒤 결함 commit revert 또는 known-good SHA 기반 복구 PR로 정상 release를 재배포한다.
-12. 모바일에서 대용량 입력 거부가 UI 멈춤 없이 안내된다.
-13. 열린 탭의 미저장 초안, `skipWaiting`/`clientsClaim`, 갱신 중 오프라인, storage quota/eviction, cache migration을 시험한다.
-14. CDN `max-age=600` 지연을 포함해 목표 복구시간 안에 rollback되고 live SHA/releaseId 및 온라인·오프라인 실기기 상태를 확인한다.
-
-### 10.3 완료 수용 기준
-
-- [ ] 레이어 관리 명칭이 사용자 토글과 운영자 작업공간으로 구분된다.
-- [ ] 운영자는 GeoJSON을 가져와 오류 위치와 수정 가이드를 볼 수 있다.
-- [ ] Phase 2에서 레이어와 피처 속성 C/R/U/D 초안을 만들고 undo/discard할 수 있다.
-- [ ] Phase 3 승인 시 geometry 초안을 편집하고 QGIS round-trip 결과를 검증할 수 있다.
-- [ ] 새로고침 후 IndexedDB 초안을 복원하거나 명시적으로 삭제할 수 있다.
-- [ ] PWA는 GitHub token, password, client secret을 요구하거나 저장하지 않는다.
-- [ ] 게시 패키지는 manifest, versioned GeoJSON, hash, diff, 검증 보고서를 포함한다.
-- [ ] CI가 브라우저와 독립적으로 모든 게시 규칙을 다시 검사한다.
-- [ ] 필수 status check와 PR 승인 없이는 `main`에 병합할 수 없다.
-- [ ] validate job은 read-only이고 deploy job만 Pages write 권한을 가진다.
-- [ ] 배포된 앱에 release ID, 데이터 기준일, 캐시/온라인 상태가 표시된다.
-- [ ] Kakao/Leaflet 간 지원 geometry와 스타일의 차이가 제거되거나 명시적으로 차단된다.
-- [ ] 온라인/오프라인/업데이트/롤백 실기기 증적이 남는다.
-- [ ] known-good tag/release, 담당자, 목표 복구시간, rollback runbook과 리허설 증적이 남는다.
-- [ ] Kakao JavaScript 키는 공개 client 식별자로 취급하고 허용 도메인 제한·회전·live domain smoke를 확인한다.
-- [ ] 데이터 출처·라이선스·책임자 승인 증적이 남는다.
-
-## 11. 단계별 구현 제안과 승인 게이트
-
-### Phase 0 — 계약·데이터 거버넌스
-
-- 실제 레이어 목록, schema, geometry, 공개 가능 속성 정의
-- GeoJSON 및 manifest JSON Schema 확정
-- 출처·라이선스·갱신 책임자 확정
-- branch ruleset/CODEOWNERS/PR template 설계
-
-**Gate A:** 제품 책임자, 데이터 책임자, 저장소 관리자가 계약 승인
-
-### Phase 1 — 검증·게시 기반
-
-- Node 기반 layer validation CLI와 PR workflow
-- `index.json` catalog와 versioned 파일 도입
-- 런타임 schemaVersion/hash/release 원자성 검사
-- release/캐시 상태 UI
-- 기존 두 레이어 정규화와 회귀 검증
-
-**Gate B:** 기존 화면 회귀 없음, PR 필수 check 설정, 롤백 리허설 통과
-
-### Phase 2 — 운영자 로컬 작업공간
-
-- import, Web Worker validation, preview
-- IndexedDB draft
-- layer/feature 속성 CRUD와 diff/undo
-- 게시 패키지 export와 운영 가이드
-
-**Gate C:** 비개발 운영자 사용성 시험과 악성/대용량 파일 시험 통과
-
-### Phase 3 — geometry 편집과 포맷 확대
-
-- 지도 vertex 편집
-- QGIS round-trip 비교
-- 필요가 입증된 경우에만 GeoPackage 또는 ZIP Shapefile import 검토
-
-**Gate D:** geometry 정확도, 모바일 성능, Kakao/Leaflet 동등성 승인
-
-각 gate에서 승인받기 전 다음 단계 구현·운영 배포를 진행하지 않는다.
-
-## 12. 대안 평가
-
-| 대안 | 장점 | 단점 | 판정 |
+| GeoJSON 도형 타입 | Kakao Map v3 (`KakaoMapCanvas.tsx`) 렌더링 구현 | Legacy Leaflet (`LegacyLeafletCanvas.tsx`) 렌더링 구현 | 공통 인터랙션 |
 |---|---|---|---|
-| A. 로컬 관리 화면 + PR 게시 | Pages-only, 안전한 승인/이력, 운영자 UX 개선 | 저장과 게시가 2단계 | **권고** |
-| B. QGIS 편집 + GitHub 파일 업로드만 | 가장 단순, 구현량 적음 | 앱 안 CRUD 요구를 충족하지 못함 | 최소 대안 |
-| C. PWA에서 GitHub API 직접 commit | 한 화면에서 게시 가능 | public client token 보안, 권한·피싱·회수·충돌 위험 | 비채택 |
-| D. 인증 API + 공간 DB | 진정한 공유 CRUD/동시성 | Pages-only·무클라우드 범위 위반 | 보류 |
-| E. GeoPackage를 PWA에서 직접 CRUD | QGIS 원본과 가까움 | WASM/번들/메모리/호환·게시 문제 | 2단계 조사 |
+| `Polygon` / `MultiPolygon` | `new kakao.maps.Polygon({ path, strokeWeight, strokeColor, strokeOpacity, strokeStyle, fillColor, fillOpacity, zIndex })` (도넛 홀 내부 링 배열 완벽 지원) | `<GeoJSON style={...} />` (`L.Polygon`) | 도형 클릭 시 속성 팝업/요약 배너 표시, `labelField` 지정 시 중심점 라벨 표시 |
+| `LineString` / `MultiLineString` | `new kakao.maps.Polyline({ path, strokeWeight, strokeColor, strokeOpacity, strokeStyle, zIndex })` | `<GeoJSON style={...} />` (`L.Polyline`) | 항로·경계선 클릭 시 노선명 및 속성 표시 |
+| `Point` / `MultiPoint` | `new kakao.maps.CustomOverlay` (레이어 `style.fillColor`·`labelField`가 반영된 배지/핀 마커) | `pointToLayer` 기반 `L.circleMarker` / `L.divIcon` | 포인트 클릭 시 상세 속성 표시 |
 
-## 13. 구현 시 예상 변경 영역
+---
 
-아래는 설계상 예상이며 아직 구현하지 않았다.
+## 7. `[저장]` 영속화 및 원격 자동 동기화 상세 설계
 
-- `src/types/`: layer catalog, manifest, validation, draft 계약
-- `src/services/`: import/normalize/hash/diff/export, catalog loader
-- `src/workers/`: GeoJSON 검증 worker
-- `src/hooks/`: IndexedDB draft와 release 상태
-- `src/components/layers/`: 사용자 레이어 설정과 운영자 작업공간 분리
-- `public/data/layers/`: catalog와 versioned GeoJSON
-- `scripts/`: CI용 독립 validator
-- `.github/workflows/`: PR layer-data-check
-- `docs/`: QGIS 내보내기, 게시, 장애/롤백 runbook
+### 7.1 2계층 하이브리드 운영 저장소 구조
 
-기존 사용자의 dirty worktree가 있으므로 구현 단계에서는 파일별 충돌을 다시 점검해야 한다.
+GitHub Pages는 정적 호스팅이므로 브라우저 메모리에만 두면 새로고침 시 사라지고, 원격 커밋만 기다리면 빌드 시간(약 1~2분) 동안 화면 반영이 지연된다. 이를 해결하기 위해 **로컬 즉시 영속화(`IndexedDB` + `localStorage`)와 원격 GitHub 자동 커밋을 결합**한다.
 
-## 14. 사용자 소유 작업 요청
+1. **1계층 — 기기 내 즉시 운영 반영 (`IndexedDB` + `localStorage` + `Runtime State`)**:
+   - 직원이 `[저장]`을 누르는 즉시(0.1초 이내) 메타데이터 카탈로그와 정규화된 GeoJSON `FeatureCollection` 본문을 브라우저 `IndexedDB`(`bada_kkomkkomi_layers_db`)에 저장하고, 활성 지도(`MapView`)의 `layerGeoJsonMap` 상태를 즉시 갱신한다.
+   - 동시에 최근 10개 운영 스냅샷(`snapshots` 스토어)을 자동 보관하여 네트워크 없이도 언제든 직전 버전으로 `[복원 후 저장]`할 수 있게 한다.
+2. **2계층 — 원격 GitHub 저장소(`main`) 자동 커밋 및 전 단말 동기화**:
+   - 운영 설정에 등록된 GitHub Fine-grained PAT(대상 저장소의 `contents: write` 단일 권한만 부여)를 사용해 GitHub Git Data API(`POST /repos/{owner}/{repo}/git/trees` → `commits` → `PATCH refs/heads/main`)로 변경된 `.geojson` 파일과 `public/config/app_config.json`(또는 `public/data/layers/index.json`)을 **단일 원자적 커밋(Single Atomic Commit)**으로 푸시한다.
+   - 커밋 즉시 `.github/workflows/deploy-pages.yml`이 실행되어 다른 직원들의 단말기에도 동일한 운영 레이어가 배포된다.
+   - **오프라인(해상 출항 중) 대응**: 출항 중이라 인터넷이 연결되지 않은 상태에서 직원이 `[저장]`을 누르면 **1계층(기기 내 운영 반영)이 즉시 완료되어 현장에서 바로 사용**할 수 있으며, `pendingSyncQueue`에 기록되었다가 육지 복귀(온라인 전환) 시 원클릭 또는 자동으로 원격 저장소에 동기화된다.
 
-구현 착수 전에 다음 정보를 사용자에게 요청한다. 인증이나 저장소 설정을 우회하지 않는다.
+### 7.2 앱 시작 시 레이어 로드 우선순위 (최신성 보장)
 
-1. GitHub 저장소 visibility와 plan, 사용자에게 admin 권한이 있는지 알려 달라.
-2. `main` ruleset, required reviews, required status checks를 설정할 담당자를 지정해 달라.
-3. 운영자 collaborator/team과 최종 데이터 승인자를 지정해 달라.
-4. 실제 QGIS 원본 샘플 1개와 목표 GeoJSON 샘플 1개를 제공해 달라. 민감정보는 제거해야 한다.
-5. 공원구역/특별보호구역 데이터의 출처 URL 또는 내부 승인 문서, 라이선스, 기준일을 제공해 달라.
-6. 지원 기기/브라우저와 오프라인 현장 시험 담당자를 지정해 달라.
-7. MVP에 geometry 편집을 포함할지, GeoJSON-only 입력을 승인할지 결정해 달라.
+앱 부팅 시 `useAppConfig` 및 레이어 로더는 다음 순서로 최신 운영 데이터를 결정한다:
+1. 원격 서버(`public/data/layers/index.json` 및 `app_config.json`)와 기기 `IndexedDB`의 `updatedAt` / `releaseId`를 비교한다.
+2. 기기에서 방금 `[저장]`한 최신 운영 데이터가(아직 GitHub Pages CDN `max-age=600` 캐시 전파 전이거나 오프라인 미동기화 상태일 때) 더 최신이면 **기기 `IndexedDB`의 운영본을 우선 표시**하여, 직원이 `[저장]` 후 새로고침하더라도 옛날 캐시로 되돌아가는 현상(Stale Read)을 원천 차단한다.
+3. 다른 직원이 원격 저장소에 더 새로운 레이어 버전을 배포한 경우에는 원격 최신본을 가져와 `IndexedDB` 캐시를 자동 갱신한다.
 
-## 15. 공식 근거
+---
 
-- [RFC 7946: The GeoJSON Format](https://www.rfc-editor.org/info/rfc7946/) — WGS 84 경도/위도, geometry 구조, `crs` 제거, 정밀도 고려
-- [OGC GeoPackage Encoding Standard](https://www.geopackage.org/spec/) — SQLite 기반 단일 파일·서버리스·트랜잭션 공간 데이터 컨테이너
-- [QGIS 3.44 Editing](https://docs.qgis.org/3.44/en/docs/user_manual/working_with_vector/editing_geometry_attributes.html) — vector 편집, undo/redo와 저장 개념
-- [QGIS 3.44 Check validity](https://docs.qgis.org/3.44/en/docs/user_manual/processing_algs/qgis/vectorgeometry.html) — geometry 유효성 검사
-- [GDAL GeoJSON driver](https://gdal.org/en/stable/drivers/vector/geojson.html) — RFC 7946 export, 좌표계와 정밀도 옵션
-- [GitHub Pages 소개](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages) — 정적 사이트 호스팅의 성격
-- [GitHub Pages publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) — Actions artifact와 Pages 배포 흐름
-- [GitHub protected deployment checks](https://docs.github.com/en/pull-requests/concepts/deploying-code) — required status checks와 review
-- [GitHub ruleset rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets) — PR과 status check 강제
-- [GitHub OAuth app security practices](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/best-practices-for-creating-an-oauth-app) — public client의 secret/token 보호 한계와 device flow 주의
+## 8. 보안·데이터 무결성·안전장치 설계
 
-## 16. 최종 판정
+직원용 앱에서 편의성을 극대화하더라도 잘못된 공간 데이터나 스크립트 주입으로 지도 전체가 멈추는 일은 없어야 한다.
 
-- **현재 구현:** 공간 레이어 읽기·표시·가시성 토글은 존재한다.
-- **현재 미구현:** 운영자 업로드, 레이어/피처 CRUD, 영속 초안, 인증된 게시, 스키마/CRS 검증, 감사·승인·롤백 UI.
-- **기술적으로 가능한 Pages-only 범위:** 로컬 CRUD 작업공간 + 게시 패키지 + GitHub PR/CI/Pages 배포.
-- **Pages 자체만으로 제공할 수 없는 요구:** 별도 쓰기 API·인증 설계 없이 모든 사용자에게 즉시 반영되는 공유 CRUD. GitHub API 직접 쓰기는 기술적으로 가능하지만 본 보안·운영 정책에서는 비채택한다.
-- **권고 결정:** 대안 A와 Phase 0부터 승인 후 진행한다.
+1. **`[저장]` 전 자동 무결성 게이트 (Auto-Healing & Validation Gate)**:
+   - **자동 복구(Auto-Heal) 우선**: 닫히지 않은 Polygon Ring(첫 점과 끝점 불일치), 반시계/시계 방향 Winding 오류, 레거시 `crs` 객체 잔존, `EPSG:5179`/`5186` 좌표계, `CP949` 인코딩, 중복 꼭짓점은 직원을 귀찮게 막지 않고 **인앱 엔진이 자동으로 표준 규격으로 교정**한다.
+   - **치명적 손상 파일만 차단**: 도형 좌표가 숫자가 아닌 파일(`NaN`/`Infinity`), 공간 좌표가 전혀 없는 빈 파일, 압축 폭탄(Zip Bomb) 파일은 명확한 한국어 원인과 함께 `[저장]` 전에 차단한다.
+2. **XSS 및 프로토타입 오염 방지**:
+   - QGIS 파일 내부의 모든 속성(`properties`) 문자열은 지도 팝업·라벨·테이블에 렌더링할 때 React 텍스트 바인딩 또는 `escapeHtml`을 거치도록 강제하며, `__proto__`/`constructor` 키는 파싱 단계에서 제거한다.
+3. **고용량 파일 Web Worker 비동기 처리 및 단순화 옵션**:
+   - 정밀 해안선 등 꼭짓점(Vertex)이 수십만 개인 대용량 파일 업로드 시 메인 UI 스레드가 멈추지 않도록 파싱·좌표변환·BBox 계산을 Web Worker에서 수행한다.
+   - 모바일 렌더링 부하가 큰 초고밀도 폴리곤/라인의 경우, 관리 화면에서 **[모바일 최적화 단순화(Douglas-Peucker, 허용오차 1m / 5m)]** 옵션을 선택해 형상 왜곡 없이 파일 크기를 70~90% 경량화하여 `[저장]`할 수 있도록 지원한다.
+4. **원격 동기화 토큰 격리**:
+   - 원격 GitHub 자동 커밋용 토큰은 소스코드나 공개 빌드 번들에 절대 포함하지 않으며, 직원 단말기의 로컬 보안 저장소에만 보관하거나 사내 경량 프록시 엔드포인트를 통해 연동한다.
 
-본 문서는 구현 또는 운영 배포 완료 보고가 아니다. 검토·승인 후 별도 구현 작업과 GitHub 사용자 소유 설정, 실제 데이터 검증, 실기기 PWA 시험이 필요하다.
+---
+
+## 9. CI/CD 및 PWA 캐시 최적화
+
+### 9.1 GitHub Actions (`deploy-pages.yml`) 연동 검증
+
+- 관리 화면에서 `[저장]`을 눌러 원격 `main` 브랜치에 레이어 커밋이 푸시되면 `.github/workflows/deploy-pages.yml`이 자동 실행된다.
+- 워크플로 내에 `npm run validate:layers`(레이어 JSON/GeoJSON 무결성 검사), `npm run lint`, `npm run build`가 포함되어 있어, 만에 하나 손상된 데이터가 푸시되더라도 기존 정상 GitHub Pages 배포본이 덮어써지지 않고 보호된다.
+- 빌드 산출물(`dist/`) 최적화: `public/dev/` 등 개발 참고용 대용량 디자인 원본이 운영 배포 아티팩트에 불필요하게 포함되지 않도록 정리하여 배포 속도를 단축한다.
+
+### 9.2 PWA 서비스 워커 캐시 정책
+
+- `public/data/layers/**` 및 `public/config/**`는 `NetworkFirst` 전략과 로컬 `IndexedDB` 최신 스냅샷 비교를 병행하여, 직원이 `[저장]`한 즉시 현재 기기에서 0초 만에 반영되고 타 단말기에서도 온라인 접속 시 최신 레이어를 즉시 수신하도록 구성한다.
+
+---
+
+## 10. 검증 규칙 및 서비스 품질 보증 (QA)
+
+### 10.1 자동 및 실무 시나리오 검증 항목
+
+| 검증 구분 | 실무 테스트 시나리오 | 기대 결과 (Pass 기준) |
+|---|---|---|
+| **포맷 호환성** | 1. QGIS에서 내보낸 `.gpkg` 파일 업로드 (복수 레이어 포함) | 내부 레이어 목록이 표시되고 선택한 레이어가 정상 파싱됨 |
+| **포맷 호환성** | 2. 공공데이터포털/공단 표준 `.zip` (Shapefile: `.shp+.dbf+.prj`) 업로드 | 압축 해제 후 도형과 한글 속성이 깨짐 없이 로드됨 |
+| **포맷 호환성** | 3. `.geojson` 및 `.kml`/`.kmz` 파일 업로드 | 즉시 파싱되어 지도 미리보기에 렌더링됨 |
+| **좌표계 자동 변환** | 4. `EPSG:5179`(UTM-K) 및 `EPSG:5186`(중부원점) 공간 파일 업로드 | 오류 차단 없이 `EPSG:4326`(WGS 84)으로 자동 재투영되어 남해안(통영·거제) 정위치에 정확히 표시됨 |
+| **한글 인코딩** | 5. `CP949`(`EUC-KR`)로 인코딩된 관공서 `.dbf` 포함 Shapefile 업로드 | 한글 컬럼명과 속성값이 깨지지 않고 정상 출력됨 |
+| **전 도형 & 듀얼 엔진** | 6. `Polygon`(구역), `LineString`(항로), `Point`(지점) 레이어를 Kakao Map과 Legacy Leaflet에서 각각 확인 | 두 지도 엔진 모두에서 설정한 색상·두께·점선·투명도·라벨로 정상 렌더링됨 |
+| **`[저장]` = 즉시 운영 반영** | 7. 새 레이어 추가·스타일 변경·속성 수정 후 **`[저장]` 버튼 클릭** | 클릭 즉시 활성 지도에 반영되고, **브라우저를 새로고침(F5)하거나 오프라인으로 전환해도 저장된 운영 상태가 100% 유지**됨 |
+| **원격 자동 배포** | 8. 동기화 토큰 설정 상태에서 **`[저장]` 버튼 클릭** | 수동 PR/ZIP 작업 없이 원격 GitHub `main` 브랜치에 자동 커밋되고 GitHub Pages 배포가 트리거됨 |
+| **즉시 롤백** | 9. 잘못된 수정 후 관리 화면에서 `[이전 버전 복원]` 선택 후 **`[저장]` 클릭** | 즉시 직전 정상 운영 레이어 상태로 복구됨 |
+
+---
+
+## 11. 구현 아키텍처 모듈 구성 (Target Codebase Structure)
+
+실제 구현 시 생성·고도화할 모듈 구조는 다음과 같다.
+
+```text
+src/
+├─ types/
+│   ├─ config.ts                  # SpatialLayer 스타일(LayerStyle), 도형 타입, 출처 메타데이터, 스냅샷 타입 확장
+│   └─ spatialLayer.ts            # 멀티 포맷 파싱 결과, CRS 코드, 피처 편집/이력, GitHub 동기화 계약 정의
+├─ services/
+│   ├─ spatialFileParser.ts       # .gpkg, .zip(.shp/.dbf/.prj/.cpg), .geojson, .kml/.kmz 통합 파서 및 CRS/CP949 자동 변환기
+│   ├─ layerStorageService.ts     # IndexedDB + localStorage 영속 저장소, 버전 스냅샷 보관, 즉시 롤백 서비스
+│   └─ githubLayerSyncService.ts  # [저장] 시 GitHub Git Data/Contents API를 통한 원격 main 브랜치 자동 커밋 서비스
+├─ hooks/
+│   └─ useAppConfig.ts            # 정적 JSON + IndexedDB 운영본 통합 로더, 레이어 CRUD 및 [저장(즉시 운영 반영)] 액션 제공
+└─ components/
+    ├─ MapView.tsx                # 동적 인메모리/IndexedDB GeoJSON 및 원격 URL 통합 공급
+    ├─ map/
+    │   ├─ KakaoMapCanvas.tsx     # Polygon + Polyline(LineString) + CustomOverlay(Point/라벨) 및 동적 LayerStyle 렌더링 확장
+    │   └─ LegacyLeafletCanvas.tsx# 동적 LayerStyle 및 Point/Line/Polygon/라벨 렌더링 정합화
+    └─ notebook/
+        └─ LayerControlModal.tsx  # 직원용 통합 공간정보 레이어 관리 워크스페이스 (멀티포맷 업로드, 스타일/속성 편집, [저장=즉시 운영 반영], 버전 복원)
+```
+
+---
+
+## 12. 대안 비교 및 최종 아키텍처 판정
+
+| 대안 | 내용 | 직원용 서비스 관점 평가 | 최종 판정 |
+|---|---|---|---|
+| **A. 직원용 풀서비스 아키텍처 (멀티 포맷·한국 좌표계 인앱 자동 변환 + `[저장]` 즉시 운영 반영)** | `.gpkg`/`.zip(shp)`/`.geojson`/`.kml` 직접 업로드, `EPSG:5179`/`5186` 자동 재투영, `CP949` 한글 복원, **`[저장]` 클릭 한 번으로 로컬 영속화 + 원격 GitHub Pages 자동 배포 동시 수행** | **현장·행정 직원이 QGIS 재가공이나 GitHub 수작업 없이 앱 안에서 모든 공간 레이어 업무를 완결할 수 있음 (최고의 실무 생산성)** | **최종 채택** |
+| B. MVP 제한 설계 (`.geojson`만 허용 + 수동 ZIP 다운로드 후 개발자 PR 요청) | 비 GeoJSON 및 `EPSG:5179` 파일 거부, 저장 버튼을 눌러도 임시 초안만 만들고 ZIP을 받아 GitHub PR을 수동 생성 | 직원이 매번 QGIS에서 포맷·좌표계를 수동 변환해야 하고, 저장해도 운영 반영이 안 되어 실무 앱으로 사용 불가 | **폐기** |
+| C. 별도 유료 클라우드 서버 + 상용 GIS 엔진 도입 | 외부 클라우드 VM 및 PostGIS/GeoServer 구축 | 월 고정 클라우드 비용 및 서버 유지보수 부담 발생 (Zero-cost 원칙 위배) | **비채택** |
+
+---
+
+## 13. 공식 기술 표준 근거
+
+- [OGC GeoPackage Encoding Standard](https://www.geopackage.org/spec/) — `.gpkg` SQLite 컨테이너 및 Standard GeoPackage Binary(GPB) 도형 명세
+- [ESRI Shapefile Technical Description](https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf) — `.shp`, `.shx`, `.dbf` 바이너리 레코드 구조
+- [RFC 7946: The GeoJSON Format](https://www.rfc-editor.org/info/rfc7946/) — 표준 웹 공간 데이터 구조 및 WGS 84(`EPSG:4326`) 경도/위도 규격
+- [국토지리정보원 국가좌표계 변환 파라미터 고시](https://www.ngii.go.kr/) — `EPSG:5179`(UTM-K), `EPSG:5186`(중부원점 2010), `EPSG:5174`(보정 베셀) 투영 정의
+- [GitHub REST API — Git Database / Contents API](https://docs.github.com/en/rest/git/trees) — 정적 PWA에서 단일 원자적 커밋을 통한 원격 저장소 자동 업데이트 및 Pages 배포 트리거

@@ -1,81 +1,59 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type {
   HourlyMarineWeather,
-  MarineWeatherGrade,
   MarineWeatherStatusResult,
   WeatherThresholds,
 } from '../types/weather';
+import type { WeatherDefaultsConfig } from '../types/config';
+import {
+  evaluateHourlyWeatherSeries,
+  fetchEcmwfMarineWeatherSeries,
+  isValidWeatherThresholds,
+  resolveEffectiveThresholds,
+  SAFE_DEFAULT_THRESHOLDS,
+  type RawAlignedHourlyWeather,
+} from '../services/ecmwfWeatherService';
 
 const STORAGE_KEY_THRESHOLDS = 'bada_weather_thresholds_v1';
 
-export const DEFAULT_THRESHOLDS: WeatherThresholds = {
-  windKnot: { good: 14, moderate: 20 },
-  waveMeter: { good: 1.0, moderate: 1.8 },
-};
+export const DEFAULT_THRESHOLDS: WeatherThresholds = SAFE_DEFAULT_THRESHOLDS;
 
-interface RawHourlyEntry {
-  time: string;
-  datePart: string;
-  hourPart: string;
-  displayTime: string;
-  windSpeedKnots: number | null;
-  waveHeightMeters: number | null;
+function readSavedUserThresholds(): WeatherThresholds | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_THRESHOLDS);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (isValidWeatherThresholds(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // ignore storage error
+  }
+  return null;
 }
 
-function judgeMetric(
-  value: number | null,
-  thresholds: { good: number; moderate: number },
-): MarineWeatherGrade {
-  if (value === null || Number.isNaN(value)) return 'unknown';
-  if (value < thresholds.good) return 'good';
-  if (value <= thresholds.moderate) return 'moderate';
-  return 'bad';
-}
-
-/**
- * 풍속과 파고 각각 판정 후 더 나쁜 등급을 최종 결과로 적용
- * - 단, 하나라도 'bad'이면 'bad'
- * - 자료가 없거나 조회 실패('unknown')인 항목이 있으면 '좋음'이나 '보통'으로 판정하지 않고 'unknown'('?') 반환
- */
-function calculateOverallGrade(
-  windGrade: MarineWeatherGrade,
-  waveGrade: MarineWeatherGrade,
-): MarineWeatherGrade {
-  if (windGrade === 'bad' || waveGrade === 'bad') return 'bad';
-  if (windGrade === 'unknown' || waveGrade === 'unknown') return 'unknown';
-  if (windGrade === 'moderate' || waveGrade === 'moderate') return 'moderate';
-  return 'good';
-}
-
-function getKstCurrentHourPrefix(): string {
-  const now = new Date();
-  // Asia/Seoul (UTC+9) 기준 YYYY-MM-DDTHH 생성
-  const kstTime = new Date(now.getTime() + (9 * 60 + now.getTimezoneOffset()) * 60000);
-  const yyyy = kstTime.getFullYear();
-  const mm = String(kstTime.getMonth() + 1).padStart(2, '0');
-  const dd = String(kstTime.getDate()).padStart(2, '0');
-  const hh = String(kstTime.getHours()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}T${hh}`;
-}
-
-export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
+export function useMarineWeather(
+  initialLat = 34.8195,
+  initialLng = 128.552,
+  configWeatherDefaults?: WeatherDefaultsConfig,
+) {
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({
     lat: initialLat,
     lng: initialLng,
   });
   const [fetchNonce, setFetchNonce] = useState<number>(0);
 
-  const [thresholds, setThresholds] = useState<WeatherThresholds>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_THRESHOLDS);
-      if (raw) return JSON.parse(raw) as WeatherThresholds;
-    } catch {
-      // ignore storage error
-    }
-    return DEFAULT_THRESHOLDS;
-  });
+  // 사용자가 직접 수정해 저장한 임계값 (없으면 null -> configWeatherDefaults -> SAFE_DEFAULT_THRESHOLDS 순으로 폴백)
+  const [userThresholds, setUserThresholds] = useState<WeatherThresholds | null>(() =>
+    readSavedUserThresholds(),
+  );
 
-  const [rawHourly, setRawHourly] = useState<RawHourlyEntry[]>([]);
+  const thresholds = useMemo<WeatherThresholds>(
+    () => resolveEffectiveThresholds(userThresholds, configWeatherDefaults),
+    [userThresholds, configWeatherDefaults],
+  );
+
+  const [rawHourly, setRawHourly] = useState<RawAlignedHourlyWeather[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +63,8 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
 
   // 기준치 저장 (네트워크 재요청 없이 useMemo로 즉시 재판정)
   const updateThresholds = useCallback((newThresholds: WeatherThresholds) => {
-    setThresholds(newThresholds);
+    if (!isValidWeatherThresholds(newThresholds)) return;
+    setUserThresholds(newThresholds);
     try {
       localStorage.setItem(STORAGE_KEY_THRESHOLDS, JSON.stringify(newThresholds));
     } catch {
@@ -93,7 +72,21 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
     }
   }, []);
 
-  // 좌표 또는 수동 새로고침 시 Open-Meteo API 비동기 조회 (Effect 내 동기 setState 제거)
+  // 오프라인 전환 시 과거 예보를 정상 상태처럼 유지하지 않고 즉시 미확인('?')으로 전환 (설계서 5.4항)
+  useEffect(() => {
+    const handleOffline = () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      setIsLoading(false);
+      setRawHourly([]);
+      setError('오프라인 상태 — 실시간 ECMWF 예보를 확인할 수 없습니다.');
+    };
+    window.addEventListener('offline', handleOffline);
+    return () => window.removeEventListener('offline', handleOffline);
+  }, []);
+
+  // 좌표 또는 수동 새로고침 시 ECMWF 전용(IFS + WAM) API 비동기 조회
   useEffect(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -101,57 +94,9 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${coords.lat.toFixed(4)}&longitude=${coords.lng.toFixed(4)}&hourly=wave_height&timezone=Asia%2FSeoul`;
-    const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat.toFixed(4)}&longitude=${coords.lng.toFixed(4)}&hourly=wind_speed_10m&wind_speed_unit=kn&timezone=Asia%2FSeoul`;
-
-    Promise.all([
-      fetch(marineUrl, { signal: controller.signal }),
-      fetch(forecastUrl, { signal: controller.signal }),
-    ])
-      .then(async ([marineRes, forecastRes]) => {
-        if (!marineRes.ok || !forecastRes.ok) {
-          throw new Error('해상기상 예보 서버 응답 오류');
-        }
-
-        const marineJson = await marineRes.json();
-        const forecastJson = await forecastRes.json();
-
-        const times: string[] = marineJson.hourly?.time || forecastJson.hourly?.time || [];
-        const waveHeights: (number | null)[] = marineJson.hourly?.wave_height || [];
-        const windSpeeds: (number | null)[] = forecastJson.hourly?.wind_speed_10m || [];
-
-        if (times.length === 0) {
-          throw new Error('해당 좌표의 해상기상 예보 자료가 없습니다.');
-        }
-
-        const nowPrefix = getKstCurrentHourPrefix();
-        let startIndex = times.findIndex((t) => t.startsWith(nowPrefix));
-        if (startIndex === -1) startIndex = 0;
-
-        const targetTimes = times.slice(startIndex, startIndex + 48);
-        const parsedRaw: RawHourlyEntry[] = targetTimes.map((timeStr, idx) => {
-          const globalIdx = startIndex + idx;
-          const wave = waveHeights[globalIdx] ?? null;
-          const wind = windSpeeds[globalIdx] ?? null;
-
-          // "YYYY-MM-DDTHH:mm" 직접 파싱으로 타임존 왜곡 원천 차단
-          const [dateSection, timeSection] = timeStr.split('T');
-          const [, monthStr, dayStr] = (dateSection || '').split('-');
-          const hourStr = (timeSection || '00:00').slice(0, 2);
-          const datePart = `${monthStr}/${dayStr}`;
-          const hourPart = `${hourStr}시`;
-
-          return {
-            time: timeStr,
-            datePart,
-            hourPart,
-            displayTime: `${datePart} ${hourPart}`,
-            windSpeedKnots: wind,
-            waveHeightMeters: wave,
-          };
-        });
-
-        setRawHourly(parsedRaw);
+    fetchEcmwfMarineWeatherSeries(coords.lat, coords.lng, controller.signal)
+      .then((alignedSeries) => {
+        setRawHourly(alignedSeries);
         setSelectedIndex(0);
         setError(null);
         setLastFetchedAt(Date.now());
@@ -159,7 +104,7 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const msg =
-          err instanceof Error ? err.message : '기상 정보를 불러오지 못했습니다.';
+          err instanceof Error ? err.message : 'ECMWF 기상 정보를 불러오지 못했습니다.';
         // 조회 실패 시 이전 좌표의 좋음/보통 상태가 남지 않도록 즉시 비움 -> '?'(unknown) 표시 보장
         setRawHourly([]);
         setError(msg);
@@ -173,19 +118,9 @@ export function useMarineWeather(initialLat = 34.8195, initialLng = 128.552) {
     return () => controller.abort();
   }, [coords.lat, coords.lng, fetchNonce]);
 
-  // 기준치(thresholds)와 원시 예보 데이터를 결합해 3단계 등급 도출
+  // 기준치(thresholds)와 타임스탬프 정렬된 원시 예보 데이터를 결합해 3단계 등급 도출
   const hourlyData: HourlyMarineWeather[] = useMemo(() => {
-    return rawHourly.map((item) => {
-      const waveGrade = judgeMetric(item.waveHeightMeters, thresholds.waveMeter);
-      const windGrade = judgeMetric(item.windSpeedKnots, thresholds.windKnot);
-      const grade = calculateOverallGrade(windGrade, waveGrade);
-      return {
-        ...item,
-        grade,
-        windGrade,
-        waveGrade,
-      };
-    });
+    return evaluateHourlyWeatherSeries(rawHourly, thresholds);
   }, [rawHourly, thresholds]);
 
   const updateCoordinates = useCallback((lat: number, lng: number) => {

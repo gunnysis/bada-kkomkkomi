@@ -9,7 +9,7 @@ export default defineConfig({
   base,
   envPrefix: ['VITE_', 'KAKAO_'],
   build: {
-    chunkSizeWarningLimit: 700,
+    chunkSizeWarningLimit: 900,
   },
   plugins: [
     react(),
@@ -31,7 +31,7 @@ export default defineConfig({
         name: '바다꼼꼬미 — 해양 현장업무 접안·항해 지원 PWA',
         short_name: '바다꼼꼬미',
         description:
-          '통영·거제 해역 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 135개 항포구·선착장) 오프라인 PWA [v1.0]',
+          '통영·거제 해역 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 135개 항포구·선착장) 오프라인 PWA [v1.2]',
         lang: 'ko',
         start_url: base,
         scope: base,
@@ -124,22 +124,6 @@ export default defineConfig({
               expiration: {
                 maxEntries: 600,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            // 4. Open-Meteo 해상기상 예보 API: 온라인 우선 조회(4초 타임아웃), 해상 음영지역 진입 시 최근 6시간 내 예보 폴백
-            urlPattern: /^https:\/\/(marine-)?api\.open-meteo\.com\/v1\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'bada-open-meteo-v1',
-              networkTimeoutSeconds: 4,
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 6, // 6시간
               },
               cacheableResponse: {
                 statuses: [0, 200],

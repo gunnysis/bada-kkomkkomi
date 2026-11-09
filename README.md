@@ -1,13 +1,16 @@
-# 바다꼼꼬미 (Bada-Kkomkkomi) [v1.0]
+# 바다꼼꼬미 (Bada-Kkomkkomi) [v1.2]
 
-해양 현장업무 지원 오프라인 우선(Offline-First) PWA 웹 애플리케이션입니다.
-백엔드 서버나 외부 유료 DB 없이 **순수 정적 데이터(`GeoJSON`, `JSON`, 로컬 이미지) 교체와 Git Push만으로 무상(Zero-cost) 운영 및 자동 배포**되도록 설계되었습니다.
+국립공원공단 해양국립공원 직원의 해상·도서 현장업무 지원을 위한 오프라인 우선(Offline-First) PWA 웹 애플리케이션입니다.
+백엔드 서버나 외부 유료 DB 없이 **순수 정적 데이터(`GeoJSON`, `JSON`, 로컬 이미지) + 인앱 공간정보 운영 저장소(`IndexedDB` / GitHub 자동 커밋)만으로 무상(Zero-cost) 운영 및 자동 배포**되도록 설계되었습니다.
 
 - **라이브 배포 URL (GitHub Pages)**: https://gunnysis.github.io/bada-kkomkkomi/
 - **GitHub 저장소**: https://github.com/gunnysis/bada-kkomkkomi
 - **비개발자 운영자 매뉴얼**: [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)
 - **아키텍처·구현 설계·트러블슈팅 정본**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
-- **항포구·소규모 선착장 팩트체크 및 연구 보고서**:
+- **핵심 도메인 연구 및 상세 설계 보고서**:
+  - [`docs/qgis_layer_management_research_and_design.md`](./docs/qgis_layer_management_research_and_design.md) (직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 & `[저장]` 즉시 운영 반영 설계)
+  - [`docs/ecmwf_weather_forecast_research_and_design.md`](./docs/ecmwf_weather_forecast_research_and_design.md) (ECMWF IFS/WAM 9km 전용 해상기상 예보 및 안전 판정 설계)
+  - [`docs/intro_hub_ux_proposal.md`](./docs/intro_hub_ux_proposal.md) (인트로 허브 UX/UI 및 딥링크 아키텍처)
   - [`docs/factcheck_and_data_analysis.md`](./docs/factcheck_and_data_analysis.md) (통영·거제 81개 정규 어항 전수 검증)
   - [`docs/small_berths_factcheck_analysis.md`](./docs/small_berths_factcheck_analysis.md) (통영·거제 50개 소규모 선착장·접안시설 팩트체크)
   - [`docs/architecture_and_algorithm_review.md`](./docs/architecture_and_algorithm_review.md) (해상 변침점 A* 우회 및 초성 검색 알고리즘 설계)
@@ -22,22 +25,24 @@
 | :--- | :--- | :--- |
 | **Core** | Vite `8.3` + React `19.3` + TypeScript `7.0` | 초고속 번들링 및 엄격한 정적 타입 시스템 |
 | **Styling & Icons** | Tailwind CSS `4.3` + Lucide React `1.70` | 해상 직사광선 대비 고대비 다크/화이트 투톤 HUD |
-| **Map Engine** | Kakao Maps SDK `v3` (Primary) + Leaflet `1.9.4` (Legacy Fallback) | 카카오 일반/스카이뷰(위성) + 60fps 커스텀 오버레이 드래그 + 무중단 레거시(OSM) 자동 폴백 |
-| **PWA / Offline** | `vite-plugin-pwa` `2.0` + Workbox `7.4` | 32개 정적 에셋 프리캐시 + Kakao/OSM 타일 & Open-Meteo API 런타임 캐시 |
+| **Map & GIS Engine** | Kakao Maps SDK `v3` (Primary) + Leaflet `1.9.4` (Fallback) + `proj4` + `fflate` | 카카오 일반/스카이뷰(위성) + QGIS `.gpkg`/`.zip(shp)`/`.kml`/`.geojson` 인앱 파서 & 한국 좌표계(`EPSG:5179`/`5186` 등) 자동 변환 |
+| **PWA / Offline** | `vite-plugin-pwa` `2.0` + Workbox `7.4` | 정적 에셋 프리캐시 + Kakao/OSM 타일 런타임 캐시 (기상 API는 실시간 안전을 위해 캐시 배제) |
 | **Linter** | Oxlint `1.90` (`react`, `typescript`, `oxc`) | 116개 규칙 기반 정적 분석 (`0 warnings, 0 errors`) |
 | **CI/CD & Hosting** | GitHub Actions (`deploy-pages.yml`) / Cloudflare Pages | `main` 브랜치 Push 시 무상 빌드 및 자동 배포 |
 
 ---
 
-## 2. 핵심 도메인 기능 (v1.0)
+## 2. 핵심 도메인 기능 (v1.2)
 
 ### 2.1. 꼬미의 바다수첩 (`3.1`)
 - **A. 갯바위 접안정보 및 소규모 선착장 (`docking_points.geojson` — 55개소)**:
   - 통영·거제 해역 공식 조사선 접안지(5개소) 및 부잔교·슬립웨이·물양장·돌제선착장 등 소규모 접안시설(50개소) 총 **55개소**를 5가지 색상(`red` 위험주의, `amber` 조석주의, `green` 안전접안, `blue` 전용부두, `purple` 비상거점) 전술 마커로 표시합니다.
   - 색상별 실시간 필터링, 하단 슬라이딩 상세 바텀시트(`DockingDetailSheet`), CSS Scroll Snap 기반 현장 사진 좌우 넘기기(`PhotoGallery`), 현재 GPS 위치 추적(실시간/시뮬레이션)을 제공합니다.
-- **B. 공간정보 레이어 (`app_config.json` + `public/data/layers/*.geojson`)**:
-  - 한려해상국립공원 경계(`national_park.geojson`), 특별보호구역(`protected_area.geojson`), 갯바위 접안 포인트(`docking`)를 체크박스로 개별 표시·숨김 전환합니다.
-  - `public/config/app_config.json`의 `layers` 배열에 항목만 추가하면 코드 변경 없이 신규 QGIS 폴리곤 레이어를 확장할 수 있습니다.
+- **B. 직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 (`LayerControlModal` + `spatialFileParser` + `layerStorageService`)**:
+  - **QGIS 실무 파일 무변환 직접 업로드**: `.gpkg` (OGC GeoPackage SQLite3 바이너리), `.zip` / `.shp+.dbf+.prj+.cpg` (ESRI Shapefile), `.geojson`/`.json`, `.kml`/`.kmz` 파일을 브라우저에서 직접 파싱하며, 복수 레이어 포함 시 선택·일괄 반입을 지원합니다.
+  - **한국 공공측량 좌표계(`EPSG:5179`, `5186`, `5187`, `5185`, `5181`, `5174`, `3857`) & `CP949`(`EUC-KR`) 인앱 자동 변환**: `proj4`와 `TextDecoder('euc-kr')`를 내장하여 별도의 QGIS 재투영이나 인코딩 변환 없이도 `EPSG:4326`(WGS 84) 및 정상 한글 속성으로 즉시 자동 복원합니다.
+  - **전 도형(`Polygon`, `LineString`, `Point`) & 동적 스타일/피처 편집**: 선/면 색상, 두께, 실선/점선, 채우기 투명도, 지도 라벨 표시 속성(`labelField`), 피처 속성값 편집 및 Douglas-Peucker 모바일 경량화를 Kakao Map과 Legacy Leaflet 양쪽에서 동일하게 렌더링합니다.
+  - **`[저장 (운영 반영)]` = 즉시 운영 반영**: 관리 화면에서 **`[저장 (운영 반영)]`** 버튼을 누르면 즉시 활성 지도와 기기 영속 저장소(`IndexedDB` + `localStorage`, 최대 12개 버전 스냅샷 및 즉시 롤백 지원)에 운영 본으로 반영되며, 원격 GitHub 토큰 설정 시 `main` 브랜치 원자적 자동 커밋 및 GitHub Pages 배포까지 원클릭으로 수행합니다.
 - **C. 현장정보 제보 (`FieldReportModal` + `emailReportService`)**:
   - 접안 포인트 상세창 또는 독립 제보 버튼(**`지도에서 위치 선택`** 지원)을 통해 위경도 좌표·현장 사진·자유 메모를 입력합니다.
   - 운영자 수신 이메일(`admin.report_recipient_email`, 앱 내에서도 즉시 변경·저장 가능)로 규격화된 제보 메일(`mailto:`)을 발송하거나 클립보드에 전문을 복사합니다.
@@ -53,9 +58,10 @@
   - **지도 마커 드래그 & 500m 스마트 스냅 (`resolveSmartWaypoint`)**: 지도 위 출발·경유·도착 마커를 드래그하거나 지도 위 선착장 마커를 탭하면 Haversine 거리 `500m` 이내의 항구·소규모 선착장으로 자동 스냅되며, 반경 밖 해상은 `해상 좌표`로 실시간 동기화됩니다.
   - **지도 항로 폴리라인 구간 배지**: 각 구간(Leg) 중점에 `14분 · 3.5NM (142°SE)` 형태의 소요시간·해리·방위각(8방위) 캡슐 배지를 표시합니다.
   - **편의 제어**: 선박 속도 입력(기본 `15kn`) 및 원터치 프리셋(`10kn`, `15kn`, `20kn`, `28kn`), `출발↔도착 반전`, 지도 위 `선착장핀` 표시/숨김, 하단 패널 `접기/펼치기` 토글을 지원합니다.
-- **D. 해상 기상상태 판정 (`MarineWeatherPanel` + `WeatherThresholdSettings` + `useMarineWeather`)**:
-  - Open-Meteo Forecast API(풍속 `knots`) 및 Marine API(파고 `m`)를 병렬 호출하여 선택한 해역의 KST(`Asia/Seoul`) 시간대별 기상 데이터를 제공합니다.
-  - 풍속·파고 중 더 나쁜 등급을 기준으로 최종 3단계(`좋음` 초록 / `보통` 노랑 / `나쁨` 빨강)를 판정하며, 연안 격자에서 파고 등 데이터가 결측(`null`)된 경우 허위 안전 판정을 막기 위해 `판정불가 (?)`로 정직하게 표시합니다.
+- **D. ECMWF 전용 해상 기상상태 판정 (`MarineWeatherPanel` + `ecmwfWeatherService` + `useMarineWeather`)**:
+  - **ECMWF 단일 모델 고정 (`ecmwf_ifs` + `ecmwf_wam`)**: Open-Meteo Forecast API(`models=ecmwf_ifs`, 9km 해상도 10m 풍속 `kn`)와 Marine API(`models=ecmwf_wam`, 9km 해상도 유의파고 `m`)를 명시적으로 고정 호출하며, 타 모델이나 Best Match로 임의 폴백하지 않습니다.
+  - **타임스탬프(`Map`) 정합 결합 및 안전 실패(`unknown`) 원칙**: 단순 배열 인덱스가 아닌 동일 KST(`Asia/Seoul`) 타임스탬프 기준으로 풍속·파고를 결합하며, 두 값 중 하나라도 결측(`null`/`NaN`)이거나 오프라인/네트워크 오류 시 과거 캐시를 재사용하지 않고 즉시 `판정불가 (?)`로 정직하게 표시합니다.
+  - **출처 및 연안 격자 한계 고지**: 화면 하단에 `예보 모델: ECMWF IFS HRES 9 km · ECMWF WAM 9 km / API 제공: Open-Meteo` 출처와 9km 연안 격자 해상도 한계 및 안전 안내를 상시 표기합니다.
 
 ---
 

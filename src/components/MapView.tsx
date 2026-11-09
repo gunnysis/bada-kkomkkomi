@@ -45,6 +45,9 @@ export interface MapViewProps {
   selectedFeature: DockingFeature | null;
   onSelectFeature: (feature: DockingFeature) => void;
   layers: MapLayerConfig[];
+  geoJsonLayersData?: Record<string, any>;
+  layerLoadErrorIds?: string[];
+  onRetryGeoJsonLayers?: () => void;
   showPorpoiseLayer: boolean;
   isPorpoiseAddMode: boolean;
   isReportPickMode: boolean;
@@ -81,6 +84,9 @@ export function MapView({
   selectedFeature,
   onSelectFeature,
   layers,
+  geoJsonLayersData: externalGeoJsonLayersData,
+  layerLoadErrorIds: externalLayerLoadErrorIds,
+  onRetryGeoJsonLayers,
   showPorpoiseLayer,
   isPorpoiseAddMode,
   isReportPickMode,
@@ -129,13 +135,14 @@ export function MapView({
     nonce: number;
   } | null>(null);
 
-  // 2. QGIS 공간정보 레이어 GeoJSON 로드 및 상태/재시도 관리 (proposal P2 반영)
-  const [geoJsonLayersData, setGeoJsonLayersData] = useState<Record<string, any>>({});
-  const [layerLoadErrorIds, setLayerLoadErrorIds] = useState<string[]>([]);
+  // 2. QGIS 공간정보 레이어 GeoJSON 로드 및 상태/재시도 관리 (IndexedDB 운영본 + 정적 URL 통합)
+  const [localGeoJsonLayersData, setLocalGeoJsonLayersData] = useState<Record<string, any>>({});
+  const [localLayerLoadErrorIds, setLocalLayerLoadErrorIds] = useState<string[]>([]);
   const fetchedLayerIdsRef = useRef<Set<string>>(new Set());
 
   const fetchMissingGeoJsonLayers = useCallback(() => {
     layers.forEach((layer) => {
+      if (externalGeoJsonLayersData?.[layer.id]) return;
       if (layer.url && !fetchedLayerIdsRef.current.has(layer.id)) {
         fetchedLayerIdsRef.current.add(layer.id);
         const fullUrl = `${import.meta.env.BASE_URL}${layer.url.replace(/^\/+/, '')}`;
@@ -145,24 +152,35 @@ export function MapView({
             return r.json();
           })
           .then((data) => {
-            setGeoJsonLayersData((prev) => ({ ...prev, [layer.id]: data }));
-            setLayerLoadErrorIds((prev) => prev.filter((id) => id !== layer.id));
+            setLocalGeoJsonLayersData((prev) => ({ ...prev, [layer.id]: data }));
+            setLocalLayerLoadErrorIds((prev) => prev.filter((id) => id !== layer.id));
           })
           .catch(() => {
             fetchedLayerIdsRef.current.delete(layer.id);
-            setLayerLoadErrorIds((prev) =>
+            setLocalLayerLoadErrorIds((prev) =>
               prev.includes(layer.id) ? prev : [...prev, layer.id],
             );
           });
       }
     });
-  }, [layers]);
+  }, [layers, externalGeoJsonLayersData]);
+
+  const geoJsonLayersData = {
+    ...localGeoJsonLayersData,
+    ...(externalGeoJsonLayersData ?? {}),
+  };
+
+  const layerLoadErrorIds =
+    externalLayerLoadErrorIds ?? localLayerLoadErrorIds;
 
   const handleRetryGeoJsonLayers = useCallback(() => {
-    layerLoadErrorIds.forEach((id) => fetchedLayerIdsRef.current.delete(id));
-    setLayerLoadErrorIds([]);
+    if (onRetryGeoJsonLayers) {
+      onRetryGeoJsonLayers();
+    }
+    localLayerLoadErrorIds.forEach((id) => fetchedLayerIdsRef.current.delete(id));
+    setLocalLayerLoadErrorIds([]);
     fetchMissingGeoJsonLayers();
-  }, [layerLoadErrorIds, fetchMissingGeoJsonLayers]);
+  }, [onRetryGeoJsonLayers, localLayerLoadErrorIds, fetchMissingGeoJsonLayers]);
 
   useEffect(() => {
     fetchMissingGeoJsonLayers();

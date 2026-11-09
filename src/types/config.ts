@@ -25,6 +25,39 @@ export interface WeatherDefaultsConfig {
   };
 }
 
+export type SpatialGeometryType =
+  | 'Point'
+  | 'MultiPoint'
+  | 'LineString'
+  | 'MultiLineString'
+  | 'Polygon'
+  | 'MultiPolygon';
+
+export type StrokeDashPattern = 'solid' | 'shortdash' | 'shortdot';
+
+export interface LayerRenderStyle {
+  strokeColor: string;
+  strokeWidth: number;
+  strokeOpacity: number;
+  strokeDash: StrokeDashPattern;
+  fillColor: string;
+  fillOpacity: number;
+  pointRadius: number;
+  labelField?: string;
+  showLabels?: boolean;
+  zIndex?: number;
+}
+
+export interface LayerSourceMeta {
+  originalFileName?: string;
+  originalFormat?: 'gpkg' | 'shapefile' | 'geojson' | 'kml';
+  detectedCrs?: string;
+  detectedEncoding?: 'UTF-8' | 'EUC-KR';
+  updatedAt?: string;
+  updatedBy?: string;
+  dataSha256?: string;
+}
+
 export interface MapLayerConfig {
   id: string;
   name: string;
@@ -32,6 +65,12 @@ export interface MapLayerConfig {
   color: string;
   url?: string;
   description: string;
+  isSystemLayer?: boolean;
+  geometryTypes?: SpatialGeometryType[];
+  featureCount?: number;
+  bbox?: [number, number, number, number];
+  style?: LayerRenderStyle;
+  sourceMeta?: LayerSourceMeta;
 }
 
 export interface AppConfig {

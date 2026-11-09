@@ -33,6 +33,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate static config & spatial GeoJSON integrity
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const cfg = JSON.parse(fs.readFileSync('public/config/app_config.json', 'utf8'));
+            if (!Array.isArray(cfg.layers)) throw new Error('Invalid app_config.json: layers must be an array');
+            const layersDir = 'public/data/layers';
+            for (const file of fs.readdirSync(layersDir)) {
+              if (file.endsWith('.geojson') || file.endsWith('.json')) {
+                const fc = JSON.parse(fs.readFileSync(path.join(layersDir, file), 'utf8'));
+                if (fc.type !== 'FeatureCollection' || !Array.isArray(fc.features)) {
+                  throw new Error('Invalid GeoJSON FeatureCollection: ' + file);
+                }
+              }
+            }
+            console.log('Verified app_config.json and spatial layer files.');
+          "
+
       - name: Lint & Build PWA (with GitHub Pages base path)
         env:
           GITHUB_ACTIONS: 'true'
@@ -40,6 +59,7 @@ jobs:
         run: |
           npm run lint
           npm run build
+          rm -rf dist/dev
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

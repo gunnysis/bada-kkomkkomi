@@ -398,20 +398,66 @@ export function LegacyLeafletCanvas({
         zoomStepTrigger={zoomStepTrigger}
       />
 
-      {/* 1. QGIS 공간정보 레이어 (국립공원 경계, 특별보호구역) */}
+      {/* 1. QGIS 공간정보 레이어 (Polygon, LineString, Point 및 동적 스타일/라벨) */}
       {layers.map((layer) => {
-        if (!layer.visible || !geoJsonLayersData[layer.id]) return null;
+        const fc = geoJsonLayersData[layer.id];
+        if (!layer.visible || layer.id === 'docking' || layer.isSystemLayer || !fc) {
+          return null;
+        }
+        const strokeColor = layer.style?.strokeColor || layer.color || '#10b981';
+        const strokeWidth =
+          layer.style?.strokeWidth ?? (layer.id === 'national_park' ? 2.5 : 3);
+        const strokeOpacity = layer.style?.strokeOpacity ?? 0.92;
+        const strokeDash =
+          layer.style?.strokeDash ??
+          (layer.id === 'protected_area' ? 'shortdash' : 'solid');
+        const dashArray =
+          strokeDash === 'shortdash'
+            ? '8 5'
+            : strokeDash === 'shortdot'
+              ? '3 5'
+              : undefined;
+        const fillColor = layer.style?.fillColor || layer.color || '#10b981';
+        const fillOpacity =
+          layer.style?.fillOpacity ?? (layer.id === 'national_park' ? 0.08 : 0.16);
+        const pointRadius = layer.style?.pointRadius ?? 7;
+        const labelField = layer.style?.labelField || 'name';
+        const showLabels = layer.style?.showLabels !== false;
+        const versionKey = `${layer.id}:${layer.color}:${strokeColor}:${strokeWidth}:${strokeDash}:${fillColor}:${fillOpacity}:${pointRadius}:${labelField}:${showLabels}:${fc?.features?.length ?? 0}:${layer.sourceMeta?.dataSha256 ?? ''}`;
+
         return (
           <GeoJSON
-            key={`layer-${layer.id}`}
-            data={geoJsonLayersData[layer.id]}
+            key={versionKey}
+            data={fc}
             style={() => ({
-              color: layer.color,
-              weight: layer.id === 'national_park' ? 2.5 : 3,
-              fillColor: layer.color,
-              fillOpacity: layer.id === 'national_park' ? 0.08 : 0.16,
-              dashArray: layer.id === 'protected_area' ? '6 4' : undefined,
+              color: strokeColor,
+              weight: strokeWidth,
+              opacity: strokeOpacity,
+              fillColor,
+              fillOpacity,
+              dashArray,
             })}
+            pointToLayer={(_feature, latlng) =>
+              L.circleMarker(latlng, {
+                radius: pointRadius,
+                color: '#ffffff',
+                weight: 2,
+                fillColor,
+                fillOpacity: 0.92,
+              })
+            }
+            onEachFeature={(feature, leafletLayer) => {
+              if (!showLabels) return;
+              const props = feature?.properties ?? {};
+              const lbl =
+                props[labelField] ?? props.name ?? props.명칭 ?? props.이름 ?? '';
+              if (lbl) {
+                leafletLayer.bindTooltip(String(lbl), {
+                  permanent: false,
+                  direction: 'top',
+                });
+              }
+            }}
           />
         );
       })}

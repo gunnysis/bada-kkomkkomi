@@ -304,7 +304,6 @@ export function buildRouteLegBadgeSpec(
     yAnchorRatio: 0.5,
   };
 }
-
 /**
  * 5. 해상기상 상태 3단계 신호등 마커
  */
@@ -386,6 +385,98 @@ export function buildGpsPulseSpec(): MarkerTemplateSpec {
     height: 44,
     anchorX: 22,
     anchorY: 22,
+    xAnchorRatio: 0.5,
+    yAnchorRatio: 0.5,
+  };
+}
+/**
+ * 7. QGIS 공간정보 레이어 Point/MultiPoint 피처 마커
+ */
+export function buildSpatialLayerPointSpec(
+  color: string,
+  label: string,
+  radius = 7,
+  showLabel = true,
+): MarkerTemplateSpec {
+  const safeColor = escapeHtml(color || '#10b981');
+  const rawShort = label.length > 14 ? `${label.slice(0, 14)}…` : label;
+  const safeLabel = escapeHtml(rawShort);
+  const diameter = Math.max(12, Math.min(24, radius * 2));
+
+  const labelHtml =
+    showLabel && safeLabel
+      ? `<div style="
+          padding: 1px 6px;
+          border-radius: 5px;
+          background: rgba(2, 6, 23, 0.92);
+          border: 1.5px solid ${safeColor};
+          color: #f8fafc;
+          font-size: 10px;
+          font-weight: 800;
+          white-space: nowrap;
+          margin-bottom: 2px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.7);
+        ">${safeLabel}</div>`
+      : '';
+
+  const html = `
+    <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+      ${labelHtml}
+      <div style="
+        width: ${diameter}px;
+        height: ${diameter}px;
+        border-radius: 9999px;
+        background: ${safeColor};
+        border: 2.5px solid #ffffff;
+        box-shadow: 0 2px 7px rgba(0,0,0,0.8);
+      "></div>
+    </div>
+  `;
+
+  return {
+    html,
+    width: 44,
+    height: showLabel && safeLabel ? 36 : diameter + 6,
+    anchorX: 22,
+    anchorY: showLabel && safeLabel ? 30 : Math.round((diameter + 6) / 2),
+    xAnchorRatio: 0.5,
+    yAnchorRatio: showLabel && safeLabel ? 30 / 36 : 0.5,
+  };
+}
+
+/**
+ * 8. QGIS 공간정보 레이어 Polygon/Line 중심점 라벨 오버레이
+ */
+export function buildSpatialLayerLabelSpec(
+  color: string,
+  label: string,
+): MarkerTemplateSpec {
+  const safeColor = escapeHtml(color || '#10b981');
+  const rawShort = label.length > 18 ? `${label.slice(0, 18)}…` : label;
+  const safeLabel = escapeHtml(rawShort);
+
+  const html = `
+    <div style="pointer-events: none; display: flex; align-items: center; justify-content: center;">
+      <div style="
+        padding: 1.5px 7px;
+        border-radius: 6px;
+        background: rgba(11, 25, 44, 0.88);
+        border: 1.5px solid ${safeColor};
+        color: #f8fafc;
+        font-size: 10px;
+        font-weight: 900;
+        white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+      ">${safeLabel}</div>
+    </div>
+  `;
+
+  return {
+    html,
+    width: 110,
+    height: 22,
+    anchorX: 55,
+    anchorY: 11,
     xAnchorRatio: 0.5,
     yAnchorRatio: 0.5,
   };

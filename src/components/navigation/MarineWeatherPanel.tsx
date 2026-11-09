@@ -7,6 +7,8 @@ import {
   ChevronDown,
   ChevronUp,
   WifiOff,
+  Wind,
+  Waves,
 } from 'lucide-react';
 import type { MarineWeatherStatusResult } from '../../types/weather';
 
@@ -31,21 +33,21 @@ export function MarineWeatherPanel({
       badge: '🟢',
       color: '#10b981',
       pillClass: 'bg-emerald-500 text-slate-950',
-      desc: '풍속·파고 모두 설정 기준 양호 구간',
+      desc: '풍속(IFS)·파고(WAM) 모두 설정 기준 양호 구간',
     },
     moderate: {
       label: '보통',
       badge: '⚪',
       color: '#94a3b8',
       pillClass: 'bg-slate-300 text-slate-950',
-      desc: '풍속·파고 중 하나 이상 보통 주의 구간',
+      desc: '풍속(IFS)·파고(WAM) 중 하나 이상 보통 주의 구간',
     },
     bad: {
       label: '나쁨',
       badge: '🔴',
       color: '#ef4444',
       pillClass: 'bg-red-500 text-white',
-      desc: '풍속·파고 중 하나 이상 나쁨(위험) 구간',
+      desc: '풍속(IFS)·파고(WAM) 중 하나 이상 나쁨(위험) 구간',
     },
     unknown: {
       label: '미확인 (?)',
@@ -64,9 +66,9 @@ export function MarineWeatherPanel({
       {/* 상단 기상 판정 결과 헤더 */}
       <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-black tracking-wider text-sky-400 uppercase">
-              해상기상 3단계 판정
+              ECMWF 해상기상 3단계 판정
             </span>
             <span className="font-mono text-[10px] font-bold text-slate-400">
               ({weather.lat.toFixed(3)}°N, {weather.lng.toFixed(3)}°E)
@@ -89,6 +91,22 @@ export function MarineWeatherPanel({
               >
                 {current.displayTime}
               </span>
+            )}
+            {current && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-200">
+                <span className="inline-flex items-center gap-0.5 rounded bg-slate-800/90 px-1.5 py-0.5 font-mono text-sky-300">
+                  <Wind className="h-3 w-3" />
+                  {current.windSpeedKnots !== null
+                    ? `${current.windSpeedKnots.toFixed(1)}kn`
+                    : '?'}
+                </span>
+                <span className="inline-flex items-center gap-0.5 rounded bg-slate-800/90 px-1.5 py-0.5 font-mono text-teal-300">
+                  <Waves className="h-3 w-3" />
+                  {current.waveHeightMeters !== null
+                    ? `${current.waveHeightMeters.toFixed(2)}m`
+                    : '?'}
+                </span>
+              </div>
             )}
           </div>
           <p className="mt-0.5 truncate text-[11px] font-bold text-slate-300">{gradeMeta.desc}</p>
@@ -148,7 +166,7 @@ export function MarineWeatherPanel({
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-extrabold text-slate-300">
-                예보 날짜·시각 선택 (좌우 슬라이드)
+                예보 날짜·시각 선택 (48시간 KST 타임스탬프 정합)
               </span>
               <span className="font-mono text-xs font-bold text-sky-300">
                 {current?.displayTime ?? '자료 없음'}
@@ -165,7 +183,7 @@ export function MarineWeatherPanel({
                       : item.grade === 'moderate'
                         ? '#94a3b8'
                         : item.grade === 'bad'
-                          ? '#ef4444'
+                           ? '#ef4444'
                           : '#64748b';
 
                   return (
@@ -198,25 +216,27 @@ export function MarineWeatherPanel({
             ) : (
               <div className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-center text-xs text-slate-400">
                 {weather.isLoading
-                  ? '선택한 해역의 풍속·파고 예보를 조회하는 중입니다...'
+                  ? '선택한 해역의 ECMWF 풍속(IFS)·파고(WAM) 예보를 조회하는 중입니다...'
                   : '예보 자료가 없습니다 (?) — 해역 위치를 다시 선택하거나 새로고침하세요.'}
               </div>
             )}
           </div>
 
-          {/* 사용상 제한 안내 */}
+          {/* 사용상 제한 및 연안 9km 격자 한계 안내 (설계서 5.7항) */}
           <div className="rounded-2xl border border-amber-500/40 bg-amber-950/30 p-2.5">
             <div className="flex items-start gap-2 text-[11px] leading-snug text-amber-200">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
               <p>
-                <strong>참고 상태 안내:</strong> 사용자 설정 기준에 따른 참고 등급이며 실제 출항 안전을 보장하지 않습니다. 상세 수치는 Windy 등 전문 기상 서비스에서 확인하세요.
+                <strong>참고 상태 및 연안 격자 한계 안내:</strong> 9 km 모델 격자 예보이며 현장 관측값이 아닙니다. 작은 섬·방파제·국지 돌풍 등 연안 지형 효과를 다 표현하지 못할 수 있으며, 실제 출항 안전을 보증하지 않으므로 기상특보와 현장 관측을 반드시 함께 확인하세요.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[10px] text-slate-400">
-            <span>출처: Open-Meteo Weather &amp; Marine API</span>
-            <span className="flex items-center gap-1 text-sky-300 font-bold">
+          <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400">
+            <span>
+              예보 모델: <strong className="text-slate-300">ECMWF IFS HRES 9 km · ECMWF WAM 9 km</strong> / API 제공: Open-Meteo
+            </span>
+            <span className="flex items-center gap-1 font-bold text-sky-300">
               <HelpCircle className="h-3 w-3" />
               지도 탭 또는 핀 드래그로 해역 이동
             </span>
