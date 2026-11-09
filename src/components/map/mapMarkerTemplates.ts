@@ -228,14 +228,13 @@ export function buildPorpoiseSpec(count: number): MarkerTemplateSpec {
           width: 38px;
           height: 38px;
           border-radius: 9999px;
-          background: #14b8a6;
-          border: 3px solid #ffffff;
+          background: #ffffff;
+          border: 3px solid #14b8a6;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 18px;
           box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-        ">🐬</div>
+        "><img src="${import.meta.env.BASE_URL}images/brand/icon_porpoise.png" alt="" style="width: 24px; height: 24px; object-fit: contain;" /></div>
       </div>
     </div>
   `;
@@ -410,7 +409,10 @@ export function buildWeatherPinSpec(
         : grade === 'bad'
           ? '나쁨'
           : '미확인 (?)';
-  const innerSymbol = grade === 'unknown' ? '?' : '⚓';
+  const innerSymbol =
+    grade === 'unknown'
+      ? '?'
+      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>`;
 
   const html = `
     <div class="bada-draggable-overlay" style="display: flex; flex-direction: column; align-items: center; cursor: grab;">

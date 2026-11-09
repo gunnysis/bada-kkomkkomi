@@ -48,28 +48,24 @@ export function MarineWeatherPanel({
   const gradeMeta = {
     good: {
       label: '좋음',
-      badge: '🟢',
       color: '#10b981',
       pillClass: 'bg-emerald-500 text-slate-950',
       desc: '풍속(IFS)·파고(WAM) 모두 설정 기준 양호 구간',
     },
     moderate: {
       label: '보통',
-      badge: '⚪',
       color: '#94a3b8',
       pillClass: 'bg-slate-300 text-slate-950',
       desc: '풍속(IFS)·파고(WAM) 중 하나 이상 보통 주의 구간',
     },
     bad: {
       label: '나쁨',
-      badge: '🔴',
       color: '#ef4444',
       pillClass: 'bg-red-500 text-white',
       desc: '풍속(IFS)·파고(WAM) 중 하나 이상 나쁨(위험) 구간',
     },
     unknown: {
       label: '미확인 (?)',
-      badge: '?',
       color: '#64748b',
       pillClass: 'bg-slate-700 text-amber-300',
       desc: '예보 자료가 없거나 조회 실패 (좋음/보통으로 판정하지 않음)',
@@ -94,7 +90,7 @@ export function MarineWeatherPanel({
             </span>
             {nearestAreaLabel && (
               <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[10px] font-extrabold text-sky-300">
-                📍 {nearestAreaLabel}
+                {nearestAreaLabel}
               </span>
             )}
             <span className="font-mono text-[10px] font-bold text-slate-400">

@@ -76,9 +76,14 @@ export function PorpoiseObservationModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-700/90 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/20 text-teal-400">
-              <span className="text-xl" aria-hidden="true">🐬</span>
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 p-1 shadow">
+              <img
+                src={`${import.meta.env.BASE_URL}images/brand/icon_porpoise.png`}
+                alt=""
+                aria-hidden="true"
+                className="h-7 w-7 object-contain"
+              />
             </div>
             <div>
               <h2 id="porpoise-modal-title" className="text-base font-black tracking-tight text-white">

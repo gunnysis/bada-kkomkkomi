@@ -294,7 +294,7 @@ export function RouteTimeCalculator({
               <div className="flex flex-wrap gap-1" role="group" aria-label="지도 탭 동작 모드">
                 {(
                   [
-                    { mode: 'pan_only', label: '✋이동만' },
+                    { mode: 'pan_only', label: '이동만' },
                     { mode: 'add_waypoint', label: '+경유지' },
                     { mode: 'set_start', label: '출발지' },
                     { mode: 'set_end', label: '목적지' },

@@ -244,7 +244,7 @@ export function DockingDetailSheet({
               className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-teal-300 bg-gradient-to-r from-teal-500 to-sky-500 px-3 py-3 text-xs font-black text-slate-950 shadow-lg transition active:scale-[0.99] sm:text-sm"
             >
               <Navigation className="h-4 w-4 stroke-[2.6]" />
-              <span>🧭 이 접안지를 목적지로 바닷길 시간·기상 계산하기</span>
+              <span>이 접안지를 목적지로 바닷길 시간·기상 계산하기</span>
             </button>
           )}
 

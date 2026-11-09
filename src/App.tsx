@@ -2,7 +2,6 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import {
   AlertCircle,
   AlertTriangle,
-  Anchor,
   ArrowLeftRight,
   Check,
   ChevronDown,
@@ -578,7 +577,7 @@ export function App() {
     if (selectedFeature && selectedFeature.properties.color !== 'red') {
       setSelectedFeature(null);
     }
-    showToast('🚨 위험주의(9개소) 집중 표시 모드로 전환되었습니다.');
+    showToast('위험주의(9개소) 집중 표시 모드로 전환되었습니다.');
   }, [selectedFeature, showToast]);
 
   const handleSelectAllColors = useCallback(() => {
@@ -592,12 +591,12 @@ export function App() {
       if (selectedFeature && selectedFeature.properties.color !== 'red') {
         setSelectedFeature(null);
       }
-      showToast('🚨 위험주의(9개소) 단독 표시 모드로 전환되었습니다.');
+      showToast('위험주의(9개소) 단독 표시 모드로 전환되었습니다.');
       return;
     }
     // 이미 위험주의 단독 모드일 때 탭하면 통영·거제 전체 위험지점 시야로 리셋 안내
     setFlyTarget({ lat: 34.8195, lng: 128.552, zoom: 11, nonce: Date.now() });
-    showToast('🚨 통영·거제 위험주의 9개소 집중 표시 중 (우측 [+등급 선택]에서 타 등급 추가 가능)');
+    showToast('통영·거제 위험주의 9개소 집중 표시 중 (우측 [+등급 선택]에서 타 등급 추가 가능)');
   }, [selectedColors, selectedFeature, showToast]);
 
   const isDockingLayerVisible = useMemo(
@@ -738,7 +737,7 @@ export function App() {
         if (startWp) {
           handleUpdateWaypointPos(startWp.id, lat, lng);
           setRouteMapTapMode('pan_only');
-          showToast('출발지 지정 완료 · 실수 방지를 위해 [✋이동만] 모드로 전환됨');
+          showToast('출발지 지정 완료 · 실수 방지를 위해 [이동만] 모드로 전환됨');
         }
         return;
       }
@@ -747,7 +746,7 @@ export function App() {
         if (endWp) {
           handleUpdateWaypointPos(endWp.id, lat, lng);
           setRouteMapTapMode('pan_only');
-          showToast('목적지 지정 완료 · 실수 방지를 위해 [✋이동만] 모드로 전환됨');
+          showToast('목적지 지정 완료 · 실수 방지를 위해 [이동만] 모드로 전환됨');
         }
         return;
       }
@@ -1028,7 +1027,7 @@ export function App() {
       setLastTriggeredCardId('navigation');
       switchWorkspaceScreen('navigation', 'route');
       handleFlyToPoint(lat, lng, 13);
-      showToast(`🧭 '${p.name}' 목적지 설정 · 바닷길 시간·기상 계산 모드 전환`);
+      showToast(`'${p.name}' 목적지 설정 · 바닷길 시간·기상 계산 모드 전환`);
     },
     [
       portsList,
@@ -1072,7 +1071,7 @@ export function App() {
     });
     replaceNavPanel('route');
     handleFlyToPoint(resolved.lat, resolved.lng, 12);
-    showToast(`🧭 '${resolved.name}' 경유지 추가 및 시간계산 탭 전환`);
+    showToast(`'${resolved.name}' 경유지 추가 및 시간계산 탭 전환`);
   }, [
     routeWaypoints.length,
     marineWeather.lat,
@@ -1131,7 +1130,7 @@ export function App() {
       updateWeatherCoordinates(lat, lng);
       replaceNavPanel('weather');
       handleFlyToPoint(lat, lng, 13);
-      showToast(`🌊 '${name}' 해역 기상상태판정 탭으로 전환되었습니다.`);
+      showToast(`'${name}' 해역 기상상태판정 탭으로 전환되었습니다.`);
     },
     [updateWeatherCoordinates, replaceNavPanel, handleFlyToPoint, showToast],
   );
@@ -1219,19 +1218,16 @@ export function App() {
                   <ChevronLeft className="h-4 w-4 stroke-[2.6]" aria-hidden="true" />
                   <span>홈</span>
                 </button>
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/25 shadow sm:h-9 sm:w-9 ${
+                <img
+                  src={`${import.meta.env.BASE_URL}images/brand/${
                     activeMainTab === 'notebook'
-                      ? 'bg-gradient-to-br from-[#00854a] to-[#0ea5e9] text-white'
-                      : 'bg-gradient-to-br from-[#0066b3] to-[#14b8a6] text-white'
+                      ? 'icon_notebook_map_alpha.png'
+                      : 'icon_navigation_clock_alpha.png'
                   }`}
-                >
-                  {activeMainTab === 'notebook' ? (
-                    <Anchor className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
-                  ) : (
-                    <Navigation className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
-                  )}
-                </div>
+                  alt=""
+                  aria-hidden="true"
+                  className="h-8 w-9 shrink-0 rounded-xl bg-white/95 object-contain p-0.5 shadow sm:h-9 sm:w-10"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <h1
@@ -1249,7 +1245,7 @@ export function App() {
                   <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-emerald-100/90 sm:text-[11px]">
                     {activeMainTab === 'notebook'
                       ? isRedOnly && selectedRegion === 'all' && !dockingSearchQuery
-                        ? `🚨 위험주의 ${filteredFeatures.length}개소 집중 표시`
+                        ? `위험주의 ${filteredFeatures.length}개소 집중 표시`
                         : `${
                             selectedRegion === 'tongyeong'
                               ? '통영권 '
@@ -1260,6 +1256,12 @@ export function App() {
                       : `실항로 ${routeCalculation.totalDistanceKm.toFixed(1)}km · 약 ${Math.round(routeCalculation.totalDurationMinutes)}분`}
                   </p>
                 </div>
+                <img
+                  src={`${import.meta.env.BASE_URL}images/brand/kkomi_header_binoculars.png`}
+                  alt=""
+                  aria-hidden="true"
+                  className="hidden h-9 w-auto shrink-0 object-contain drop-shadow sm:block"
+                />
               </div>
 
               <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
@@ -1374,7 +1376,7 @@ export function App() {
                     setIsPorpoiseAddMode(next);
                     setIsReportPickMode(false);
                     if (next) {
-                      showToast('지도에서 상괭이를 목격한 위치를 탭하세요 🐬');
+                      showToast('지도에서 상괭이를 목격한 위치를 탭하세요.');
                     }
                   }}
                   className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
@@ -1383,12 +1385,17 @@ export function App() {
                       : 'border-teal-500/80 bg-teal-950/90 text-teal-300'
                   }`}
                 >
-                  <span>🐬</span>
+                  <img
+                    src={`${import.meta.env.BASE_URL}images/brand/icon_porpoise.png`}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 rounded bg-white/90 object-contain p-0.5"
+                  />
                   <span className="sm:hidden">
                     {isPorpoiseAddMode ? '탭대기' : '상괭이'}
                   </span>
                   <span className="hidden sm:inline">
-                    {isPorpoiseAddMode ? '위치 탭 대기중' : '상괭이 기록'}
+                    {isPorpoiseAddMode ? '위치 탭 대기중' : '상괭이 관찰'}
                   </span>
                 </button>
               </div>
@@ -1491,7 +1498,7 @@ export function App() {
                           : 'border-slate-600 bg-slate-800/90 text-slate-200 hover:border-red-400'
                       }`}
                     >
-                      🚨 위험주의만 (기본)
+                      위험주의만 (기본)
                     </button>
                     <button
                       type="button"
@@ -1755,7 +1762,7 @@ export function App() {
             <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
             <span>
               {isReportPickMode
-                ? '지도에서 제보할 위치를 직접 탭하세요 📍'
+                ? '지도에서 제보할 위치를 직접 탭하세요.'
                 : gpsStatusMsg}
             </span>
           </div>
@@ -1854,7 +1861,7 @@ export function App() {
               <span className="mt-0.5 text-[11px] font-extrabold text-amber-300">
                 {isRedOnly
                   ? `전체 ${totalDockingCount}곳 모두 보기 ➔`
-                  : '🚨 위험주의 9곳만 보기 ➔'}
+                  : '위험주의 9곳만 보기 ➔'}
               </span>
             </button>
 
@@ -1942,7 +1949,7 @@ export function App() {
                 onSelectWaypointWeather={(lat, lng, name) => {
                   marineWeather.updateCoordinates(lat, lng);
                   handleFlyToPoint(lat, lng, 13);
-                  showToast(`🌊 '${name}' 해역 기상 조회 완료`);
+                  showToast(`'${name}' 해역 기상 조회 완료`);
                 }}
                 onAddCurrentWeatherAsWaypoint={handleAddWeatherCoordAsWaypoint}
                 onOpenSettings={() => setIsWeatherSettingsOpen(true)}

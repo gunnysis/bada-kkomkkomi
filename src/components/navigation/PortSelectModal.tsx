@@ -232,7 +232,7 @@ export function PortSelectModal({
 
                     {port.islandName && (
                       <span className="shrink-0 rounded border border-teal-500/40 bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-teal-300">
-                        🏝️ {port.islandName}
+                        {port.islandName}
                       </span>
                     )}
 

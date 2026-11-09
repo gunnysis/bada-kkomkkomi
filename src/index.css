@@ -7,15 +7,13 @@
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-    /* 국립공원공단(KNPS) 공식 CI 3원색(산림 생태 그린 · 한려해상 오션 블루 · 태양 활력 앰버) 기반 디자인 토큰 */
+    /* 국립공원공단(KNPS) 공식 CI 심볼마크(산림 생태 그린 #00854a · 청정 해양 블루 #0066b3) 기반 디자인 토큰 */
     --knps-green-primary: #00854a;
     --knps-green-bright: #10b981;
     --knps-green-soft: #6ee7b7;
     --knps-blue-primary: #0066b3;
     --knps-blue-bright: #0ea5e9;
     --knps-teal-bright: #14b8a6;
-    --knps-sun-amber: #f59e0b;
-    --knps-sun-orange: #ea580c;
 
     /* 한려해상국립공원 다도해 심해·숲 야외 고대비 다크 HUD 서피스 토큰 */
     --knps-bg-deep: #061c24;
@@ -71,14 +69,14 @@
     inset 0 1px 0 rgba(110, 231, 183, 0.25);
 }
 
-/* 국립공원공단 CI 3원색(그린 · 블루 · 앰버) 상단 시그니처 라인 */
+/* 국립공원공단 공식 CI 심볼마크(산림 그린 · 해양 블루) 상단 시그니처 라인 */
 .knps-tricolor-bar {
   background: linear-gradient(
     90deg,
     #00854a 0%,
-    #10b981 36%,
-    #0284c7 72%,
-    #f59e0b 100%
+    #10b981 45%,
+    #0284c7 75%,
+    #0066b3 100%
   );
 }
 

@@ -36,6 +36,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: [
+        'favicon.ico',
+        'icons/favicon-32x32.png',
         'icons/pwa-192x192.png',
         'icons/pwa-512x512.png',
         'icons/apple-touch-icon.png',
@@ -59,6 +61,12 @@ export default defineConfig({
         theme_color: '#061c24',
         categories: ['navigation', 'utilities', 'productivity'],
         icons: [
+          {
+            src: 'icons/favicon-32x32.png',
+            sizes: '32x32',
+            type: 'image/png',
+            purpose: 'any',
+          },
           {
             src: 'icons/pwa-192x192.png',
             sizes: '192x192',
