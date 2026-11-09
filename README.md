@@ -1,4 +1,4 @@
-# 바다꼼꼬미 (Bada-Kkomkkomi) [v1.2]
+# 바다꼼꼬미 (Bada-Kkomkkomi) [v1.3]
 
 국립공원공단 해양국립공원 직원의 해상·도서 현장업무 지원을 위한 오프라인 우선(Offline-First) PWA 웹 애플리케이션입니다.
 백엔드 서버나 외부 유료 DB 없이 **순수 정적 데이터(`GeoJSON`, `JSON`, 로컬 이미지) + 인앱 공간정보 운영 저장소(`IndexedDB` / GitHub 자동 커밋)만으로 무상(Zero-cost) 운영 및 자동 배포**되도록 설계되었습니다.
@@ -8,6 +8,8 @@
 - **비개발자 운영자 매뉴얼**: [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)
 - **아키텍처·구현 설계·트러블슈팅 정본**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
 - **핵심 도메인 연구 및 상세 설계 보고서**:
+  - [`docs/marker_color_hazard_first_ux_plan.md`](./docs/marker_color_hazard_first_ux_plan.md) (`MARKER_COLOR_MAP` '위험주의(Red)' 최우선 인지(Hazard-First) 및 선택적 다중 등급 확장 UI/UX 설계·구현 명세서)
+  - [`docs/kakao_map_type_and_3d_view_plan.md`](./docs/kakao_map_type_and_3d_view_plan.md) (카카오맵 `MapTypeId` 베이스 3종·중첩 오버레이 5종·2.5D 입체지형도 및 360° 3D 현장 로드뷰 설계)
   - [`docs/qgis_layer_management_research_and_design.md`](./docs/qgis_layer_management_research_and_design.md) (직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 & `[저장]` 즉시 운영 반영 설계)
   - [`docs/ecmwf_weather_forecast_research_and_design.md`](./docs/ecmwf_weather_forecast_research_and_design.md) (ECMWF IFS/WAM 9km 전용 해상기상 예보 및 안전 판정 설계)
   - [`docs/intro_hub_ux_proposal.md`](./docs/intro_hub_ux_proposal.md) (인트로 허브 UX/UI 및 딥링크 아키텍처)
@@ -35,9 +37,10 @@
 ## 2. 핵심 도메인 기능 (v1.2)
 
 ### 2.1. 꼬미의 바다수첩 (`3.1`)
-- **A. 갯바위 접안정보 및 소규모 선착장 (`docking_points.geojson` — 55개소)**:
-  - 통영·거제 해역 공식 조사선 접안지(5개소) 및 부잔교·슬립웨이·물양장·돌제선착장 등 소규모 접안시설(50개소) 총 **55개소**를 5가지 색상(`red` 위험주의, `amber` 조석주의, `green` 안전접안, `blue` 전용부두, `purple` 비상거점) 전술 마커로 표시합니다.
-  - 색상별 실시간 필터링, 하단 슬라이딩 상세 바텀시트(`DockingDetailSheet`), CSS Scroll Snap 기반 현장 사진 좌우 넘기기(`PhotoGallery`), 현재 GPS 위치 추적(실시간/시뮬레이션)을 제공합니다.
+- **A. 갯바위 접안정보 및 소규모 선착장 (`docking_points.geojson` — 55개소 · '위험주의' 우선 노출 UX)**:
+  - 통영·거제 해역 공식 조사선 접안지(5개소) 및 부잔교·슬립웨이·물양장·돌제선착장 등 소규모 접안시설(50개소) 총 **55개소**를 5가지 색상(`red` 위험주의 9, `amber` 조석주의 14, `green` 안전접안 13, `blue` 전용부두 12, `purple` 비상거점 7) 전술 마커로 표시합니다.
+  - **Hazard-First 다중 등급 필터**: 초기 진입 시 **`red`(위험·암초 주의 9개소)만 단독 기본 표시**하여 암초·폐로프 위험 지점을 즉각 인지시키며, 필요한 사용자만 상단 `[+등급 선택 ▾]` 팝오버에서 나머지 4개 등급을 복수 선택(Multi-Select)하거나 `[전체 55곳 보기]`로 확장할 수 있습니다.
+  - 하단 슬라이딩 상세 바텀시트(`DockingDetailSheet`), CSS Scroll Snap 기반 현장 사진 좌우 넘기기(`PhotoGallery`), 현재 GPS 위치 추적(실시간/시뮬레이션)을 제공합니다.
 - **B. 직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 (`LayerControlModal` + `spatialFileParser` + `layerStorageService`)**:
   - **QGIS 실무 파일 무변환 직접 업로드**: `.gpkg` (OGC GeoPackage SQLite3 바이너리), `.zip` / `.shp+.dbf+.prj+.cpg` (ESRI Shapefile), `.geojson`/`.json`, `.kml`/`.kmz` 파일을 브라우저에서 직접 파싱하며, 복수 레이어 포함 시 선택·일괄 반입을 지원합니다.
   - **한국 공공측량 좌표계(`EPSG:5179`, `5186`, `5187`, `5185`, `5181`, `5174`, `3857`) & `CP949`(`EUC-KR`) 인앱 자동 변환**: `proj4`와 `TextDecoder('euc-kr')`를 내장하여 별도의 QGIS 재투영이나 인코딩 변환 없이도 `EPSG:4326`(WGS 84) 및 정상 한글 속성으로 즉시 자동 복원합니다.

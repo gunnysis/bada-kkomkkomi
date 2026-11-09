@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
+  AlertTriangle,
   Anchor,
+  Check,
+  ChevronDown,
   ChevronLeft,
   Download,
   Layers,
@@ -9,8 +12,10 @@ import {
   Navigation,
   RefreshCw,
   ShieldCheck,
+  SlidersHorizontal,
   Wifi,
   WifiOff,
+  X,
 } from 'lucide-react';
 
 import { MapView } from './components/MapView';
@@ -32,10 +37,16 @@ import type {
   DockingFeatureCollection,
   MarkerColor,
 } from './types/docking';
-import { ALL_MARKER_COLORS, MARKER_COLOR_MAP } from './types/docking';
+import {
+  ALL_MARKER_COLORS,
+  MARKER_COLOR_MAP,
+  MARKER_PRIORITY_ORDER,
+  SECONDARY_MARKER_COLORS,
+} from './types/docking';
 import type { PorpoiseRecord } from './types/porpoise';
 import type { MarinePort, MarineWaypointNode, PortsDataset } from './types/port';
 import type { RouteWaypoint } from './types/route';
+import type { RoadviewTargetLocation } from './types/kakao';
 
 import { useAppConfig } from './hooks/useAppConfig';
 import { useAppRoute } from './hooks/useAppRoute';
@@ -134,7 +145,10 @@ export function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
 
-  const [selectedColor, setSelectedColor] = useState<MarkerColor | 'all'>('all');
+  // '위험주의(red)' 우선 인지(Hazard-First) 기본값: 초기 진입 시 고위험 9개소만 단독 표시하며, 나머지 등급은 필요한 사용자만 다중 선택
+  const [selectedColors, setSelectedColors] = useState<MarkerColor[]>(['red']);
+  const [isColorFilterOpen, setIsColorFilterOpen] = useState<boolean>(false);
+  const colorFilterPopoverRef = useRef<HTMLDivElement | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<DockingFeature | null>(null);
 
   // 3. 모달 및 지도 인터랙션 모드 상태
@@ -150,6 +164,8 @@ export function App() {
   const [selectedPorpoise, setSelectedPorpoise] = useState<PorpoiseRecord | null>(null);
 
   const [isWeatherSettingsOpen, setIsWeatherSettingsOpen] = useState(false);
+  const [externalRoadviewTarget, setExternalRoadviewTarget] =
+    useState<RoadviewTargetLocation | null>(null);
   const [portSelectorTarget, setPortSelectorTarget] = useState<{
     waypointId: string;
     label: string;
@@ -171,9 +187,11 @@ export function App() {
     // Home 복귀 시 일시적인 픽커 모드 및 모달은 종료하고 주요 작업 상태(항로/필터/카메라)는 보존 (proposal 2.2 계약)
     setIsPorpoiseAddMode(false);
     setIsReportPickMode(false);
+    setIsColorFilterOpen(false);
     setIsLayerModalOpen(false);
     setIsReportModalOpen(false);
     setIsWeatherSettingsOpen(false);
+    setExternalRoadviewTarget(null);
     setPortSelectorTarget(null);
     navigateToScreen('home', navSubTab);
   }, [navigateToScreen, navSubTab]);
@@ -305,12 +323,126 @@ export function App() {
     setReloadNonce((n) => n + 1);
   }, []);
 
-  // 접안 포인트 필터링
+  // 접안지 등급별 건수 사전 집계
+  const colorCounts = useMemo<Record<MarkerColor, number>>(() => {
+    const counts: Record<MarkerColor, number> = {
+      red: 0,
+      amber: 0,
+      green: 0,
+      blue: 0,
+      purple: 0,
+    };
+    if (!collection) return counts;
+    for (const f of collection.features) {
+      const c = f.properties.color;
+      if (c in counts) {
+        counts[c] += 1;
+      }
+    }
+    return counts;
+  }, [collection]);
+
+  const totalDockingCount = collection?.features.length ?? 0;
+
+  // 접안 포인트 다중 필터링 + 위험도 우선순위(red→amber→green→blue→purple) 자동 정렬
   const filteredFeatures = useMemo(() => {
     if (!collection) return [];
-    if (selectedColor === 'all') return collection.features;
-    return collection.features.filter((f) => f.properties.color === selectedColor);
-  }, [collection, selectedColor]);
+    const activeSet = new Set<MarkerColor>(selectedColors);
+    return collection.features
+      .filter((f) => activeSet.has(f.properties.color))
+      .slice()
+      .sort(
+        (a, b) =>
+          (MARKER_PRIORITY_ORDER[a.properties.color] ?? 99) -
+          (MARKER_PRIORITY_ORDER[b.properties.color] ?? 99),
+      );
+  }, [collection, selectedColors]);
+
+  const isRedOnly =
+    selectedColors.length === 1 && selectedColors[0] === 'red';
+  const isAllColorsSelected =
+    selectedColors.length === ALL_MARKER_COLORS.length;
+  const extraSelectedCount = useMemo(
+    () =>
+      selectedColors.filter((c) => c !== 'red').length,
+    [selectedColors],
+  );
+
+  // 등급 선택 팝오버 외부 클릭 및 Escape 닫기 가드
+  useEffect(() => {
+    if (!isColorFilterOpen) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (
+        colorFilterPopoverRef.current &&
+        !colorFilterPopoverRef.current.contains(e.target as Node)
+      ) {
+        setIsColorFilterOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsColorFilterOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isColorFilterOpen]);
+
+  const handleToggleColor = useCallback(
+    (colorKey: MarkerColor) => {
+      setSelectedColors((prev) => {
+        const exists = prev.includes(colorKey);
+        if (exists) {
+          const next = prev.filter((c) => c !== colorKey);
+          // 최소 1개 등급 활성 보장 가드 (빈 지도 방지)
+          if (next.length === 0) {
+            showToast('최소 1개 등급이 필요하여 위험주의(기본) 상태로 유지됩니다.');
+            return ['red'];
+          }
+          if (selectedFeature && !next.includes(selectedFeature.properties.color)) {
+            setSelectedFeature(null);
+          }
+          return next;
+        }
+        const next = [...prev, colorKey].sort(
+          (a, b) => MARKER_PRIORITY_ORDER[a] - MARKER_PRIORITY_ORDER[b],
+        );
+        return next;
+      });
+    },
+    [selectedFeature, showToast],
+  );
+
+  const handleResetToHazardOnly = useCallback(() => {
+    setSelectedColors(['red']);
+    if (selectedFeature && selectedFeature.properties.color !== 'red') {
+      setSelectedFeature(null);
+    }
+    showToast('🚨 위험주의(9개소) 집중 표시 모드로 전환되었습니다.');
+  }, [selectedFeature, showToast]);
+
+  const handleSelectAllColors = useCallback(() => {
+    setSelectedColors([...ALL_MARKER_COLORS]);
+    showToast(`전체 ${totalDockingCount || 55}개소(5개 등급)가 모두 표시됩니다.`);
+  }, [totalDockingCount, showToast]);
+
+  const handleHazardPrimaryChipClick = useCallback(() => {
+    if (!selectedColors.includes('red') || selectedColors.length > 1) {
+      setSelectedColors(['red']);
+      if (selectedFeature && selectedFeature.properties.color !== 'red') {
+        setSelectedFeature(null);
+      }
+      showToast('🚨 위험주의(9개소) 단독 표시 모드로 전환되었습니다.');
+      return;
+    }
+    // 이미 위험주의 단독 모드일 때 탭하면 통영·거제 전체 위험지점 시야로 리셋 안내
+    setFlyTarget({ lat: 34.8195, lng: 128.552, zoom: 11, nonce: Date.now() });
+    showToast('🚨 통영·거제 위험주의 9개소 집중 표시 중 (우측 [+등급 선택]에서 타 등급 추가 가능)');
+  }, [selectedColors, selectedFeature, showToast]);
 
   const isDockingLayerVisible = useMemo(
     () => layers.find((l) => l.id === 'docking')?.visible !== false,
@@ -665,12 +797,14 @@ export function App() {
                       바다꼼꼬미
                     </h1>
                     <span className="shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
-                      v1.1
+                      v1.3
                     </span>
                   </div>
                   <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-slate-300 sm:text-[11px]">
                     {activeMainTab === 'notebook'
-                      ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개 접안·선착장)`
+                      ? isRedOnly
+                        ? `3.1 꼬미의 바다수첩 (🚨 위험주의 ${filteredFeatures.length}개소 집중 표시)`
+                        : `3.1 꼬미의 바다수첩 (${filteredFeatures.length}/${totalDockingCount}개 접안·선착장 표시)`
                       : `3.2 바닷길 콕콕 (항포구·선착장 ${portsList.length}개소)`}
                   </p>
                 </div>
@@ -725,6 +859,7 @@ export function App() {
                   navigateToScreen('notebook', navSubTab);
                   setIsPorpoiseAddMode(false);
                   setIsReportPickMode(false);
+                  setIsColorFilterOpen(false);
                 }}
                 className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
                   activeMainTab === 'notebook'
@@ -743,6 +878,7 @@ export function App() {
                   navigateToScreen('navigation', navSubTab);
                   setIsPorpoiseAddMode(false);
                   setIsReportPickMode(false);
+                  setIsColorFilterOpen(false);
                 }}
                 className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
                   activeMainTab === 'navigation'
@@ -755,90 +891,303 @@ export function App() {
               </button>
             </div>
 
-        {/* 3.1 꼬미의 바다수첩 서브 컨트롤 바 */}
+        {/* 3.1 꼬미의 바다수첩 서브 컨트롤 바 (모바일 가로 잘림 제로 · '위험주의' 고정 + 선택형 다중 등급 확장) */}
         {activeMainTab === 'notebook' && (
-          <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            <button
-              type="button"
-              onClick={() => setIsLayerModalOpen(true)}
-              className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-2.5 py-1 text-[11px] font-black text-emerald-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>공간 레이어</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setReportTargetFeature(null);
-                setIsReportModalOpen(true);
-              }}
-              className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-2.5 py-1 text-[11px] font-black text-amber-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              <span>현장 제보</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const next = !isPorpoiseAddMode;
-                setIsPorpoiseAddMode(next);
-                setIsReportPickMode(false);
-                if (next) {
-                  showToast('지도에서 상괭이를 목격한 위치를 탭하세요 🐬');
-                }
-              }}
-              className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-[11px] font-black shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
-                isPorpoiseAddMode
-                  ? 'border-teal-300 bg-teal-400 text-slate-950 animate-pulse'
-                  : 'border-teal-500/80 bg-teal-950/90 text-teal-300'
-              }`}
-            >
-              <span>🐬</span>
-              <span>{isPorpoiseAddMode ? '위치 탭 대기중' : '상괭이 기록'}</span>
-            </button>
-
-            <div className="mx-0.5 h-5 w-px shrink-0 bg-slate-700" />
-
-            <button
-              type="button"
-              onClick={() => setSelectedColor('all')}
-              className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-[11px] font-black tabular-nums shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
-                selectedColor === 'all'
-                  ? 'border-white bg-sky-400 text-slate-950'
-                  : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
-              }`}
-            >
-              <span>전체 ({collection?.features.length ?? 0})</span>
-            </button>
-
-            {ALL_MARKER_COLORS.map((colorKey) => {
-              const meta = MARKER_COLOR_MAP[colorKey];
-              const count =
-                collection?.features.filter((f) => f.properties.color === colorKey).length ?? 0;
-              const isActive = selectedColor === colorKey;
-
-              return (
+          <div
+            ref={colorFilterPopoverRef}
+            className="pointer-events-auto relative mx-auto flex w-full max-w-3xl flex-col gap-1.5"
+          >
+            <div className="flex w-full items-center justify-between gap-1 sm:gap-1.5">
+              {/* 좌측 유틸리티 버튼 3종 */}
+              <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
                 <button
-                  key={colorKey}
                   type="button"
-                  onClick={() => setSelectedColor(isActive ? 'all' : colorKey)}
-                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2.5 py-1 text-[11px] font-extrabold tabular-nums shadow active:scale-95 sm:min-h-9 sm:text-xs ${
-                    isActive
-                      ? 'border-white bg-slate-100 text-slate-950'
-                      : 'border-slate-600/90 bg-[#0b192c]/95 text-slate-100'
+                  onClick={() => {
+                    setIsColorFilterOpen(false);
+                    setIsLayerModalOpen(true);
+                  }}
+                  className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-2 py-1 text-[11px] font-black text-emerald-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
+                >
+                  <Layers className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
+                  <span className="sm:hidden">레이어</span>
+                  <span className="hidden sm:inline">공간 레이어</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsColorFilterOpen(false);
+                    setReportTargetFeature(null);
+                    setIsReportModalOpen(true);
+                  }}
+                  className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-2 py-1 text-[11px] font-black text-amber-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
+                >
+                  <Mail className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
+                  <span className="sm:hidden">제보</span>
+                  <span className="hidden sm:inline">현장 제보</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsColorFilterOpen(false);
+                    const next = !isPorpoiseAddMode;
+                    setIsPorpoiseAddMode(next);
+                    setIsReportPickMode(false);
+                    if (next) {
+                      showToast('지도에서 상괭이를 목격한 위치를 탭하세요 🐬');
+                    }
+                  }}
+                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
+                    isPorpoiseAddMode
+                      ? 'border-teal-300 bg-teal-400 text-slate-950 animate-pulse'
+                      : 'border-teal-500/80 bg-teal-950/90 text-teal-300'
                   }`}
                 >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full border border-white/80"
-                    style={{ backgroundColor: meta.hex }}
-                  />
-                  <span>{meta.shortLabel}</span>
-                  <span className="opacity-75">({count})</span>
+                  <span>🐬</span>
+                  <span className="sm:hidden">
+                    {isPorpoiseAddMode ? '탭대기' : '상괭이'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {isPorpoiseAddMode ? '위치 탭 대기중' : '상괭이 기록'}
+                  </span>
                 </button>
-              );
-            })}
+              </div>
+
+              {/* 우측: '위험주의' 고정 경보 칩 + 필요한 사용자만 여는 '[+ 등급 선택 ▾]' 버튼 */}
+              <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleHazardPrimaryChipClick}
+                  title="위험·암초 주의 접안지 최우선 표시 (탭하면 위험주의 단독 모드로 즉시 전환)"
+                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow-lg transition active:scale-95 sm:min-h-9 sm:gap-1.5 sm:px-3 sm:text-xs ${
+                    selectedColors.includes('red')
+                      ? 'border-red-400 bg-red-950/95 text-red-100 shadow-[0_0_14px_rgba(239,68,68,0.45)]'
+                      : 'border-red-500/50 bg-[#0b192c]/95 text-red-300/85 hover:border-red-400'
+                  }`}
+                >
+                  <span className="relative flex h-2 w-2 shrink-0 sm:h-2.5 sm:w-2.5">
+                    {selectedColors.includes('red') && (
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                    )}
+                    <span
+                      className="relative inline-flex h-2 w-2 rounded-full border border-white/90 sm:h-2.5 sm:w-2.5"
+                      style={{ backgroundColor: MARKER_COLOR_MAP.red.hex }}
+                    />
+                  </span>
+                  <span>{MARKER_COLOR_MAP.red.shortLabel}</span>
+                  <span className="rounded bg-red-500/30 px-1 py-0.2 text-[10px] font-black text-red-200">
+                    {colorCounts.red}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  aria-expanded={isColorFilterOpen}
+                  aria-controls="docking-color-filter-popover"
+                  onClick={() => setIsColorFilterOpen((open) => !open)}
+                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow transition active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
+                    isColorFilterOpen
+                      ? 'border-sky-300 bg-sky-400 text-slate-950'
+                      : isAllColorsSelected
+                        ? 'border-sky-400/90 bg-sky-950/95 text-sky-200'
+                        : extraSelectedCount > 0
+                          ? 'border-amber-400/90 bg-amber-950/95 text-amber-200'
+                          : 'border-slate-500 bg-[#0b192c]/95 text-slate-200 hover:border-sky-400'
+                  }`}
+                >
+                  <SlidersHorizontal className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
+                  <span className="sm:hidden">
+                    {isAllColorsSelected
+                      ? `전체(${totalDockingCount})`
+                      : extraSelectedCount > 0
+                        ? `+${extraSelectedCount}등급`
+                        : '+등급'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {isAllColorsSelected
+                      ? `전체 (${totalDockingCount})`
+                      : extraSelectedCount > 0
+                        ? `+${extraSelectedCount}등급`
+                        : '+등급 선택'}
+                  </span>
+                  <ChevronDown
+                    className={`h-3 w-3 shrink-0 transition-transform sm:h-3.5 sm:w-3.5 ${
+                      isColorFilterOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 온디맨드 다중 등급 확장 팝오버 (필요한 사용자만 열어서 조석주의·안전접안·전용부두·비상거점 추가 선택) */}
+            {isColorFilterOpen && (
+              <section
+                id="docking-color-filter-popover"
+                aria-label="접안지 등급 표시 설정"
+                className="w-full rounded-2xl border-2 border-sky-400/70 bg-[#0b192c]/98 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" />
+                    <span className="text-xs font-black text-white sm:text-sm">
+                      접안지 등급 선택
+                    </span>
+                    <span className="rounded-md border border-sky-400/40 bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-300">
+                      복수 선택 가능 · {filteredFeatures.length}곳 표시 중
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleResetToHazardOnly}
+                      className={`rounded-lg border px-2 py-1 text-[11px] font-black transition active:scale-95 ${
+                        isRedOnly
+                          ? 'border-red-400 bg-red-500/25 text-red-200'
+                          : 'border-slate-600 bg-slate-800/90 text-slate-200 hover:border-red-400'
+                      }`}
+                    >
+                      🚨 위험주의만 (기본)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSelectAllColors}
+                      className={`rounded-lg border px-2 py-1 text-[11px] font-black transition active:scale-95 ${
+                        isAllColorsSelected
+                          ? 'border-sky-300 bg-sky-400 text-slate-950'
+                          : 'border-slate-600 bg-slate-800/90 text-slate-200 hover:border-sky-400'
+                      }`}
+                    >
+                      전체 {totalDockingCount}곳 보기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsColorFilterOpen(false)}
+                      aria-label="등급 선택 창 닫기"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:border-slate-400"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 1순위: 위험주의 (기본 노출 등급) */}
+                <div className="mt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleColor('red')}
+                    className={`flex w-full items-center justify-between gap-2 rounded-xl border-2 px-3 py-2 text-left transition active:scale-[0.99] ${
+                      selectedColors.includes('red')
+                        ? 'border-red-400 bg-red-950/75 text-white shadow-md'
+                        : 'border-slate-700 bg-slate-900/70 text-slate-300 opacity-75 hover:border-red-500/60'
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
+                          selectedColors.includes('red')
+                            ? 'border-red-300 bg-red-500 text-white'
+                            : 'border-slate-500 bg-slate-900 text-transparent'
+                        }`}
+                      >
+                        <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full border border-white"
+                            style={{ backgroundColor: MARKER_COLOR_MAP.red.hex }}
+                          />
+                          <span className="text-xs font-black text-red-200 sm:text-sm">
+                            {MARKER_COLOR_MAP.red.label} ({MARKER_COLOR_MAP.red.shortLabel})
+                          </span>
+                          <span className="rounded bg-red-500/30 px-1.5 py-0.5 text-[10px] font-black text-red-200">
+                            기본 우선 표시
+                          </span>
+                        </div>
+                        <p className="mt-0.5 truncate text-[11px] font-bold text-slate-300">
+                          {MARKER_COLOR_MAP.red.description}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 font-mono text-xs font-black text-red-200 sm:text-sm">
+                      {colorCounts.red}곳
+                    </span>
+                  </button>
+                </div>
+
+                {/* 2순위: 필요한 사용자만 선택하는 4개 부가 등급 (2x2 그리드) */}
+                <p className="mt-2.5 mb-1.5 text-[11px] font-extrabold text-slate-300">
+                  추가 표시할 접안지 등급 선택 (필요한 항목만 클릭하여 함께 표시)
+                </p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {SECONDARY_MARKER_COLORS.map((colorKey) => {
+                    const meta = MARKER_COLOR_MAP[colorKey];
+                    const count = colorCounts[colorKey];
+                    const isChecked = selectedColors.includes(colorKey);
+
+                    return (
+                      <button
+                        key={colorKey}
+                        type="button"
+                        onClick={() => handleToggleColor(colorKey)}
+                        className={`flex items-start justify-between gap-2 rounded-xl border-2 p-2.5 text-left transition active:scale-[0.98] ${
+                          isChecked
+                            ? `${meta.borderClass} bg-slate-800/95 text-white shadow-md`
+                            : 'border-slate-700/90 bg-slate-900/75 text-slate-300 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex min-w-0 items-start gap-2">
+                          <span
+                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                              isChecked
+                                ? 'border-white bg-sky-400 text-slate-950'
+                                : 'border-slate-500 bg-slate-950 text-transparent'
+                            }`}
+                          >
+                            <Check className="h-3 w-3 stroke-[3]" />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/80"
+                                style={{ backgroundColor: meta.hex }}
+                              />
+                              <span className="truncate text-xs font-black text-white">
+                                {meta.shortLabel}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 line-clamp-1 text-[10px] font-bold text-slate-300">
+                              {meta.description}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 font-mono text-[11px] font-black text-sky-300">
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-2.5 flex items-center justify-between border-t border-slate-800 pt-2">
+                  <span className="text-[11px] font-bold text-slate-300">
+                    선택된 등급:{' '}
+                    <strong className="font-black text-sky-300">
+                      {selectedColors.map((c) => MARKER_COLOR_MAP[c].shortLabel).join(' · ')}
+                    </strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsColorFilterOpen(false)}
+                    className="rounded-xl border border-sky-300 bg-sky-400 px-3 py-1 text-xs font-black text-slate-950 shadow active:scale-95"
+                  >
+                    확인 · 닫기
+                  </button>
+                </div>
+              </section>
+            )}
           </div>
         )}
 
@@ -945,6 +1294,8 @@ export function App() {
         onSimulateFieldGps={handleSimulateFieldGps}
         flyTarget={flyTarget}
         onResetBounds={handleResetBounds}
+        externalRoadviewTarget={externalRoadviewTarget}
+        onClearExternalRoadviewTarget={() => setExternalRoadviewTarget(null)}
       />
 
       {/* 3.1 꼬미의 바다수첩: 하단 빠른 접안지 선택 바 (하단 Leaflet 출처 배지 위 16px 여유 확보) */}
@@ -955,9 +1306,41 @@ export function App() {
           style={{ paddingBottom: 'var(--safe-bottom)' }}
         >
           <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {/* 맨 앞: 현재 필터 모드 안내 및 원터치 전환 카드 */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isRedOnly) {
+                  handleSelectAllColors();
+                } else {
+                  handleResetToHazardOnly();
+                }
+              }}
+              className={`flex min-h-11 shrink-0 flex-col justify-center rounded-2xl border-2 px-3 py-1 text-left shadow-xl backdrop-blur-md transition active:scale-95 sm:min-h-12 sm:px-3.5 sm:py-1.5 ${
+                isRedOnly
+                  ? 'border-red-400/90 bg-red-950/95 text-red-100'
+                  : 'border-sky-400/90 bg-sky-950/95 text-sky-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-300" />
+                <span className="text-[11px] font-black text-white">
+                  {isRedOnly
+                    ? `위험주의 ${colorCounts.red}곳 집중 표시`
+                    : `${selectedColors.length}개 등급 · ${filteredFeatures.length}곳 표시`}
+                </span>
+              </div>
+              <span className="mt-0.5 text-[11px] font-extrabold text-amber-300">
+                {isRedOnly
+                  ? `전체 ${totalDockingCount}곳 모두 보기 ➔`
+                  : '🚨 위험주의 9곳만 보기 ➔'}
+              </span>
+            </button>
+
             {filteredFeatures.map((feature) => {
               const meta = MARKER_COLOR_MAP[feature.properties.color] ?? MARKER_COLOR_MAP.blue;
               const isSelected = selectedFeature?.properties.id === feature.properties.id;
+              const isHazardRed = feature.properties.color === 'red';
               return (
                 <button
                   key={feature.properties.id}
@@ -970,7 +1353,9 @@ export function App() {
                   className={`flex min-h-11 shrink-0 flex-col justify-center rounded-2xl border-2 px-3 py-1 text-left shadow-xl backdrop-blur-md transition active:scale-95 sm:min-h-12 sm:px-3.5 sm:py-1.5 ${
                     isSelected
                       ? 'border-white bg-sky-950/95'
-                      : 'border-slate-600/90 bg-[#0b192c]/95'
+                      : isHazardRed
+                        ? 'border-red-500/80 bg-[#1a0a12]/95'
+                        : 'border-slate-600/90 bg-[#0b192c]/95'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
@@ -981,8 +1366,12 @@ export function App() {
                     <span className="font-mono text-[11px] font-black text-sky-300">
                       {feature.properties.id}
                     </span>
-                    <span className="text-[11px] font-bold text-slate-300">
-                      · {meta.shortLabel}
+                    <span
+                      className={`text-[11px] font-bold ${
+                        isHazardRed ? 'text-red-300' : 'text-slate-300'
+                      }`}
+                    >
+                      · {isHazardRed ? '⚠️ 위험주의' : meta.shortLabel}
                     </span>
                   </div>
                   <span className="mt-0.5 max-w-[175px] truncate text-xs font-extrabold text-white">
@@ -1038,6 +1427,14 @@ export function App() {
         userLocation={userLocation}
         onClose={() => setSelectedFeature(null)}
         onFlyToPoint={(lat, lng) => handleFlyToPoint(lat, lng, 15)}
+        onRequestRoadview={(feat) => {
+          setExternalRoadviewTarget({
+            lat: feat.geometry.coordinates[1],
+            lng: feat.geometry.coordinates[0],
+            title: feat.properties.name,
+            pointId: feat.properties.id,
+          });
+        }}
         onRequestReport={(feat) => {
           setReportTargetFeature(feat);
           setCustomReportCoords(null);

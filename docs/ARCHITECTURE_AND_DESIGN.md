@@ -1,6 +1,6 @@
-# 바다꼼꼬미 [v1.2] 아키텍처 · 최종 구현 설계 · 트러블슈팅 정본 (`ARCHITECTURE_AND_DESIGN.md`)
+# 바다꼼꼬미 [v1.3] 아키텍처 · 최종 구현 설계 · 트러블슈팅 정본 (`ARCHITECTURE_AND_DESIGN.md`)
 
-이 문서는 **'바다꼼꼬미' (Bada-Kkomkkomi) [v1.2]** 프로젝트의 전체 요구사항 명세 대조, 시스템 아키텍처, 통영·거제 135개 항포구·소규모 선착장 및 35개 해상 변침점(Waypoint) 데이터 사전, A* 실항로 우회 연산, **직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 시스템(`[저장]` = 즉시 운영 반영)**, **ECMWF(`ecmwf_ifs` + `ecmwf_wam`) 전용 해상기상 예보 판정 엔진**, PWA 캐시 무효화 설계 및 다중 에이전트 전수 감사(Audit) 기반 근본 원인(Root Cause) 해결 내역을 기록한 기술 문서입니다.
+이 문서는 **'바다꼼꼬미' (Bada-Kkomkkomi) [v1.3]** 프로젝트의 전체 요구사항 명세 대조, 시스템 아키텍처, 통영·거제 135개 항포구·소규모 선착장 및 35개 해상 변침점(Waypoint) 데이터 사전, A* 실항로 우회 연산, **직원용 QGIS 멀티포맷 공간정보 레이어 운영 관리 시스템(`[저장]` = 즉시 운영 반영)**, **ECMWF(`ecmwf_ifs` + `ecmwf_wam`) 전용 해상기상 예보 판정 엔진**, **카카오맵 `MapTypeId` 다중 배경지도(베이스 3종·중첩 오버레이 5종)·2.5D 입체지형도 및 360° 3D 현장 로드뷰 시스템**, PWA 캐시 무효화 설계 및 다중 에이전트 전수 감사(Audit) 기반 근본 원인(Root Cause) 해결 내역을 기록한 기술 문서입니다.
 
 ---
 
@@ -111,4 +111,6 @@ flowchart TD
 | **6** | **Leaflet 60fps & React 19 린트** | 렌더링마다 `L.divIcon()` 재생성 및 `useEffect` 내 동기 `setState` 경고 | 모듈 레벨 `iconCache` (`Map<string, L.DivIcon>`) 캐싱 및 지연 초기화 적용으로 `oxlint` 116개 규칙 `0 warnings, 0 errors` 달성 |
 | **7** | **DevOps / Git Credential 샌드박스 트러블슈팅** | 컨테이너 환경에서 `/opt/antigravity/bin/gh` 실행 시 `tar`의 `utime` 권한 오류로 `gh` 바이너리 압축 해제가 중단됨 | `tar --no-same-owner --no-same-permissions -m` 옵션으로 `~/.local/bin/gh`에 설치 및 `~/.local/bin/gh-cred-helper` 래퍼 구성으로 `git credential fill` 정상 동작 보장 |
 | **8** | **GIS 듀얼 엔진 (Kakao Maps v3 Primary + Legacy Leaflet Fallback) & 7대 트러블슈팅** | ① 카카오 개발자 콘솔 웹 도메인 미등록 시 `401 AccessDeniedError (domain mismatched)`로 지도가 백지화될 위험<br>② Kakao `CustomOverlay`가 기본 드래그를 미지원<br>③ Tailwind CSS v4 `img { max-width: 100% }` 리셋으로 카카오 타일 정렬 왜곡<br>④ 폴리곤 내부 클릭 시 지도 탭 이벤트 차단 | ① `kakaoMapLoader.ts`에서 도메인 미등록/오프라인 감지 시 1초 내 **Legacy Leaflet(OSM)으로 자동 폴백** 및 현재 접속 Origin 원클릭 복사 진단 모달 제공<br>② `KakaoMapCanvas.tsx`에 Pointer-Capture + `coordsFromContainerPoint()` 기반 60fps 커스텀 오버레이 드래그 엔진 및 `preventMap()` 버블링 차단 구현<br>③ `.bada-kakao-map img { max-width: none !important }` 격리<br>④ 폴리곤 클릭 이벤트 브릿징 및 우측 컨트롤 독 `위성뷰(HYBRID)` / `카카오↔OSM` 실시간 스위치 제공 |
+| **9** | **`MARKER_COLOR_MAP` '위험주의(Red)' 최우선 노출(Hazard-First) & 선택적 다중 등급 팝오버 리팩토링** | ① 상단 서브 바에 9개 버튼이 1열 배치되어 360px 모바일 화면에서 `[위험주의(9)]` 이하 5개 등급 버튼이 우측 밖으로 잘림<br>② 초기값 `selectedColor = 'all'`(55개 동시 표출)로 인해 고위험 9개소가 일반 마커 46개에 묻힘<br>③ 단일 선택 구조여서 `위험주의 + 안전접안` 등 조합 비교 불가 | ① 초기 상태를 `selectedColors = ['red']` (`위험주의` 9개소 단독 표시)로 전환하고 상단 바를 `[레이어] [제보] [🐬상괭이] │ [🚨위험주의 9] [+등급 선택 ▾]` 컴팩트 1열로 압축(360px 가로 스크롤·겹침 제로 실측 검증)<br>② `[+등급 선택 ▾]` 팝오버에서 나머지 4개 등급 다중 선택 및 `[전체 55곳 보기]` 원터치 전환 제공<br>③ `mapMarkerTemplates.ts`에서 `red` 마커에 `⚠️` 배지·이중 경보 링·최상위 비선택 `zIndex(380)`를 부여하고 하단 캐러셀을 위험도 순(`red→amber→green→blue→purple`)으로 자동 정렬 |
+
 

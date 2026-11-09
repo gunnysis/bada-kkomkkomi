@@ -15,6 +15,7 @@ import type { PorpoiseRecord } from '../../types/porpoise';
 import type { MarinePort } from '../../types/port';
 import type { RouteLeg, RouteWaypoint } from '../../types/route';
 import type { MapLayerConfig } from '../../types/config';
+import type { KakaoBaseMapType, KakaoOverlayMapType } from '../../types/kakao';
 import {
   buildDockingMarkerSpec,
   buildGpsPulseSpec,
@@ -23,10 +24,12 @@ import {
   buildRouteLegBadgeSpec,
   buildRouteWaypointSpec,
   buildWeatherPinSpec,
+  getDockingMarkerLeafletZOffset,
 } from './mapMarkerTemplates';
 
 export interface LegacyLeafletCanvasProps {
-  mapType: 'roadmap' | 'skyview';
+  baseMapType: KakaoBaseMapType;
+  overlayMapTypes: KakaoOverlayMapType[];
   activeMainTab: 'notebook' | 'navigation';
   navSubTab: 'route' | 'weather';
 
@@ -277,7 +280,8 @@ function MapEventsAndCameraController({
 }
 
 export function LegacyLeafletCanvas({
-  mapType,
+  baseMapType,
+  overlayMapTypes,
   activeMainTab,
   navSubTab,
   features,
@@ -369,11 +373,17 @@ export function LegacyLeafletCanvas({
       worldCopyJump={false}
       className="h-full w-full"
     >
-      {mapType === 'skyview' ? (
+      {baseMapType === 'skyview' || baseMapType === 'hybrid' ? (
         <TileLayer
           attribution="Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           maxZoom={18}
+        />
+      ) : overlayMapTypes.includes('terrain') ? (
+        <TileLayer
+          attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+          maxZoom={17}
         />
       ) : (
         <TileLayer
@@ -480,6 +490,10 @@ export function LegacyLeafletCanvas({
               key={feature.properties.id}
               position={[lat, lng]}
               icon={icon}
+              zIndexOffset={getDockingMarkerLeafletZOffset(
+                feature.properties.color,
+                isSelected,
+              )}
               eventHandlers={{
                 click: () => onSelectFeature(feature),
               }}

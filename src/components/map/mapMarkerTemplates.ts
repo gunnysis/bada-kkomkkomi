@@ -27,7 +27,34 @@ export function escapeHtml(raw: string): string {
 }
 
 /**
- * 1. 커스텀 접안 마커 (5색)
+ * 접안지 등급별 GIS 오버레이 zIndex 산출 헬퍼
+ * - 복수 등급 또는 전체(55개소) 동시 표출 시에도 '위험주의(red)' 마커가 일반 마커에 가려지지 않도록 최상위 비선택 우선순위를 부여합니다.
+ */
+export function getDockingMarkerZIndex(
+  color: MarkerColor,
+  isSelected: boolean,
+): number {
+  if (isSelected) return 550;
+  if (color === 'red') return 380;
+  if (color === 'amber') return 340;
+  return 300;
+}
+
+/**
+ * Leaflet 폴백 엔진용 zIndexOffset 산출 헬퍼
+ */
+export function getDockingMarkerLeafletZOffset(
+  color: MarkerColor,
+  isSelected: boolean,
+): number {
+  if (isSelected) return 550;
+  if (color === 'red') return 280;
+  if (color === 'amber') return 140;
+  return 0;
+}
+
+/**
+ * 1. 커스텀 접안 마커 (5색 · '위험주의(red)' 이중 경보 링 및 ⚠️ 고대비 배지 강화)
  */
 export function buildDockingMarkerSpec(
   color: MarkerColor,
@@ -36,10 +63,35 @@ export function buildDockingMarkerSpec(
 ): MarkerTemplateSpec {
   const safeCode = escapeHtml(pointCode);
   const theme = MARKER_COLOR_MAP[color] ?? MARKER_COLOR_MAP.blue;
-  const scaleStyle = isSelected ? 'transform: scale(1.16);' : '';
+  const isHazardRed = color === 'red';
+  const scaleStyle = isSelected
+    ? 'transform: scale(1.16);'
+    : isHazardRed
+      ? 'transform: scale(1.04);'
+      : '';
   const selectedHalo = isSelected
     ? `<circle cx="26" cy="22" r="21" fill="none" stroke="${theme.ringHex}" stroke-width="3.5" stroke-dasharray="5 3" />`
-    : '';
+    : isHazardRed
+      ? `<circle cx="26" cy="21" r="20.5" fill="none" stroke="#fca5a5" stroke-opacity="0.85" stroke-width="2.5" stroke-dasharray="4 2" />`
+      : '';
+
+  const badgeBg = isHazardRed ? '#450a0a' : '#020617';
+  const badgeBorder = isSelected
+    ? '#ffffff'
+    : isHazardRed
+      ? '#fca5a5'
+      : theme.hex;
+  const badgePrefix = isHazardRed ? '⚠️ ' : '';
+  const innerCoreSvg = isHazardRed
+    ? `
+      <circle cx="26" cy="21" r="8.2" fill="#450a0a" stroke="#ffffff" stroke-width="2.2" />
+      <path d="M26 16.2V21.5" stroke="#fef2f2" stroke-width="2.6" stroke-linecap="round" />
+      <circle cx="26" cy="24.5" r="1.4" fill="#fef2f2" />
+    `
+    : `
+      <circle cx="26" cy="21" r="7.5" fill="#0b192c" stroke="#ffffff" stroke-width="2" />
+      <circle cx="26" cy="21" r="3.2" fill="#ffffff" />
+    `;
 
   const html = `
     <div class="bada-marker-hit-target" style="${scaleStyle}">
@@ -48,20 +100,19 @@ export function buildDockingMarkerSpec(
           margin-bottom: 2px;
           padding: 1px 6px;
           border-radius: 6px;
-          background: #020617;
-          border: 1.5px solid ${isSelected ? '#ffffff' : theme.hex};
+          background: ${badgeBg};
+          border: 1.5px solid ${badgeBorder};
           color: #f8fafc;
           font-size: 10px;
           font-weight: 900;
           line-height: 1.2;
           white-space: nowrap;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.65);
-        ">${safeCode}</div>
-        <svg width="44" height="44" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.65));">
+          box-shadow: 0 2px 6px rgba(0,0,0,0.75);
+        ">${badgePrefix}${safeCode}</div>
+        <svg width="44" height="44" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.72));">
           ${selectedHalo}
           <path d="M26 4C16.611 4 9 11.611 9 21C9 33.25 26 48 26 48C26 48 43 33.25 43 21C43 11.611 35.389 4 26 4Z" fill="${theme.hex}" stroke="#ffffff" stroke-width="3" />
-          <circle cx="26" cy="21" r="7.5" fill="#0b192c" stroke="#ffffff" stroke-width="2" />
-          <circle cx="26" cy="21" r="3.2" fill="#ffffff" />
+          ${innerCoreSvg}
         </svg>
       </div>
     </div>

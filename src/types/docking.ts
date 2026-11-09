@@ -103,3 +103,20 @@ export const MARKER_COLOR_MAP: Record<MarkerColor, MarkerColorTheme> = {
 };
 
 export const ALL_MARKER_COLORS: MarkerColor[] = ['red', 'amber', 'green', 'blue', 'purple'];
+
+/**
+ * 초기 기본 표시 등급 ('red': 위험·암초 주의) 제외한 부가 선택 등급 목록
+ */
+export const SECONDARY_MARKER_COLORS: MarkerColor[] = ['amber', 'green', 'blue', 'purple'];
+
+/**
+ * 해상 안전 의사결정 기준 마커/카드 정렬 우선순위 (낮을수록 최우선 노출)
+ */
+export const MARKER_PRIORITY_ORDER: Record<MarkerColor, number> = {
+  red: 0,
+  amber: 1,
+  green: 2,
+  blue: 3,
+  purple: 4,
+};
+

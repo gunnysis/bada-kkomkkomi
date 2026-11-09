@@ -31,7 +31,7 @@ export default defineConfig({
         name: '바다꼼꼬미 — 해양 현장업무 접안·항해 지원 PWA',
         short_name: '바다꼼꼬미',
         description:
-          '통영·거제 해역 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 135개 항포구·선착장) 오프라인 PWA [v1.2]',
+          '통영·거제 해역 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 135개 항포구·선착장) 오프라인 PWA [v1.3]',
         lang: 'ko',
         start_url: base,
         scope: base,

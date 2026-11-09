@@ -32,6 +32,27 @@ export interface KakaoAnimateOptions {
   animate?: boolean | { duration?: number };
 }
 
+export type KakaoBaseMapType = 'roadmap' | 'skyview' | 'hybrid';
+
+export type KakaoOverlayMapType =
+  | 'terrain'
+  | 'use_district'
+  | 'roadview'
+  | 'traffic'
+  | 'bicycle';
+
+export interface KakaoMapTypePreferences {
+  baseMapType: KakaoBaseMapType;
+  overlayMapTypes: KakaoOverlayMapType[];
+}
+
+export interface RoadviewTargetLocation {
+  lat: number;
+  lng: number;
+  title: string;
+  pointId?: string;
+}
+
 export interface KakaoMap {
   setCenter(latlng: KakaoLatLng): void;
   getCenter(): KakaoLatLng;
@@ -40,6 +61,8 @@ export interface KakaoMap {
   getLevel(): number;
   setMapTypeId(mapTypeId: number): void;
   getMapTypeId(): number;
+  addOverlayMapTypeId(mapTypeId: number): void;
+  removeOverlayMapTypeId(mapTypeId: number): void;
   setDraggable(draggable: boolean): void;
   getDraggable(): boolean;
   setZoomable(zoomable: boolean): void;
@@ -135,6 +158,40 @@ export interface KakaoMouseEvent {
   point: KakaoPoint;
 }
 
+export interface KakaoViewpoint {
+  pan: number;
+  tilt: number;
+  zoom: number;
+  panoId?: number;
+}
+
+export interface KakaoRoadviewOptions {
+  panoId?: number;
+  panoX?: number;
+  panoY?: number;
+  pan?: number;
+  tilt?: number;
+  zoom?: number;
+  disableZoomControl?: boolean;
+}
+
+export interface KakaoRoadview {
+  setPanoId(panoId: number, position: KakaoLatLng): void;
+  getPanoId(): number;
+  getPosition(): KakaoLatLng;
+  setViewpoint(viewpoint: KakaoViewpoint): void;
+  getViewpoint(): KakaoViewpoint;
+  relayout(): void;
+}
+
+export interface KakaoRoadviewClient {
+  getNearestPanoId(
+    position: KakaoLatLng,
+    radius: number,
+    callback: (panoId: number | null) => void,
+  ): void;
+}
+
 export interface KakaoMapsNamespace {
   load(callback: () => void): void;
   Map: new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap;
@@ -144,10 +201,20 @@ export interface KakaoMapsNamespace {
   Polygon: new (options: KakaoPolygonOptions) => KakaoPolygon;
   Polyline: new (options: KakaoPolylineOptions) => KakaoPolyline;
   Circle: new (options: KakaoCircleOptions) => KakaoCircle;
+  Roadview: new (container: HTMLElement, options?: KakaoRoadviewOptions) => KakaoRoadview;
+  RoadviewClient: new () => KakaoRoadviewClient;
   MapTypeId: {
     ROADMAP: number;
+    NORMAL: number;
     SKYVIEW: number;
     HYBRID: number;
+    OVERLAY: number;
+    ROADVIEW: number;
+    TRAFFIC: number;
+    TERRAIN: number;
+    BICYCLE: number;
+    BICYCLE_HYBRID: number;
+    USE_DISTRICT: number;
   };
   event: {
     addListener<T = KakaoMouseEvent>(

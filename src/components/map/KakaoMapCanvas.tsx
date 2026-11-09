@@ -5,12 +5,14 @@ import type { MarinePort } from '../../types/port';
 import type { RouteLeg, RouteWaypoint } from '../../types/route';
 import type { MapLayerConfig } from '../../types/config';
 import type {
+  KakaoBaseMapType,
   KakaoCircle,
   KakaoCustomOverlay,
   KakaoLatLng,
   KakaoMap,
   KakaoMapsNamespace,
   KakaoMouseEvent,
+  KakaoOverlayMapType,
   KakaoPolygon,
   KakaoPolyline,
 } from '../../types/kakao';
@@ -28,12 +30,14 @@ import {
   buildSpatialLayerLabelSpec,
   buildSpatialLayerPointSpec,
   buildWeatherPinSpec,
+  getDockingMarkerZIndex,
   type MarkerTemplateSpec,
 } from './mapMarkerTemplates';
 
 export interface KakaoMapCanvasProps {
   kakaoMaps: KakaoMapsNamespace;
-  mapType: 'roadmap' | 'skyview';
+  baseMapType: KakaoBaseMapType;
+  overlayMapTypes: KakaoOverlayMapType[];
   activeMainTab: 'notebook' | 'navigation';
   navSubTab: 'route' | 'weather';
 
@@ -50,6 +54,7 @@ export interface KakaoMapCanvasProps {
   onSelectPorpoise: (record: PorpoiseRecord) => void;
   onMapClickForPorpoise: (lat: number, lng: number) => void;
   onMapClickForReport: (lat: number, lng: number) => void;
+  onMapClickForRoadview: (lat: number, lng: number) => void;
 
   // 3.2 바닷길 콕콕 (경로 계산 & 소규모 선착장/항포구 마커)
   routeWaypoints: RouteWaypoint[];
@@ -310,7 +315,8 @@ function parseGeoJsonToKakaoPrimitives(
 
 export function KakaoMapCanvas({
   kakaoMaps,
-  mapType,
+  baseMapType,
+  overlayMapTypes,
   activeMainTab,
   navSubTab,
   features,
@@ -325,6 +331,7 @@ export function KakaoMapCanvas({
   onSelectPorpoise,
   onMapClickForPorpoise,
   onMapClickForReport,
+  onMapClickForRoadview,
   routeWaypoints,
   routeLegs,
   portsList,
@@ -342,6 +349,7 @@ export function KakaoMapCanvas({
 }: KakaoMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMap | null>(null);
+  const appliedOverlayTypeIdsRef = useRef<number[]>([]);
   const initialViewportRef = useRef(viewport);
   const onViewportChangeRef = useRef(onViewportChange);
   useEffect(() => {
@@ -371,8 +379,10 @@ export function KakaoMapCanvas({
     navSubTab,
     isPorpoiseAddMode,
     isReportPickMode,
+    overlayMapTypes,
     onMapClickForPorpoise,
     onMapClickForReport,
+    onMapClickForRoadview,
     onMapClickForRoute,
     onUpdateWeatherCoords,
   });
@@ -383,8 +393,10 @@ export function KakaoMapCanvas({
       navSubTab,
       isPorpoiseAddMode,
       isReportPickMode,
+      overlayMapTypes,
       onMapClickForPorpoise,
       onMapClickForReport,
+      onMapClickForRoadview,
       onMapClickForRoute,
       onUpdateWeatherCoords,
     };
@@ -393,8 +405,10 @@ export function KakaoMapCanvas({
     navSubTab,
     isPorpoiseAddMode,
     isReportPickMode,
+    overlayMapTypes,
     onMapClickForPorpoise,
     onMapClickForReport,
+    onMapClickForRoadview,
     onMapClickForRoute,
     onUpdateWeatherCoords,
   ]);
@@ -407,6 +421,11 @@ export function KakaoMapCanvas({
     }
     if (ctx.isPorpoiseAddMode) {
       ctx.onMapClickForPorpoise(lat, lng);
+      return;
+    }
+    // 트러블슈팅 RC-03: 3D 로드뷰 구간(ROADVIEW) 오버레이 활성화 시 국립공원 폴리곤 내부 해안도로 클릭도 최우선으로 3D 로드뷰로 브릿징
+    if (ctx.overlayMapTypes.includes('roadview')) {
+      ctx.onMapClickForRoadview(lat, lng);
       return;
     }
     if (ctx.activeMainTab === 'navigation') {
@@ -461,20 +480,67 @@ export function KakaoMapCanvas({
       kakaoMaps.event.removeListener(map, 'click', onMapClick);
       kakaoMaps.event.removeListener(map, 'zoom_changed', syncViewportToParent);
       kakaoMaps.event.removeListener(map, 'dragend', syncViewportToParent);
+      appliedOverlayTypeIdsRef.current = [];
       mapRef.current = null;
     };
   }, [kakaoMaps, handleCoordinateClick]);
 
-  // 2. 일반지도(ROADMAP) vs 스카이뷰 위성지도(HYBRID) 전환
+  // 2. 베이스 맵 3종(ROADMAP / SKYVIEW / HYBRID) 및 중첩 오버레이 5종(TERRAIN / USE_DISTRICT / ROADVIEW / TRAFFIC / BICYCLE) 원자적 동기화
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const targetTypeId =
-      mapType === 'skyview'
-        ? kakaoMaps.MapTypeId.HYBRID
-        : kakaoMaps.MapTypeId.ROADMAP;
-    map.setMapTypeId(targetTypeId);
-  }, [kakaoMaps, mapType]);
+
+    const targetBaseTypeId =
+      baseMapType === 'skyview'
+        ? kakaoMaps.MapTypeId.SKYVIEW
+        : baseMapType === 'hybrid'
+          ? kakaoMaps.MapTypeId.HYBRID
+          : kakaoMaps.MapTypeId.ROADMAP;
+    map.setMapTypeId(targetBaseTypeId);
+
+    const isDarkSatelliteBase = baseMapType === 'skyview' || baseMapType === 'hybrid';
+    const desiredOverlayIds: number[] = [];
+
+    for (const key of overlayMapTypes) {
+      if (key === 'terrain' && kakaoMaps.MapTypeId.TERRAIN) {
+        desiredOverlayIds.push(kakaoMaps.MapTypeId.TERRAIN);
+      } else if (key === 'use_district' && kakaoMaps.MapTypeId.USE_DISTRICT) {
+        desiredOverlayIds.push(kakaoMaps.MapTypeId.USE_DISTRICT);
+      } else if (key === 'roadview' && kakaoMaps.MapTypeId.ROADVIEW) {
+        desiredOverlayIds.push(kakaoMaps.MapTypeId.ROADVIEW);
+      } else if (key === 'traffic' && kakaoMaps.MapTypeId.TRAFFIC) {
+        desiredOverlayIds.push(kakaoMaps.MapTypeId.TRAFFIC);
+      } else if (key === 'bicycle') {
+        const bikeId = isDarkSatelliteBase
+          ? (kakaoMaps.MapTypeId.BICYCLE_HYBRID ?? kakaoMaps.MapTypeId.BICYCLE)
+          : kakaoMaps.MapTypeId.BICYCLE;
+        if (bikeId) desiredOverlayIds.push(bikeId);
+      }
+    }
+
+    const prevIds = appliedOverlayTypeIdsRef.current;
+    for (const prevId of prevIds) {
+      if (!desiredOverlayIds.includes(prevId)) {
+        try {
+          map.removeOverlayMapTypeId(prevId);
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    for (const nextId of desiredOverlayIds) {
+      if (!prevIds.includes(nextId)) {
+        try {
+          map.addOverlayMapTypeId(nextId);
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    appliedOverlayTypeIdsRef.current = desiredOverlayIds;
+  }, [kakaoMaps, baseMapType, overlayMapTypes]);
 
   // 3. 카메라 이동 (flyTarget) 반영
   useEffect(() => {
@@ -665,7 +731,7 @@ export function KakaoMapCanvas({
         content: el,
         xAnchor: spec.xAnchorRatio,
         yAnchor: spec.yAnchorRatio,
-        zIndex: isSelected ? 550 : 300,
+        zIndex: getDockingMarkerZIndex(feature.properties.color, isSelected),
         clickable: true,
       });
       created.push(overlay);

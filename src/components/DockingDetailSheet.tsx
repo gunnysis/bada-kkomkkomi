@@ -6,6 +6,7 @@ import {
   Check,
   Compass,
   Copy,
+  Eye,
   Navigation,
   Waves,
   X,
@@ -21,6 +22,7 @@ interface DockingDetailSheetProps {
   onClose: () => void;
   onFlyToPoint: (lat: number, lng: number) => void;
   onRequestReport: (feature: DockingFeature) => void;
+  onRequestRoadview?: (feature: DockingFeature) => void;
 }
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -42,6 +44,7 @@ export function DockingDetailSheet({
   onClose,
   onFlyToPoint,
   onRequestReport,
+  onRequestRoadview,
 }: DockingDetailSheetProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [copied, setCopied] = useState(false);
@@ -223,8 +226,8 @@ export function DockingDetailSheet({
             </div>
           </div>
 
-          {/* 액션 버튼 3종: 좌표복사 / 포인트정밀확대 / 현장제보 */}
-          <div className="mt-4 grid grid-cols-3 gap-2">
+          {/* 액션 버튼 4종: 좌표복사 / 포인트정밀확대 / 3D 현장뷰 / 현장제보 */}
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
               type="button"
               onClick={handleCopyCoords}
@@ -255,7 +258,20 @@ export function DockingDetailSheet({
               <span>정밀 확대</span>
             </button>
 
-            {/* [신규] 현장 제보 버튼 */}
+            {onRequestRoadview && (
+              <button
+                type="button"
+                onClick={() => {
+                  onRequestRoadview(feature);
+                  onClose();
+                }}
+                className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-emerald-400/80 bg-emerald-500/20 px-2 py-3 text-xs font-black text-emerald-300 shadow active:scale-95"
+              >
+                <Eye className="h-4 w-4" />
+                <span>3D 현장뷰</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
