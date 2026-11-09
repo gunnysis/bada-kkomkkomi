@@ -1257,10 +1257,14 @@ export function App() {
                   </p>
                 </div>
                 <img
-                  src={`${import.meta.env.BASE_URL}images/brand/kkomi_header_binoculars.png`}
+                  src={`${import.meta.env.BASE_URL}images/brand/${
+                    activeMainTab === 'notebook'
+                      ? 'kkomi_header_clipboard.png'
+                      : 'kkomi_header_binoculars.png'
+                  }`}
                   alt=""
                   aria-hidden="true"
-                  className="hidden h-9 w-auto shrink-0 object-contain drop-shadow sm:block"
+                  className="hidden h-8 w-auto shrink-0 object-contain drop-shadow min-[380px]:block sm:h-9"
                 />
               </div>
 
@@ -1347,7 +1351,7 @@ export function App() {
                     setIsColorFilterOpen(false);
                     setIsLayerModalOpen(true);
                   }}
-                  className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-2 py-1 text-[11px] font-black text-emerald-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
+                  className="flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-emerald-500/80 bg-emerald-950/90 px-2 text-[11px] font-black text-emerald-300 shadow active:scale-95 sm:h-9 sm:px-3 sm:text-xs"
                 >
                   <Layers className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
                   <span className="sm:hidden">레이어</span>
@@ -1361,7 +1365,7 @@ export function App() {
                     setReportTargetFeature(null);
                     setIsReportModalOpen(true);
                   }}
-                  className="flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-2 py-1 text-[11px] font-black text-amber-300 shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs"
+                  className="flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 border-amber-500/80 bg-amber-950/90 px-2 text-[11px] font-black text-amber-300 shadow active:scale-95 sm:h-9 sm:px-3 sm:text-xs"
                 >
                   <Mail className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
                   <span className="sm:hidden">제보</span>
@@ -1379,7 +1383,7 @@ export function App() {
                       showToast('지도에서 상괭이를 목격한 위치를 탭하세요.');
                     }
                   }}
-                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black shadow active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
+                  className={`flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black shadow active:scale-95 sm:h-9 sm:px-3 sm:text-xs ${
                     isPorpoiseAddMode
                       ? 'border-teal-300 bg-teal-400 text-slate-950 animate-pulse'
                       : 'border-teal-500/80 bg-teal-950/90 text-teal-300'
@@ -1406,7 +1410,7 @@ export function App() {
                   type="button"
                   onClick={handleHazardPrimaryChipClick}
                   title="위험·암초 주의 접안지 최우선 표시 (탭하면 위험주의 단독 모드로 즉시 전환)"
-                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow-lg transition active:scale-95 sm:min-h-9 sm:gap-1.5 sm:px-3 sm:text-xs ${
+                  className={`flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black tabular-nums shadow-lg transition active:scale-95 sm:h-9 sm:gap-1.5 sm:px-3 sm:text-xs ${
                     selectedColors.includes('red')
                       ? 'border-red-400 bg-red-950/95 text-red-100 shadow-[0_0_14px_rgba(239,68,68,0.45)]'
                       : 'border-red-500/50 bg-[#061c24]/95 text-red-300/85 hover:border-red-400'
@@ -1432,7 +1436,7 @@ export function App() {
                   aria-expanded={isColorFilterOpen}
                   aria-controls="docking-color-filter-popover"
                   onClick={() => setIsColorFilterOpen((open) => !open)}
-                  className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow transition active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
+                  className={`flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black tabular-nums shadow transition active:scale-95 sm:h-9 sm:px-3 sm:text-xs ${
                     isColorFilterOpen
                       ? 'border-emerald-300 bg-emerald-400 text-slate-950'
                       : isAllColorsSelected || selectedRegion !== 'all' || dockingSearchQuery
@@ -1705,7 +1709,7 @@ export function App() {
             <button
               type="button"
               onClick={() => replaceNavPanel('route')}
-              className={`flex min-h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums transition active:scale-95 sm:min-h-9 sm:text-xs ${
+              className={`flex h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black tabular-nums transition active:scale-95 sm:h-9 sm:text-xs ${
                 navSubTab === 'route'
                   ? 'border-sky-400 bg-[#072a42]/95 text-sky-200 shadow-lg'
                   : 'border-emerald-500/35 bg-[#061c24]/95 text-slate-300 hover:border-sky-400/60'
@@ -1720,7 +1724,7 @@ export function App() {
             <button
               type="button"
               onClick={() => replaceNavPanel('weather')}
-              className={`flex min-h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums transition active:scale-95 sm:min-h-9 sm:text-xs ${
+              className={`flex h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black tabular-nums transition active:scale-95 sm:h-9 sm:text-xs ${
                 navSubTab === 'weather'
                   ? 'border-teal-400 bg-[#063229]/95 text-teal-200 shadow-lg'
                   : 'border-emerald-500/35 bg-[#061c24]/95 text-slate-300 hover:border-teal-400/60'

@@ -83,7 +83,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,geojson,webmanifest}'],
-        globIgnores: ['**/dev/**'],
+        globIgnores: ['**/dev/**', '**/backup/**', '**/knps_logo_alpha.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

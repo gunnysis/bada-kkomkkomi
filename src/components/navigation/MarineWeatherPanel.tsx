@@ -74,57 +74,95 @@ export function MarineWeatherPanel({
 
   return (
     <section
-      className="knps-hud-surface pointer-events-auto relative flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-emerald-500/45 bg-[#061c24]/95 p-2.5 text-white shadow-2xl backdrop-blur-md sm:p-3.5"
+      className="knps-hud-surface bada-hud-panel pointer-events-auto relative flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-emerald-500/45 bg-[#061c24]/95 p-2.5 text-white shadow-2xl backdrop-blur-md sm:p-3.5"
       aria-label="해상기상 상태판정 패널"
     >
       <div
         aria-hidden="true"
         className="knps-tricolor-bar pointer-events-none absolute inset-x-0 top-0 h-0.5 opacity-95"
       />
-      {/* 상단 기상 판정 결과 헤더 */}
-      <div className="flex shrink-0 items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-black tracking-wider text-sky-400 uppercase">
-              ECMWF 해상기상 3단계 판정
+      {/* 상단 2단 계층형 기상 판정 헤더 (Row 1: 타이틀·해역배지·유틸 툴바 / Row 2: 전폭 100% 기상 신호등·수치·기준치 브리핑 박스) */}
+      <div className="shrink-0">
+        {/* Row 1: 좌측 타이틀·해역 배지 + 우측 유틸리티 컨트롤 툴바 */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="shrink-0 text-[11px] font-black tracking-wider whitespace-nowrap text-sky-400 uppercase">
+              ECMWF 해상기상 판정
             </span>
             {nearestAreaLabel && (
-              <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[10px] font-extrabold text-sky-300">
+              <span className="min-w-0 truncate rounded-md border border-sky-400/40 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-200">
                 {nearestAreaLabel}
               </span>
             )}
-            <span className="font-mono text-[10px] font-bold text-slate-400">
-              ({weather.lat.toFixed(3)}°N, {weather.lng.toFixed(3)}°E)
-            </span>
           </div>
 
-          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-            <span
-              className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-[10px] font-black text-white shadow"
-              style={{ backgroundColor: gradeMeta.color }}
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={onRefresh}
+              aria-label="기상 정보 새로고침"
+              title="기상 예보 다시 불러오기"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-300 active:scale-95 sm:h-8.5 sm:w-8.5"
             >
-              {current?.grade === 'unknown' || !current ? '?' : ''}
-            </span>
-            <span className="text-xl leading-none font-black tracking-tight text-white sm:text-2xl">
-              {weather.isLoading ? '예보 조회 중...' : gradeMeta.label}
-            </span>
-            {current && (
+              <RefreshCw className={`h-3.5 w-3.5 ${weather.isLoading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              aria-label="기준값 설정"
+              title="풍속·파고 판정 기준치 설정"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-sky-400 active:scale-95 sm:h-8.5 sm:w-8.5"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed((v) => !v)}
+              aria-label={isCollapsed ? '기상 패널 펼치기' : '기상 패널 접기'}
+              className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-sky-400/60 bg-sky-500/20 px-2.5 text-xs font-black whitespace-nowrap text-sky-300 active:scale-95 sm:h-8.5"
+            >
+              <span>{isCollapsed ? '펼치기' : '접기'}</span>
+              {isCollapsed ? (
+                <ChevronUp className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: 전폭(100%) 기상 판정 히어로 브리핑 박스 */}
+        <div className="mt-1.5 rounded-2xl border border-emerald-500/30 bg-slate-950/70 px-2.5 py-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+            <div className="flex min-w-0 items-center gap-1.5">
               <span
-                className={`rounded-md px-1.5 py-0.5 text-[11px] font-extrabold ${gradeMeta.pillClass}`}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] font-black text-white shadow"
+                style={{ backgroundColor: gradeMeta.color }}
               >
-                {current.displayTime}
+                {current?.grade === 'unknown' || !current ? '?' : ''}
               </span>
-            )}
+              <span className="shrink-0 text-xl leading-none font-black tracking-tight whitespace-nowrap text-white sm:text-2xl">
+                {weather.isLoading ? '예보 조회 중...' : gradeMeta.label}
+              </span>
+              {current && (
+                <span
+                  className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-extrabold whitespace-nowrap tabular-nums ${gradeMeta.pillClass}`}
+                >
+                  {current.displayTime}
+                </span>
+              )}
+            </div>
+
             {current && (
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-200">
-                <span className="inline-flex items-center gap-0.5 rounded bg-slate-800/90 px-1.5 py-0.5 font-mono text-sky-300">
-                  <Wind className="h-3 w-3" />
+              <div className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-slate-200">
+                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-sky-400/40 bg-slate-800/90 px-1.5 py-0.5 font-mono whitespace-nowrap tabular-nums text-sky-300">
+                  <Wind className="h-3 w-3 shrink-0" />
                   {current.windSpeedKnots !== null
                     ? `${current.windSpeedKnots.toFixed(1)}kn`
                     : '?'}
                 </span>
-                <span className="inline-flex items-center gap-0.5 rounded bg-slate-800/90 px-1.5 py-0.5 font-mono text-teal-300">
-                  <Waves className="h-3 w-3" />
+                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-teal-400/40 bg-slate-800/90 px-1.5 py-0.5 font-mono whitespace-nowrap tabular-nums text-teal-300">
+                  <Waves className="h-3 w-3 shrink-0" />
                   {current.waveHeightMeters !== null
                     ? `${current.waveHeightMeters.toFixed(2)}m`
                     : '?'}
@@ -132,48 +170,17 @@ export function MarineWeatherPanel({
               </div>
             )}
           </div>
-          <p className="mt-0.5 truncate text-[11px] font-bold text-slate-300">
-            {gradeMeta.desc}
-            {thresholds && (
-              <span className="ml-1 font-mono text-[10px] text-slate-400">
-                (양호 &lt;{thresholds.windKnot.good}kn·&lt;{thresholds.waveMeter.good}m / 주의 &lt;{thresholds.windKnot.moderate}kn·&lt;{thresholds.waveMeter.moderate}m)
-              </span>
-            )}
-          </p>
-        </div>
 
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={onRefresh}
-            aria-label="기상 정보 새로고침"
-            title="기상 예보 다시 불러오기"
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-300 active:scale-95 sm:h-9 sm:w-9"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${weather.isLoading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            aria-label="기준값 설정"
-            title="풍속·파고 판정 기준치 설정"
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-sky-400 active:scale-95 sm:h-9 sm:w-9"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsCollapsed((v) => !v)}
-            aria-label={isCollapsed ? '기상 패널 펼치기' : '기상 패널 접기'}
-            className="flex h-8 items-center gap-0.5 rounded-xl border border-sky-400/60 bg-sky-500/20 px-2 text-xs font-black text-sky-300 active:scale-95 sm:h-9 sm:px-2.5"
-          >
-            <span>{isCollapsed ? '펼치기' : '접기'}</span>
-            {isCollapsed ? (
-              <ChevronUp className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
-            )}
-          </button>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px]">
+            <span className="font-bold text-slate-300">
+              {gradeMeta.desc}
+            </span>
+            <span className="font-mono whitespace-nowrap tabular-nums text-slate-400">
+              {thresholds
+                ? `양호 <${thresholds.windKnot.good}kn·<${thresholds.waveMeter.good}m / 주의 ≤${thresholds.windKnot.moderate}kn·≤${thresholds.waveMeter.moderate}m`
+                : `${weather.lat.toFixed(3)}°N, ${weather.lng.toFixed(3)}°E`}
+            </span>
+          </div>
         </div>
       </div>
 

@@ -583,7 +583,7 @@ export function MapView({
 
       {/* 3. 우측 상단(헤더 바로 아래) 도킹형 한 손 컨트롤러 */}
       <div
-        className="fixed top-[8.75rem] right-2.5 z-[850] flex flex-col gap-1.5 sm:top-[10.5rem] sm:right-3 sm:gap-2"
+        className="fixed top-[6.25rem] right-2.5 z-[850] flex flex-col gap-1.5 sm:top-[7.25rem] sm:right-3 sm:gap-2"
         aria-label="지도 확대·축소, 배경지도 및 GPS 위치 컨트롤"
       >
         <button
@@ -694,7 +694,7 @@ export function MapView({
         <div
           role="dialog"
           aria-label="배경지도 및 2.5D 지형·3D 로드뷰 레이어 설정"
-          className="knps-modal-surface fixed top-[8.75rem] right-13 z-[920] w-[17.5rem] rounded-2xl border-2 border-emerald-400/80 bg-[#061c24]/98 p-3 text-white shadow-2xl backdrop-blur-md sm:top-[10.5rem] sm:right-16 sm:w-80 sm:p-3.5"
+          className="knps-modal-surface fixed top-[6.25rem] right-13 z-[920] w-[17.5rem] rounded-2xl border-2 border-emerald-400/80 bg-[#061c24]/98 p-3 text-white shadow-2xl backdrop-blur-md sm:top-[7.25rem] sm:right-16 sm:w-80 sm:p-3.5"
         >
           <div className="flex items-center justify-between border-b border-slate-700 pb-2">
             <div className="flex items-center gap-1.5">
