@@ -1,22 +1,33 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import L from 'leaflet';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Circle,
-  GeoJSON,
-  MapContainer,
-  Marker,
-  Polyline,
-  TileLayer,
-  useMap,
-  useMapEvents,
-} from 'react-leaflet';
-import { Compass, LocateFixed, Maximize, Minus, Plus } from 'lucide-react';
-import type { DockingFeature, MarkerColor } from '../types/docking';
-import { MARKER_COLOR_MAP } from '../types/docking';
+  AlertTriangle,
+  Check,
+  Compass,
+  Copy,
+  Globe,
+  LocateFixed,
+  Maximize,
+  Minus,
+  Plus,
+  RefreshCw,
+  Satellite,
+  X,
+} from 'lucide-react';
+import type { DockingFeature } from '../types/docking';
 import type { PorpoiseRecord } from '../types/porpoise';
 import type { MarinePort } from '../types/port';
 import type { RouteLeg, RouteWaypoint } from '../types/route';
 import type { MapLayerConfig } from '../types/config';
+import type { KakaoMapsNamespace } from '../types/kakao';
+import {
+  getConfiguredKakaoApiKey,
+  getMaskedApiKey,
+  loadKakaoMapSdk,
+  type KakaoSdkDiagnostics,
+  type KakaoSdkErrorCode,
+} from '../services/kakaoMapLoader';
+import { KakaoMapCanvas } from './map/KakaoMapCanvas';
+import { LegacyLeafletCanvas } from './map/LegacyLeafletCanvas';
 
 interface UserGpsLocation {
   lat: number;
@@ -25,7 +36,7 @@ interface UserGpsLocation {
   isSimulated?: boolean;
 }
 
-interface MapViewProps {
+export interface MapViewProps {
   activeMainTab: 'notebook' | 'navigation';
   navSubTab: 'route' | 'weather';
 
@@ -63,493 +74,6 @@ interface MapViewProps {
   onResetBounds: () => void;
 }
 
-const DEFAULT_CENTER: [number, number] = [34.8195, 128.552];
-const DEFAULT_ZOOM = 11;
-
-/**
- * 모듈 레벨 L.DivIcon 캐시:
- * 불필요한 DOM 마커 재생성(teardown/rebuild)을 방지하여 모바일 60fps 드래그 성능을 보장합니다.
- */
-const iconCache = new Map<string, L.DivIcon>();
-
-function getCachedDivIcon(key: string, factory: () => L.DivIcon): L.DivIcon {
-  const cached = iconCache.get(key);
-  if (cached) return cached;
-  const created = factory();
-  iconCache.set(key, created);
-  return created;
-}
-
-// 1. 커스텀 접안 마커 (5색)
-function getDockingMarkerIcon(
-  color: MarkerColor,
-  pointCode: string,
-  isSelected: boolean,
-): L.DivIcon {
-  const cacheKey = `docking:${color}:${pointCode}:${isSelected ? 1 : 0}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const theme = MARKER_COLOR_MAP[color] ?? MARKER_COLOR_MAP.blue;
-    const scaleStyle = isSelected ? 'transform: scale(1.16);' : '';
-    const selectedHalo = isSelected
-      ? `<circle cx="26" cy="22" r="21" fill="none" stroke="${theme.ringHex}" stroke-width="3.5" stroke-dasharray="5 3" />`
-      : '';
-
-    const html = `
-      <div class="bada-marker-hit-target" style="${scaleStyle}">
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <div style="
-            margin-bottom: 2px;
-            padding: 1px 6px;
-            border-radius: 6px;
-            background: #020617;
-            border: 1.5px solid ${isSelected ? '#ffffff' : theme.hex};
-            color: #f8fafc;
-            font-size: 10px;
-            font-weight: 900;
-            line-height: 1.2;
-            white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.65);
-          ">${pointCode}</div>
-          <svg width="44" height="44" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.65));">
-            ${selectedHalo}
-            <path d="M26 4C16.611 4 9 11.611 9 21C9 33.25 26 48 26 48C26 48 43 33.25 43 21C43 11.611 35.389 4 26 4Z" fill="${theme.hex}" stroke="#ffffff" stroke-width="3" />
-            <circle cx="26" cy="21" r="7.5" fill="#0b192c" stroke="#ffffff" stroke-width="2" />
-            <circle cx="26" cy="21" r="3.2" fill="#ffffff" />
-          </svg>
-        </div>
-      </div>
-    `;
-
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [52, 58],
-      iconAnchor: [26, 54],
-    });
-  });
-}
-
-// 1-B. 바닷길 콕콕용 항포구 / 소규모 선착장 마커 아이콘 (줌 13 미만에서는 깔끔한 도트, 줌 13 이상에서 이름 라벨 표시)
-function getNavPortPinIcon(port: MarinePort, showLabel: boolean): L.DivIcon {
-  const isSmallBerth = port.subCategory === 'small_berth' || port.category === 'docking';
-  const shortName = port.name.length > 8 ? `${port.name.slice(0, 8)}…` : port.name;
-  const cacheKey = `navport:${port.id}:${isSmallBerth ? 'sb' : 'pt'}:${showLabel ? 'lbl' : 'dot'}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const color = isSmallBerth ? '#f59e0b' : '#38bdf8';
-    const bg = isSmallBerth ? '#451a03' : '#082f49';
-    if (!showLabel) {
-      const dotHtml = `
-        <div style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; cursor: pointer;" title="${port.name}">
-          <div style="
-            width: 11px;
-            height: 11px;
-            border-radius: 9999px;
-            background: ${bg};
-            border: 2px solid ${color};
-            box-shadow: 0 1px 4px rgba(0,0,0,0.8);
-          "></div>
-        </div>
-      `;
-      return L.divIcon({
-        className: 'bada-custom-marker',
-        html: dotHtml,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-      });
-    }
-    const html = `
-      <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
-        <div style="
-          padding: 1px 5px;
-          border-radius: 5px;
-          background: rgba(2, 6, 23, 0.9);
-          border: 1px solid ${color};
-          color: #f8fafc;
-          font-size: 9px;
-          font-weight: 800;
-          white-space: nowrap;
-          margin-bottom: 2px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.65);
-        ">${shortName}</div>
-        <div style="
-          width: 14px;
-          height: 14px;
-          border-radius: 9999px;
-          background: ${bg};
-          border: 2.5px solid ${color};
-          box-shadow: 0 2px 6px rgba(0,0,0,0.75);
-        "></div>
-      </div>
-    `;
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [44, 32],
-      iconAnchor: [22, 26],
-    });
-  });
-}
-
-// 2. 상괭이 관찰 마커
-function getPorpoiseIcon(count: number): L.DivIcon {
-  const cacheKey = `porpoise:${count}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const html = `
-      <div class="bada-marker-hit-target" style="cursor: pointer;">
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <div style="
-            margin-bottom: 2px;
-            padding: 1px 6px;
-            border-radius: 9999px;
-            background: #0d9488;
-            border: 1.5px solid #99f6e4;
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 900;
-            white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.55);
-          ">상괭이 ${count}마리</div>
-          <div style="
-            width: 38px;
-            height: 38px;
-            border-radius: 9999px;
-            background: #14b8a6;
-            border: 3px solid #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-          ">🐬</div>
-        </div>
-      </div>
-    `;
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [48, 54],
-      iconAnchor: [24, 48],
-    });
-  });
-}
-
-// 3. 항해 경로 드래그 마커 (출발 🟢 / 경유 🟡 / 도착 🔴)
-function getRouteWaypointIcon(
-  type: 'start' | 'waypoint' | 'end',
-  label: string,
-  orderIdx: number,
-): L.DivIcon {
-  const shortLabel = label.length > 12 ? `${label.slice(0, 12)}…` : label;
-  const cacheKey = `wp:${type}:${orderIdx}:${shortLabel}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const bg =
-      type === 'start' ? '#10b981' : type === 'waypoint' ? '#f59e0b' : '#ef4444';
-    const roleTag =
-      type === 'start' ? '출발' : type === 'end' ? '도착' : `경유${orderIdx}`;
-    const html = `
-      <div style="display: flex; flex-direction: column; align-items: center; cursor: grab;">
-        <div style="
-          padding: 2px 7px;
-          border-radius: 7px;
-          background: #020617;
-          border: 2px solid ${bg};
-          color: #ffffff;
-          font-size: 10px;
-          font-weight: 900;
-          margin-bottom: 3px;
-          white-space: nowrap;
-          box-shadow: 0 3px 8px rgba(0,0,0,0.75);
-        ">[${roleTag}] ${shortLabel}</div>
-        <div style="
-          width: 38px;
-          height: 38px;
-          border-radius: 9999px;
-          background: ${bg};
-          border: 3px solid #ffffff;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.75);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          font-weight: 900;
-          color: #020617;
-        ">${type === 'start' ? '출' : type === 'end' ? '착' : orderIdx}</div>
-      </div>
-    `;
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [56, 56],
-      iconAnchor: [28, 50],
-    });
-  });
-}
-
-// 4. 구간 선 위 예상 소요시간(분) & 방위각 배지 (요구사항: 각 구간의 선 위에 예상 소요시간 표시)
-function getRouteLegBadgeIcon(
-  durationMinutes: number,
-  distanceNm: number,
-  bearingDeg: number,
-  cardinal: string,
-): L.DivIcon {
-  const mins = Math.round(durationMinutes);
-  const nmStr = distanceNm.toFixed(1);
-  const cacheKey = `legbadge:${mins}:${nmStr}:${bearingDeg}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const html = `
-      <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-      ">
-        <div style="
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 3px 8px;
-          border-radius: 9999px;
-          background: rgba(2, 6, 23, 0.92);
-          border: 2px solid #38bdf8;
-          color: #f8fafc;
-          font-size: 11px;
-          font-weight: 900;
-          white-space: nowrap;
-          box-shadow: 0 3px 10px rgba(0,0,0,0.75);
-        ">
-          <span style="color: #fbbf24; font-size: 12px;">${mins}분</span>
-          <span style="color: #94a3b8;">·</span>
-          <span style="color: #bae6fd;">${nmStr}NM</span>
-          <span style="color: #64748b; font-size: 10px;">(${bearingDeg}°${cardinal})</span>
-        </div>
-      </div>
-    `;
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [140, 28],
-      iconAnchor: [70, 14],
-    });
-  });
-}
-
-// 5. 해상기상 상태 3단계 신호등 마커 (좋음: 초록, 보통: 회색, 나쁨: 빨강, 미확인: '?')
-function getWeatherPinIcon(
-  grade: 'good' | 'moderate' | 'bad' | 'unknown',
-): L.DivIcon {
-  const cacheKey = `weather:${grade}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const color =
-      grade === 'good'
-        ? '#10b981'
-        : grade === 'moderate'
-          ? '#94a3b8'
-          : grade === 'bad'
-            ? '#ef4444'
-            : '#475569';
-    const label =
-      grade === 'good'
-        ? '좋음'
-        : grade === 'moderate'
-          ? '보통'
-          : grade === 'bad'
-            ? '나쁨'
-            : '미확인 (?)';
-    const innerSymbol = grade === 'unknown' ? '?' : '⚓';
-
-    const html = `
-      <div style="display: flex; flex-direction: column; align-items: center; cursor: grab;">
-        <div style="
-          padding: 3px 9px;
-          border-radius: 9999px;
-          background: #020617;
-          border: 2px solid ${color};
-          color: #ffffff;
-          font-size: 11px;
-          font-weight: 900;
-          margin-bottom: 3px;
-          white-space: nowrap;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.7);
-        ">기상: ${label}</div>
-        <div style="
-          width: 44px;
-          height: 44px;
-          border-radius: 9999px;
-          background: ${color};
-          border: 3.5px solid #ffffff;
-          box-shadow: 0 0 18px ${color};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          font-weight: 900;
-          color: #ffffff;
-        ">${innerSymbol}</div>
-      </div>
-    `;
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [56, 62],
-      iconAnchor: [28, 56],
-    });
-  });
-}
-
-// 6. GPS 내 위치 펄스 마커
-function getGpsPulseIcon(): L.DivIcon {
-  return getCachedDivIcon('gps:pulse', () => {
-    const html = `
-      <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-        <span class="bada-gps-pulse-ring" style="position: absolute; width: 34px; height: 34px; border-radius: 9999px; background: rgba(56, 189, 248, 0.45); border: 2px solid #38bdf8;"></span>
-        <span style="position: relative; width: 18px; height: 18px; border-radius: 9999px; background: #0ea5e9; border: 3.5px solid #ffffff; box-shadow: 0 0 12px rgba(14, 165, 233, 0.95);"></span>
-      </div>
-    `;
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
-    });
-  });
-}
-
-function MapClickHandler({
-  activeMainTab,
-  navSubTab,
-  isPorpoiseAddMode,
-  isReportPickMode,
-  onMapClickForPorpoise,
-  onMapClickForReport,
-  onMapClickForRoute,
-  onUpdateWeatherCoords,
-  onZoomChange,
-}: {
-  activeMainTab: 'notebook' | 'navigation';
-  navSubTab: 'route' | 'weather';
-  isPorpoiseAddMode: boolean;
-  isReportPickMode: boolean;
-  onMapClickForPorpoise: (lat: number, lng: number) => void;
-  onMapClickForReport: (lat: number, lng: number) => void;
-  onMapClickForRoute: (lat: number, lng: number) => void;
-  onUpdateWeatherCoords: (lat: number, lng: number) => void;
-  onZoomChange: (zoom: number) => void;
-}) {
-  const map = useMapEvents({
-    zoomend() {
-      onZoomChange(map.getZoom());
-    },
-    click(e) {
-      const { lat, lng } = e.latlng;
-      if (isReportPickMode) {
-        onMapClickForReport(lat, lng);
-        return;
-      }
-      if (isPorpoiseAddMode) {
-        onMapClickForPorpoise(lat, lng);
-        return;
-      }
-      if (activeMainTab === 'navigation') {
-        if (navSubTab === 'route') {
-          onMapClickForRoute(lat, lng);
-        } else if (navSubTab === 'weather') {
-          onUpdateWeatherCoords(lat, lng);
-        }
-      }
-    },
-  });
-  return null;
-}
-
-/**
- * 우측 상단(헤더 바로 아래) 도킹형 한 손 컨트롤러:
- * 하단 패널(RouteTimeCalculator, MarineWeatherPanel, 접안 칩 바)과 절대 겹치지 않도록 배치
- */
-function MapCameraAndThumbControls({
-  flyTarget,
-  onRequestGps,
-  onSimulateFieldGps,
-  onResetBounds,
-  hasGps,
-}: {
-  flyTarget: { lat: number; lng: number; zoom: number; nonce: number } | null;
-  onRequestGps: () => void;
-  onSimulateFieldGps: () => void;
-  onResetBounds: () => void;
-  hasGps: boolean;
-}) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!flyTarget) return;
-    map.flyTo([flyTarget.lat, flyTarget.lng], flyTarget.zoom, {
-      animate: true,
-      duration: 0.75,
-    });
-  }, [flyTarget, map]);
-
-  return (
-    <div
-      className="fixed top-[8.75rem] right-2.5 z-[850] flex flex-col gap-1.5 sm:top-[10.5rem] sm:right-3 sm:gap-2"
-      aria-label="지도 확대·축소 및 GPS 위치 컨트롤"
-    >
-      <button
-        type="button"
-        onClick={onRequestGps}
-        aria-label="내 GPS 위치 찾기"
-        title="실제 GPS 위치 조회"
-        className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
-          hasGps
-            ? 'border-sky-300 bg-sky-500 text-slate-950'
-            : 'border-slate-600 bg-[#0b192c]/95 text-sky-400'
-        }`}
-      >
-        <LocateFixed className="h-4 w-4 stroke-[2.4] sm:h-5 sm:w-5" />
-      </button>
-
-      <button
-        type="button"
-        onClick={onSimulateFieldGps}
-        aria-label="통영·거제 해상 선박 GPS 시뮬레이션"
-        title="통영·거제 해역 가상 선박 GPS 시뮬레이션"
-        className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500/70 bg-[#0b192c]/95 text-amber-300 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
-      >
-        <Compass className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
-        <span className="text-[8px] leading-none font-black sm:text-[9px]">현장GPS</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={onResetBounds}
-        aria-label="전체 해역 보기"
-        title="통영·거제 전체 해역 보기"
-        className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 text-white shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
-      >
-        <Maximize className="h-4 w-4 stroke-[2.3] sm:h-5 sm:w-5" />
-      </button>
-
-      <div className="flex flex-col overflow-hidden rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 shadow-xl sm:rounded-2xl">
-        <button
-          type="button"
-          onClick={() => map.zoomIn()}
-          aria-label="지도 확대"
-          className="flex h-8 w-9 items-center justify-center border-b border-slate-700 text-white active:bg-slate-800 sm:h-11 sm:w-11"
-        >
-          <Plus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => map.zoomOut()}
-          aria-label="지도 축소"
-          className="flex h-8 w-9 items-center justify-center text-white active:bg-slate-800 sm:h-11 sm:w-11"
-        >
-          <Minus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function MapView({
   activeMainTab,
   navSubTab,
@@ -579,21 +103,38 @@ export function MapView({
   flyTarget,
   onResetBounds,
 }: MapViewProps) {
-  const gpsPulseIcon = useMemo(() => getGpsPulseIcon(), []);
-  const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
+  // 1. GIS 엔진 상태 ('kakao' 기본, Kakao SDK 차단/오프라인 시 'leaflet' 자동 폴백)
+  const [preferredEngine, setPreferredEngine] = useState<'kakao' | 'leaflet'>('kakao');
+  const [mapType, setMapType] = useState<'roadmap' | 'skyview'>('roadmap');
+  const [viewport, setViewport] = useState<{ lat: number; lng: number; zoom: number }>({
+    lat: 34.8195,
+    lng: 128.552,
+    zoom: 11,
+  });
+  const [kakaoNamespace, setKakaoNamespace] = useState<KakaoMapsNamespace | null>(null);
+  const [diagnostics, setDiagnostics] = useState<KakaoSdkDiagnostics>(() => {
+    const key = getConfiguredKakaoApiKey();
+    return {
+      status: 'loading',
+      currentOrigin: typeof window !== 'undefined' ? window.location.origin : '',
+      maskedKey: getMaskedApiKey(key),
+      lastCheckedAt: new Date().toLocaleTimeString('ko-KR'),
+    };
+  });
+  const [isDiagDismissed, setIsDiagDismissed] = useState<boolean>(false);
+  const [isDiagModalOpen, setIsDiagModalOpen] = useState<boolean>(false);
+  const [copiedOrigin, setCopiedOrigin] = useState<boolean>(false);
+  const [zoomStepTrigger, setZoomStepTrigger] = useState<{
+    delta: number;
+    nonce: number;
+  } | null>(null);
+
+  // 2. QGIS 공간정보 레이어 GeoJSON 로드 및 상태/재시도 관리 (proposal P2 반영)
   const [geoJsonLayersData, setGeoJsonLayersData] = useState<Record<string, any>>({});
+  const [layerLoadErrorIds, setLayerLoadErrorIds] = useState<string[]>([]);
   const fetchedLayerIdsRef = useRef<Set<string>>(new Set());
 
-  const activeWaypointPortIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const wp of routeWaypoints) {
-      if (wp.matchedPortId) set.add(wp.matchedPortId);
-    }
-    return set;
-  }, [routeWaypoints]);
-
-  // QGIS 공간정보 레이어 GeoJSON 1회 로드 (중복 요청 및 무한 재실행 방지)
-  useEffect(() => {
+  const fetchMissingGeoJsonLayers = useCallback(() => {
     layers.forEach((layer) => {
       if (layer.url && !fetchedLayerIdsRef.current.has(layer.id)) {
         fetchedLayerIdsRef.current.add(layer.id);
@@ -605,41 +146,123 @@ export function MapView({
           })
           .then((data) => {
             setGeoJsonLayersData((prev) => ({ ...prev, [layer.id]: data }));
+            setLayerLoadErrorIds((prev) => prev.filter((id) => id !== layer.id));
           })
           .catch(() => {
             fetchedLayerIdsRef.current.delete(layer.id);
+            setLayerLoadErrorIds((prev) =>
+              prev.includes(layer.id) ? prev : [...prev, layer.id],
+            );
           });
       }
     });
   }, [layers]);
 
-  // 바닷길 콕콕 실항로 좌표선 (변침점을 경유한 해상 우회 라인)
-  const polylinePositions = useMemo(() => {
-    if (routeLegs.length > 0 && routeLegs.some((leg) => leg.pathPositions && leg.pathPositions.length >= 2)) {
-      const merged: [number, number][] = [];
-      for (const leg of routeLegs) {
-        const pts =
-          leg.pathPositions && leg.pathPositions.length >= 2
-            ? leg.pathPositions
-            : ([
-                [leg.from.lat, leg.from.lng],
-                [leg.to.lat, leg.to.lng],
-              ] as [number, number][]);
-        for (let i = 0; i < pts.length; i++) {
-          if (merged.length === 0 || i > 0) {
-            merged.push(pts[i]);
-          }
-        }
-      }
-      return merged;
-    }
-    return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
-  }, [routeLegs, routeWaypoints]);
+  const handleRetryGeoJsonLayers = useCallback(() => {
+    layerLoadErrorIds.forEach((id) => fetchedLayerIdsRef.current.delete(id));
+    setLayerLoadErrorIds([]);
+    fetchMissingGeoJsonLayers();
+  }, [layerLoadErrorIds, fetchMissingGeoJsonLayers]);
 
-  // 직선 대권 참고선 (우회 항로와 비교용 얇은 점선)
-  const directPolylinePositions = useMemo(() => {
-    return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
-  }, [routeWaypoints]);
+  useEffect(() => {
+    fetchMissingGeoJsonLayers();
+  }, [fetchMissingGeoJsonLayers]);
+
+  const handleViewportChange = useCallback((lat: number, lng: number, zoom: number) => {
+    setViewport({ lat, lng, zoom });
+  }, []);
+
+  // 진단 모달 Escape 키 닫기 지원 (proposal P2 접근성 반영)
+  useEffect(() => {
+    if (!isDiagModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsDiagModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isDiagModalOpen]);
+
+  // 3. Kakao Maps SDK 초기화 및 진단/자동 폴백
+  const connectKakaoSdk = useCallback((forceRetry: boolean) => {
+    const key = getConfiguredKakaoApiKey();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+    loadKakaoMapSdk(forceRetry)
+      .then((ns) => {
+        setKakaoNamespace(ns);
+        setPreferredEngine('kakao');
+        setDiagnostics({
+          status: 'ready',
+          currentOrigin: origin,
+          maskedKey: getMaskedApiKey(key),
+          lastCheckedAt: new Date().toLocaleTimeString('ko-KR'),
+        });
+      })
+      .catch(
+        (err: {
+          code?: KakaoSdkErrorCode;
+          message?: string;
+        }) => {
+          setKakaoNamespace(null);
+          // Kakao SDK 실패 시 무중단 현장 가용성을 위해 즉시 레거시(Leaflet) 엔진으로 폴백
+          setPreferredEngine('leaflet');
+          setIsDiagDismissed(false);
+          setDiagnostics({
+            status: 'error',
+            errorCode: err?.code ?? 'DOMAIN_MISMATCH_OR_BLOCKED',
+            errorMessage:
+              err?.message ??
+              '카카오맵 SDK 로드에 실패하여 레거시 지도(OSM)로 자동 전환되었습니다.',
+            currentOrigin: origin,
+            maskedKey: getMaskedApiKey(key),
+            lastCheckedAt: new Date().toLocaleTimeString('ko-KR'),
+          });
+        },
+      );
+  }, []);
+
+  const handleRetryKakaoEngine = useCallback(() => {
+    const key = getConfiguredKakaoApiKey();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    setDiagnostics({
+      status: 'loading',
+      currentOrigin: origin,
+      maskedKey: getMaskedApiKey(key),
+      lastCheckedAt: new Date().toLocaleTimeString('ko-KR'),
+    });
+    connectKakaoSdk(true);
+  }, [connectKakaoSdk]);
+
+  useEffect(() => {
+    connectKakaoSdk(false);
+  }, [connectKakaoSdk]);
+
+  const handleToggleEngine = useCallback(() => {
+    if (preferredEngine === 'kakao') {
+      setPreferredEngine('leaflet');
+      return;
+    }
+    if (kakaoNamespace) {
+      setPreferredEngine('kakao');
+    } else {
+      handleRetryKakaoEngine();
+    }
+  }, [preferredEngine, kakaoNamespace, handleRetryKakaoEngine]);
+
+  const handleCopyOrigin = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(diagnostics.currentOrigin);
+      setCopiedOrigin(true);
+      window.setTimeout(() => setCopiedOrigin(false), 2000);
+    } catch {
+      // ignore clipboard errors
+    }
+  }, [diagnostics.currentOrigin]);
+
+  const activeEngine: 'kakao' | 'leaflet' =
+    preferredEngine === 'kakao' && kakaoNamespace ? 'kakao' : 'leaflet';
 
   return (
     <main
@@ -648,226 +271,359 @@ export function MapView({
       role="region"
       aria-label="통영·거제 해역 인터랙티브 지도"
     >
-      <MapContainer
-        center={DEFAULT_CENTER}
-        zoom={DEFAULT_ZOOM}
-        minZoom={7}
-        maxZoom={18}
-        zoomControl={false}
-        bounceAtZoomLimits={false}
-        worldCopyJump={false}
-        className="h-full w-full"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          maxZoom={19}
-        />
-
-        <MapClickHandler
+      {/* 1. 메인 지도 캔버스 (Kakao Map Primary vs Legacy Leaflet Fallback) */}
+      {activeEngine === 'kakao' && kakaoNamespace ? (
+        <KakaoMapCanvas
+          kakaoMaps={kakaoNamespace}
+          mapType={mapType}
           activeMainTab={activeMainTab}
           navSubTab={navSubTab}
+          features={features}
+          selectedFeature={selectedFeature}
+          onSelectFeature={onSelectFeature}
+          layers={layers}
+          geoJsonLayersData={geoJsonLayersData}
+          showPorpoiseLayer={showPorpoiseLayer}
           isPorpoiseAddMode={isPorpoiseAddMode}
           isReportPickMode={isReportPickMode}
+          porpoiseRecords={porpoiseRecords}
+          onSelectPorpoise={onSelectPorpoise}
           onMapClickForPorpoise={onMapClickForPorpoise}
           onMapClickForReport={onMapClickForReport}
+          routeWaypoints={routeWaypoints}
+          routeLegs={routeLegs}
+          portsList={portsList}
+          showPortMarkersOnMap={showPortMarkersOnMap}
+          onUpdateWaypointPos={onUpdateWaypointPos}
           onMapClickForRoute={onMapClickForRoute}
+          weatherCoords={weatherCoords}
+          weatherGrade={weatherGrade}
           onUpdateWeatherCoords={onUpdateWeatherCoords}
-          onZoomChange={setCurrentZoom}
-        />
-
-        {/* 1. QGIS 공간정보 레이어 (국립공원 경계, 특별보호구역) */}
-        {layers.map((layer) => {
-          if (!layer.visible || !geoJsonLayersData[layer.id]) return null;
-          return (
-            <GeoJSON
-              key={`layer-${layer.id}`}
-              data={geoJsonLayersData[layer.id]}
-              style={() => ({
-                color: layer.color,
-                weight: layer.id === 'national_park' ? 2.5 : 3,
-                fillColor: layer.color,
-                fillOpacity: layer.id === 'national_park' ? 0.08 : 0.16,
-                dashArray: layer.id === 'protected_area' ? '6 4' : undefined,
-              })}
-            />
-          );
-        })}
-
-        {/* 2. [3.1 꼬미의 바다수첩] 갯바위 접안 및 소규모 선착장 마커 */}
-        {activeMainTab === 'notebook' &&
-          layers.find((l) => l.id === 'docking')?.visible !== false &&
-          features.map((feature) => {
-            const [lng, lat] = feature.geometry.coordinates;
-            const isSelected =
-              selectedFeature?.properties.id === feature.properties.id;
-            const icon = getDockingMarkerIcon(
-              feature.properties.color,
-              feature.properties.id,
-              isSelected,
-            );
-
-            return (
-              <Marker
-                key={feature.properties.id}
-                position={[lat, lng]}
-                icon={icon}
-                eventHandlers={{
-                  click: () => onSelectFeature(feature),
-                }}
-              />
-            );
-          })}
-
-        {/* 3. [3.1 꼬미의 바다수첩] 개인 상괭이 관찰기록 마커 */}
-        {activeMainTab === 'notebook' &&
-          showPorpoiseLayer &&
-          porpoiseRecords.map((record) => (
-            <Marker
-              key={record.id}
-              position={[record.lat, record.lng]}
-              icon={getPorpoiseIcon(record.count)}
-              eventHandlers={{
-                click: () => onSelectPorpoise(record),
-              }}
-            />
-          ))}
-
-        {/* 4. [3.2 바닷길 콕콕 - 시간계산기] 소규모 선착장·항구 핀 + 경로 연결선 + 소요시간 배지 + 드래그 마커 */}
-        {activeMainTab === 'navigation' && navSubTab === 'route' && (
-          <>
-            {/* 지도 위 소규모 선착장 및 정규 항포구 빠른 탭 마커 (이미 출발/경유/도착으로 선택된 항구는 중복 표시 제외) */}
-            {showPortMarkersOnMap &&
-              portsList
-                .filter((port) => !activeWaypointPortIds.has(port.id))
-                .map((port) => (
-                  <Marker
-                    key={`nav-port-${port.id}`}
-                    position={[port.lat, port.lng]}
-                    icon={getNavPortPinIcon(port, currentZoom >= 13)}
-                    zIndexOffset={150}
-                    eventHandlers={{
-                      click: () => onMapClickForRoute(port.lat, port.lng),
-                    }}
-                  />
-                ))}
-
-            {directPolylinePositions.length >= 2 && (
-              <Polyline
-                positions={directPolylinePositions}
-                pathOptions={{
-                  color: '#64748b',
-                  weight: 1.5,
-                  dashArray: '4 6',
-                  opacity: 0.45,
-                }}
-              />
-            )}
-
-            {polylinePositions.length >= 2 && (
-              <>
-                {/* 외곽 대비 라인 */}
-                <Polyline
-                  positions={polylinePositions}
-                  pathOptions={{
-                    color: '#020617',
-                    weight: 8,
-                    opacity: 0.8,
-                  }}
-                />
-                {/* 메인 시안 해상 실항로 라인 */}
-                <Polyline
-                  positions={polylinePositions}
-                  pathOptions={{
-                    color: '#38bdf8',
-                    weight: 4,
-                    dashArray: '10 6',
-                    opacity: 0.96,
-                  }}
-                />
-              </>
-            )}
-
-            {/* 각 구간의 선 위에 예상 소요시간(분) 및 방위각 배지 표시 */}
-            {routeLegs.map((leg) => (
-              <Marker
-                key={`leg-badge-${leg.id}`}
-                position={[leg.midLat, leg.midLng]}
-                icon={getRouteLegBadgeIcon(
-                  leg.durationMinutes,
-                  leg.distanceNm,
-                  leg.bearingDeg,
-                  leg.cardinal,
-                )}
-                interactive={false}
-                zIndexOffset={400}
-              />
-            ))}
-
-            {/* 출발지·경유지·목적지 드래그 가능 마커 */}
-            {routeWaypoints.map((wp, idx) => (
-              <Marker
-                key={wp.id}
-                position={[wp.lat, wp.lng]}
-                icon={getRouteWaypointIcon(wp.type, wp.name, idx)}
-                draggable={true}
-                zIndexOffset={700}
-                eventHandlers={{
-                  dragend: (e) => {
-                    const latlng = e.target.getLatLng();
-                    onUpdateWaypointPos(wp.id, latlng.lat, latlng.lng);
-                  },
-                }}
-              />
-            ))}
-          </>
-        )}
-
-        {/* 5. [3.2 바닷길 콕콕 - 해상기상] 3단계 신호등 드래그 마커 */}
-        {activeMainTab === 'navigation' && navSubTab === 'weather' && (
-          <Marker
-            position={[weatherCoords.lat, weatherCoords.lng]}
-            icon={getWeatherPinIcon(weatherGrade)}
-            draggable={true}
-            zIndexOffset={800}
-            eventHandlers={{
-              dragend: (e) => {
-                const latlng = e.target.getLatLng();
-                onUpdateWeatherCoords(latlng.lat, latlng.lng);
-              },
-            }}
-          />
-        )}
-
-        {/* 6. GPS 현재 위치 펄스 마커 */}
-        {userLocation && (
-          <>
-            <Circle
-              center={[userLocation.lat, userLocation.lng]}
-              radius={userLocation.accuracy ?? 120}
-              pathOptions={{
-                color: '#38bdf8',
-                fillColor: '#0ea5e9',
-                fillOpacity: 0.14,
-                weight: 1.5,
-              }}
-            />
-            <Marker
-              position={[userLocation.lat, userLocation.lng]}
-              icon={gpsPulseIcon}
-              zIndexOffset={1000}
-            />
-          </>
-        )}
-
-        <MapCameraAndThumbControls
+          userLocation={userLocation}
+          viewport={viewport}
+          onViewportChange={handleViewportChange}
           flyTarget={flyTarget}
-          onRequestGps={onRequestGps}
-          onSimulateFieldGps={onSimulateFieldGps}
-          onResetBounds={onResetBounds}
-          hasGps={Boolean(userLocation)}
+          zoomStepTrigger={zoomStepTrigger}
         />
-      </MapContainer>
+      ) : (
+        <LegacyLeafletCanvas
+          mapType={mapType}
+          activeMainTab={activeMainTab}
+          navSubTab={navSubTab}
+          features={features}
+          selectedFeature={selectedFeature}
+          onSelectFeature={onSelectFeature}
+          layers={layers}
+          geoJsonLayersData={geoJsonLayersData}
+          showPorpoiseLayer={showPorpoiseLayer}
+          isPorpoiseAddMode={isPorpoiseAddMode}
+          isReportPickMode={isReportPickMode}
+          porpoiseRecords={porpoiseRecords}
+          onSelectPorpoise={onSelectPorpoise}
+          onMapClickForPorpoise={onMapClickForPorpoise}
+          onMapClickForReport={onMapClickForReport}
+          routeWaypoints={routeWaypoints}
+          routeLegs={routeLegs}
+          portsList={portsList}
+          showPortMarkersOnMap={showPortMarkersOnMap}
+          onUpdateWaypointPos={onUpdateWaypointPos}
+          onMapClickForRoute={onMapClickForRoute}
+          weatherCoords={weatherCoords}
+          weatherGrade={weatherGrade}
+          onUpdateWeatherCoords={onUpdateWeatherCoords}
+          userLocation={userLocation}
+          viewport={viewport}
+          onViewportChange={handleViewportChange}
+          flyTarget={flyTarget}
+          zoomStepTrigger={zoomStepTrigger}
+        />
+      )}
+
+      {/* 1-B. 공간정보 GeoJSON 레이어 로드 오류 발생 시 재시도 배너 */}
+      {layerLoadErrorIds.length > 0 && (
+        <div
+          role="status"
+          className="fixed bottom-24 left-2.5 z-[900] flex items-center gap-2 rounded-xl border border-rose-400/80 bg-slate-950/95 px-3 py-1.5 text-[11px] font-bold text-rose-200 shadow-lg"
+        >
+          <span>공간레이어 일부 로드 실패 ({layerLoadErrorIds.length}건)</span>
+          <button
+            type="button"
+            onClick={handleRetryGeoJsonLayers}
+            className="rounded-lg bg-rose-500/30 px-2 py-0.5 font-black text-white hover:bg-rose-500/50"
+          >
+            재시도
+          </button>
+        </div>
+      )}
+
+      {/* 2. Kakao SDK 도메인 미등록/오류 발생 시 상단 자동 폴백 & 진단 배너 */}
+      {diagnostics.status === 'error' && !isDiagDismissed && (
+        <div
+          role="alert"
+          className="fixed inset-x-2.5 top-[8.6rem] z-[900] mx-auto max-w-xl rounded-2xl border-2 border-amber-400/90 bg-slate-950/95 p-2.5 text-xs text-amber-100 shadow-2xl backdrop-blur-md sm:top-[10.2rem]"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+              <div className="min-w-0">
+                <p className="font-black text-amber-300">
+                  카카오맵 도메인 승인 대기중 · 레거시 지도(OSM) 자동 폴백 가동됨
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-slate-300">
+                  카카오 개발자 콘솔 [플랫폼 &gt; Web]에{' '}
+                  <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-sky-300">
+                    {diagnostics.currentOrigin}
+                  </code>{' '}
+                  등록 후 재시도하세요.
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsDiagModalOpen(true)}
+                    className="rounded-lg border border-amber-400/70 bg-amber-500/20 px-2 py-0.5 text-[11px] font-black text-amber-200 active:scale-95"
+                  >
+                    도메인 등록 방법 · 진단 보기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRetryKakaoEngine}
+                    className="inline-flex items-center gap-1 rounded-lg border border-sky-400/70 bg-sky-500/20 px-2 py-0.5 text-[11px] font-black text-sky-200 active:scale-95"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    <span>카카오맵 재연결</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsDiagDismissed(true)}
+              aria-label="진단 배너 닫기"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. 우측 상단(헤더 바로 아래) 도킹형 한 손 컨트롤러 */}
+      <div
+        className="fixed top-[8.75rem] right-2.5 z-[850] flex flex-col gap-1.5 sm:top-[10.5rem] sm:right-3 sm:gap-2"
+        aria-label="지도 확대·축소, 배경지도 및 GPS 위치 컨트롤"
+      >
+        <button
+          type="button"
+          onClick={onRequestGps}
+          aria-label="내 GPS 위치 찾기"
+          title="실제 GPS 위치 조회"
+          className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
+            userLocation
+              ? 'border-sky-300 bg-sky-500 text-slate-950'
+              : 'border-slate-600 bg-[#0b192c]/95 text-sky-400'
+          }`}
+        >
+          <LocateFixed className="h-4 w-4 stroke-[2.4] sm:h-5 sm:w-5" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onSimulateFieldGps}
+          aria-label="통영·거제 해상 선박 GPS 시뮬레이션"
+          title="통영·거제 해역 가상 선박 GPS 시뮬레이션"
+          className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500/70 bg-[#0b192c]/95 text-amber-300 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
+        >
+          <Compass className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
+          <span className="text-[8px] leading-none font-black sm:text-[9px]">현장GPS</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMapType((prev) => (prev === 'roadmap' ? 'skyview' : 'roadmap'))}
+          aria-label="일반지도·위성(스카이뷰) 전환"
+          title="일반지도 / 위성(스카이뷰) 전환"
+          className={`flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
+            mapType === 'skyview'
+              ? 'border-emerald-300 bg-emerald-500 text-slate-950'
+              : 'border-slate-600 bg-[#0b192c]/95 text-emerald-300'
+          }`}
+        >
+          <Satellite className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
+          <span className="text-[8px] leading-none font-black sm:text-[9px]">
+            {mapType === 'skyview' ? '위성ON' : '위성뷰'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleToggleEngine}
+          aria-label="지도 엔진 전환 (카카오맵 ↔ 레거시 OSM)"
+          title={
+            activeEngine === 'kakao'
+              ? '현재: 카카오맵 (클릭 시 레거시 OSM 지도로 전환)'
+              : '현재: 레거시 OSM (클릭 시 카카오맵 재연결/전환)'
+          }
+          className={`flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
+            activeEngine === 'kakao'
+              ? 'border-yellow-400 bg-yellow-400 text-slate-950'
+              : 'border-slate-600 bg-[#0b192c]/95 text-yellow-300'
+          }`}
+        >
+          <Globe className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
+          <span className="text-[8px] leading-none font-black sm:text-[9px]">
+            {activeEngine === 'kakao' ? '카카오' : 'OSM'}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onResetBounds}
+          aria-label="전체 해역 보기"
+          title="통영·거제 전체 해역 보기"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 text-white shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
+        >
+          <Maximize className="h-4 w-4 stroke-[2.3] sm:h-5 sm:w-5" />
+        </button>
+
+        <div className="flex flex-col overflow-hidden rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 shadow-xl sm:rounded-2xl">
+          <button
+            type="button"
+            onClick={() => setZoomStepTrigger({ delta: 1, nonce: Date.now() })}
+            aria-label="지도 확대"
+            className="flex h-8 w-9 items-center justify-center border-b border-slate-700 text-white active:bg-slate-800 sm:h-11 sm:w-11"
+          >
+            <Plus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setZoomStepTrigger({ delta: -1, nonce: Date.now() })}
+            aria-label="지도 축소"
+            className="flex h-8 w-9 items-center justify-center text-white active:bg-slate-800 sm:h-11 sm:w-11"
+          >
+            <Minus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Kakao Map GIS 진단 & 도메인 등록 안내 모달 */}
+      {isDiagModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="kakao-diag-title"
+          className="fixed inset-0 z-[1400] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+          onClick={() => setIsDiagModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl border-2 border-amber-400/80 bg-[#0b192c] p-5 text-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+                <h2 id="kakao-diag-title" className="text-base font-black text-white">
+                  Kakao Map GIS 연동 진단 및 조치 안내
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDiagModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-xs leading-relaxed text-slate-200">
+              <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
+                <p className="font-extrabold text-sky-300">현재 GIS 엔진 진단 상태</p>
+                <ul className="mt-1.5 space-y-1 text-[11px] text-slate-300">
+                  <li>
+                    • 활성 엔진:{' '}
+                    <strong className="text-amber-300">
+                      {activeEngine === 'kakao'
+                        ? 'Kakao Maps SDK v3'
+                        : 'Legacy Leaflet (OpenStreetMap 자동 폴백)'}
+                    </strong>
+                  </li>
+                  <li>
+                    • 인식된 API 키 (`.env`):{' '}
+                    <code className="rounded bg-slate-800 px-1.5 py-0.5 text-emerald-300">
+                      {diagnostics.maskedKey}
+                    </code>
+                  </li>
+                  <li>• 최근 점검 시각: {diagnostics.lastCheckedAt}</li>
+                  {diagnostics.errorMessage && (
+                    <li className="text-rose-300">• 사유: {diagnostics.errorMessage}</li>
+                  )}
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-amber-500/40 bg-amber-950/30 p-3">
+                <p className="font-extrabold text-amber-300">
+                  [사용자 필수 조치] 카카오 개발자 콘솔 웹 도메인 등록
+                </p>
+                <p className="mt-1 text-[11px] text-slate-300">
+                  카카오맵 JS SDK는 보안 정책상 등록된 도메인에서만 지도를 렌더링합니다.
+                  카카오 개발자 콘솔(developers.kakao.com) ➔ <strong>내 애플리케이션</strong> ➔{' '}
+                  <strong>앱 설정 &gt; 플랫폼 &gt; Web 사이트 도메인</strong>에 아래 주소를 추가해 주세요:
+                </p>
+
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2">
+                  <code className="truncate font-mono text-xs font-bold text-sky-300">
+                    {diagnostics.currentOrigin}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={handleCopyOrigin}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-sky-500 px-2.5 py-1 text-[11px] font-black text-slate-950 active:scale-95"
+                  >
+                    {copiedOrigin ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        <span>복사됨</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>주소 복사</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <p className="mt-2 text-[11px] text-slate-400">
+                  권장 등록 도메인 목록:
+                  <br />• 로컬 개발: <code className="text-slate-200">http://localhost:5173</code>,{' '}
+                  <code className="text-slate-200">http://127.0.0.1:5173</code>
+                  <br />• 운영 배포: <code className="text-slate-200">https://gunnysis.github.io</code>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDiagModalOpen(false);
+                  handleRetryKakaoEngine();
+                }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-400 py-2.5 text-xs font-black text-slate-950 shadow active:scale-95"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>도메인 등록 완료 · 카카오맵 즉시 재연결</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDiagModalOpen(false)}
+                className="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-200"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

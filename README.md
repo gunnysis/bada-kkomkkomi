@@ -22,8 +22,8 @@
 | :--- | :--- | :--- |
 | **Core** | Vite `8.3` + React `19.3` + TypeScript `7.0` | 초고속 번들링 및 엄격한 정적 타입 시스템 |
 | **Styling & Icons** | Tailwind CSS `4.3` + Lucide React `1.70` | 해상 직사광선 대비 고대비 다크/화이트 투톤 HUD |
-| **Map Engine** | Leaflet `1.9.4` + `react-leaflet` `5.0` | 오픈소스 타일 + 커스텀 `L.DivIcon` 캐시 + GeoJSON 공간레이어 |
-| **PWA / Offline** | `vite-plugin-pwa` `2.0` + Workbox `7.4` | 32개 정적 에셋 프리캐시 + Open-Meteo API/타일 런타임 캐시 |
+| **Map Engine** | Kakao Maps SDK `v3` (Primary) + Leaflet `1.9.4` (Legacy Fallback) | 카카오 일반/스카이뷰(위성) + 60fps 커스텀 오버레이 드래그 + 무중단 레거시(OSM) 자동 폴백 |
+| **PWA / Offline** | `vite-plugin-pwa` `2.0` + Workbox `7.4` | 32개 정적 에셋 프리캐시 + Kakao/OSM 타일 & Open-Meteo API 런타임 캐시 |
 | **Linter** | Oxlint `1.90` (`react`, `typescript`, `oxc`) | 116개 규칙 기반 정적 분석 (`0 warnings, 0 errors`) |
 | **CI/CD & Hosting** | GitHub Actions (`deploy-pages.yml`) / Cloudflare Pages | `main` 브랜치 Push 시 무상 빌드 및 자동 배포 |
 
@@ -79,9 +79,14 @@ bada-kkomkkomi/
 │   │       └── protected_area.geojson # 특별보호구역 폴리곤
 │   ├── icons/                         # PWA 홈 화면 아이콘 (192x192, 512x512, apple-touch-icon)
 │   └── images/docking/                # 현장 접안지 사진/일러스트 에셋
+├── .env.example                       # Kakao Map JavaScript API 키(KAKAO_MAP_API_KEY) 환경변수 예시
 ├── src/
 │   ├── components/
-│   │   ├── MapView.tsx                # Leaflet 지도, 5색 마커, 항로 구간 배지, 컨트롤 독
+│   │   ├── MapView.tsx                # 통합 GIS 퍼사드 (Kakao Primary ↔ Legacy Leaflet 전환, 위성뷰 토글, 도메인 진단 HUD)
+│   │   ├── map/
+│   │   │   ├── KakaoMapCanvas.tsx     # Kakao Maps SDK v3 렌더링 엔진 (CustomOverlay 포인터 드래그, 폴리곤/항로)
+│   │   │   ├── LegacyLeafletCanvas.tsx# 레거시 Leaflet + OpenStreetMap 폴백 엔진 (무중단 가용성 보장)
+│   │   │   └── mapMarkerTemplates.ts  # 5색 접안 마커·선착장핀·상괭이·항로배지·기상핀 공통 HTML 팩토리
 │   │   ├── DockingDetailSheet.tsx     # 접안 포인트 하단 슬라이딩 상세 시트
 │   │   ├── PhotoGallery.tsx           # 현장 사진 전체화면 라이트박스 모달
 │   │   ├── notebook/
@@ -98,9 +103,10 @@ bada-kkomkkomi/
 │   │   ├── useMarineWeather.ts        # Open-Meteo API 병렬 조회, KST 매칭 및 3단계 등급 연산
 │   │   └── usePorpoiseStorage.ts      # 상괭이 관찰 기록 localStorage 영속화
 │   ├── services/
+│   │   ├── kakaoMapLoader.ts          # KAKAO_MAP_API_KEY 기반 SDK 동적 로더, 줌 레벨 변환기, 도메인 검증 진단기
 │   │   ├── emailReportService.ts      # 이메일 제보 전문 포맷팅, mailto URI 생성, 클립보드 복사
 │   │   └── routeGeoService.ts         # Haversine 거리(NM), 방위각(°/8방위), 500m 항구 스마트 스냅
-│   └── types/                         # 도메인별 TypeScript 엄격 타입 정의 (config, docking, port, route, weather, porpoise, report)
+│   └── types/                         # 도메인별 TypeScript 엄격 타입 정의 (kakao, config, docking, port, route, weather, porpoise, report)
 ├── DEPLOY_GUIDE.md                    # 비개발자 운영자용 데이터 교체 및 무상 배포 가이드
 ├── README.md                          # 프로젝트 개요 문서
 └── vite.config.ts                     # Vite + Tailwind v4 + Workbox PWA 설정

@@ -7,6 +7,7 @@ const base = process.env.GITHUB_ACTIONS === 'true' ? '/bada-kkomkkomi/' : '/';
 
 export default defineConfig({
   base,
+  envPrefix: ['VITE_', 'KAKAO_'],
   build: {
     chunkSizeWarningLimit: 700,
   },
@@ -56,6 +57,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,geojson,webmanifest}'],
+        globIgnores: ['**/dev/**'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
@@ -96,7 +99,24 @@ export default defineConfig({
             },
           },
           {
-            // 3. 오픈소스 지도 타일(OpenStreetMap): 한 번 열람한 해역은 해상 오프라인에서도 열람 가능
+            // 3-A. Kakao Maps SDK 스크립트 및 지도/스카이뷰(위성) 타일 CDN:
+            // 한 번 열람한 해역의 카카오 일반지도 및 위성 타일은 해상 오프라인에서도 즉시 렌더링
+            urlPattern:
+              /^https:\/\/(dapi\.kakao\.com|(t\d|mts|map\d?|ctt-image|ssl)\.(kakaocdn|daumcdn)\.net)\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'bada-kakao-map-tiles-v1',
+              expiration: {
+                maxEntries: 800,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // 3-B. 오픈소스 지도 타일(OpenStreetMap - 레거시 폴백 엔진용): 한 번 열람한 해역은 해상 오프라인에서도 열람 가능
             urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
             handler: 'CacheFirst',
             options: {

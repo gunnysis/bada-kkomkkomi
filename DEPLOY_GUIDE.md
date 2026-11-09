@@ -184,15 +184,38 @@
 
 ---
 
-## [3단계] Cloudflare Pages 또는 GitHub Pages 배포 설정 참고
+## [3단계] Kakao Map API 키 및 도메인 등록 · 배포 설정 가이드
 
-### A. GitHub Pages (현재 기본 활성화됨)
-- `.github/workflows/deploy-pages.yml` 워크플로가 `main` 브랜치 Push마다 자동으로 `npm run lint` 및 `npm run build`를 실행하고 GitHub Pages(`https://gunnysis.github.io/bada-kkomkkomi/`)에 배포합니다.
+바다꼼꼬미는 **Kakao Maps SDK v3**를 기본 지도로 사용하며, 도메인 미등록이나 해상 오프라인 상황에서는 **레거시 지도(Leaflet + OpenStreetMap)**로 자동 폴백되도록 설계되어 있습니다.
 
-### B. Cloudflare Pages로 이전/병행 배포 시
+### A. 카카오 개발자 콘솔 웹 도메인 등록 (필수)
+카카오맵이 정상적으로 표시되려면 **카카오 개발자 콘솔(https://developers.kakao.com)**에서 아래 설정이 완료되어야 합니다:
+1. 상단 메뉴 **`내 애플리케이션`** ➔ 해당 앱 선택
+2. 좌측 메뉴 **`앱 설정` > `플랫폼`** ➔ **`Web 플랫폼 등록`** (또는 수정) 클릭
+3. **`사이트 도메인`** 입력란에 아래 주소를 줄바꿈으로 모두 등록하고 저장합니다:
+   ```text
+   http://localhost:5173
+   http://127.0.0.1:5173
+   https://gunnysis.github.io
+   ```
+   *(Cloudflare Pages 등 별도 도메인 사용 시 해당 `https://...` 도메인도 함께 추가)*
+
+### B. 환경변수(`KAKAO_MAP_API_KEY`) 설정 방법
+- **로컬 개발 환경 (`.env`)**: 프로젝트 루트의 `.env` 파일에 JavaScript 키를 입력합니다:
+  ```env
+  KAKAO_MAP_API_KEY=발급받은_카카오_JavaScript_키
+  ```
+- **GitHub Pages 자동 배포 (`GitHub Actions Secret`)**:
+  1. GitHub 저장소 상단 **`Settings`** ➔ 좌측 **`Secrets and variables` > `Actions`** 클릭
+  2. **`New repository secret`** 버튼 클릭
+  3. **Name**: `KAKAO_MAP_API_KEY` / **Secret**: `발급받은_카카오_JavaScript_키` 입력 후 **`Add secret`** 클릭
+  4. `.github/workflows/deploy-pages.yml` 워크플로가 `main` 브랜치 Push마다 자동으로 `KAKAO_MAP_API_KEY`를 주입하여 빌드·배포합니다.
+
+### C. Cloudflare Pages로 이전/병행 배포 시
 | 설정 항목 | 입력할 값 | 설명 |
 | :--- | :--- | :--- |
 | **Production branch** | `main` | `main` 브랜치에 파일을 올릴 때마다 자동 배포 |
 | **Framework preset** | `Vite` | Vite 정적 빌드 프리셋 |
 | **Build command** | `npm run build` | 타입 검사, 번들링 및 Workbox `sw.js` 생성 |
 | **Build output directory** | `dist` | 최종 생성된 정적 파일 폴더 (`public/_headers` 자동 적용) |
+| **Environment variables** | `KAKAO_MAP_API_KEY` = `JavaScript 키` | Cloudflare Pages 대시보드 환경변수에 등록 |

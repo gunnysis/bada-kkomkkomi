@@ -1,0 +1,855 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { DockingFeature } from '../../types/docking';
+import type { PorpoiseRecord } from '../../types/porpoise';
+import type { MarinePort } from '../../types/port';
+import type { RouteLeg, RouteWaypoint } from '../../types/route';
+import type { MapLayerConfig } from '../../types/config';
+import type {
+  KakaoCircle,
+  KakaoCustomOverlay,
+  KakaoLatLng,
+  KakaoMap,
+  KakaoMapsNamespace,
+  KakaoMouseEvent,
+  KakaoPolygon,
+  KakaoPolyline,
+} from '../../types/kakao';
+import {
+  kakaoLevelToLeafletZoom,
+  leafletZoomToKakaoLevel,
+} from '../../services/kakaoMapLoader';
+import {
+  buildDockingMarkerSpec,
+  buildGpsPulseSpec,
+  buildNavPortPinSpec,
+  buildPorpoiseSpec,
+  buildRouteLegBadgeSpec,
+  buildRouteWaypointSpec,
+  buildWeatherPinSpec,
+  type MarkerTemplateSpec,
+} from './mapMarkerTemplates';
+
+export interface KakaoMapCanvasProps {
+  kakaoMaps: KakaoMapsNamespace;
+  mapType: 'roadmap' | 'skyview';
+  activeMainTab: 'notebook' | 'navigation';
+  navSubTab: 'route' | 'weather';
+
+  // 3.1 꼬미의 바다수첩
+  features: DockingFeature[];
+  selectedFeature: DockingFeature | null;
+  onSelectFeature: (feature: DockingFeature) => void;
+  layers: MapLayerConfig[];
+  geoJsonLayersData: Record<string, any>;
+  showPorpoiseLayer: boolean;
+  isPorpoiseAddMode: boolean;
+  isReportPickMode: boolean;
+  porpoiseRecords: PorpoiseRecord[];
+  onSelectPorpoise: (record: PorpoiseRecord) => void;
+  onMapClickForPorpoise: (lat: number, lng: number) => void;
+  onMapClickForReport: (lat: number, lng: number) => void;
+
+  // 3.2 바닷길 콕콕 (경로 계산 & 소규모 선착장/항포구 마커)
+  routeWaypoints: RouteWaypoint[];
+  routeLegs: RouteLeg[];
+  portsList: MarinePort[];
+  showPortMarkersOnMap: boolean;
+  onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
+  onMapClickForRoute: (lat: number, lng: number) => void;
+
+  // 3.2 바닷길 콕콕 (해상기상)
+  weatherCoords: { lat: number; lng: number };
+  weatherGrade: 'good' | 'moderate' | 'bad' | 'unknown';
+  onUpdateWeatherCoords: (lat: number, lng: number) => void;
+
+  // 공통
+  userLocation: {
+    lat: number;
+    lng: number;
+    accuracy?: number;
+    isSimulated?: boolean;
+  } | null;
+  viewport: { lat: number; lng: number; zoom: number };
+  onViewportChange: (lat: number, lng: number, zoom: number) => void;
+  flyTarget: { lat: number; lng: number; zoom: number; nonce: number } | null;
+  zoomStepTrigger: { delta: number; nonce: number } | null;
+}
+
+const DEFAULT_LEAFLET_ZOOM = 11;
+
+/**
+ * 마커 HTML 문자열을 실제 DOM Element로 변환하고,
+ * 클릭/포인터 이벤트가 하단 Kakao Map으로 전파(버블링)되는 것을 차단하는 헬퍼
+ */
+function createOverlayElement(
+  kakaoMaps: KakaoMapsNamespace,
+  spec: MarkerTemplateSpec,
+  onClick?: () => void,
+): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = spec.html.trim();
+  const el = (wrapper.firstElementChild as HTMLElement) ?? wrapper;
+
+  const stopMapPropagation = (e: Event) => {
+    e.stopPropagation();
+    try {
+      kakaoMaps.event.preventMap();
+    } catch {
+      // ignore if outside map event loop
+    }
+  };
+
+  if (onClick) {
+    el.addEventListener('pointerdown', stopMapPropagation);
+    el.addEventListener('mousedown', stopMapPropagation);
+    el.addEventListener('touchstart', stopMapPropagation, { passive: true });
+    el.addEventListener('click', (e) => {
+      stopMapPropagation(e);
+      onClick();
+    });
+  }
+
+  return el;
+}
+
+/**
+ * Kakao CustomOverlay에 포인터 캡처 기반 60fps 드래그(Pointer-Capture Drag)를 부여하는 헬퍼
+ * - 드래그 시작 시 map.setDraggable(false)로 지도 흔들림 잠금
+ * - 드래그 이동 시 map.getProjection().coordsFromContainerPoint()로 실시간 위경도 변환 및 오버레이 이동
+ * - 드래그 종료 시 map.setDraggable(true) 복원 및 onDragEnd(lat, lng) 콜백 호출
+ */
+function attachDraggableToCustomOverlay(
+  kakaoMaps: KakaoMapsNamespace,
+  map: KakaoMap,
+  containerEl: HTMLElement,
+  overlay: KakaoCustomOverlay,
+  el: HTMLElement,
+  onDragEnd: (lat: number, lng: number) => void,
+): void {
+  let isDragging = false;
+  let activePointerId: number | null = null;
+
+  const stopBubble = (e: Event) => {
+    e.stopPropagation();
+    try {
+      kakaoMaps.event.preventMap();
+    } catch {
+      // ignore
+    }
+  };
+
+  el.addEventListener('mousedown', stopBubble);
+  el.addEventListener('touchstart', stopBubble, { passive: true });
+  el.addEventListener('click', stopBubble);
+
+  el.addEventListener('pointerdown', (e: PointerEvent) => {
+    stopBubble(e);
+    isDragging = true;
+    activePointerId = e.pointerId;
+    el.style.cursor = 'grabbing';
+    map.setDraggable(false);
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore if unsupported
+    }
+  });
+
+  el.addEventListener('pointermove', (e: PointerEvent) => {
+    if (!isDragging || e.pointerId !== activePointerId) return;
+    stopBubble(e);
+
+    const rect = containerEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const proj = map.getProjection();
+    if (!proj) return;
+    const nextLatLng = proj.coordsFromContainerPoint(new kakaoMaps.Point(x, y));
+    if (nextLatLng) {
+      overlay.setPosition(nextLatLng);
+    }
+  });
+
+  const finishDrag = (e: PointerEvent) => {
+    if (!isDragging || e.pointerId !== activePointerId) return;
+    stopBubble(e);
+    isDragging = false;
+    activePointerId = null;
+    el.style.cursor = 'grab';
+    map.setDraggable(true);
+
+    try {
+      if (el.hasPointerCapture(e.pointerId)) {
+        el.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+
+    const finalPos = overlay.getPosition();
+    onDragEnd(finalPos.getLat(), finalPos.getLng());
+  };
+
+  el.addEventListener('pointerup', finishDrag);
+  el.addEventListener('pointercancel', finishDrag);
+}
+
+/**
+ * GeoJSON FeatureCollection 내의 Polygon / MultiPolygon 좌표를
+ * Kakao LatLng 배열로 파싱하는 헬퍼
+ */
+function parseGeoJsonToKakaoPolygonPaths(
+  kakaoMaps: KakaoMapsNamespace,
+  geojson: any,
+): KakaoLatLng[][][] {
+  if (!geojson || !Array.isArray(geojson.features)) return [];
+  const polygons: KakaoLatLng[][][] = [];
+
+  const convertRing = (ring: number[][]): KakaoLatLng[] =>
+    ring
+      .filter((pt) => Array.isArray(pt) && pt.length >= 2)
+      .map(([lng, lat]) => new kakaoMaps.LatLng(lat, lng));
+
+  for (const feature of geojson.features) {
+    const geom = feature?.geometry;
+    if (!geom) continue;
+
+    if (geom.type === 'Polygon' && Array.isArray(geom.coordinates)) {
+      const rings = geom.coordinates.map(convertRing).filter((r: KakaoLatLng[]) => r.length >= 3);
+      if (rings.length > 0) polygons.push(rings);
+    } else if (geom.type === 'MultiPolygon' && Array.isArray(geom.coordinates)) {
+      for (const polyCoords of geom.coordinates) {
+        if (Array.isArray(polyCoords)) {
+          const rings = polyCoords.map(convertRing).filter((r: KakaoLatLng[]) => r.length >= 3);
+          if (rings.length > 0) polygons.push(rings);
+        }
+      }
+    }
+  }
+
+  return polygons;
+}
+
+export function KakaoMapCanvas({
+  kakaoMaps,
+  mapType,
+  activeMainTab,
+  navSubTab,
+  features,
+  selectedFeature,
+  onSelectFeature,
+  layers,
+  geoJsonLayersData,
+  showPorpoiseLayer,
+  isPorpoiseAddMode,
+  isReportPickMode,
+  porpoiseRecords,
+  onSelectPorpoise,
+  onMapClickForPorpoise,
+  onMapClickForReport,
+  routeWaypoints,
+  routeLegs,
+  portsList,
+  showPortMarkersOnMap,
+  onUpdateWaypointPos,
+  onMapClickForRoute,
+  weatherCoords,
+  weatherGrade,
+  onUpdateWeatherCoords,
+  userLocation,
+  viewport,
+  onViewportChange,
+  flyTarget,
+  zoomStepTrigger,
+}: KakaoMapCanvasProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<KakaoMap | null>(null);
+  const initialViewportRef = useRef(viewport);
+  const onViewportChangeRef = useRef(onViewportChange);
+  useEffect(() => {
+    onViewportChangeRef.current = onViewportChange;
+  }, [onViewportChange]);
+  const [currentLeafletZoom, setCurrentLeafletZoom] = useState<number>(
+    viewport.zoom || DEFAULT_LEAFLET_ZOOM,
+  );
+
+  // 각 레이어별 오버레이/도형 인스턴스 Ref (메모리 누수 및 좀비 마커 원천 방지)
+  const polygonsRef = useRef<KakaoPolygon[]>([]);
+  const dockingOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const porpoiseOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const portOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const polylinesRef = useRef<KakaoPolyline[]>([]);
+  const legBadgeOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const waypointOverlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const weatherOverlayRef = useRef<KakaoCustomOverlay | null>(null);
+  const gpsCircleRef = useRef<KakaoCircle | null>(null);
+  const gpsOverlayRef = useRef<KakaoCustomOverlay | null>(null);
+
+  // 최신 클릭 핸들러 컨텍스트를 Ref로 유지 (지도 및 폴리곤 클릭 이벤트 브릿징용)
+  const clickContextRef = useRef({
+    activeMainTab,
+    navSubTab,
+    isPorpoiseAddMode,
+    isReportPickMode,
+    onMapClickForPorpoise,
+    onMapClickForReport,
+    onMapClickForRoute,
+    onUpdateWeatherCoords,
+  });
+
+  useEffect(() => {
+    clickContextRef.current = {
+      activeMainTab,
+      navSubTab,
+      isPorpoiseAddMode,
+      isReportPickMode,
+      onMapClickForPorpoise,
+      onMapClickForReport,
+      onMapClickForRoute,
+      onUpdateWeatherCoords,
+    };
+  }, [
+    activeMainTab,
+    navSubTab,
+    isPorpoiseAddMode,
+    isReportPickMode,
+    onMapClickForPorpoise,
+    onMapClickForReport,
+    onMapClickForRoute,
+    onUpdateWeatherCoords,
+  ]);
+
+  const handleCoordinateClick = useCallback((lat: number, lng: number) => {
+    const ctx = clickContextRef.current;
+    if (ctx.isReportPickMode) {
+      ctx.onMapClickForReport(lat, lng);
+      return;
+    }
+    if (ctx.isPorpoiseAddMode) {
+      ctx.onMapClickForPorpoise(lat, lng);
+      return;
+    }
+    if (ctx.activeMainTab === 'navigation') {
+      if (ctx.navSubTab === 'route') {
+        ctx.onMapClickForRoute(lat, lng);
+      } else if (ctx.navSubTab === 'weather') {
+        ctx.onUpdateWeatherCoords(lat, lng);
+      }
+    }
+  }, []);
+
+  // 1. Kakao Map 인스턴스 초기화 및 ResizeObserver 등록
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const initVp = initialViewportRef.current;
+    const initialLevel = leafletZoomToKakaoLevel(initVp.zoom);
+    const map = new kakaoMaps.Map(container, {
+      center: new kakaoMaps.LatLng(initVp.lat, initVp.lng),
+      level: initialLevel,
+    });
+    mapRef.current = map;
+
+    const onMapClick = (mouseEvent: KakaoMouseEvent) => {
+      if (!mouseEvent?.latLng) return;
+      handleCoordinateClick(mouseEvent.latLng.getLat(), mouseEvent.latLng.getLng());
+    };
+
+    const syncViewportToParent = () => {
+      const c = map.getCenter();
+      const z = kakaoLevelToLeafletZoom(map.getLevel());
+      setCurrentLeafletZoom(z);
+      onViewportChangeRef.current(c.getLat(), c.getLng(), z);
+    };
+
+    kakaoMaps.event.addListener(map, 'click', onMapClick);
+    kakaoMaps.event.addListener(map, 'zoom_changed', syncViewportToParent);
+    kakaoMaps.event.addListener(map, 'dragend', syncViewportToParent);
+
+    // 트러블슈팅 #6: 컨테이너 리사이즈(모바일 주소창 변화/모달 전환) 시 중심점 유지 relayout
+    const resizeObserver = new ResizeObserver(() => {
+      if (!mapRef.current) return;
+      const prevCenter = mapRef.current.getCenter();
+      mapRef.current.relayout();
+      mapRef.current.setCenter(prevCenter);
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      kakaoMaps.event.removeListener(map, 'click', onMapClick);
+      kakaoMaps.event.removeListener(map, 'zoom_changed', syncViewportToParent);
+      kakaoMaps.event.removeListener(map, 'dragend', syncViewportToParent);
+      mapRef.current = null;
+    };
+  }, [kakaoMaps, handleCoordinateClick]);
+
+  // 2. 일반지도(ROADMAP) vs 스카이뷰 위성지도(HYBRID) 전환
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const targetTypeId =
+      mapType === 'skyview'
+        ? kakaoMaps.MapTypeId.HYBRID
+        : kakaoMaps.MapTypeId.ROADMAP;
+    map.setMapTypeId(targetTypeId);
+  }, [kakaoMaps, mapType]);
+
+  // 3. 카메라 이동 (flyTarget) 반영
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !flyTarget) return;
+    const targetLevel = leafletZoomToKakaoLevel(flyTarget.zoom);
+    const targetLatLng = new kakaoMaps.LatLng(flyTarget.lat, flyTarget.lng);
+    map.setLevel(targetLevel, { animate: true });
+    map.panTo(targetLatLng);
+    setCurrentLeafletZoom(flyTarget.zoom);
+    onViewportChangeRef.current(flyTarget.lat, flyTarget.lng, flyTarget.zoom);
+  }, [kakaoMaps, flyTarget]);
+
+  // 4. 우측 컨트롤 독 +/- 줌 버튼 제어
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !zoomStepTrigger) return;
+    const currentLevel = map.getLevel();
+    // Kakao는 level이 작을수록 확대(Zoom In)이므로 delta 부호를 반전
+    const nextLevel = Math.max(1, Math.min(13, currentLevel - zoomStepTrigger.delta));
+    map.setLevel(nextLevel, { animate: true });
+  }, [zoomStepTrigger]);
+
+  // 5. QGIS 공간정보 폴리곤 레이어 (국립공원 경계, 특별보호구역) 렌더링 & 클릭 브릿징
+  useEffect(() => {
+    const map = mapRef.current;
+    polygonsRef.current.forEach((p) => p.setMap(null));
+    polygonsRef.current = [];
+    if (!map) return;
+
+    const created: KakaoPolygon[] = [];
+    for (const layer of layers) {
+      if (!layer.visible) continue;
+      const rawGeoJson = geoJsonLayersData[layer.id];
+      if (!rawGeoJson) continue;
+
+      const pathsList = parseGeoJsonToKakaoPolygonPaths(kakaoMaps, rawGeoJson);
+      for (const rings of pathsList) {
+        const polygon = new kakaoMaps.Polygon({
+          map,
+          path: rings,
+          strokeWeight: layer.id === 'national_park' ? 2.5 : 3,
+          strokeColor: layer.color,
+          strokeOpacity: 0.92,
+          strokeStyle: layer.id === 'protected_area' ? 'shortdash' : 'solid',
+          fillColor: layer.color,
+          fillOpacity: layer.id === 'national_park' ? 0.08 : 0.16,
+          zIndex: 10,
+        });
+
+        // 트러블슈팅 #5: 폴리곤 내부 해역 클릭 시에도 지도 클릭 동작 브릿징
+        kakaoMaps.event.addListener(polygon, 'click', (mouseEvent: KakaoMouseEvent) => {
+          if (!mouseEvent?.latLng) return;
+          handleCoordinateClick(mouseEvent.latLng.getLat(), mouseEvent.latLng.getLng());
+        });
+
+        created.push(polygon);
+      }
+    }
+
+    polygonsRef.current = created;
+    return () => {
+      created.forEach((p) => p.setMap(null));
+    };
+  }, [kakaoMaps, layers, geoJsonLayersData, handleCoordinateClick]);
+
+  // 6. [3.1 꼬미의 바다수첩] 55개 갯바위 접안 및 소규모 선착장 5색 마커
+  useEffect(() => {
+    const map = mapRef.current;
+    dockingOverlaysRef.current.forEach((o) => o.setMap(null));
+    dockingOverlaysRef.current = [];
+    if (!map) return;
+
+    const isDockingVisible = layers.find((l) => l.id === 'docking')?.visible !== false;
+    if (activeMainTab !== 'notebook' || !isDockingVisible) return;
+
+    const created: KakaoCustomOverlay[] = [];
+    for (const feature of features) {
+      const [lng, lat] = feature.geometry.coordinates;
+      const isSelected = selectedFeature?.properties.id === feature.properties.id;
+      const spec = buildDockingMarkerSpec(
+        feature.properties.color,
+        feature.properties.id,
+        isSelected,
+      );
+      const el = createOverlayElement(kakaoMaps, spec, () => onSelectFeature(feature));
+
+      const overlay = new kakaoMaps.CustomOverlay({
+        map,
+        position: new kakaoMaps.LatLng(lat, lng),
+        content: el,
+        xAnchor: spec.xAnchorRatio,
+        yAnchor: spec.yAnchorRatio,
+        zIndex: isSelected ? 550 : 300,
+        clickable: true,
+      });
+      created.push(overlay);
+    }
+
+    dockingOverlaysRef.current = created;
+    return () => {
+      created.forEach((o) => o.setMap(null));
+    };
+  }, [kakaoMaps, activeMainTab, layers, features, selectedFeature, onSelectFeature]);
+
+  // 7. [3.1 꼬미의 바다수첩] 개인 상괭이 관찰기록 마커
+  useEffect(() => {
+    const map = mapRef.current;
+    porpoiseOverlaysRef.current.forEach((o) => o.setMap(null));
+    porpoiseOverlaysRef.current = [];
+    if (!map || activeMainTab !== 'notebook' || !showPorpoiseLayer) return;
+
+    const created: KakaoCustomOverlay[] = [];
+    for (const record of porpoiseRecords) {
+      const spec = buildPorpoiseSpec(record.count);
+      const el = createOverlayElement(kakaoMaps, spec, () => onSelectPorpoise(record));
+      const overlay = new kakaoMaps.CustomOverlay({
+        map,
+        position: new kakaoMaps.LatLng(record.lat, record.lng),
+        content: el,
+        xAnchor: spec.xAnchorRatio,
+        yAnchor: spec.yAnchorRatio,
+        zIndex: 450,
+        clickable: true,
+      });
+      created.push(overlay);
+    }
+
+    porpoiseOverlaysRef.current = created;
+    return () => {
+      created.forEach((o) => o.setMap(null));
+    };
+  }, [kakaoMaps, activeMainTab, showPorpoiseLayer, porpoiseRecords, onSelectPorpoise]);
+
+  // 활성 경로에 포함된 항구 ID 집합 (선착장 핀 중복 표시 제외용)
+  const activeWaypointPortIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const wp of routeWaypoints) {
+      if (wp.matchedPortId) set.add(wp.matchedPortId);
+    }
+    return set;
+  }, [routeWaypoints]);
+
+  // 8. [3.2 바닷길 콕콕 - 시간계산] 135개 항포구/소규모 선착장 빠른 탭 마커 (줌 반응형 도트/라벨)
+  useEffect(() => {
+    const map = mapRef.current;
+    portOverlaysRef.current.forEach((o) => o.setMap(null));
+    portOverlaysRef.current = [];
+    if (
+      !map ||
+      activeMainTab !== 'navigation' ||
+      navSubTab !== 'route' ||
+      !showPortMarkersOnMap
+    ) {
+      return;
+    }
+
+    const showLabel = currentLeafletZoom >= 13;
+    const created: KakaoCustomOverlay[] = [];
+
+    for (const port of portsList) {
+      if (activeWaypointPortIds.has(port.id)) continue;
+      const spec = buildNavPortPinSpec(port, showLabel);
+      const el = createOverlayElement(kakaoMaps, spec, () =>
+        onMapClickForRoute(port.lat, port.lng),
+      );
+      const overlay = new kakaoMaps.CustomOverlay({
+        map,
+        position: new kakaoMaps.LatLng(port.lat, port.lng),
+        content: el,
+        xAnchor: spec.xAnchorRatio,
+        yAnchor: spec.yAnchorRatio,
+        zIndex: showLabel ? 220 : 160,
+        clickable: true,
+      });
+      created.push(overlay);
+    }
+
+    portOverlaysRef.current = created;
+    return () => {
+      created.forEach((o) => o.setMap(null));
+    };
+  }, [
+    kakaoMaps,
+    activeMainTab,
+    navSubTab,
+    showPortMarkersOnMap,
+    portsList,
+    activeWaypointPortIds,
+    currentLeafletZoom,
+    onMapClickForRoute,
+  ]);
+
+  // 바닷길 콕콕 실항로 좌표선 계산
+  const polylinePositions = useMemo(() => {
+    if (
+      routeLegs.length > 0 &&
+      routeLegs.some((leg) => leg.pathPositions && leg.pathPositions.length >= 2)
+    ) {
+      const merged: [number, number][] = [];
+      for (const leg of routeLegs) {
+        const pts =
+          leg.pathPositions && leg.pathPositions.length >= 2
+            ? leg.pathPositions
+            : ([
+                [leg.from.lat, leg.from.lng],
+                [leg.to.lat, leg.to.lng],
+              ] as [number, number][]);
+        for (let i = 0; i < pts.length; i++) {
+          if (merged.length === 0 || i > 0) {
+            merged.push(pts[i]);
+          }
+        }
+      }
+      return merged;
+    }
+    return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
+  }, [routeLegs, routeWaypoints]);
+
+  // 9. [3.2 바닷길 콕콕 - 시간계산] 실항로 & 직선 참고선 폴리라인 + 구간 소요시간 배지 + 드래그 마커
+  useEffect(() => {
+    const map = mapRef.current;
+    const container = containerRef.current;
+    polylinesRef.current.forEach((p) => p.setMap(null));
+    polylinesRef.current = [];
+    legBadgeOverlaysRef.current.forEach((o) => o.setMap(null));
+    legBadgeOverlaysRef.current = [];
+    waypointOverlaysRef.current.forEach((o) => o.setMap(null));
+    waypointOverlaysRef.current = [];
+
+    if (!map || !container || activeMainTab !== 'navigation' || navSubTab !== 'route') {
+      return;
+    }
+
+    const createdLines: KakaoPolyline[] = [];
+    const createdLegBadges: KakaoCustomOverlay[] = [];
+    const createdWaypoints: KakaoCustomOverlay[] = [];
+
+    // 9-A. 직선 대권 참고선 (얇은 점선)
+    if (routeWaypoints.length >= 2) {
+      const directPath = routeWaypoints.map((wp) => new kakaoMaps.LatLng(wp.lat, wp.lng));
+      createdLines.push(
+        new kakaoMaps.Polyline({
+          map,
+          path: directPath,
+          strokeWeight: 1.5,
+          strokeColor: '#64748b',
+          strokeOpacity: 0.45,
+          strokeStyle: 'shortdot',
+          zIndex: 250,
+        }),
+      );
+    }
+
+    // 9-B. A* 해상 실항로 2중 폴리라인 (외곽 다크 대비선 + 메인 시안 점선)
+    if (polylinePositions.length >= 2) {
+      const seaPath = polylinePositions.map(
+        ([lat, lng]) => new kakaoMaps.LatLng(lat, lng),
+      );
+      createdLines.push(
+        new kakaoMaps.Polyline({
+          map,
+          path: seaPath,
+          strokeWeight: 8,
+          strokeColor: '#020617',
+          strokeOpacity: 0.82,
+          strokeStyle: 'solid',
+          zIndex: 280,
+        }),
+      );
+      createdLines.push(
+        new kakaoMaps.Polyline({
+          map,
+          path: seaPath,
+          strokeWeight: 4,
+          strokeColor: '#38bdf8',
+          strokeOpacity: 0.96,
+          strokeStyle: 'shortdash',
+          zIndex: 290,
+        }),
+      );
+    }
+
+    // 9-C. 구간 중점 소요시간·해리·방위각 배지
+    for (const leg of routeLegs) {
+      const spec = buildRouteLegBadgeSpec(
+        leg.durationMinutes,
+        leg.distanceNm,
+        leg.bearingDeg,
+        leg.cardinal,
+      );
+      const el = createOverlayElement(kakaoMaps, spec);
+      const badgeOverlay = new kakaoMaps.CustomOverlay({
+        map,
+        position: new kakaoMaps.LatLng(leg.midLat, leg.midLng),
+        content: el,
+        xAnchor: spec.xAnchorRatio,
+        yAnchor: spec.yAnchorRatio,
+        zIndex: 420,
+        clickable: false,
+      });
+      createdLegBadges.push(badgeOverlay);
+    }
+
+    // 9-D. 출발·경유·도착지 드래그 가능 마커 (Pointer-Capture 60fps 드래그 엔진)
+    routeWaypoints.forEach((wp, idx) => {
+      const spec = buildRouteWaypointSpec(wp.type, wp.name, idx);
+      const el = createOverlayElement(kakaoMaps, spec);
+      const wpOverlay = new kakaoMaps.CustomOverlay({
+        map,
+        position: new kakaoMaps.LatLng(wp.lat, wp.lng),
+        content: el,
+        xAnchor: spec.xAnchorRatio,
+        yAnchor: spec.yAnchorRatio,
+        zIndex: 700 + idx,
+        clickable: true,
+      });
+
+      attachDraggableToCustomOverlay(
+        kakaoMaps,
+        map,
+        container,
+        wpOverlay,
+        el,
+        (nextLat, nextLng) => {
+          onUpdateWaypointPos(wp.id, nextLat, nextLng);
+        },
+      );
+
+      createdWaypoints.push(wpOverlay);
+    });
+
+    polylinesRef.current = createdLines;
+    legBadgeOverlaysRef.current = createdLegBadges;
+    waypointOverlaysRef.current = createdWaypoints;
+
+    return () => {
+      createdLines.forEach((p) => p.setMap(null));
+      createdLegBadges.forEach((o) => o.setMap(null));
+      createdWaypoints.forEach((o) => o.setMap(null));
+    };
+  }, [
+    kakaoMaps,
+    activeMainTab,
+    navSubTab,
+    routeWaypoints,
+    routeLegs,
+    polylinePositions,
+    onUpdateWaypointPos,
+  ]);
+
+  // 10. [3.2 바닷길 콕콕 - 해상기상] 3단계 신호등 드래그 마커
+  useEffect(() => {
+    const map = mapRef.current;
+    const container = containerRef.current;
+    if (weatherOverlayRef.current) {
+      weatherOverlayRef.current.setMap(null);
+      weatherOverlayRef.current = null;
+    }
+
+    if (!map || !container || activeMainTab !== 'navigation' || navSubTab !== 'weather') {
+      return;
+    }
+
+    const spec = buildWeatherPinSpec(weatherGrade);
+    const el = createOverlayElement(kakaoMaps, spec);
+    const overlay = new kakaoMaps.CustomOverlay({
+      map,
+      position: new kakaoMaps.LatLng(weatherCoords.lat, weatherCoords.lng),
+      content: el,
+      xAnchor: spec.xAnchorRatio,
+      yAnchor: spec.yAnchorRatio,
+      zIndex: 800,
+      clickable: true,
+    });
+
+    attachDraggableToCustomOverlay(
+      kakaoMaps,
+      map,
+      container,
+      overlay,
+      el,
+      (nextLat, nextLng) => {
+        onUpdateWeatherCoords(nextLat, nextLng);
+      },
+    );
+
+    weatherOverlayRef.current = overlay;
+    return () => {
+      overlay.setMap(null);
+    };
+  }, [
+    kakaoMaps,
+    activeMainTab,
+    navSubTab,
+    weatherCoords.lat,
+    weatherCoords.lng,
+    weatherGrade,
+    onUpdateWeatherCoords,
+  ]);
+
+  // 11. GPS 현재 위치 정확도 반경 Circle & 펄스 마커
+  useEffect(() => {
+    const map = mapRef.current;
+    if (gpsCircleRef.current) {
+      gpsCircleRef.current.setMap(null);
+      gpsCircleRef.current = null;
+    }
+    if (gpsOverlayRef.current) {
+      gpsOverlayRef.current.setMap(null);
+      gpsOverlayRef.current = null;
+    }
+    if (!map || !userLocation) return;
+
+    const pos = new kakaoMaps.LatLng(userLocation.lat, userLocation.lng);
+    const circle = new kakaoMaps.Circle({
+      map,
+      center: pos,
+      radius: userLocation.accuracy ?? 120,
+      strokeWeight: 1.5,
+      strokeColor: '#38bdf8',
+      strokeOpacity: 0.9,
+      strokeStyle: 'solid',
+      fillColor: '#0ea5e9',
+      fillOpacity: 0.14,
+      zIndex: 900,
+    });
+
+    const spec = buildGpsPulseSpec();
+    const el = createOverlayElement(kakaoMaps, spec);
+    const pulseOverlay = new kakaoMaps.CustomOverlay({
+      map,
+      position: pos,
+      content: el,
+      xAnchor: spec.xAnchorRatio,
+      yAnchor: spec.yAnchorRatio,
+      zIndex: 1000,
+      clickable: false,
+    });
+
+    gpsCircleRef.current = circle;
+    gpsOverlayRef.current = pulseOverlay;
+
+    return () => {
+      circle.setMap(null);
+      pulseOverlay.setMap(null);
+    };
+  }, [kakaoMaps, userLocation]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="bada-kakao-map h-full w-full"
+      aria-label="카카오맵 해역 캔버스"
+    />
+  );
+}

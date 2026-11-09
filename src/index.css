@@ -51,6 +51,26 @@
   filter: contrast(1.06) saturate(1.08);
 }
 
+/* Kakao Maps v3 컨테이너 및 Tailwind CSS v4 Preflight(img max-width) 충돌 방지 가드 */
+.bada-kakao-map {
+  width: 100%;
+  height: 100%;
+  background-color: #0b192c !important;
+  font-family: inherit;
+}
+
+.bada-kakao-map img {
+  max-width: none !important;
+  height: auto;
+}
+
+/* Kakao CustomOverlay 포인터 캡처 드래그 시 모바일 브라우저 기본 제스처 간섭 차단 */
+.bada-draggable-overlay {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* 하단 우측 Leaflet 출처 배지: 하단 플로팅 패널과 겹치지 않는 초슬림 다크 테마 */
 .leaflet-control-attribution {
   background: rgba(11, 25, 44, 0.78) !important;

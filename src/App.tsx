@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   Anchor,
+  ChevronLeft,
   Download,
   Layers,
   Mail,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import { MapView } from './components/MapView';
+import { HomeScreen } from './components/home/HomeScreen';
 import { DockingDetailSheet } from './components/DockingDetailSheet';
 import { LayerControlModal } from './components/notebook/LayerControlModal';
 import { FieldReportModal } from './components/notebook/FieldReportModal';
@@ -36,6 +38,7 @@ import type { MarinePort, MarineWaypointNode, PortsDataset } from './types/port'
 import type { RouteWaypoint } from './types/route';
 
 import { useAppConfig } from './hooks/useAppConfig';
+import { useAppRoute } from './hooks/useAppRoute';
 import { usePorpoiseStorage } from './hooks/usePorpoiseStorage';
 import { useMarineWeather } from './hooks/useMarineWeather';
 import {
@@ -92,9 +95,20 @@ export function App() {
     deleteRecord: deletePorpoise,
   } = usePorpoiseStorage();
 
-  // 1. 대메뉴 및 서브 탭 상태
-  const [activeMainTab, setActiveMainTab] = useState<'notebook' | 'navigation'>('notebook');
-  const [navSubTab, setNavSubTab] = useState<'route' | 'weather'>('route');
+  // 1. 라우트(Home / Notebook / Navigation) 및 서브 탭 상태 (URL Query & History API 양방향 동기화)
+  const { route, navigateToScreen, replaceNavPanel } = useAppRoute();
+  const isHomeScreen = route.screen === 'home';
+  const [hasEnteredWorkspace, setHasEnteredWorkspace] = useState<boolean>(
+    () => route.screen !== 'home',
+  );
+  const [lastTriggeredCardId, setLastTriggeredCardId] = useState<
+    'notebook' | 'navigation' | null
+  >(null);
+  const workspaceHeadingRef = useRef<HTMLHeadingElement | null>(null);
+
+  const activeMainTab: 'notebook' | 'navigation' =
+    route.screen === 'navigation' ? 'navigation' : 'notebook';
+  const navSubTab: 'route' | 'weather' = route.panel;
 
   // 2. 정적 데이터 (접안 포인트 GeoJSON + 주요 항포구·소규모 선착장·변침점 JSON)
   const [collection, setCollection] = useState<DockingFeatureCollection | null>(null);
@@ -126,6 +140,29 @@ export function App() {
     waypointId: string;
     label: string;
   } | null>(null);
+
+  const handleOpenWorkspaceFromHome = useCallback(
+    (target: 'notebook' | 'navigation') => {
+      setLastTriggeredCardId(target);
+      setHasEnteredWorkspace(true);
+      navigateToScreen(target, 'route');
+      window.setTimeout(() => {
+        workspaceHeadingRef.current?.focus();
+      }, 60);
+    },
+    [navigateToScreen],
+  );
+
+  const handleReturnToHome = useCallback(() => {
+    // Home 복귀 시 일시적인 픽커 모드 및 모달은 종료하고 주요 작업 상태(항로/필터/카메라)는 보존 (proposal 2.2 계약)
+    setIsPorpoiseAddMode(false);
+    setIsReportPickMode(false);
+    setIsLayerModalOpen(false);
+    setIsReportModalOpen(false);
+    setIsWeatherSettingsOpen(false);
+    setPortSelectorTarget(null);
+    navigateToScreen('home', navSubTab);
+  }, [navigateToScreen, navSubTab]);
 
   // 4. GPS, 온라인 상태 및 PWA 설치 프롬프트
   const [userLocation, setUserLocation] = useState<UserGpsState | null>(null);
@@ -565,109 +602,144 @@ export function App() {
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#0b192c] text-white select-none">
-      {/* 상단 고정 HUD 헤더 */}
-      <header
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3"
-        style={{ paddingTop: 'calc(var(--safe-top) + 0.375rem)' }}
-      >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-2.5 py-1.5 shadow-2xl backdrop-blur-md sm:px-3 sm:py-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow sm:h-9 sm:w-9">
-              <Anchor className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h1 className="truncate text-sm leading-none font-black tracking-tight text-white sm:text-base">
-                  바다꼼꼬미
-                </h1>
-                <span className="shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
-                  v1.0
-                </span>
-              </div>
-              <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-slate-300 sm:text-[11px]">
-                {activeMainTab === 'notebook'
-                  ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개 접안·선착장)`
-                  : `3.2 바닷길 콕콕 (항포구·선착장 ${portsList.length}개소)`}
-              </p>
-            </div>
-          </div>
+      {/* 1. 초기 접속 인트로 허브 (HomeScreen): 새 접속 시 지도/SDK를 미리 로드하지 않고 즉시 표시하며,
+          한 번 작업공간에 진입한 뒤 홈으로 복귀하면 오버레이로 열려 하단 작업공간 상태를 보존합니다. */}
+      {isHomeScreen && (
+        <HomeScreen
+          lastTriggeredCardId={lastTriggeredCardId}
+          onSelectFeatureCard={handleOpenWorkspaceFromHome}
+          isOnline={isOnline}
+          isStandalone={isStandalone}
+          onInstallClick={handleInstallClick}
+        />
+      )}
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-            {!isStandalone && (
+      {/* 2. 메인 작업공간 (WorkspaceScreen): 첫 기능 카드 선택 또는 직접 URL(?screen=...) 진입 시 마운트 후 유지 */}
+      {(hasEnteredWorkspace || !isHomeScreen) && (
+        <div
+          aria-hidden={isHomeScreen}
+          inert={isHomeScreen ? true : undefined}
+          className={`relative h-dvh w-full ${isHomeScreen ? 'pointer-events-none invisible' : ''}`}
+        >
+          {/* 상단 고정 HUD 헤더 */}
+          <header
+            className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1 p-2 sm:gap-1.5 sm:p-3"
+            style={{ paddingTop: 'calc(var(--safe-top) + 0.375rem)' }}
+          >
+            <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-2.5 py-1.5 shadow-2xl backdrop-blur-md sm:px-3 sm:py-2">
+              <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={handleReturnToHome}
+                  aria-label="인트로 홈 화면으로 돌아가기"
+                  title="홈 화면으로 이동"
+                  className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-slate-600 bg-slate-800/90 px-2 text-xs font-black text-sky-300 shadow transition hover:border-sky-400 active:scale-95 focus-visible:outline-2 focus-visible:outline-sky-400 sm:h-9 sm:px-2.5"
+                >
+                  <ChevronLeft className="h-4 w-4 stroke-[2.6]" aria-hidden="true" />
+                  <span>홈</span>
+                </button>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400 text-slate-950 shadow sm:h-9 sm:w-9">
+                  <Anchor className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h1
+                      ref={workspaceHeadingRef}
+                      tabIndex={-1}
+                      className="truncate text-sm leading-none font-black tracking-tight text-white outline-none sm:text-base"
+                    >
+                      바다꼼꼬미
+                    </h1>
+                    <span className="shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300">
+                      v1.1
+                    </span>
+                  </div>
+                  <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-slate-300 sm:text-[11px]">
+                    {activeMainTab === 'notebook'
+                      ? `3.1 꼬미의 바다수첩 (${filteredFeatures.length}개 접안·선착장)`
+                      : `3.2 바닷길 콕콕 (항포구·선착장 ${portsList.length}개소)`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                {!isStandalone && (
+                  <button
+                    type="button"
+                    onClick={handleInstallClick}
+                    className="flex h-8 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2 text-[11px] font-black text-slate-950 shadow-md transition active:scale-95 sm:h-9 sm:px-2.5 sm:text-xs"
+                    title="앱 설치"
+                  >
+                    <Download className="h-3.5 w-3.5 stroke-[2.8]" />
+                    <span>앱 설치</span>
+                  </button>
+                )}
+
+                <div
+                  role="status"
+                  className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-extrabold sm:h-9 ${
+                    isOnline
+                      ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300'
+                      : 'border-amber-400 bg-amber-950/95 text-amber-200'
+                  }`}
+                >
+                  {isOnline ? (
+                    <Wifi className="h-3.5 w-3.5 text-emerald-400" />
+                  ) : (
+                    <WifiOff className="h-3.5 w-3.5 text-amber-400" />
+                  )}
+                  <span className="hidden sm:inline">{isOnline ? '온라인' : '오프라인'}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleManualReload}
+                  aria-label="데이터 새로고침"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95 sm:h-9 sm:w-9"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* 대메뉴 2종 탭 전환 바 (3.1 꼬미의 바다수첩 vs 3.2 바닷길 콕콕) */}
+            <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
               <button
                 type="button"
-                onClick={handleInstallClick}
-                className="flex h-8 items-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-500 px-2 text-[11px] font-black text-slate-950 shadow-md transition active:scale-95 sm:h-9 sm:px-2.5 sm:text-xs"
-                title="앱 설치"
+                onClick={() => {
+                  setLastTriggeredCardId('notebook');
+                  navigateToScreen('notebook', navSubTab);
+                  setIsPorpoiseAddMode(false);
+                  setIsReportPickMode(false);
+                }}
+                className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
+                  activeMainTab === 'notebook'
+                    ? 'border-sky-400 bg-sky-500 text-slate-950'
+                    : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
+                }`}
               >
-                <Download className="h-3.5 w-3.5 stroke-[2.8]" />
-                <span>앱 설치</span>
+                <Anchor className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>꼬미의 바다수첩</span>
               </button>
-            )}
 
-            <div
-              role="status"
-              className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-extrabold sm:h-9 ${
-                isOnline
-                  ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300'
-                  : 'border-amber-400 bg-amber-950/95 text-amber-200'
-              }`}
-            >
-              {isOnline ? (
-                <Wifi className="h-3.5 w-3.5 text-emerald-400" />
-              ) : (
-                <WifiOff className="h-3.5 w-3.5 text-amber-400" />
-              )}
-              <span className="hidden sm:inline">{isOnline ? '온라인' : '오프라인'}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLastTriggeredCardId('navigation');
+                  navigateToScreen('navigation', navSubTab);
+                  setIsPorpoiseAddMode(false);
+                  setIsReportPickMode(false);
+                }}
+                className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
+                  activeMainTab === 'navigation'
+                    ? 'border-sky-400 bg-sky-500 text-slate-950'
+                    : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
+                }`}
+              >
+                <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>바닷길 콕콕</span>
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={handleManualReload}
-              aria-label="데이터 새로고침"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95 sm:h-9 sm:w-9"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* 대메뉴 2종 탭 전환 바 (3.1 꼬미의 바다수첩 vs 3.2 바닷길 콕콕) */}
-        <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveMainTab('notebook');
-              setIsPorpoiseAddMode(false);
-              setIsReportPickMode(false);
-            }}
-            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
-              activeMainTab === 'notebook'
-                ? 'border-sky-400 bg-sky-500 text-slate-950'
-                : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
-            }`}
-          >
-            <Anchor className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>꼬미의 바다수첩</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveMainTab('navigation');
-              setIsPorpoiseAddMode(false);
-              setIsReportPickMode(false);
-            }}
-            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-xl border-2 py-1 text-xs font-black shadow-lg transition active:scale-95 sm:min-h-10 sm:py-1.5 ${
-              activeMainTab === 'navigation'
-                ? 'border-sky-400 bg-sky-500 text-slate-950'
-                : 'border-slate-600 bg-[#0b192c]/95 text-slate-200'
-            }`}
-          >
-            <Navigation className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>바닷길 콕콕</span>
-          </button>
-        </div>
 
         {/* 3.1 꼬미의 바다수첩 서브 컨트롤 바 */}
         {activeMainTab === 'notebook' && (
@@ -761,7 +833,7 @@ export function App() {
           <div className="pointer-events-auto mx-auto grid w-full max-w-3xl grid-cols-2 gap-1.5">
             <button
               type="button"
-              onClick={() => setNavSubTab('route')}
+              onClick={() => replaceNavPanel('route')}
               className={`flex min-h-8 items-center justify-center rounded-xl border-2 py-1 text-[11px] font-black transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'route'
                   ? 'border-amber-400 bg-amber-400/20 text-amber-300'
@@ -772,7 +844,7 @@ export function App() {
             </button>
             <button
               type="button"
-              onClick={() => setNavSubTab('weather')}
+              onClick={() => replaceNavPanel('weather')}
               className={`flex min-h-8 items-center justify-center rounded-xl border-2 py-1 text-[11px] font-black transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'weather'
                   ? 'border-amber-400 bg-amber-400/20 text-amber-300'
@@ -1036,6 +1108,8 @@ export function App() {
         thresholds={marineWeather.thresholds}
         onSave={marineWeather.updateThresholds}
       />
+        </div>
+      )}
     </div>
   );
 }

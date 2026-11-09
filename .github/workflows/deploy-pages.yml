@@ -36,6 +36,7 @@ jobs:
       - name: Lint & Build PWA (with GitHub Pages base path)
         env:
           GITHUB_ACTIONS: 'true'
+          KAKAO_MAP_API_KEY: ${{ secrets.KAKAO_MAP_API_KEY }}
         run: |
           npm run lint
           npm run build
