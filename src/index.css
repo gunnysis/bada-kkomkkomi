@@ -6,6 +6,26 @@
     color-scheme: dark;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+    /* 국립공원공단(KNPS) 공식 CI 3원색(산림 생태 그린 · 한려해상 오션 블루 · 태양 활력 앰버) 기반 디자인 토큰 */
+    --knps-green-primary: #00854a;
+    --knps-green-bright: #10b981;
+    --knps-green-soft: #6ee7b7;
+    --knps-blue-primary: #0066b3;
+    --knps-blue-bright: #0ea5e9;
+    --knps-teal-bright: #14b8a6;
+    --knps-sun-amber: #f59e0b;
+    --knps-sun-orange: #ea580c;
+
+    /* 한려해상국립공원 다도해 심해·숲 야외 고대비 다크 HUD 서피스 토큰 */
+    --knps-bg-deep: #061c24;
+    --knps-bg-elevated: #0a2733;
+    --knps-bg-card: #0d3140;
+    --knps-border-subtle: rgba(16, 185, 129, 0.36);
+    --knps-border-strong: rgba(45, 212, 191, 0.55);
+
+    /* modern-web-guidance: brand-consistent-forms */
+    accent-color: var(--knps-green-bright);
   }
 
   html,
@@ -16,12 +36,80 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #0b192c;
+    background-color: var(--knps-bg-deep);
     color: #f8fafc;
+    accent-color: var(--knps-green-bright);
     /* 해상 야외 조작 중 당겨서 새로고침(Pull-to-refresh) 및 브라우저 좌우 스와이프 뒤로가기 오작동 차단 */
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+  }
+}
+
+/* 국립공원공단(KNPS) 시그니처 HUD & 모달 서피스 시스템 */
+.knps-hud-surface {
+  background: linear-gradient(
+    145deg,
+    rgba(6, 28, 36, 0.96) 0%,
+    rgba(9, 38, 49, 0.95) 55%,
+    rgba(6, 34, 32, 0.96) 100%
+  );
+  border-color: rgba(20, 184, 166, 0.48);
+  box-shadow:
+    0 14px 34px rgba(2, 12, 18, 0.78),
+    inset 0 1px 0 rgba(110, 231, 183, 0.22);
+}
+
+.knps-modal-surface {
+  background:
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.14), transparent 45%),
+    radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.12), transparent 50%),
+    linear-gradient(180deg, #07222c 0%, #061c24 100%);
+  border-color: rgba(45, 212, 191, 0.52);
+  box-shadow:
+    0 24px 52px rgba(2, 10, 16, 0.88),
+    inset 0 1px 0 rgba(110, 231, 183, 0.25);
+}
+
+/* 국립공원공단 CI 3원색(그린 · 블루 · 앰버) 상단 시그니처 라인 */
+.knps-tricolor-bar {
+  background: linear-gradient(
+    90deg,
+    #00854a 0%,
+    #10b981 36%,
+    #0284c7 72%,
+    #f59e0b 100%
+  );
+}
+
+/* modern-web-guidance: contrast-color() with Relative Color Syntax (oklch) fallback */
+.knps-dynamic-badge {
+  --badge-bg: #00854a;
+  background-color: var(--badge-bg);
+  color: #ffffff;
+}
+
+@supports (color: oklch(from red l c h)) {
+  .knps-dynamic-badge {
+    --threshold: 0.623;
+    --l: max(0, sign(var(--threshold) - l));
+    color: oklch(from var(--badge-bg) var(--l) 0 h);
+  }
+}
+
+@supports (color: contrast-color(red)) {
+  .knps-dynamic-badge {
+    color: contrast-color(var(--badge-bg));
+  }
+}
+
+/* modern-web-guidance: Forced Colors Mode (Windows High Contrast) 대응 */
+@media (forced-colors: active) {
+  .knps-hud-surface,
+  .knps-modal-surface {
+    border: 2px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
   }
 }
 
@@ -35,7 +123,7 @@
 }
 
 .bada-map-viewport:focus-visible {
-  outline: 3px solid #38bdf8;
+  outline: 3px solid #10b981;
   outline-offset: -3px;
 }
 
@@ -43,7 +131,7 @@
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background-color: #0b192c !important;
+  background-color: #061c24 !important;
   font-family: inherit;
 }
 
@@ -55,7 +143,7 @@
 .bada-kakao-map {
   width: 100%;
   height: 100%;
-  background-color: #0b192c !important;
+  background-color: #061c24 !important;
   font-family: inherit;
 }
 
@@ -73,8 +161,8 @@
 
 /* 하단 우측 Leaflet 출처 배지: 하단 플로팅 패널과 겹치지 않는 초슬림 다크 테마 */
 .leaflet-control-attribution {
-  background: rgba(11, 25, 44, 0.78) !important;
-  color: #94a3b8 !important;
+  background: rgba(6, 28, 36, 0.82) !important;
+  color: #a7f3d0 !important;
   font-size: 9px !important;
   line-height: 1.2 !important;
   padding: 1px 6px !important;
@@ -84,7 +172,7 @@
 }
 
 .leaflet-control-attribution a {
-  color: #38bdf8 !important;
+  color: #34d399 !important;
   text-decoration: none;
 }
 
@@ -186,8 +274,8 @@ dialog.bada-bottom-sheet::backdrop {
   @media (prefers-reduced-motion: no-preference) {
     @container scroll-state(snapped: x) {
       .bada-photo-card {
-        border-color: #38bdf8;
-        box-shadow: 0 10px 28px rgba(56, 189, 248, 0.25);
+        border-color: #10b981;
+        box-shadow: 0 10px 28px rgba(16, 185, 129, 0.28);
       }
     }
   }

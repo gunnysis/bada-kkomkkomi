@@ -828,7 +828,7 @@ export function LayerControlModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-2 border-slate-600 bg-[#0b192c] text-white shadow-2xl"
+        className="knps-modal-surface flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. 상단 헤더 & 현재 운영 릴리스 상태 배지 */}

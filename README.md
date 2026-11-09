@@ -1,6 +1,6 @@
-# 바다꼼꼬미 (Bada-Kkomkkomi) [v1.7]
+# 바다꼼꼬미 (Bada-Kkomkkomi) [v1.8]
 
-국립공원공단 해양국립공원 직원의 해상·도서 현장업무 지원을 위한 오프라인 우선(Offline-First) PWA 웹 애플리케이션입니다.
+국립공원공단 해양국립공원(한려해상·통영·거제) 직원의 해상·도서 현장업무 지원을 위한 오프라인 우선(Offline-First) PWA 웹 애플리케이션입니다.
 백엔드 서버나 외부 유료 DB 없이 **순수 정적 데이터(`GeoJSON`, `JSON`, 로컬 이미지) + 인앱 공간정보 운영 저장소(`IndexedDB` / GitHub 자동 커밋)만으로 무상(Zero-cost) 운영 및 자동 배포**되도록 설계되었습니다.
 
 - **라이브 배포 URL (GitHub Pages)**: https://gunnysis.github.io/bada-kkomkkomi/
@@ -15,7 +15,7 @@
 | 영역 | 기술 및 버전 | 역할 |
 | :--- | :--- | :--- |
 | **Core** | Vite `8.3` + React `19.3` + TypeScript `7.0` | 초고속 번들링 및 엄격한 정적 타입 시스템 |
-| **Styling & Icons** | Tailwind CSS `4.3` + Lucide React `1.70` | 해상 직사광선 대비 고대비 다크/화이트 투톤 HUD |
+| **Styling & Brand Design** | Tailwind CSS `4.3` + Lucide React `1.70` + KNPS Marine-Eco Tokens | 국립공원공단(KNPS) 3원색(숲 초록 `#00854a`/`#10b981` · 청정 바다 파랑 `#0066b3`/`#0ea5e9` · 생명력 태양 앰버 `#f59e0b`) 및 한려해상 딥 어비스(`#061c24`) 기반 야외 직사광선 고대비 HUD |
 | **Map & GIS Engine** | Kakao Maps SDK `v3` (Primary) + Leaflet `1.9.4` (Fallback) + `proj4` + `fflate` | 카카오 일반/순수위성/하이브리드 + 5종 오버레이 + 360° 3D 로드뷰 + QGIS `.gpkg`/`.zip(shp)`/`.kml`/`.geojson` 인앱 파서 & 한국 좌표계(`EPSG:5179`/`5186` 등) 자동 변환 |
 | **PWA / Offline** | `vite-plugin-pwa` `2.0` + Workbox `7.4` | 정적 에셋 프리캐시 + Kakao/OSM 타일 런타임 캐시 (기상 API는 실시간 안전을 위해 캐시 배제) |
 | **Linter** | Oxlint `1.90` (`react`, `typescript`, `oxc`) | 116개 규칙 기반 정적 분석 (`0 warnings, 0 errors`) |
@@ -23,9 +23,10 @@
 
 ---
 
-## 2. 핵심 도메인 기능 (v1.7)
+## 2. 핵심 도메인 기능 (v1.8)
 
-### 2.0. 인트로 미션 런치패드 & 2단 슬림 HUD (`HomeScreen` + `useAppRoute`)
+### 2.0. 국립공원공단(KNPS) 브랜드 디자인 시스템 & 인트로 미션 런치패드 (`HomeScreen` + `useAppRoute`)
+- **국립공원공단(KNPS) 한려해상 비오필릭 디자인 시스템**: 국립공원공단 공식 상징 3원색(생태보전 그린 `#00854a`·`#10b981`, 청정 해양 블루 `#0066b3`·`#0ea5e9`, 생명력 태양 앰버 `#f59e0b`)과 한려해상 다도해 파노라마 일러스트, 국립공원 레인저(Ranger) 복장 마스코트, `accent-color` 브랜드 폼 컨트롤 및 `contrast-color()`/`oklch` 폴백 배지를 전 화면에 일관되게 적용했습니다.
 - **원터치 직행 미션 런치패드**: 초기 접속 시 무거운 지도 SDK 로드 없이 2×2 기능 그리드를 즉시 표시하며, 세부 작업 직행 칩(`[🚨위험주의 9곳]`, `[🗺️전체 55곳]`, `[📦공간 레이어]`, `[⏱️실항로 시간계산]`, `[🌊해상기상 판정]`)으로 1탭 진입을 지원합니다.
 - **2단 슬림 HUD & 깊이 인식 히스토리 라우터**: 모바일 화면 상단 고정 바 점유율을 12% 미만(`~92px`)으로 압축하고, 인앱 진입 시 `[< 홈]` 클릭이 `window.history.back()`으로 동작하여 뒤로가기 무한 루프(Back-Button Trap)를 방지합니다.
 

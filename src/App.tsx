@@ -1163,7 +1163,7 @@ export function App() {
     : (customReportCoords?.lng ?? userLocation?.lng ?? 128.552);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-[#0b192c] text-white select-none">
+    <div className="relative h-dvh w-full overflow-hidden bg-[#061c24] text-white select-none">
       {/* 1. 초기 접속 인트로 허브 (HomeScreen): 새 접속 시 지도/SDK를 미리 로드하지 않고 즉시 표시하며,
           한 번 작업공간에 진입한 뒤 홈으로 복귀하면 오버레이로 열려 하단 작업공간 상태를 보존합니다. */}
       {isHomeScreen && (
@@ -1202,24 +1202,28 @@ export function App() {
             className="pointer-events-none fixed inset-x-0 top-0 z-[1000] flex flex-col gap-1 px-2 py-1 sm:gap-1.5 sm:p-3"
             style={{ paddingTop: 'calc(var(--safe-top) + 0.25rem)' }}
           >
-            {/* Row 1: 홈 복귀 + 현재 페이지 전용 정체성 타이틀 + 상대 페이지 원터치 스위치 + 상태 유틸 */}
-            <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-center justify-between gap-1.5 rounded-2xl border-2 border-slate-600/90 bg-[#0b192c]/95 px-2 py-1 shadow-2xl backdrop-blur-md sm:gap-2 sm:px-3 sm:py-2">
+            {/* Row 1: 홈 복귀 + 현재 페이지 전용 정체성 타이틀(국립공원공단 배지) + 상대 페이지 원터치 스위치 + 상태 유틸 */}
+            <div className="knps-hud-surface pointer-events-auto relative mx-auto flex w-full max-w-3xl items-center justify-between gap-1.5 overflow-hidden rounded-2xl border-2 border-emerald-500/45 bg-[#061c24]/95 px-2 py-1 shadow-2xl backdrop-blur-md sm:gap-2 sm:px-3 sm:py-2">
+              <div
+                aria-hidden="true"
+                className="knps-tricolor-bar pointer-events-none absolute inset-x-0 top-0 h-0.5 opacity-95"
+              />
               <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleReturnToHome}
                   aria-label="인트로 홈 화면으로 돌아가기"
                   title="홈 화면으로 이동"
-                  className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-slate-600 bg-slate-800/90 px-2 text-xs font-black text-sky-300 shadow transition hover:border-sky-400 active:scale-95 focus-visible:outline-2 focus-visible:outline-sky-400 sm:h-9 sm:px-2.5"
+                  className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-emerald-500/45 bg-[#0a2733]/95 px-2 text-xs font-black text-emerald-300 shadow transition hover:border-emerald-400 active:scale-95 focus-visible:outline-2 focus-visible:outline-emerald-400 sm:h-9 sm:px-2.5"
                 >
                   <ChevronLeft className="h-4 w-4 stroke-[2.6]" aria-hidden="true" />
                   <span>홈</span>
                 </button>
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow sm:h-9 sm:w-9 ${
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/25 shadow sm:h-9 sm:w-9 ${
                     activeMainTab === 'notebook'
-                      ? 'bg-sky-400 text-slate-950'
-                      : 'bg-amber-400 text-slate-950'
+                      ? 'bg-gradient-to-br from-[#00854a] to-[#0ea5e9] text-white'
+                      : 'bg-gradient-to-br from-[#0066b3] to-[#14b8a6] text-white'
                   }`}
                 >
                   {activeMainTab === 'notebook' ? (
@@ -1237,11 +1241,12 @@ export function App() {
                     >
                       {activeMainTab === 'notebook' ? '꼬미의 바다수첩' : '바닷길 콕콕'}
                     </h1>
-                    <span className="hidden shrink-0 rounded-md border border-sky-400/50 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-black text-sky-300 sm:inline">
-                      v1.7
+                    <span className="hidden shrink-0 items-center gap-1 rounded-md border border-emerald-400/50 bg-emerald-950/90 px-1.5 py-0.5 text-[10px] font-black text-emerald-200 sm:inline-flex">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      국립공원 · v1.8
                     </span>
                   </div>
-                  <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-slate-300 sm:text-[11px]">
+                  <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-emerald-100/90 sm:text-[11px]">
                     {activeMainTab === 'notebook'
                       ? isRedOnly && selectedRegion === 'all' && !dockingSearchQuery
                         ? `🚨 위험주의 ${filteredFeatures.length}개소 집중 표시`
@@ -1277,8 +1282,8 @@ export function App() {
                   }
                   className={`flex h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 text-[11px] font-black shadow-md transition active:scale-95 sm:h-9 sm:px-2.5 sm:text-xs ${
                     activeMainTab === 'notebook'
-                      ? 'border-amber-400/90 bg-amber-950/90 text-amber-200 hover:bg-amber-900/90'
-                      : 'border-sky-400/90 bg-sky-950/90 text-sky-200 hover:bg-sky-900/90'
+                      ? 'border-sky-400/90 bg-[#072a42]/95 text-sky-200 hover:bg-[#093554]'
+                      : 'border-emerald-400/90 bg-[#063229]/95 text-emerald-200 hover:bg-[#084236]'
                   }`}
                 >
                   <ArrowLeftRight className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
@@ -1318,7 +1323,7 @@ export function App() {
                   type="button"
                   onClick={handleManualReload}
                   aria-label="데이터 새로고침"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/90 text-sky-300 active:scale-95 sm:h-9 sm:w-9"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-500/45 bg-[#0a2733]/95 text-emerald-300 active:scale-95 sm:h-9 sm:w-9"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
                 </button>
@@ -1397,7 +1402,7 @@ export function App() {
                   className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow-lg transition active:scale-95 sm:min-h-9 sm:gap-1.5 sm:px-3 sm:text-xs ${
                     selectedColors.includes('red')
                       ? 'border-red-400 bg-red-950/95 text-red-100 shadow-[0_0_14px_rgba(239,68,68,0.45)]'
-                      : 'border-red-500/50 bg-[#0b192c]/95 text-red-300/85 hover:border-red-400'
+                      : 'border-red-500/50 bg-[#061c24]/95 text-red-300/85 hover:border-red-400'
                   }`}
                 >
                   <span className="relative flex h-2 w-2 shrink-0 sm:h-2.5 sm:w-2.5">
@@ -1422,12 +1427,12 @@ export function App() {
                   onClick={() => setIsColorFilterOpen((open) => !open)}
                   className={`flex min-h-8 shrink-0 items-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums shadow transition active:scale-95 sm:min-h-9 sm:px-3 sm:text-xs ${
                     isColorFilterOpen
-                      ? 'border-sky-300 bg-sky-400 text-slate-950'
+                      ? 'border-emerald-300 bg-emerald-400 text-slate-950'
                       : isAllColorsSelected || selectedRegion !== 'all' || dockingSearchQuery
-                        ? 'border-sky-400/90 bg-sky-950/95 text-sky-200'
+                        ? 'border-emerald-400/90 bg-emerald-950/95 text-emerald-200'
                         : extraSelectedCount > 0
                           ? 'border-amber-400/90 bg-amber-950/95 text-amber-200'
-                          : 'border-slate-500 bg-[#0b192c]/95 text-slate-200 hover:border-sky-400'
+                          : 'border-emerald-500/45 bg-[#061c24]/95 text-slate-200 hover:border-emerald-400'
                   }`}
                 >
                   <SlidersHorizontal className="hidden h-3.5 w-3.5 shrink-0 sm:inline" />
@@ -1459,7 +1464,7 @@ export function App() {
               <section
                 id="docking-color-filter-popover"
                 aria-label="접안지 등급 및 권역 표시 설정"
-                className="w-full rounded-2xl border-2 border-sky-400/70 bg-[#0b192c]/98 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+                className="knps-modal-surface w-full rounded-2xl border-2 border-emerald-400/70 bg-[#061c24]/98 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.85)] backdrop-blur-xl"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2">
                   <div className="flex items-center gap-1.5">
@@ -1695,13 +1700,13 @@ export function App() {
               onClick={() => replaceNavPanel('route')}
               className={`flex min-h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'route'
-                  ? 'border-amber-400 bg-amber-400/20 text-amber-200 shadow-lg'
-                  : 'border-slate-700 bg-slate-900/90 text-slate-300 hover:border-slate-500'
+                  ? 'border-sky-400 bg-[#072a42]/95 text-sky-200 shadow-lg'
+                  : 'border-emerald-500/35 bg-[#061c24]/95 text-slate-300 hover:border-sky-400/60'
               }`}
             >
               <Navigation className="hidden h-3.5 w-3.5 shrink-0 sm:inline" aria-hidden="true" />
               <span>시간계산</span>
-              <span className="rounded bg-amber-400/20 px-1.5 py-0.2 text-[10px] font-extrabold text-amber-300">
+              <span className="rounded bg-sky-400/20 px-1.5 py-0.2 text-[10px] font-extrabold text-sky-200">
                 {Math.round(routeCalculation.totalDurationMinutes)}분 · {routeCalculation.totalDistanceKm.toFixed(1)}km
               </span>
             </button>
@@ -1710,8 +1715,8 @@ export function App() {
               onClick={() => replaceNavPanel('weather')}
               className={`flex min-h-8 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1 text-[11px] font-black tabular-nums transition active:scale-95 sm:min-h-9 sm:text-xs ${
                 navSubTab === 'weather'
-                  ? 'border-amber-400 bg-amber-400/20 text-amber-200 shadow-lg'
-                  : 'border-slate-700 bg-slate-900/90 text-slate-300 hover:border-slate-500'
+                  ? 'border-teal-400 bg-[#063229]/95 text-teal-200 shadow-lg'
+                  : 'border-emerald-500/35 bg-[#061c24]/95 text-slate-300 hover:border-teal-400/60'
               }`}
             >
               <Waves className="hidden h-3.5 w-3.5 shrink-0 sm:inline" aria-hidden="true" />
@@ -1745,9 +1750,9 @@ export function App() {
         {(gpsStatusMsg || isReportPickMode) && (
           <div
             role="status"
-            className="pointer-events-auto mx-auto flex items-center gap-1.5 rounded-xl border border-sky-400/80 bg-slate-950/95 px-3 py-1 text-[11px] font-extrabold text-sky-200 shadow-xl sm:text-xs"
+            className="pointer-events-auto mx-auto flex items-center gap-1.5 rounded-xl border border-emerald-400/80 bg-[#061c24]/98 px-3 py-1 text-[11px] font-extrabold text-emerald-200 shadow-xl sm:text-xs"
           >
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
             <span>
               {isReportPickMode
                 ? '지도에서 제보할 위치를 직접 탭하세요 📍'
@@ -1772,7 +1777,7 @@ export function App() {
       {/* 메인 100dvh 지도 */}
       <Suspense
         fallback={
-          <div className="flex h-dvh w-full items-center justify-center bg-[#0b192c] text-xs font-black text-sky-300">
+          <div className="flex h-dvh w-full items-center justify-center bg-[#061c24] text-xs font-black text-emerald-300">
             해상 전자지도 엔진 준비 중...
           </div>
         }
@@ -1864,10 +1869,10 @@ export function App() {
                   onClick={() => handleSelectFeatureOnMap(feature)}
                   className={`flex min-h-11 shrink-0 flex-col justify-center rounded-2xl border-2 px-3 py-1 text-left shadow-xl backdrop-blur-md transition active:scale-95 sm:min-h-12 sm:px-3.5 sm:py-1.5 ${
                     isSelected
-                      ? 'border-white bg-sky-950/95'
+                      ? 'border-emerald-300 bg-[#063229]/95'
                       : isHazardRed
                         ? 'border-red-500/80 bg-[#1a0a12]/95'
-                        : 'border-slate-600/90 bg-[#0b192c]/95'
+                        : 'border-emerald-500/45 bg-[#061c24]/95'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">

@@ -79,7 +79,7 @@ export function PortSelectModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[88dvh] w-full max-w-xl flex-col rounded-3xl border-2 border-slate-600 bg-[#0b192c] p-4 text-white shadow-2xl sm:p-5"
+        className="knps-modal-surface flex max-h-[88dvh] w-full max-w-xl flex-col rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-4 text-white shadow-2xl sm:p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700/90 pb-3">

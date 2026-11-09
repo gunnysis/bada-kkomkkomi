@@ -594,7 +594,7 @@ export function MapView({
           className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
             userLocation
               ? 'border-sky-300 bg-sky-500 text-slate-950'
-              : 'border-slate-600 bg-[#0b192c]/95 text-sky-400'
+              : 'border-emerald-500/45 bg-[#061c24]/95 text-sky-400'
           }`}
         >
           <LocateFixed className="h-4 w-4 stroke-[2.4] sm:h-5 sm:w-5" />
@@ -605,7 +605,7 @@ export function MapView({
           onClick={onSimulateFieldGps}
           aria-label="통영·거제 해상 선박 GPS 시뮬레이션"
           title="통영·거제 해역 가상 선박 GPS 시뮬레이션"
-          className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500/70 bg-[#0b192c]/95 text-amber-300 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
+          className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500/70 bg-[#061c24]/95 text-amber-300 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
         >
           <Compass className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
           <span className="text-[8px] leading-none font-black sm:text-[9px]">현장GPS</span>
@@ -620,7 +620,7 @@ export function MapView({
           className={`relative flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
             isMapTypePopoverOpen || baseMapType !== 'roadmap' || overlayMapTypes.length > 0
               ? 'border-emerald-300 bg-emerald-500 text-slate-950'
-              : 'border-slate-600 bg-[#0b192c]/95 text-emerald-300'
+              : 'border-emerald-500/45 bg-[#061c24]/95 text-emerald-300'
           }`}
         >
           <Satellite className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
@@ -650,7 +650,7 @@ export function MapView({
           className={`flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
             activeEngine === 'kakao'
               ? 'border-yellow-400 bg-yellow-400 text-slate-950'
-              : 'border-slate-600 bg-[#0b192c]/95 text-yellow-300'
+              : 'border-emerald-500/45 bg-[#061c24]/95 text-yellow-300'
           }`}
         >
           <Globe className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
@@ -664,17 +664,17 @@ export function MapView({
           onClick={onResetBounds}
           aria-label="전체 해역 보기"
           title="통영·거제 전체 해역 보기"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 text-white shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-emerald-500/45 bg-[#061c24]/95 text-white shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
         >
           <Maximize className="h-4 w-4 stroke-[2.3] sm:h-5 sm:w-5" />
         </button>
 
-        <div className="flex flex-col overflow-hidden rounded-xl border-2 border-slate-600 bg-[#0b192c]/95 shadow-xl sm:rounded-2xl">
+        <div className="flex flex-col overflow-hidden rounded-xl border-2 border-emerald-500/45 bg-[#061c24]/95 shadow-xl sm:rounded-2xl">
           <button
             type="button"
             onClick={() => setZoomStepTrigger({ delta: 1, nonce: Date.now() })}
             aria-label="지도 확대"
-            className="flex h-8 w-9 items-center justify-center border-b border-slate-700 text-white active:bg-slate-800 sm:h-11 sm:w-11"
+            className="flex h-8 w-9 items-center justify-center border-b border-emerald-500/30 text-white active:bg-[#0a2733] sm:h-11 sm:w-11"
           >
             <Plus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
           </button>
@@ -682,7 +682,7 @@ export function MapView({
             type="button"
             onClick={() => setZoomStepTrigger({ delta: -1, nonce: Date.now() })}
             aria-label="지도 축소"
-            className="flex h-8 w-9 items-center justify-center text-white active:bg-slate-800 sm:h-11 sm:w-11"
+            className="flex h-8 w-9 items-center justify-center text-white active:bg-[#0a2733] sm:h-11 sm:w-11"
           >
             <Minus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
           </button>
@@ -694,7 +694,7 @@ export function MapView({
         <div
           role="dialog"
           aria-label="배경지도 및 2.5D 지형·3D 로드뷰 레이어 설정"
-          className="fixed top-[8.75rem] right-13 z-[920] w-[17.5rem] rounded-2xl border-2 border-emerald-400/80 bg-[#0b192c]/98 p-3 text-white shadow-2xl backdrop-blur-md sm:top-[10.5rem] sm:right-16 sm:w-80 sm:p-3.5"
+          className="knps-modal-surface fixed top-[8.75rem] right-13 z-[920] w-[17.5rem] rounded-2xl border-2 border-emerald-400/80 bg-[#061c24]/98 p-3 text-white shadow-2xl backdrop-blur-md sm:top-[10.5rem] sm:right-16 sm:w-80 sm:p-3.5"
         >
           <div className="flex items-center justify-between border-b border-slate-700 pb-2">
             <div className="flex items-center gap-1.5">
@@ -915,7 +915,7 @@ export function MapView({
       {overlayMapTypes.includes('roadview') && (
         <div
           role="status"
-          className="fixed inset-x-3 top-[8.6rem] z-[880] mx-auto flex max-w-md items-center justify-between gap-2 rounded-2xl border-2 border-sky-400 bg-[#0b192c]/95 px-3 py-2 text-xs text-sky-100 shadow-2xl backdrop-blur-md sm:top-[10.3rem]"
+          className="fixed inset-x-3 top-[8.6rem] z-[880] mx-auto flex max-w-md items-center justify-between gap-2 rounded-2xl border-2 border-sky-400 bg-[#061c24]/95 px-3 py-2 text-xs text-sky-100 shadow-2xl backdrop-blur-md sm:top-[10.3rem]"
         >
           <div className="flex items-center gap-2">
             <Eye className="h-4 w-4 shrink-0 text-sky-400" />
@@ -967,7 +967,7 @@ export function MapView({
           onClick={() => setIsDiagModalOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-3xl border-2 border-amber-400/80 bg-[#0b192c] p-5 text-white shadow-2xl"
+            className="knps-modal-surface w-full max-w-md rounded-3xl border-2 border-amber-400/80 bg-[#061c24] p-5 text-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-700 pb-3">

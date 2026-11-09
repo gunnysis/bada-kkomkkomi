@@ -43,7 +43,7 @@ export function WeatherThresholdSettings({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-3xl border-2 border-slate-600 bg-[#0b192c] p-5 text-white shadow-2xl"
+        className="knps-modal-surface w-full max-w-md rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-5 text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-700/90 pb-3">

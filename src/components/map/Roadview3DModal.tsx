@@ -183,11 +183,11 @@ export function Roadview3DModal({
       onClick={onClose}
     >
       <div
-        className="flex h-[84dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border-t-2 border-sky-400/80 bg-[#0b192c] text-white shadow-2xl sm:h-[82dvh] sm:rounded-3xl sm:border-2"
+        className="knps-modal-surface flex h-[84dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border-t-2 border-emerald-400/80 bg-[#061c24] text-white shadow-2xl sm:h-[82dvh] sm:rounded-3xl sm:border-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. 상단 3D 현장 로드뷰 헤더 */}
-        <div className="flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/95 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-emerald-500/30 bg-[#0a2733]/95 px-4 py-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-md bg-sky-500 px-2 py-0.5 text-[10px] font-black text-slate-950">

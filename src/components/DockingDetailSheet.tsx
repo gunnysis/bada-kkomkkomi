@@ -103,7 +103,7 @@ export function DockingDetailSheet({
         }
       }}
       aria-labelledby="sheet-point-title"
-      className="bada-bottom-sheet fixed inset-x-0 bottom-0 top-auto z-[1200] m-0 max-h-[86dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border-t-2 border-slate-600 bg-[#0b192c] p-0 text-white shadow-2xl sm:mx-auto"
+      className="bada-bottom-sheet knps-modal-surface fixed inset-x-0 bottom-0 top-auto z-[1200] m-0 max-h-[86dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border-t-2 border-emerald-500/50 bg-[#061c24] p-0 text-white shadow-2xl sm:mx-auto"
       style={{
         transform: dragOffsetY > 0 ? `translateY(${dragOffsetY}px)` : undefined,
         transition: touchStartY === null ? 'transform 0.22s ease-out' : 'none',
@@ -111,7 +111,7 @@ export function DockingDetailSheet({
     >
       {/* 상단 드래그 핸들 및 헤더 */}
       <div
-        className="sticky top-0 z-20 border-b border-slate-700/90 bg-[#0b192c]/95 px-5 pt-3 pb-4 backdrop-blur-md"
+        className="sticky top-0 z-20 border-b border-emerald-500/30 bg-[#061c24]/95 px-5 pt-3 pb-4 backdrop-blur-md"
         onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
         onTouchMove={(e) => {
           if (touchStartY === null) return;

@@ -164,9 +164,13 @@ export function RouteTimeCalculator({
 
   return (
     <section
-      className="pointer-events-auto flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-slate-600/95 bg-[#0b192c]/95 p-2.5 text-white shadow-2xl backdrop-blur-md sm:p-3.5"
+      className="knps-hud-surface pointer-events-auto relative flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-emerald-500/45 bg-[#061c24]/95 p-2.5 text-white shadow-2xl backdrop-blur-md sm:p-3.5"
       aria-label="바닷길 시간계산 패널"
     >
+      <div
+        aria-hidden="true"
+        className="knps-tricolor-bar pointer-events-none absolute inset-x-0 top-0 h-0.5 opacity-95"
+      />
       {/* 상단 고정 헤더: 전체 예상 소요시간 및 실항로 요약 (1~2줄 초컴팩트 구성) */}
       <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
