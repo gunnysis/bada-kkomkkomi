@@ -98,7 +98,8 @@ export function useMarineWeather(
     }
   }, []);
 
-  // 오프라인 전환 시 과거 예보를 정상 상태처럼 유지하지 않고 즉시 미확인('?')으로 전환 (설계서 5.4항)
+  // 오프라인 전환 시 과거 예보를 정상 상태처럼 유지하지 않고 즉시 미확인('?')으로 전환하며,
+  // 해상 음영지역 통과 후 온라인 복귀 시 자동으로 최신 ECMWF 예보를 재조회합니다.
   useEffect(() => {
     const handleOffline = () => {
       if (abortControllerRef.current) {
@@ -108,8 +109,17 @@ export function useMarineWeather(
       setRawHourly([]);
       setError('오프라인 상태 — 실시간 ECMWF 예보를 확인할 수 없습니다.');
     };
+    const handleOnline = () => {
+      setIsLoading(true);
+      setError(null);
+      setFetchNonce((n) => n + 1);
+    };
     window.addEventListener('offline', handleOffline);
-    return () => window.removeEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+    };
   }, []);
 
   // 좌표 또는 수동 새로고침 시 ECMWF 전용(IFS + WAM) API 비동기 조회

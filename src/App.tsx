@@ -325,10 +325,31 @@ export function App() {
     );
   });
 
-  // 5. 바닷길 콕콕 - 시간계산기 상태 & 최대 10단계 실행취소(Undo) 히스토리 스택
-  const [speedKnots, setSpeedKnots] = useState<number>(
-    config.route_defaults?.default_speed_knots || 15,
-  );
+  // 5. 바닷길 콕콕 - 시간계산기 상태 & 최대 10단계 실행취소(Undo) 히스토리 스택 (선박 속력 기기 영속 저장 지원)
+  const [speedKnots, setSpeedKnotsState] = useState<number>(() => {
+    try {
+      const saved = window.localStorage.getItem('bada_vessel_speed_knots_v1');
+      if (saved !== null) {
+        const num = Number(saved);
+        if (Number.isFinite(num) && num >= 5 && num <= 45) {
+          return num;
+        }
+      }
+    } catch {
+      // ignore storage error
+    }
+    return config.route_defaults?.default_speed_knots || 15;
+  });
+
+  const setSpeedKnots = useCallback((nextSpeed: number) => {
+    if (!Number.isFinite(nextSpeed) || nextSpeed < 5 || nextSpeed > 45) return;
+    setSpeedKnotsState(nextSpeed);
+    try {
+      window.localStorage.setItem('bada_vessel_speed_knots_v1', String(nextSpeed));
+    } catch {
+      // ignore storage error
+    }
+  }, []);
   const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(INITIAL_WAYPOINTS);
   const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
   const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('add_waypoint');

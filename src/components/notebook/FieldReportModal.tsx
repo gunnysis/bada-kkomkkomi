@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import {
   Mail,
   Camera,
@@ -13,7 +13,6 @@ import {
 import type { FieldReportData } from '../../types/report';
 import type { AdminConfig } from '../../types/config';
 import { sendFieldReport } from '../../services/emailReportService';
-import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface FieldReportModalProps {
   isOpen: boolean;
@@ -38,8 +37,8 @@ export function FieldReportModal({
   onUpdateAdminEmail,
   onPickLocationOnMap,
 }: FieldReportModalProps) {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [memo, setMemo] = useState('');
-  useEscapeKey(isOpen, onClose);
   const [reporterName, setReporterName] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -48,6 +47,18 @@ export function FieldReportModal({
   const [recipientEmailInput, setRecipientEmailInput] = useState(
     adminConfig.report_recipient_email,
   );
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -137,17 +148,18 @@ export function FieldReportModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) {
+          onClose();
+        }
+      }}
       aria-labelledby="report-modal-title"
-      className="fixed inset-0 z-[1300] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1300] m-auto max-h-[90dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-5 text-white shadow-2xl"
     >
-      <div
-        className="knps-modal-surface max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-5 text-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div>
         <div className="flex items-center justify-between border-b border-slate-700/90 pb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
@@ -351,6 +363,6 @@ export function FieldReportModal({
           </button>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 }

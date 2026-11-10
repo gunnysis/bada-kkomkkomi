@@ -1,7 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Plus, Minus, Trash2, Calendar, Compass, X } from 'lucide-react';
 import type { PorpoiseRecord } from '../../types/porpoise';
-import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface PorpoiseObservationModalProps {
   isOpen: boolean;
@@ -24,6 +23,7 @@ export function PorpoiseObservationModal({
   onUpdate,
   onDelete,
 }: PorpoiseObservationModalProps) {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [observedAt, setObservedAt] = useState(() => {
     if (existingRecord) return existingRecord.observedAt.slice(0, 16);
     const now = new Date();
@@ -32,7 +32,17 @@ export function PorpoiseObservationModal({
   });
   const [count, setCount] = useState(() => existingRecord?.count ?? 1);
 
-  useEscapeKey(isOpen, onClose);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -64,17 +74,18 @@ export function PorpoiseObservationModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) {
+          onClose();
+        }
+      }}
       aria-labelledby="porpoise-modal-title"
-      className="fixed inset-0 z-[1300] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1300] m-auto w-[calc(100%-1.5rem)] max-w-md rounded-3xl border-2 border-teal-400/70 bg-[#061c24] p-5 text-white shadow-2xl"
     >
-      <div
-        className="knps-modal-surface w-full max-w-md rounded-3xl border-2 border-teal-400/70 bg-[#061c24] p-5 text-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div>
         <div className="flex items-center justify-between border-b border-slate-700/90 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 p-1 shadow">
@@ -187,6 +198,6 @@ export function PorpoiseObservationModal({
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 }

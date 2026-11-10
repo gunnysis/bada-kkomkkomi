@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Anchor,
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import type { MarinePort } from '../../types/port';
 import { searchMarinePorts } from '../../services/routeGeoService';
-import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface PortSelectModalProps {
   isOpen: boolean;
@@ -47,10 +46,21 @@ export function PortSelectModal({
   onSelectPort,
   onSelectUserGps,
 }: PortSelectModalProps) {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTabKey>('all');
 
-  useEscapeKey(isOpen, onClose);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
 
   const counts = useMemo(() => {
     return {
@@ -71,17 +81,18 @@ export function PortSelectModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) {
+          onClose();
+        }
+      }}
       aria-labelledby="port-select-title"
-      className="fixed inset-0 z-[1350] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-sm sm:p-4"
-      onClick={onClose}
+      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1350] m-auto max-h-[88dvh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-4 text-white shadow-2xl sm:p-5"
     >
-      <div
-        className="knps-modal-surface flex max-h-[88dvh] w-full max-w-xl flex-col rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-4 text-white shadow-2xl sm:p-5"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex max-h-[calc(88dvh-2.5rem)] min-h-0 flex-col">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700/90 pb-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400">
@@ -138,13 +149,17 @@ export function PortSelectModal({
 
         {/* 검색창 */}
         <div className="relative mt-2 shrink-0">
+          <label htmlFor="port-select-search-input" className="sr-only">
+            항포구 및 소규모 선착장 검색
+          </label>
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
+            id="port-select-search-input"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="항구·선착장·섬·초성 검색 (예: ㅅㄷㅎ, 원항, 노대도, 부잔교, 제승당)"
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2 pr-4 pl-10 text-sm font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+            className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 py-2 pr-4 pl-10 text-base font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
           />
         </div>
 
@@ -296,6 +311,6 @@ export function PortSelectModal({
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

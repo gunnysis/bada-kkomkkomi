@@ -37,6 +37,38 @@ interface WeatherThresholdSettingsProps {
 
 const KNOT_TO_MS = 0.514444;
 
+const VESSEL_THRESHOLD_PRESETS: Array<{
+  id: string;
+  label: string;
+  desc: string;
+  thresholds: WeatherThresholds;
+}> = [
+  {
+    id: 'small_rib',
+    label: '연안 단정·고무보트 (강화)',
+    desc: '10/15kn · 0.7/1.2m',
+    thresholds: {
+      windKnot: { good: 10, moderate: 15 },
+      waveMeter: { good: 0.7, moderate: 1.2 },
+    },
+  },
+  {
+    id: 'standard_patrol',
+    label: '소형 순찰선 (표준 기본)',
+    desc: '14/20kn · 1.0/1.8m',
+    thresholds: SAFE_DEFAULT_THRESHOLDS,
+  },
+  {
+    id: 'medium_vessel',
+    label: '중형 관공선 (완화)',
+    desc: '18/25kn · 1.5/2.5m',
+    thresholds: {
+      windKnot: { good: 18, moderate: 25 },
+      waveMeter: { good: 1.5, moderate: 2.5 },
+    },
+  },
+];
+
 function formatKnotsToMs(knots: number): string {
   if (!Number.isFinite(knots) || knots <= 0) return '0.0';
   return (knots * KNOT_TO_MS).toFixed(1);
@@ -54,11 +86,27 @@ export function WeatherThresholdSettings({
 }: WeatherThresholdSettingsProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const guideSectionRef = useRef<HTMLElement | null>(null);
+  const windGoodInputRef = useRef<HTMLInputElement | null>(null);
+  const waveGoodInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [windGood, setWindGood] = useState<number>(thresholds.windKnot.good);
-  const [windMod, setWindMod] = useState<number>(thresholds.windKnot.moderate);
-  const [waveGood, setWaveGood] = useState<number>(thresholds.waveMeter.good);
-  const [waveMod, setWaveMod] = useState<number>(thresholds.waveMeter.moderate);
+  // 모바일 키보드에서 백스페이스 삭제 시 '0' 강제 치환을 방지하기 위해 문자열 드래프트 상태 유지
+  const [windGoodStr, setWindGoodStr] = useState<string>(() =>
+    String(thresholds.windKnot.good),
+  );
+  const [windModStr, setWindModStr] = useState<string>(() =>
+    String(thresholds.windKnot.moderate),
+  );
+  const [waveGoodStr, setWaveGoodStr] = useState<string>(() =>
+    String(thresholds.waveMeter.good),
+  );
+  const [waveModStr, setWaveModStr] = useState<string>(() =>
+    String(thresholds.waveMeter.moderate),
+  );
+
+  // modern-web-guidance (validate-input-after-interaction): blur 또는 submit 이후에만 에러 노출, 수정 즉시 해제
+  const [windTouched, setWindTouched] = useState<boolean>(false);
+  const [waveTouched, setWaveTouched] = useState<boolean>(false);
+  const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
 
   // 네이티브 <dialog> Top-Layer 열기/닫기 동기화 ([RC-SET-01] 해결)
   useEffect(() => {
@@ -84,13 +132,17 @@ export function WeatherThresholdSettings({
 
   if (!isOpen) return null;
 
-  const windGoodNum = Number(windGood);
-  const windModNum = Number(windMod);
-  const waveGoodNum = Number(waveGood);
-  const waveModNum = Number(waveMod);
+  const windGoodNum = Number(windGoodStr);
+  const windModNum = Number(windModStr);
+  const waveGoodNum = Number(waveGoodStr);
+  const waveModNum = Number(waveModStr);
 
-  const windError: string | null =
-    !Number.isFinite(windGoodNum) || !Number.isFinite(windModNum) || windGoodNum <= 0
+  const rawWindError: string | null =
+    windGoodStr.trim() === '' ||
+    windModStr.trim() === '' ||
+    !Number.isFinite(windGoodNum) ||
+    !Number.isFinite(windModNum) ||
+    windGoodNum <= 0
       ? '풍속 기준치는 0보다 큰 숫자를 입력해야 합니다.'
       : windGoodNum >= windModNum
         ? `풍속 '좋음 상한선(${windGoodNum}kn)'은 '보통 상한선(${windModNum}kn)'보다 작아야 합니다.`
@@ -98,8 +150,12 @@ export function WeatherThresholdSettings({
           ? '풍속 상한선은 60kn 이하로 설정하세요.'
           : null;
 
-  const waveError: string | null =
-    !Number.isFinite(waveGoodNum) || !Number.isFinite(waveModNum) || waveGoodNum <= 0
+  const rawWaveError: string | null =
+    waveGoodStr.trim() === '' ||
+    waveModStr.trim() === '' ||
+    !Number.isFinite(waveGoodNum) ||
+    !Number.isFinite(waveModNum) ||
+    waveGoodNum <= 0
       ? '파고 기준치는 0보다 큰 숫자를 입력해야 합니다.'
       : waveGoodNum >= waveModNum
         ? `파고 '좋음 상한선(${waveGoodNum}m)'은 '보통 상한선(${waveModNum}m)'보다 작아야 합니다.`
@@ -107,7 +163,9 @@ export function WeatherThresholdSettings({
           ? '파고 상한선은 15m 이하로 설정하세요.'
           : null;
 
-  const isFormValid = windError === null && waveError === null;
+  const windError = windTouched || hasSubmitted ? rawWindError : null;
+  const waveError = waveTouched || hasSubmitted ? rawWaveError : null;
+  const isFormValid = rawWindError === null && rawWaveError === null;
 
   const isMatchesDefault =
     windGoodNum === defaultThresholds.windKnot.good &&
@@ -115,17 +173,33 @@ export function WeatherThresholdSettings({
     waveGoodNum === defaultThresholds.waveMeter.good &&
     waveModNum === defaultThresholds.waveMeter.moderate;
 
+  const handleApplyPreset = (presetThresholds: WeatherThresholds) => {
+    setWindGoodStr(String(presetThresholds.windKnot.good));
+    setWindModStr(String(presetThresholds.windKnot.moderate));
+    setWaveGoodStr(String(presetThresholds.waveMeter.good));
+    setWaveModStr(String(presetThresholds.waveMeter.moderate));
+    setWindTouched(false);
+    setWaveTouched(false);
+    setHasSubmitted(false);
+  };
+
   const handleResetToDefault = () => {
-    setWindGood(defaultThresholds.windKnot.good);
-    setWindMod(defaultThresholds.windKnot.moderate);
-    setWaveGood(defaultThresholds.waveMeter.good);
-    setWaveMod(defaultThresholds.waveMeter.moderate);
+    handleApplyPreset(defaultThresholds);
     onReset?.();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) return;
+    setHasSubmitted(true);
+
+    if (rawWindError !== null) {
+      windGoodInputRef.current?.focus();
+      return;
+    }
+    if (rawWaveError !== null) {
+      waveGoodInputRef.current?.focus();
+      return;
+    }
 
     const result = onSave({
       windKnot: { good: windGoodNum, moderate: windModNum },
@@ -213,6 +287,42 @@ export function WeatherThresholdSettings({
             </button>
           </div>
 
+          {/* 선박 규모별 원터치 기준 프리셋 칩 */}
+          <div
+            role="group"
+            aria-label="선박 규모별 기상 기준 프리셋"
+            className="mb-3 grid grid-cols-3 gap-1.5"
+          >
+            {VESSEL_THRESHOLD_PRESETS.map((preset) => {
+              const isSelectedPreset =
+                windGoodNum === preset.thresholds.windKnot.good &&
+                windModNum === preset.thresholds.windKnot.moderate &&
+                waveGoodNum === preset.thresholds.waveMeter.good &&
+                waveModNum === preset.thresholds.waveMeter.moderate;
+
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  aria-pressed={isSelectedPreset}
+                  onClick={() => handleApplyPreset(preset.thresholds)}
+                  className={`flex flex-col items-center justify-center rounded-xl border px-2 py-1.5 text-center transition active:scale-95 ${
+                    isSelectedPreset
+                      ? 'border-teal-400 bg-teal-950/90 text-teal-200 shadow'
+                      : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500'
+                  }`}
+                >
+                  <span className="text-[11px] font-black leading-tight">
+                    {preset.label}
+                  </span>
+                  <span className="mt-0.5 font-mono text-[10px] font-bold tabular-nums text-slate-400">
+                    {preset.desc}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
             {/* 1-1. 풍속 판정 기준 (<fieldset> + <legend>) */}
             <fieldset className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3.5 space-y-3">
@@ -230,26 +340,29 @@ export function WeatherThresholdSettings({
                     좋음 상한선 (&lt;)
                   </label>
                   <div
-                    className={`flex items-center rounded-xl border bg-slate-800 px-3 py-2 ${
+                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
                       windError ? 'border-red-400' : 'border-slate-600 focus-within:border-sky-400'
                     }`}
                   >
                     <input
+                      ref={windGoodInputRef}
                       id="wind-good-input"
+                      name="windGood"
                       type="number"
                       inputMode="decimal"
                       step="0.5"
                       min="1"
                       max="50"
-                      value={windGood}
+                      value={windGoodStr}
                       aria-invalid={windError ? true : undefined}
                       aria-describedby={windError ? 'wind-threshold-error' : undefined}
-                      onChange={(e) => setWindGood(Number(e.target.value))}
+                      onBlur={() => setWindTouched(true)}
+                      onChange={(e) => setWindGoodStr(e.target.value)}
                       className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
                     />
                     <span className="ml-1 text-xs font-bold text-slate-300">kn</span>
                   </div>
-                  <p className="mt-1 font-mono text-[11px] font-bold text-sky-300/90">
+                  <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-sky-300/90">
                     ≈ {formatKnotsToMs(windGoodNum)} m/s 미만
                   </p>
                 </div>
@@ -262,26 +375,28 @@ export function WeatherThresholdSettings({
                     보통 상한선 (≤)
                   </label>
                   <div
-                    className={`flex items-center rounded-xl border bg-slate-800 px-3 py-2 ${
+                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
                       windError ? 'border-red-400' : 'border-slate-600 focus-within:border-sky-400'
                     }`}
                   >
                     <input
                       id="wind-moderate-input"
+                      name="windModerate"
                       type="number"
                       inputMode="decimal"
                       step="0.5"
                       min="1"
                       max="60"
-                      value={windMod}
+                      value={windModStr}
                       aria-invalid={windError ? true : undefined}
                       aria-describedby={windError ? 'wind-threshold-error' : undefined}
-                      onChange={(e) => setWindMod(Number(e.target.value))}
+                      onBlur={() => setWindTouched(true)}
+                      onChange={(e) => setWindModStr(e.target.value)}
                       className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
                     />
                     <span className="ml-1 text-xs font-bold text-slate-300">kn</span>
                   </div>
-                  <p className="mt-1 font-mono text-[11px] font-bold text-slate-300">
+                  <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-slate-300">
                     ≈ {formatKnotsToMs(windModNum)} m/s 이하
                   </p>
                 </div>
@@ -297,15 +412,15 @@ export function WeatherThresholdSettings({
                   <span>{windError}</span>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-extrabold">
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-extrabold tabular-nums">
                   <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/60 px-1.5 py-1 text-emerald-300">
-                    좋음: &lt;{windGoodNum}kn
+                    좋음: &lt;{windGoodNum || 0}kn
                   </div>
                   <div className="rounded-lg border border-slate-500/50 bg-slate-800/90 px-1.5 py-1 text-slate-200">
-                    보통: {windGoodNum}~{windModNum}kn
+                    보통: {windGoodNum || 0}~{windModNum || 0}kn
                   </div>
                   <div className="rounded-lg border border-red-500/40 bg-red-950/60 px-1.5 py-1 text-red-300">
-                    나쁨: &gt;{windModNum}kn
+                    나쁨: &gt;{windModNum || 0}kn
                   </div>
                 </div>
               )}
@@ -327,21 +442,24 @@ export function WeatherThresholdSettings({
                     좋음 상한선 (&lt;)
                   </label>
                   <div
-                    className={`flex items-center rounded-xl border bg-slate-800 px-3 py-2 ${
+                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
                       waveError ? 'border-red-400' : 'border-slate-600 focus-within:border-teal-400'
                     }`}
                   >
                     <input
+                      ref={waveGoodInputRef}
                       id="wave-good-input"
+                      name="waveGood"
                       type="number"
                       inputMode="decimal"
                       step="0.1"
                       min="0.1"
                       max="10"
-                      value={waveGood}
+                      value={waveGoodStr}
                       aria-invalid={waveError ? true : undefined}
                       aria-describedby={waveError ? 'wave-threshold-error' : undefined}
-                      onChange={(e) => setWaveGood(Number(e.target.value))}
+                      onBlur={() => setWaveTouched(true)}
+                      onChange={(e) => setWaveGoodStr(e.target.value)}
                       className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
                     />
                     <span className="ml-1 text-xs font-bold text-slate-300">m</span>
@@ -356,21 +474,23 @@ export function WeatherThresholdSettings({
                     보통 상한선 (≤)
                   </label>
                   <div
-                    className={`flex items-center rounded-xl border bg-slate-800 px-3 py-2 ${
+                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
                       waveError ? 'border-red-400' : 'border-slate-600 focus-within:border-teal-400'
                     }`}
                   >
                     <input
                       id="wave-moderate-input"
+                      name="waveModerate"
                       type="number"
                       inputMode="decimal"
                       step="0.1"
                       min="0.1"
                       max="15"
-                      value={waveMod}
+                      value={waveModStr}
                       aria-invalid={waveError ? true : undefined}
                       aria-describedby={waveError ? 'wave-threshold-error' : undefined}
-                      onChange={(e) => setWaveMod(Number(e.target.value))}
+                      onBlur={() => setWaveTouched(true)}
+                      onChange={(e) => setWaveModStr(e.target.value)}
                       className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
                     />
                     <span className="ml-1 text-xs font-bold text-slate-300">m</span>
@@ -388,15 +508,15 @@ export function WeatherThresholdSettings({
                   <span>{waveError}</span>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-extrabold">
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-extrabold tabular-nums">
                   <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/60 px-1.5 py-1 text-emerald-300">
-                    좋음: &lt;{waveGoodNum}m
+                    좋음: &lt;{waveGoodNum || 0}m
                   </div>
                   <div className="rounded-lg border border-slate-500/50 bg-slate-800/90 px-1.5 py-1 text-slate-200">
-                    보통: {waveGoodNum}~{waveModNum}m
+                    보통: {waveGoodNum || 0}~{waveModNum || 0}m
                   </div>
                   <div className="rounded-lg border border-red-500/40 bg-red-950/60 px-1.5 py-1 text-red-300">
-                    나쁨: &gt;{waveModNum}m
+                    나쁨: &gt;{waveModNum || 0}m
                   </div>
                 </div>
               )}
@@ -404,7 +524,7 @@ export function WeatherThresholdSettings({
 
             <button
               type="submit"
-              disabled={!isFormValid}
+              disabled={(windTouched || waveTouched || hasSubmitted) && !isFormValid}
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-400 to-sky-400 py-3 text-sm font-black text-slate-950 shadow-lg transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Check className="h-4 w-4 stroke-[2.8]" aria-hidden="true" />
