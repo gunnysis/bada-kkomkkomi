@@ -233,16 +233,18 @@
   animation: bada-gps-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-/* 바텀 시트 모달 스크롤 체이닝 방지: modern-web-guidance `prevent-page-scroll-under-modal-dialog` */
-dialog.bada-bottom-sheet:modal {
+/* 바텀 시트 및 센터 모달 스크롤 체이닝 방지: modern-web-guidance `prevent-page-scroll-under-modal-dialog` & `dialog` */
+dialog.bada-bottom-sheet:modal,
+dialog.bada-modal-dialog:modal {
   overscroll-behavior: contain;
 }
 
-dialog.bada-bottom-sheet::backdrop {
+dialog.bada-bottom-sheet::backdrop,
+dialog.bada-modal-dialog::backdrop {
   overflow: hidden;
   overscroll-behavior: contain;
-  background: rgba(2, 6, 23, 0.62);
-  backdrop-filter: blur(3px);
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
 }
 
 /* 사진 갤러리 캐러셀 스냅 하이라이트: modern-web-guidance `carousel-snap-highlights` */

@@ -116,16 +116,20 @@ export function PorpoiseObservationModal({
 
           {/* 2. 목격 날짜 및 시간 */}
           <div>
-            <label className="mb-1 flex items-center gap-1.5 text-xs font-bold text-slate-300">
+            <label
+              htmlFor="porpoise-observed-at"
+              className="mb-1 flex items-center gap-1.5 text-xs font-bold text-slate-300"
+            >
               <Calendar className="h-3.5 w-3.5 text-teal-400" />
               <span>관찰 날짜 및 시간</span>
             </label>
             <input
+              id="porpoise-observed-at"
               type="datetime-local"
               required
               value={observedAt}
               onChange={(e) => setObservedAt(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm font-bold text-white focus:border-teal-400 focus:outline-none"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-base font-bold text-white focus:border-teal-400 focus:outline-none"
             />
           </div>
 

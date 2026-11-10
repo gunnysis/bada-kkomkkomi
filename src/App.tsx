@@ -22,6 +22,8 @@ import {
 
 import { HomeScreen, type NotebookLaunchPreset } from './components/home/HomeScreen';
 import type { RouteMapTapMode } from './components/navigation/RouteTimeCalculator';
+import type { SettingsInitialSection } from './components/navigation/WeatherThresholdSettings';
+import { APP_VERSION_DISPLAY } from './config/appVersion';
 
 const MapView = lazy(() =>
   import('./components/MapView').then((m) => ({ default: m.MapView })),
@@ -225,6 +227,8 @@ export function App() {
   const [selectedPorpoise, setSelectedPorpoise] = useState<PorpoiseRecord | null>(null);
 
   const [isWeatherSettingsOpen, setIsWeatherSettingsOpen] = useState(false);
+  const [settingsInitialSection, setSettingsInitialSection] =
+    useState<SettingsInitialSection>('thresholds');
   const [externalRoadviewTarget, setExternalRoadviewTarget] =
     useState<RoadviewTargetLocation | null>(null);
   const [portSelectorTarget, setPortSelectorTarget] = useState<{
@@ -1174,6 +1178,11 @@ export function App() {
           onSelectFeatureCard={handleOpenWorkspaceFromHome}
           onSelectNotebookPreset={handleOpenNotebookPresetFromHome}
           onSelectNavigationPanel={handleOpenNavigationPanelFromHome}
+          onOpenSettings={(section = 'thresholds') => {
+            setSettingsInitialSection(section);
+            setIsWeatherSettingsOpen(true);
+          }}
+          isCustomThresholds={marineWeather.isCustomThresholds}
           hasActiveWorkspace={hasEnteredWorkspace}
           activeWorkspaceSummary={activeWorkspaceSummary}
           onResumeWorkspace={() =>
@@ -1242,7 +1251,7 @@ export function App() {
                     </h1>
                     <span className="hidden shrink-0 items-center gap-1 rounded-md border border-emerald-400/50 bg-emerald-950/90 px-1.5 py-0.5 text-[10px] font-black text-emerald-200 sm:inline-flex">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      국립공원 · v1.8
+                      국립공원 · {APP_VERSION_DISPLAY}
                     </span>
                   </div>
                   <p className="mt-0.5 truncate text-[10px] font-bold tabular-nums text-emerald-100/90 sm:text-[11px]">
@@ -1327,6 +1336,26 @@ export function App() {
                   )}
                   <span className="hidden md:inline">{isOnline ? '온라인' : '오프라인'}</span>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettingsInitialSection('thresholds');
+                    setIsWeatherSettingsOpen(true);
+                  }}
+                  aria-label="설정 및 이용 안내 열기"
+                  title="기상 판정 기준 설정 및 이용 안내"
+                  className="relative flex h-8 shrink-0 items-center gap-1 rounded-xl border border-emerald-500/45 bg-[#0a2733]/95 px-2 text-xs font-extrabold text-teal-200 transition hover:border-teal-400 active:scale-95 sm:h-9 sm:px-2.5"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-teal-300 sm:h-4 sm:w-4" aria-hidden="true" />
+                  <span className="hidden md:inline">설정</span>
+                  {marineWeather.isCustomThresholds && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full border border-slate-950 bg-teal-400"
+                    />
+                  )}
+                </button>
 
                 <button
                   type="button"
@@ -1976,7 +2005,10 @@ export function App() {
                   showToast(`'${name}' 해역 기상 조회 완료`);
                 }}
                 onAddCurrentWeatherAsWaypoint={handleAddWeatherCoordAsWaypoint}
-                onOpenSettings={() => setIsWeatherSettingsOpen(true)}
+                onOpenSettings={() => {
+                  setSettingsInitialSection('thresholds');
+                  setIsWeatherSettingsOpen(true);
+                }}
                 onRefresh={marineWeather.refresh}
               />
             )}
@@ -2112,20 +2144,33 @@ export function App() {
           />
         </Suspense>
       )}
+        </div>
+      )}
 
-      {/* 모달 6: 해상기상 기준치 설정 */}
+      {/* 모달 6 (최상위 루트 호이스팅): 설정 및 이용 안내 (인트로 HomeScreen 및 WorkspaceScreen 양쪽에서 즉시 오픈 가능) */}
       {isWeatherSettingsOpen && (
         <Suspense fallback={null}>
           <WeatherThresholdSettings
-            key="weather-settings-open"
+            key={`weather-settings-${settingsInitialSection}-${marineWeather.thresholds.windKnot.good}-${marineWeather.thresholds.windKnot.moderate}-${marineWeather.thresholds.waveMeter.good}-${marineWeather.thresholds.waveMeter.moderate}`}
             isOpen={isWeatherSettingsOpen}
             onClose={() => setIsWeatherSettingsOpen(false)}
             thresholds={marineWeather.thresholds}
-            onSave={marineWeather.updateThresholds}
+            defaultThresholds={marineWeather.defaultThresholds}
+            isCustomThresholds={marineWeather.isCustomThresholds}
+            initialSection={settingsInitialSection}
+            onSave={(newThresholds) => {
+              const ok = marineWeather.updateThresholds(newThresholds);
+              if (ok) {
+                showToast('기상 판정 기준이 기기에 저장되어 즉시 반영되었습니다.');
+              }
+              return ok;
+            }}
+            onReset={() => {
+              marineWeather.resetThresholds();
+              showToast('기상 판정 기준을 표준 기본값으로 복원했습니다.');
+            }}
           />
         </Suspense>
-      )}
-        </div>
       )}
     </div>
   );

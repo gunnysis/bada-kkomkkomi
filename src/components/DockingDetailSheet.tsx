@@ -15,6 +15,7 @@ import {
 import type { DockingFeature } from '../types/docking';
 import { MARKER_COLOR_MAP } from '../types/docking';
 import { PhotoGallery } from './PhotoGallery';
+import { calculateHaversineKm, kmToNauticalMiles } from '../services/routeGeoService';
 
 interface DockingDetailSheetProps {
   feature: DockingFeature | null;
@@ -24,19 +25,6 @@ interface DockingDetailSheetProps {
   onRequestReport: (feature: DockingFeature) => void;
   onRequestRoadview?: (feature: DockingFeature) => void;
   onRequestNavigateRoute?: (feature: DockingFeature) => void;
-}
-
-function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
 export function DockingDetailSheet({
@@ -73,9 +61,9 @@ export function DockingDetailSheet({
   const colorMeta = MARKER_COLOR_MAP[properties.color] ?? MARKER_COLOR_MAP.blue;
 
   const distanceKm = userLocation
-    ? calculateDistanceKm(userLocation.lat, userLocation.lng, lat, lng)
+    ? calculateHaversineKm(userLocation.lat, userLocation.lng, lat, lng)
     : null;
-  const distanceNauticalMiles = distanceKm !== null ? distanceKm / 1.852 : null;
+  const distanceNauticalMiles = distanceKm !== null ? kmToNauticalMiles(distanceKm) : null;
 
   const handleCopyCoords = async () => {
     const text = `${lat.toFixed(5)}, ${lng.toFixed(5)} (${properties.name})`;

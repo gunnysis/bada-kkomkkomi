@@ -3,14 +3,17 @@ import {
   AlertTriangle,
   Anchor,
   ArrowRight,
+  BookOpen,
   Download,
   Layers,
   Navigation,
+  SlidersHorizontal,
   Waves,
   Wifi,
   WifiOff,
 } from 'lucide-react';
 import type { NavPanelType } from '../../hooks/useAppRoute';
+import { APP_VERSION_DISPLAY } from '../../config/appVersion';
 
 export type NotebookLaunchPreset = 'hazard' | 'all' | 'layers';
 
@@ -19,6 +22,8 @@ export interface HomeScreenProps {
   onSelectFeatureCard: (target: 'notebook' | 'navigation') => void;
   onSelectNotebookPreset?: (preset: NotebookLaunchPreset) => void;
   onSelectNavigationPanel?: (panel: NavPanelType) => void;
+  onOpenSettings?: (section?: 'thresholds' | 'guide') => void;
+  isCustomThresholds?: boolean;
   hasActiveWorkspace?: boolean;
   activeWorkspaceSummary?: string;
   onResumeWorkspace?: () => void;
@@ -31,8 +36,8 @@ export interface HomeScreenProps {
 }
 
 /**
- * 초기 접속 인트로 허브 (HomeScreen v1.8)
- * - public/dev/intro_design.png 시안 원본 에셋(공식 국립공원공단 CI, 망원경 든 해양 레인저 꼬미, 240x180 정규화 4대 기능 카드 일러스트 아이콘, 해저 산호/해초 푸터) 및
+ * 초기 접속 인트로 허브 (HomeScreen v2.1)
+ * - 공식 국립공원공단 CI, 망원경 든 해양 레인저 꼬미, 240x180 정규화 4대 기능 카드 일러스트 아이콘, 해저 산호/해초 푸터 및
  *   국립공원공단 공식 대표 캐릭터(반달이 & 꼬미) 이미지를 그대로 사용합니다.
  * - 2x2 그리드 전 카드의 [상단 배지 → 아이콘 슬롯 → 타이틀 → 부제 → 하단 액션] 수직·수평 기준선을 1px 단위로 일치시켰습니다.
  */
@@ -41,6 +46,8 @@ export function HomeScreen({
   onSelectFeatureCard,
   onSelectNotebookPreset,
   onSelectNavigationPanel,
+  onOpenSettings,
+  isCustomThresholds = false,
   hasActiveWorkspace = false,
   activeWorkspaceSummary,
   onResumeWorkspace,
@@ -125,7 +132,7 @@ export function HomeScreen({
           </div>
         </div>
 
-        {/* 상단 히어로 배너: public/dev/intro_design.png 원본 일러스트 (국립공원공단 공식 CI + 바다꼼꼬미 + 해양 레인저 꼬미) */}
+        {/* 상단 히어로 배너: 국립공원공단 공식 CI + 바다꼼꼬미 + 해양 레인저 꼬미 */}
         <section
           aria-labelledby="home-hero-title"
           className="relative overflow-hidden rounded-t-[2rem] border-x-4 border-t-4 border-white/95 shadow-lg"
@@ -282,60 +289,98 @@ export function HomeScreen({
               type="button"
               disabled
               aria-disabled="true"
-              className="flex h-full cursor-not-allowed flex-col items-center justify-between rounded-3xl border-2 border-[#bfdbfe] bg-gradient-to-b from-[#e4f0fe] via-[#dbeafe] to-[#b3d4fc] p-2.5 text-center opacity-85 shadow-sm sm:p-3.5"
+              className="flex h-full cursor-not-allowed flex-col justify-between rounded-3xl border-2 border-[#bfdbfe] bg-gradient-to-b from-[#e4f0fe] via-[#dbeafe] to-[#b3d4fc] p-2.5 text-center opacity-85 shadow-sm sm:p-3.5"
             >
-              <span className="inline-flex h-5 items-center rounded-full bg-[#072a40]/85 px-2.5 text-[10px] leading-none font-black text-sky-100">
-                출시 예정
-              </span>
+              <div className="flex flex-1 flex-col items-center justify-between px-1 pt-0.5 pb-2">
+                <span className="inline-flex h-5 items-center rounded-full bg-[#072a40]/85 px-2.5 text-[10px] leading-none font-black text-sky-100">
+                  출시 예정
+                </span>
 
-              <div className="my-1.5 flex h-14 w-full items-center justify-center sm:h-16">
-                <img
-                  src={`${base}images/brand/icon_calendar_boat_alpha.png`}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-full w-auto object-contain"
-                />
+                <div className="my-1.5 flex h-14 w-full items-center justify-center sm:h-16">
+                  <img
+                    src={`${base}images/brand/icon_calendar_boat_alpha.png`}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-auto object-contain"
+                  />
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-base leading-tight font-black tracking-tight whitespace-nowrap text-[#072a40] sm:text-xl">
+                    꼬미의 달력
+                  </span>
+                  <span className="mt-1 flex min-h-[1.5rem] items-center justify-center text-[11px] leading-tight font-bold text-[#1e3a5f] sm:text-xs">
+                    운항불가 일정 · 직원 메모
+                  </span>
+                </div>
               </div>
 
-              <div className="flex flex-col items-center">
-                <span className="text-base leading-tight font-black tracking-tight whitespace-nowrap text-[#072a40] sm:text-xl">
-                  꼬미의 달력
-                </span>
-                <span className="mt-1 flex min-h-[1.5rem] items-center justify-center text-[11px] leading-tight font-bold text-[#1e3a5f] sm:text-xs">
-                  운항불가 일정 · 직원 메모
+              <div className="border-t border-[#0066b3]/20 pt-2">
+                <span className="flex h-8 w-full items-center justify-center rounded-xl border border-[#0066b3]/25 bg-white/60 px-2 text-[10px] font-extrabold text-[#1e3a5f]">
+                  차기 업데이트 지원 예정
                 </span>
               </div>
             </button>
 
-            {/* 카드 4 (출시 예정): 설정 */}
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              className="flex h-full cursor-not-allowed flex-col items-center justify-between rounded-3xl border-2 border-slate-300 bg-gradient-to-b from-[#e9eff8] via-[#dfe7f2] to-[#c2cfde] p-2.5 text-center opacity-85 shadow-sm sm:p-3.5"
+            {/* 카드 4 (활성): 설정 (3.4 기상 판정 기준 설정 · 이용 안내 · 앱 버전 확인) */}
+            <article
+              aria-label="설정"
+              className="flex h-full flex-col justify-between overflow-hidden rounded-3xl border-2 border-[#5eead4] bg-gradient-to-b from-[#e6fcf8] via-[#d5f7f0] to-[#99ebdc] p-2.5 shadow-md transition hover:border-[#0d9488] hover:shadow-lg sm:p-3.5"
             >
-              <span className="inline-flex h-5 items-center rounded-full bg-[#072a40]/85 px-2.5 text-[10px] leading-none font-black text-sky-100">
-                출시 예정
-              </span>
-
-              <div className="my-1.5 flex h-14 w-full items-center justify-center sm:h-16">
-                <img
-                  src={`${base}images/brand/icon_settings_gear_alpha.png`}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-full w-auto object-contain"
-                />
-              </div>
-
-              <div className="flex flex-col items-center">
-                <span className="text-base leading-tight font-black tracking-tight whitespace-nowrap text-[#072a40] sm:text-xl">
-                  설정
+              <button
+                type="button"
+                onClick={() => onOpenSettings?.('thresholds')}
+                className="group flex flex-1 flex-col items-center justify-between rounded-2xl px-1 pt-0.5 pb-2 text-center transition active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488]"
+              >
+                <span className="inline-flex h-5 items-center gap-1 rounded-full bg-[#0f766e] px-2 text-[10px] leading-none font-black whitespace-nowrap text-white shadow-sm">
+                  <SlidersHorizontal className="h-2.5 w-2.5 shrink-0 stroke-[2.6]" aria-hidden="true" />
+                  <span>{isCustomThresholds ? '사용자 기준 적용중' : '기상기준 · 이용안내'}</span>
                 </span>
-                <span className="mt-1 flex min-h-[1.5rem] items-center justify-center text-[11px] leading-tight font-bold text-slate-700 sm:text-xs">
-                  앱 설정 · 이용 안내
-                </span>
+
+                <div className="my-1.5 flex h-14 w-full items-center justify-center sm:h-16">
+                  <img
+                    src={`${base}images/brand/icon_settings_gear_alpha.png`}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-auto object-contain transition-transform group-hover:scale-105"
+                  />
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-base leading-tight font-black tracking-tight whitespace-nowrap text-[#072a40] sm:text-xl">
+                    설정
+                  </span>
+                  <span className="mt-1 flex min-h-[1.5rem] items-center justify-center text-[11px] leading-tight font-bold text-[#134e4a] sm:text-xs">
+                    풍속·파고 기준 · 이용안내
+                  </span>
+                </div>
+              </button>
+
+              <div
+                role="group"
+                aria-label="설정 세부 기능 바로가기"
+                className="grid grid-cols-2 gap-1 border-t border-teal-600/25 pt-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => onOpenSettings?.('thresholds')}
+                  title="바닷길 콕콕 풍속·파고 판정 기준 설정 열기"
+                  className="flex h-8 items-center justify-center gap-1 rounded-xl bg-[#0f766e] px-1.5 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0d9488] active:scale-95"
+                >
+                  <SlidersHorizontal className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                  <span>기상기준</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenSettings?.('guide')}
+                  title="앱 이용 안내 및 버전 확인 열기"
+                  className="flex h-8 items-center justify-center gap-1 rounded-xl border border-[#0f766e]/60 bg-white/95 px-1.5 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-teal-50 active:scale-95"
+                >
+                  <BookOpen className="h-2.5 w-2.5 shrink-0 text-[#0f766e]" aria-hidden="true" />
+                  <span>이용안내</span>
+                </button>
               </div>
-            </button>
+            </article>
           </div>
         </nav>
 
@@ -370,7 +415,7 @@ export function HomeScreen({
         )}
       </main>
 
-      {/* 하단 해저 산호·물고기·불가사리 파노라마 푸터 (public/dev/intro_design.png 원본 하단 그래픽) */}
+      {/* 하단 해저 산호·물고기·불가사리 파노라마 푸터 */}
       <footer className="relative mt-1 w-full shrink-0 overflow-hidden">
         <img
           src={`${base}images/brand/footer_ocean.png`}
@@ -379,7 +424,7 @@ export function HomeScreen({
           className="block h-18 w-full object-cover object-bottom sm:h-22"
         />
         <div className="absolute inset-x-0 bottom-1.5 px-2 text-center text-[11px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)] sm:text-xs">
-          국립공원공단 한려해상 · 통영·거제 {totalDockingCount}개 접안지 · {totalPortsCount}개 항포구/선착장 지원 [v1.8]
+          국립공원공단 한려해상 · 통영·거제 {totalDockingCount}개 접안지 · {totalPortsCount}개 항포구/선착장 지원 [{APP_VERSION_DISPLAY}]
         </div>
       </footer>
     </div>

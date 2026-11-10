@@ -48,10 +48,25 @@ export function useMarineWeather(
     readSavedUserThresholds(),
   );
 
+  const defaultThresholds = useMemo<WeatherThresholds>(
+    () => resolveEffectiveThresholds(null, configWeatherDefaults),
+    [configWeatherDefaults],
+  );
+
   const thresholds = useMemo<WeatherThresholds>(
     () => resolveEffectiveThresholds(userThresholds, configWeatherDefaults),
     [userThresholds, configWeatherDefaults],
   );
+
+  const isCustomThresholds = useMemo<boolean>(() => {
+    if (!userThresholds) return false;
+    return (
+      userThresholds.windKnot.good !== defaultThresholds.windKnot.good ||
+      userThresholds.windKnot.moderate !== defaultThresholds.windKnot.moderate ||
+      userThresholds.waveMeter.good !== defaultThresholds.waveMeter.good ||
+      userThresholds.waveMeter.moderate !== defaultThresholds.waveMeter.moderate
+    );
+  }, [userThresholds, defaultThresholds]);
 
   const [rawHourly, setRawHourly] = useState<RawAlignedHourlyWeather[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -61,12 +76,23 @@ export function useMarineWeather(
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 기준치 저장 (네트워크 재요청 없이 useMemo로 즉시 재판정)
-  const updateThresholds = useCallback((newThresholds: WeatherThresholds) => {
-    if (!isValidWeatherThresholds(newThresholds)) return;
+  // 기준치 저장 (네트워크 재요청 없이 useMemo로 즉시 재판정, 유효성 통과 여부 반환)
+  const updateThresholds = useCallback((newThresholds: WeatherThresholds): boolean => {
+    if (!isValidWeatherThresholds(newThresholds)) return false;
     setUserThresholds(newThresholds);
     try {
       localStorage.setItem(STORAGE_KEY_THRESHOLDS, JSON.stringify(newThresholds));
+    } catch {
+      // ignore storage error
+    }
+    return true;
+  }, []);
+
+  // 기준치 기본값 복원 (사용자 커스텀 설정 해제 및 localStorage 키 제거)
+  const resetThresholds = useCallback(() => {
+    setUserThresholds(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY_THRESHOLDS);
     } catch {
       // ignore storage error
     }
@@ -157,8 +183,11 @@ export function useMarineWeather(
   return {
     ...result,
     thresholds,
+    defaultThresholds,
+    isCustomThresholds,
     updateCoordinates,
     updateThresholds,
+    resetThresholds,
     refresh,
   };
 }

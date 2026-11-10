@@ -186,16 +186,20 @@ export function FieldReportModal({
         {/* 운영자 수신 이메일 설정/변경 패널 */}
         {isEditingEmail && (
           <div className="mt-3 rounded-2xl border border-amber-500/50 bg-slate-900 p-3">
-            <label className="mb-1 block text-xs font-bold text-amber-300">
+            <label
+              htmlFor="report-recipient-email-input"
+              className="mb-1 block text-xs font-bold text-amber-300"
+            >
               제보 수신 관리자 이메일 설정
             </label>
             <div className="flex gap-2">
               <input
+                id="report-recipient-email-input"
                 type="email"
                 value={recipientEmailInput}
                 onChange={(e) => setRecipientEmailInput(e.target.value)}
                 placeholder="marine_admin@knps.or.kr"
-                className="flex-1 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
+                className="flex-1 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 font-mono text-base font-bold text-white focus:border-amber-400 focus:outline-none"
               />
               <button
                 type="button"
@@ -245,30 +249,38 @@ export function FieldReportModal({
 
           {/* 2. 제보자 이름 (선택) */}
           <div>
-            <label className="mb-1 block text-xs font-bold text-slate-300">
+            <label
+              htmlFor="report-reporter-name-input"
+              className="mb-1 block text-xs font-bold text-slate-300"
+            >
               제보자 이름 / 소속 (선택)
             </label>
             <input
+              id="report-reporter-name-input"
               type="text"
               value={reporterName}
               onChange={(e) => setReporterName(e.target.value)}
               placeholder="예: 홍길동 주무관"
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-base font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
           {/* 3. 현장 자유 메모 (필수) */}
           <div>
-            <label className="mb-1 block text-xs font-bold text-slate-300">
+            <label
+              htmlFor="report-memo-textarea"
+              className="mb-1 block text-xs font-bold text-slate-300"
+            >
               현장 자유 메모 및 위험/특이사항 (필수)
             </label>
             <textarea
+              id="report-memo-textarea"
               required
               rows={4}
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
               placeholder="예: 물양장 3번 비트 볼트 부식으로 계류 시 파손 위험. 간조 시 노출 암초 신규 확인."
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3.5 text-sm font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3.5 text-base font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
