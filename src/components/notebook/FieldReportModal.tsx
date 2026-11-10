@@ -157,27 +157,30 @@ export function FieldReportModal({
         }
       }}
       aria-labelledby="report-modal-title"
-      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1300] m-auto max-h-[90dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-5 text-white shadow-2xl"
+      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1300] m-auto max-h-[90dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-2 border-[#00a79d]/65 bg-white p-5 text-[#003360] shadow-2xl"
     >
       <div>
-        <div className="flex items-center justify-between border-b border-slate-700/90 pb-3">
+        <div className="flex items-center justify-between border-b border-sky-200 pb-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 text-amber-700">
               <Mail className="h-5 w-5" />
             </div>
             <div>
-              <h2 id="report-modal-title" className="text-base font-black tracking-tight text-white">
+              <h2
+                id="report-modal-title"
+                className="text-base font-black tracking-tight text-[#003360]"
+              >
                 현장정보 이메일 제보
               </h2>
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
                 <span>수신:</span>
-                <span className="font-mono font-bold text-sky-300">
+                <span className="font-mono font-bold text-[#0066b3]">
                   {adminConfig.report_recipient_email}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsEditingEmail((v) => !v)}
-                  className="inline-flex items-center gap-0.5 rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 hover:bg-slate-700"
+                  className="inline-flex items-center gap-0.5 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 hover:bg-amber-100"
                 >
                   <Settings2 className="h-3 w-3" />
                   <span>변경</span>
@@ -189,7 +192,7 @@ export function FieldReportModal({
             type="button"
             onClick={onClose}
             aria-label="제보 창 닫기"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] shadow-2xs active:scale-95"
           >
             <X className="h-5 w-5" />
           </button>
@@ -197,10 +200,10 @@ export function FieldReportModal({
 
         {/* 운영자 수신 이메일 설정/변경 패널 */}
         {isEditingEmail && (
-          <div className="mt-3 rounded-2xl border border-amber-500/50 bg-slate-900 p-3">
+          <div className="mt-3 rounded-2xl border border-amber-300 bg-amber-50/75 p-3">
             <label
               htmlFor="report-recipient-email-input"
-              className="mb-1 block text-xs font-bold text-amber-300"
+              className="mb-1 block text-xs font-extrabold text-amber-950"
             >
               제보 수신 관리자 이메일 설정
             </label>
@@ -211,49 +214,49 @@ export function FieldReportModal({
                 value={recipientEmailInput}
                 onChange={(e) => setRecipientEmailInput(e.target.value)}
                 placeholder="marine_admin@knps.or.kr"
-                className="flex-1 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 font-mono text-base font-bold text-white focus:border-amber-400 focus:outline-none"
+                className="flex-1 rounded-xl border-2 border-slate-400 bg-white px-3 py-2 font-mono text-base font-bold text-[#003360] focus:border-[#0066b3] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={handleSaveRecipientEmail}
-                className="rounded-xl bg-amber-400 px-3 py-2 text-xs font-black text-slate-950 active:scale-95"
+                className="rounded-xl bg-[#00846c] px-3 py-2 text-xs font-black text-white active:scale-95"
               >
                 저장
               </button>
             </div>
-            <p className="mt-1 text-[10px] text-slate-400">
-              * 영구 기본값은 <code className="text-sky-300">public/config/app_config.json</code>에서 관리하며, 이곳에서 변경 시 현재 기기에 즉시 적용됩니다.
+            <p className="mt-1 text-[10px] font-semibold text-slate-600">
+              * 영구 기본값은 <code className="font-bold text-[#0066b3]">public/config/app_config.json</code>에서 관리하며, 이곳에서 변경 시 현재 기기에 즉시 적용됩니다.
             </p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* 1. 제보 위치 정보 및 지도 위치 재지정 버튼 */}
-          <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
+          <div className="rounded-2xl border border-sky-200 bg-sky-50/80 p-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-bold text-slate-400">제보 위치 좌표</span>
-                <p className="mt-0.5 flex items-center gap-1 font-mono text-xs font-black text-sky-300">
-                  <Compass className="h-3.5 w-3.5 text-sky-400" />
+                <span className="text-xs font-bold text-slate-600">제보 위치 좌표</span>
+                <p className="mt-0.5 flex items-center gap-1 font-mono text-xs font-black text-[#0066b3]">
+                  <Compass className="h-3.5 w-3.5 text-[#0066b3]" />
                   {initialLat.toFixed(5)}°N, {initialLng.toFixed(5)}°E
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onPickLocationOnMap}
-                className="flex items-center gap-1 rounded-xl border border-sky-400/60 bg-sky-500/20 px-2.5 py-2 text-xs font-black text-sky-300 active:scale-95"
+                className="flex items-center gap-1 rounded-xl border border-sky-300 bg-white px-2.5 py-2 text-xs font-black text-[#0066b3] shadow-2xs active:scale-95"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 <span>지도에서 위치 선택</span>
               </button>
             </div>
             {pointName ? (
-              <p className="mt-1.5 text-sm font-extrabold text-white">
+              <p className="mt-1.5 text-sm font-extrabold text-[#003360]">
                 {pointId ? `[${pointId}] ` : ''}
                 {pointName}
               </p>
             ) : (
-              <p className="mt-1 text-[11px] text-slate-400">
+              <p className="mt-1 text-[11px] font-semibold text-slate-600">
                 특정 접안 포인트와 무관한 독립 현장 제보 위치입니다.
               </p>
             )}
@@ -263,7 +266,7 @@ export function FieldReportModal({
           <div>
             <label
               htmlFor="report-reporter-name-input"
-              className="mb-1 block text-xs font-bold text-slate-300"
+              className="mb-1 block text-xs font-extrabold text-[#003360]"
             >
               제보자 이름 / 소속 (선택)
             </label>
@@ -273,7 +276,7 @@ export function FieldReportModal({
               value={reporterName}
               onChange={(e) => setReporterName(e.target.value)}
               placeholder="예: 홍길동 주무관"
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-base font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+              className="w-full rounded-xl border-2 border-slate-400 bg-white px-3.5 py-2.5 text-base font-bold text-[#003360] placeholder-slate-400 shadow-2xs focus:border-[#0066b3] focus:outline-none"
             />
           </div>
 
@@ -281,7 +284,7 @@ export function FieldReportModal({
           <div>
             <label
               htmlFor="report-memo-textarea"
-              className="mb-1 block text-xs font-bold text-slate-300"
+              className="mb-1 block text-xs font-extrabold text-[#003360]"
             >
               현장 자유 메모 및 위험/특이사항 (필수)
             </label>
@@ -292,20 +295,20 @@ export function FieldReportModal({
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
               placeholder="예: 물양장 3번 비트 볼트 부식으로 계류 시 파손 위험. 간조 시 노출 암초 신규 확인."
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 p-3.5 text-base font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+              className="w-full resize-y rounded-xl border-2 border-slate-400 bg-white p-3.5 text-base font-bold text-[#003360] placeholder-slate-400 shadow-2xs focus:border-[#0066b3] focus:outline-none"
             />
           </div>
 
           {/* 4. 현장 사진 첨부 */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-slate-300">
+            <label className="mb-1.5 block text-xs font-extrabold text-[#003360]">
               현장 사진 첨부 (최대 4장)
             </label>
             <div className="flex flex-wrap gap-2.5">
               {photos.map((src, i) => (
                 <div
                   key={i}
-                  className="relative h-16 w-16 overflow-hidden rounded-xl border border-slate-600 bg-slate-800"
+                  className="relative h-16 w-16 overflow-hidden rounded-xl border border-slate-300 bg-slate-100"
                 >
                   <img src={src} alt={`첨부사진 ${i + 1}`} className="h-full w-full object-cover" />
                   <button
@@ -320,7 +323,7 @@ export function FieldReportModal({
               ))}
 
               {photos.length < 4 && (
-                <label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-600 bg-slate-900/60 text-slate-400 transition hover:border-sky-400 hover:text-sky-300">
+                <label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-400 bg-slate-50 text-slate-600 transition hover:border-[#0066b3] hover:bg-sky-50 hover:text-[#0066b3]">
                   <Camera className="h-5 w-5" />
                   <span className="mt-1 text-[10px] font-black">사진 추가</span>
                   <input
@@ -337,8 +340,8 @@ export function FieldReportModal({
           </div>
 
           {/* 안내문 */}
-          <div className="rounded-xl border border-slate-700/80 bg-slate-900/70 p-3 text-[11px] leading-relaxed text-slate-400">
-            <div className="mb-0.5 flex items-center gap-1.5 font-bold text-amber-300">
+          <div className="rounded-xl border border-[#d6c6b2] bg-[#f7f4ee] p-3 text-[11px] font-semibold leading-relaxed text-slate-700">
+            <div className="mb-0.5 flex items-center gap-1.5 font-extrabold text-[#8b5e3c]">
               <AlertCircle className="h-3.5 w-3.5" />
               <span>안내: 공식 지도에 자동 반영되지 않습니다</span>
             </div>
@@ -346,20 +349,20 @@ export function FieldReportModal({
           </div>
 
           {sendResult && (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-950/90 p-3 text-xs font-black text-emerald-300">
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-black text-[#00846c]">
               <CheckCircle2 className="h-4 w-4" />
               <span>{sendResult}</span>
             </div>
           )}
 
-          {/* 전송 버튼 */}
+          {/* 제출 버튼 */}
           <button
             type="submit"
             disabled={isSending}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 py-3 text-sm font-black text-slate-950 shadow-lg active:scale-95 disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00854a] via-[#00846c] to-[#0066b3] py-3.5 text-sm font-black text-white shadow-md transition active:scale-95 disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
-            <span>{isSending ? '전송 준비 중...' : '관리자에게 이메일 제보 전송'}</span>
+            <span>{isSending ? '제보 데이터 구성 중...' : '이메일 클라이언트로 제보 발송'}</span>
           </button>
         </form>
       </div>

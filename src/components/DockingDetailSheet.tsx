@@ -91,7 +91,7 @@ export function DockingDetailSheet({
         }
       }}
       aria-labelledby="sheet-point-title"
-      className="bada-bottom-sheet knps-modal-surface fixed inset-x-0 bottom-0 top-auto z-[1200] m-0 max-h-[86dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border-t-2 border-emerald-500/50 bg-[#061c24] p-0 text-white shadow-2xl sm:mx-auto"
+      className="bada-bottom-sheet knps-modal-surface fixed inset-x-0 bottom-0 top-auto z-[1200] m-0 max-h-[86dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border-t-2 border-[#00a79d]/65 bg-white p-0 text-[#003360] shadow-2xl sm:mx-auto"
       style={{
         transform: dragOffsetY > 0 ? `translateY(${dragOffsetY}px)` : undefined,
         transition: touchStartY === null ? 'transform 0.22s ease-out' : 'none',
@@ -99,7 +99,7 @@ export function DockingDetailSheet({
     >
       {/* 상단 드래그 핸들 및 헤더 */}
       <div
-        className="sticky top-0 z-20 border-b border-emerald-500/30 bg-[#061c24]/95 px-5 pt-3 pb-4 backdrop-blur-md"
+        className="sticky top-0 z-20 border-b border-sky-200 bg-gradient-to-r from-sky-50 via-teal-50/60 to-white px-5 pt-3 pb-4 backdrop-blur-md select-none"
         onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
         onTouchMove={(e) => {
           if (touchStartY === null) return;
@@ -115,12 +115,12 @@ export function DockingDetailSheet({
           setTouchStartY(null);
         }}
       >
-        <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-slate-500" aria-hidden="true" />
+        <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-slate-300" aria-hidden="true" />
 
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-lg bg-slate-800 px-2.5 py-1 font-mono text-xs font-extrabold text-sky-300">
+              <span className="rounded-lg border border-sky-200 bg-white px-2.5 py-1 font-mono text-xs font-extrabold text-[#0066b3] shadow-2xs">
                 {properties.id}
               </span>
               <span
@@ -130,13 +130,16 @@ export function DockingDetailSheet({
                 {colorMeta.label}
               </span>
               {distanceKm !== null && distanceNauticalMiles !== null && (
-                <span className="rounded-lg bg-emerald-950/90 border border-emerald-500/50 px-2.5 py-1 text-xs font-extrabold text-emerald-300">
+                <span className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-[#00846c]">
                   현재 위치에서 {distanceKm.toFixed(1)}km ({distanceNauticalMiles.toFixed(1)}NM)
                 </span>
               )}
             </div>
 
-            <h2 id="sheet-point-title" className="text-xl leading-snug font-black tracking-tight text-white sm:text-2xl">
+            <h2
+              id="sheet-point-title"
+              className="text-xl leading-snug font-black tracking-tight text-[#003360] sm:text-2xl"
+            >
               {properties.name}
             </h2>
           </div>
@@ -145,7 +148,7 @@ export function DockingDetailSheet({
             type="button"
             onClick={onClose}
             aria-label="상세 시트 닫기"
-            className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-600 bg-slate-800/90 text-white shadow-md active:scale-95"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-white text-[#003360] shadow-xs active:scale-95"
           >
             <X className="h-6 w-6" />
           </button>
@@ -154,40 +157,46 @@ export function DockingDetailSheet({
 
       {/* 본문 영역 */}
       <div className="space-y-5 px-5 pt-4 pb-8">
-        {/* 1. 최우선 경고: 위험 요소 */}
+        {/* 1. 최우선 경고: 위험 요소 (NPIP Pitta Crimson & Rose 시맨틱 배너) */}
         <div
           role="alert"
-          className="rounded-2xl border-2 border-red-500 bg-gradient-to-br from-red-950/95 via-red-950/80 to-slate-950 p-4 shadow-lg"
+          className="rounded-2xl border-2 border-red-300 bg-gradient-to-br from-red-50 via-rose-50/90 to-white p-4 shadow-sm"
         >
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-500 text-slate-950 shadow">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-600 text-white shadow">
               <AlertTriangle className="h-6 w-6 stroke-[2.5]" aria-hidden="true" />
             </div>
             <div className="space-y-1">
-              <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-black tracking-wider text-slate-950 uppercase">
+              <span className="inline-block rounded bg-[#870b41] px-2 py-0.5 text-xs font-black tracking-wider text-white uppercase">
                 접안 위험 요소 · 필독
               </span>
-              <p className="text-base leading-relaxed font-extrabold text-red-100">{properties.hazard}</p>
+              <p className="text-base leading-relaxed font-extrabold text-red-950">
+                {properties.hazard}
+              </p>
             </div>
           </div>
         </div>
 
         {/* 2. 조석/수심 정보 및 접안 목적 */}
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-          <div className="rounded-2xl border border-sky-500/40 bg-sky-950/40 p-4">
-            <div className="mb-1.5 flex items-center gap-2 text-sky-300">
+          <div className="rounded-2xl border border-sky-200 bg-sky-50/80 p-4">
+            <div className="mb-1.5 flex items-center gap-2 text-[#0066b3]">
               <Waves className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="text-sm font-extrabold">조석 · 수심 · 조류 특성</span>
             </div>
-            <p className="text-base leading-relaxed font-bold text-slate-100">{properties.tide_info}</p>
+            <p className="text-base leading-relaxed font-bold text-[#003360]">
+              {properties.tide_info}
+            </p>
           </div>
 
-          <div className="rounded-2xl border border-amber-500/40 bg-amber-950/30 p-4">
-            <div className="mb-1.5 flex items-center gap-2 text-amber-300">
+          <div className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-4">
+            <div className="mb-1.5 flex items-center gap-2 text-[#8b5e3c]">
               <Anchor className="h-5 w-5 shrink-0" aria-hidden="true" />
               <span className="text-sm font-extrabold">주요 현장 업무 · 접안 목적</span>
             </div>
-            <p className="text-base leading-relaxed font-bold text-slate-100">{properties.purpose}</p>
+            <p className="text-base leading-relaxed font-bold text-[#003360]">
+              {properties.purpose}
+            </p>
           </div>
         </div>
 
@@ -200,24 +209,26 @@ export function DockingDetailSheet({
         />
 
         {/* 4. 좌표 및 검증일 */}
-        <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+        <div className="rounded-2xl border border-sky-200 bg-sky-50/55 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                <Compass className="h-4 w-4 text-sky-400" />
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                <Compass className="h-4 w-4 text-[#0066b3]" />
                 <span>WGS84 해상 좌표</span>
               </div>
-              <p className="font-mono text-base font-extrabold text-sky-200">
+              <p className="font-mono text-base font-extrabold text-[#003360]">
                 {lat.toFixed(4)}°N, {lng.toFixed(4)}°E
               </p>
             </div>
 
             <div className="space-y-1 text-right">
-              <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-slate-400">
-                <CalendarCheck2 className="h-4 w-4 text-emerald-400" />
+              <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-slate-600">
+                <CalendarCheck2 className="h-4 w-4 text-[#00846c]" />
                 <span>최근 실측 검증일</span>
               </div>
-              <p className="font-mono text-sm font-extrabold text-emerald-300">{properties.verified_date}</p>
+              <p className="font-mono text-sm font-extrabold text-[#00846c]">
+                {properties.verified_date}
+              </p>
             </div>
           </div>
 
@@ -229,7 +240,7 @@ export function DockingDetailSheet({
                 onRequestNavigateRoute(feature);
                 onClose();
               }}
-              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-teal-300 bg-gradient-to-r from-teal-500 to-sky-500 px-3 py-3 text-xs font-black text-slate-950 shadow-lg transition active:scale-[0.99] sm:text-sm"
+              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00854a] via-[#00846c] to-[#0066b3] px-3 py-3 text-xs font-black text-white shadow-md transition hover:brightness-105 active:scale-[0.99] sm:text-sm"
             >
               <Navigation className="h-4 w-4 stroke-[2.6]" />
               <span>이 접안지를 목적지로 바닷길 시간·기상 계산하기</span>
@@ -241,16 +252,16 @@ export function DockingDetailSheet({
             <button
               type="button"
               onClick={handleCopyCoords}
-              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-slate-600 bg-slate-800 px-2 py-3 text-xs font-extrabold text-white active:scale-95"
+              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2 py-3 text-xs font-extrabold text-[#003360] shadow-2xs active:scale-95"
             >
               {copied ? (
                 <>
-                  <Check className="h-4 w-4 text-emerald-400" />
-                  <span className="text-emerald-300">복사됨</span>
+                  <Check className="h-4 w-4 text-[#00846c]" />
+                  <span className="text-[#00846c]">복사됨</span>
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4 text-sky-400" />
+                  <Copy className="h-4 w-4 text-[#0066b3]" />
                   <span>좌표 복사</span>
                 </>
               )}
@@ -262,7 +273,7 @@ export function DockingDetailSheet({
                 onFlyToPoint(lat, lng);
                 onClose();
               }}
-              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-2 py-3 text-xs font-black text-slate-950 shadow-lg active:scale-95"
+              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-[#0066b3] px-2 py-3 text-xs font-black text-white shadow-sm active:scale-95"
             >
               <Navigation className="h-4 w-4" />
               <span>정밀 확대</span>
@@ -275,7 +286,7 @@ export function DockingDetailSheet({
                   onRequestRoadview(feature);
                   onClose();
                 }}
-                className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-emerald-400/80 bg-emerald-500/20 px-2 py-3 text-xs font-black text-emerald-300 shadow active:scale-95"
+                className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-2 py-3 text-xs font-black text-[#00846c] shadow-2xs active:scale-95"
               >
                 <Eye className="h-4 w-4" />
                 <span>3D 현장뷰</span>
@@ -288,7 +299,7 @@ export function DockingDetailSheet({
                 onRequestReport(feature);
                 onClose();
               }}
-              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-amber-400/80 bg-amber-500/20 px-2 py-3 text-xs font-black text-amber-300 shadow active:scale-95"
+              className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-2 py-3 text-xs font-black text-amber-900 shadow-2xs active:scale-95"
             >
               <Send className="h-4 w-4" />
               <span>현장 제보</span>

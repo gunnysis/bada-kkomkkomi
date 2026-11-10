@@ -14,7 +14,6 @@ import type {
   KakaoRoadview,
   RoadviewTargetLocation,
 } from '../../types/kakao';
-import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 export interface Roadview3DModalProps {
   kakaoMaps: KakaoMapsNamespace | null;
@@ -31,6 +30,7 @@ export function Roadview3DModal({
   onClose,
   onFallbackToSatelliteTerrain,
 }: Roadview3DModalProps) {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const roadviewRef = useRef<KakaoRoadview | null>(null);
 
@@ -45,7 +45,15 @@ export function Roadview3DModal({
   const [currentPan, setCurrentPan] = useState<number>(0);
   const [currentTilt, setCurrentTilt] = useState<number>(0);
 
-  useEscapeKey(Boolean(target), onClose, true);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (target && !dialog.open) {
+      dialog.showModal();
+    } else if (!target && dialog.open) {
+      dialog.close();
+    }
+  }, [target]);
 
   useEffect(() => {
     if (!target || !kakaoMaps || !isSdkAvailable) return;
@@ -132,27 +140,24 @@ export function Roadview3DModal({
 
   const effectiveStatus: SearchStatus = !isSdkAvailable ? 'sdk_unavailable' : status;
 
-  const handleAdjustViewpoint = useCallback(
-    (deltaPan: number, resetTilt = false) => {
-      const rv = roadviewRef.current;
-      if (!rv) return;
-      try {
-        const vp = rv.getViewpoint();
-        const nextPan = ((vp.pan + deltaPan) % 360 + 360) % 360;
-        const nextTilt = resetTilt ? 0 : vp.tilt;
-        rv.setViewpoint({
-          ...vp,
-          pan: nextPan,
-          tilt: nextTilt,
-        });
-        setCurrentPan(Math.round(nextPan));
-        setCurrentTilt(Math.round(nextTilt));
-      } catch {
-        // ignore
-      }
-    },
-    [],
-  );
+  const handleAdjustViewpoint = useCallback((deltaPan: number, resetTilt = false) => {
+    const rv = roadviewRef.current;
+    if (!rv) return;
+    try {
+      const vp = rv.getViewpoint();
+      const nextPan = (((vp.pan + deltaPan) % 360) + 360) % 360;
+      const nextTilt = resetTilt ? 0 : vp.tilt;
+      rv.setViewpoint({
+        ...vp,
+        pan: nextPan,
+        tilt: nextTilt,
+      });
+      setCurrentPan(Math.round(nextPan));
+      setCurrentTilt(Math.round(nextTilt));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const handleResetNorth = useCallback(() => {
     const rv = roadviewRef.current;
@@ -175,43 +180,47 @@ export function Roadview3DModal({
   if (!target) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
       aria-labelledby="roadview-3d-modal-title"
-      className="fixed inset-0 z-[1350] flex flex-col justify-end bg-slate-950/85 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4"
-      onClick={onClose}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="bada-modal-dialog fixed inset-0 m-0 flex h-dvh max-h-none w-full max-w-none flex-col justify-end border-none bg-transparent p-0 text-[#003360] sm:items-center sm:justify-center sm:p-4"
     >
-      <div
-        className="knps-modal-surface flex h-[84dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border-t-2 border-emerald-400/80 bg-[#061c24] text-white shadow-2xl sm:h-[82dvh] sm:rounded-3xl sm:border-2"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="knps-modal-surface flex h-[84dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border-t-2 border-[#00a79d]/60 bg-white text-[#003360] shadow-2xl sm:h-[82dvh] sm:rounded-3xl sm:border-2">
         {/* 1. 상단 3D 현장 로드뷰 헤더 */}
-        <div className="flex items-center justify-between gap-2 border-b border-emerald-500/30 bg-[#0a2733]/95 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-sky-200 bg-gradient-to-r from-sky-50 via-teal-50/60 to-white px-4 py-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-md bg-sky-500 px-2 py-0.5 text-[10px] font-black text-slate-950">
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#0066b3] px-2 py-0.5 text-[10px] font-black text-white">
                 <Eye className="h-3 w-3 stroke-[2.6]" />
                 <span>360° 3D 현장 로드뷰</span>
               </span>
               {target.pointId && (
-                <span className="rounded-md bg-slate-800 px-2 py-0.5 font-mono text-[10px] font-extrabold text-amber-300">
+                <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 font-mono text-[10px] font-extrabold text-amber-900">
                   {target.pointId}
                 </span>
               )}
               {effectiveStatus === 'ready' && (
-                <span className="rounded-md border border-emerald-500/50 bg-emerald-950/80 px-2 py-0.5 text-[10px] font-extrabold text-emerald-300">
+                <span className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-[#00846c]">
                   반경 {matchedRadiusMeters}m 내 실사 파노라마
                 </span>
               )}
             </div>
             <h2
               id="roadview-3d-modal-title"
-              className="mt-1 truncate text-sm font-black text-white sm:text-base"
+              className="mt-1 truncate text-sm font-black text-[#003360] sm:text-base"
             >
               {target.title}
             </h2>
-            <p className="font-mono text-[11px] font-bold text-slate-400">
+            <p className="font-mono text-[11px] font-bold text-slate-600">
               {target.lat.toFixed(5)}°N, {target.lng.toFixed(5)}°E
             </p>
           </div>
@@ -220,21 +229,21 @@ export function Roadview3DModal({
             type="button"
             onClick={onClose}
             aria-label="3D 현장 로드뷰 닫기"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] shadow-xs active:scale-95"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* 2. 본문: 3D 파노라마 캔버스 또는 무인도/해상 미촬영 폴백 */}
-        <div className="relative flex-1 bg-slate-950">
+        <div className="relative flex-1 bg-sky-50/70">
           {effectiveStatus === 'searching' && (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-400 border-t-transparent" />
-              <p className="text-sm font-extrabold text-sky-200">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0066b3] border-t-transparent" />
+              <p className="text-sm font-extrabold text-[#003360]">
                 인접 해안도로·선착장 360° 3D 파노라마 탐색 중...
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 반경 80m → 250m 순서로 가장 가까운 카카오 로드뷰 지점을 찾고 있습니다.
               </p>
             </div>
@@ -249,8 +258,8 @@ export function Roadview3DModal({
               />
 
               {/* 상단 좌측 방위각·틸트 HUD 배지 */}
-              <div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-xl border border-slate-600/90 bg-[#0b192c]/90 px-3 py-1.5 text-xs font-extrabold text-sky-200 shadow-lg backdrop-blur-md">
-                <Compass className="h-4 w-4 text-amber-400" />
+              <div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-xl border border-sky-200 bg-white/95 px-3 py-1.5 text-xs font-extrabold text-[#003360] shadow-lg backdrop-blur-md">
+                <Compass className="h-4 w-4 text-[#0066b3]" />
                 <span>
                   방위각 {currentPan}° · 상하각 {currentTilt}°
                 </span>
@@ -260,16 +269,16 @@ export function Roadview3DModal({
 
           {(effectiveStatus === 'not_found' || effectiveStatus === 'sdk_unavailable') && (
             <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-              <div className="max-w-md rounded-3xl border-2 border-amber-500/60 bg-slate-900/95 p-5 shadow-2xl">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-300">
+              <div className="max-w-md rounded-3xl border-2 border-amber-300 bg-white p-5 shadow-xl">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
                   <AlertTriangle className="h-6 w-6" />
                 </div>
-                <h3 className="mt-3 text-base font-black text-white">
+                <h3 className="mt-3 text-base font-black text-[#003360]">
                   {effectiveStatus === 'sdk_unavailable'
                     ? '카카오맵 엔진 연결 후 3D 로드뷰를 사용할 수 있습니다'
                     : '이 해상·도서 지점(반경 250m)에는 촬영된 3D 로드뷰가 없습니다'}
                 </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">
                   {effectiveStatus === 'sdk_unavailable'
                     ? '현재 오프라인 또는 레거시 지도 모드입니다. 온라인 상태에서 카카오맵 엔진으로 전환하면 360° 3D 파노라마를 열람할 수 있습니다.'
                     : '무인도·외해 갯바위·해상 구역은 차량/선박 로드뷰 촬영 구간이 존재하지 않습니다. 지명 가림이 없는 순수 위성뷰(SKYVIEW)와 2.5D 입체 지형도를 결합해 암초와 접안 여건을 확인해 주세요.'}
@@ -282,7 +291,7 @@ export function Roadview3DModal({
                       onFallbackToSatelliteTerrain(target.lat, target.lng);
                       onClose();
                     }}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-400 px-3 py-2.5 text-xs font-black text-slate-950 shadow active:scale-95"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#00846c] px-3 py-2.5 text-xs font-black text-white shadow active:scale-95"
                   >
                     <Satellite className="h-4 w-4" />
                     <span>순수 위성뷰(SKYVIEW) + 2.5D 지형도로 보기</span>
@@ -290,7 +299,7 @@ export function Roadview3DModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-200"
+                    className="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700"
                   >
                     닫기
                   </button>
@@ -302,30 +311,30 @@ export function Roadview3DModal({
 
         {/* 3. 하단 원터치 360° 회전·시점 제어 바 (젖은 장갑/한 손 조작 최적화) */}
         {effectiveStatus === 'ready' && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-700 bg-slate-900/95 px-4 py-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-sky-200 bg-sky-50/90 px-4 py-2.5">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => handleAdjustViewpoint(-45)}
-                className="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2.5 text-xs font-extrabold text-white active:scale-95"
+                className="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-extrabold text-[#003360] shadow-xs active:scale-95"
                 title="왼쪽으로 45도 회전"
               >
-                <RotateCcw className="h-3.5 w-3.5 text-sky-300" />
+                <RotateCcw className="h-3.5 w-3.5 text-[#0066b3]" />
                 <span>좌 45°</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleAdjustViewpoint(45)}
-                className="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-2.5 text-xs font-extrabold text-white active:scale-95"
+                className="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-extrabold text-[#003360] shadow-xs active:scale-95"
                 title="오른쪽으로 45도 회전"
               >
-                <RotateCw className="h-3.5 w-3.5 text-sky-300" />
+                <RotateCw className="h-3.5 w-3.5 text-[#0066b3]" />
                 <span>우 45°</span>
               </button>
               <button
                 type="button"
                 onClick={handleResetNorth}
-                className="inline-flex h-9 items-center gap-1 rounded-xl border border-amber-400/60 bg-amber-500/20 px-2.5 text-xs font-extrabold text-amber-200 active:scale-95"
+                className="inline-flex h-9 items-center gap-1 rounded-xl border border-amber-300 bg-amber-50 px-2.5 text-xs font-extrabold text-amber-900 active:scale-95"
                 title="정북(0°) 및 수평 시점으로 초기화"
               >
                 <Compass className="h-3.5 w-3.5" />
@@ -339,7 +348,7 @@ export function Roadview3DModal({
                 onFallbackToSatelliteTerrain(target.lat, target.lng);
                 onClose();
               }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 text-xs font-extrabold text-emerald-200 active:scale-95"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-xs font-extrabold text-[#00846c] active:scale-95"
             >
               <LocateFixed className="h-3.5 w-3.5" />
               <span>위성+2.5D 지형도로 위치 보기</span>
@@ -347,6 +356,6 @@ export function Roadview3DModal({
           </div>
         )}
       </div>
-    </div>
+    </dialog>
   );
 }

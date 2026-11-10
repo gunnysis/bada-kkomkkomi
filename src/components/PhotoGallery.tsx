@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from 'lucide-react';
-import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface PhotoGalleryProps {
   photos: string[];
@@ -17,6 +16,7 @@ function resolveAssetUrl(rawPath: string): string {
 
 export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) {
   const carouselRef = useRef<HTMLDivElement | null>(null);
+  const lightboxDialogRef = useRef<HTMLDialogElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
@@ -25,7 +25,15 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
     setExpandedPhoto(null);
   }, []);
 
-  useEscapeKey(Boolean(expandedPhoto), handleCloseExpanded, true);
+  useEffect(() => {
+    const dialog = lightboxDialogRef.current;
+    if (!dialog) return;
+    if (expandedPhoto && !dialog.open) {
+      dialog.showModal();
+    } else if (!expandedPhoto && dialog.open) {
+      dialog.close();
+    }
+  }, [expandedPhoto]);
 
   // IntersectionObserver로 스냅된 슬라이드 인덱스를 모든 브라우저에서 정확히 추적
   useEffect(() => {
@@ -69,12 +77,13 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
 
   if (!photos || photos.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-700/80 bg-slate-900/90 p-5 text-center">
-        <Camera className="mx-auto mb-2 h-8 w-8 text-slate-400" />
-        <p className="text-base font-bold text-slate-200">등록된 현장 사진이 없습니다</p>
-        <p className="mt-1 text-xs text-slate-400">
-          운영자 안내: <code className="text-sky-300">public/images/docking/</code> 폴더에 사진을 추가하고{' '}
-          <code className="text-sky-300">docking_points.geojson</code>의 <code className="text-amber-300">photos</code> 배열에 경로를 기입하세요.
+      <div className="rounded-2xl border border-sky-200 bg-sky-50/80 p-5 text-center">
+        <Camera className="mx-auto mb-2 h-8 w-8 text-[#0066b3]" />
+        <p className="text-base font-bold text-[#003360]">등록된 현장 사진이 없습니다</p>
+        <p className="mt-1 text-xs text-slate-600">
+          운영자 안내: <code className="font-bold text-[#0066b3]">public/images/docking/</code> 폴더에 사진을 추가하고{' '}
+          <code className="font-bold text-[#0066b3]">docking_points.geojson</code>의{' '}
+          <code className="font-bold text-[#00846c]">photos</code> 배열에 경로를 기입하세요.
         </p>
       </div>
     );
@@ -84,12 +93,12 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
     <section aria-label={`${pointName} 현장 사진 갤러리`} className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Camera className="h-5 w-5 text-sky-400" aria-hidden="true" />
-          <h3 className="text-base font-extrabold tracking-tight text-white">
+          <Camera className="h-5 w-5 text-[#0066b3]" aria-hidden="true" />
+          <h3 className="text-base font-extrabold tracking-tight text-[#003360]">
             현장 접안 사진 ({activeIndex + 1} / {photos.length})
           </h3>
         </div>
-        <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-bold text-slate-300">
+        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold text-[#003360]">
           좌우 스와이프 · 탭하여 확대
         </span>
       </div>
@@ -114,7 +123,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
                 aria-roledescription="slide"
                 aria-label={`${photos.length}장 중 ${idx + 1}번째 사진`}
               >
-                <div className="bada-photo-card relative aspect-16/10 w-full overflow-hidden rounded-2xl border-2 border-slate-700 bg-slate-950">
+                <div className="bada-photo-card relative aspect-16/10 w-full overflow-hidden rounded-2xl border-2 border-sky-200 bg-slate-900 shadow-sm">
                   {!isBroken ? (
                     <>
                       <img
@@ -133,18 +142,18 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
                         type="button"
                         onClick={() => setExpandedPhoto(resolvedUrl)}
                         aria-label={`${idx + 1}번 사진 전체화면 확대`}
-                        className="absolute right-3 bottom-3 flex min-h-12 min-w-12 items-center gap-1.5 rounded-xl border border-white/25 bg-slate-950/85 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-lg active:scale-95"
+                        className="absolute right-3 bottom-3 flex min-h-12 min-w-12 items-center gap-1.5 rounded-xl border border-sky-200 bg-white/95 px-3.5 py-2.5 text-xs font-extrabold text-[#003360] shadow-lg backdrop-blur-sm active:scale-95"
                       >
-                        <Maximize2 className="h-4 w-4 text-sky-400" />
+                        <Maximize2 className="h-4 w-4 text-[#0066b3]" />
                         <span>크게 보기</span>
                       </button>
                     </>
                   ) : (
-                    <div className="flex h-full flex-col items-center justify-center p-4 text-center">
-                      <ImageOff className="mb-2 h-9 w-9 text-amber-400" />
-                      <p className="text-sm font-bold text-white">이미지를 불러올 수 없습니다</p>
-                      <p className="mt-1 break-all font-mono text-xs text-amber-300">{photoUrl}</p>
-                      <p className="mt-2 text-xs text-slate-400">
+                    <div className="flex h-full flex-col items-center justify-center bg-sky-50 p-4 text-center">
+                      <ImageOff className="mb-2 h-9 w-9 text-amber-600" />
+                      <p className="text-sm font-bold text-[#003360]">이미지를 불러올 수 없습니다</p>
+                      <p className="mt-1 break-all font-mono text-xs text-amber-700">{photoUrl}</p>
+                      <p className="mt-2 text-xs text-slate-600">
                         파일명 대소문자 및 확장자(.jpg, .png, .svg)를 확인해주세요.
                       </p>
                     </div>
@@ -163,7 +172,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
               onClick={() => scrollToSlide(activeIndex - 1)}
               disabled={activeIndex === 0}
               aria-label="이전 사진"
-              className="absolute top-1/2 left-2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-slate-950/85 text-white shadow-lg transition disabled:opacity-30 active:scale-90"
+              className="absolute top-1/2 left-2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-sky-200 bg-white/95 text-[#003360] shadow-lg transition disabled:opacity-30 active:scale-90"
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
@@ -172,7 +181,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
               onClick={() => scrollToSlide(activeIndex + 1)}
               disabled={activeIndex === photos.length - 1}
               aria-label="다음 사진"
-              className="absolute top-1/2 right-2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-slate-950/85 text-white shadow-lg transition disabled:opacity-30 active:scale-90"
+              className="absolute top-1/2 right-2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-sky-200 bg-white/95 text-[#003360] shadow-lg transition disabled:opacity-30 active:scale-90"
             >
               <ChevronRight className="h-6 w-6" />
             </button>
@@ -196,7 +205,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
               >
                 <span
                   className={`block h-2.5 rounded-full transition-all ${
-                    isCurrent ? 'w-8 bg-sky-400' : 'w-2.5 bg-slate-600'
+                    isCurrent ? 'w-8 bg-[#00846c]' : 'w-2.5 bg-slate-300'
                   }`}
                 />
               </button>
@@ -205,25 +214,29 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
         </div>
       )}
 
-      {/* 전체화면 사진 확대 뷰어 */}
+      {/* 전체화면 사진 확대 뷰어 (Native <dialog> Top-Layer) */}
       {expandedPhoto && (
-        <div
-          role="dialog"
-          aria-modal="true"
+        <dialog
+          ref={lightboxDialogRef}
           data-photo-lightbox="true"
           aria-label={`${pointName} 현장 사진 확대 보기`}
-          className="fixed inset-0 z-[2000] flex flex-col justify-between bg-slate-950/95 p-4 backdrop-blur-md"
-          onClick={() => setExpandedPhoto(null)}
+          onCancel={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleCloseExpanded();
+          }}
+          onClick={handleCloseExpanded}
+          className="bada-modal-dialog fixed inset-0 m-0 flex h-dvh max-h-none w-full max-w-none flex-col justify-between border-none bg-[#003360]/95 p-4 text-white backdrop-blur-md"
         >
           <div className="flex items-center justify-between pt-2">
-            <span className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-bold text-sky-300">
+            <span className="rounded-xl border border-white/25 bg-white/95 px-3.5 py-1.5 text-sm font-black text-[#003360] shadow-md">
               {pointId} · {pointName}
             </span>
             <button
               type="button"
-              onClick={() => setExpandedPhoto(null)}
+              onClick={handleCloseExpanded}
               aria-label="확대 보기 닫기"
-              className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-600 bg-slate-900 text-white active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-200 bg-white text-[#003360] shadow-md active:scale-95"
             >
               <X className="h-6 w-6" />
             </button>
@@ -236,14 +249,14 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
             <img
               src={expandedPhoto}
               alt={`${pointName} 확대 이미지`}
-              className="max-h-[75dvh] w-full rounded-xl object-contain"
+              className="max-h-[75dvh] w-full rounded-xl bg-white/10 object-contain shadow-2xl"
             />
           </div>
 
-          <p className="pb-2 text-center text-xs font-semibold text-slate-400">
+          <p className="pb-2 text-center text-xs font-bold text-sky-100">
             화면을 탭하거나 우측 상단 닫기(X) 버튼을 누르면 돌아갑니다.
           </p>
-        </div>
+        </dialog>
       )}
     </section>
   );

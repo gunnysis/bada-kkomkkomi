@@ -484,7 +484,7 @@ export function MapView({
       ) : (
         <Suspense
           fallback={
-            <div className="flex h-full w-full items-center justify-center bg-[#0b192c] text-xs font-bold text-slate-300">
+            <div className="flex h-full w-full items-center justify-center bg-[#e0f2fe] text-xs font-bold text-[#003360]">
               해양 보조 지도 엔진 불러오는 중...
             </div>
           }
@@ -533,13 +533,13 @@ export function MapView({
       {layerLoadErrorIds.length > 0 && (
         <div
           role="status"
-          className="fixed bottom-24 left-2.5 z-[900] flex items-center gap-2 rounded-xl border border-rose-400/80 bg-slate-950/95 px-3 py-1.5 text-[11px] font-bold text-rose-200 shadow-lg"
+          className="fixed bottom-24 left-2.5 z-[900] flex items-center gap-2 rounded-xl border border-[#b2415f] bg-rose-50/98 px-3 py-1.5 text-[11px] font-bold text-[#870b41] shadow-lg"
         >
           <span>공간레이어 일부 로드 실패 ({layerLoadErrorIds.length}건)</span>
           <button
             type="button"
             onClick={handleRetryGeoJsonLayers}
-            className="rounded-lg bg-rose-500/30 px-2 py-0.5 font-black text-white hover:bg-rose-500/50"
+            className="rounded-lg bg-[#870b41] px-2 py-0.5 font-black text-white hover:bg-[#b2415f]"
           >
             재시도
           </button>
@@ -550,18 +550,18 @@ export function MapView({
       {diagnostics.status === 'error' && !isDiagDismissed && (
         <div
           role="alert"
-          className="fixed inset-x-2.5 top-[8.6rem] z-[900] mx-auto max-w-xl rounded-2xl border-2 border-amber-400/90 bg-slate-950/95 p-2.5 text-xs text-amber-100 shadow-2xl backdrop-blur-md sm:top-[10.2rem]"
+          className="fixed inset-x-2.5 top-[8.6rem] z-[900] mx-auto max-w-xl rounded-2xl border-2 border-amber-500 bg-white/98 p-2.5 text-xs text-[#003360] shadow-2xl backdrop-blur-md sm:top-[10.2rem]"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               <div className="min-w-0">
-                <p className="font-black text-amber-300">
+                <p className="font-black text-amber-900">
                   카카오맵 도메인 승인 대기중 · 레거시 지도(OSM) 자동 폴백 가동됨
                 </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-slate-300">
+                <p className="mt-0.5 text-[11px] leading-snug text-[#484843]">
                   카카오 개발자 콘솔 [플랫폼 &gt; Web]에{' '}
-                  <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-sky-300">
+                  <code className="rounded bg-sky-100 px-1 py-0.5 font-mono text-sky-900">
                     {diagnostics.currentOrigin}
                   </code>{' '}
                   등록 후 재시도하세요.
@@ -570,14 +570,14 @@ export function MapView({
                   <button
                     type="button"
                     onClick={() => setIsDiagModalOpen(true)}
-                    className="rounded-lg border border-amber-400/70 bg-amber-500/20 px-2 py-0.5 text-[11px] font-black text-amber-200 active:scale-95"
+                    className="rounded-lg border border-amber-500 bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-900 active:scale-95"
                   >
                     도메인 등록 방법 · 진단 보기
                   </button>
                   <button
                     type="button"
                     onClick={handleRetryKakaoEngine}
-                    className="inline-flex items-center gap-1 rounded-lg border border-sky-400/70 bg-sky-500/20 px-2 py-0.5 text-[11px] font-black text-sky-200 active:scale-95"
+                    className="inline-flex items-center gap-1 rounded-lg border border-sky-400 bg-sky-100 px-2 py-0.5 text-[11px] font-black text-[#003360] active:scale-95"
                   >
                     <RefreshCw className="h-3 w-3" />
                     <span>카카오맵 재연결</span>
@@ -589,7 +589,7 @@ export function MapView({
               type="button"
               onClick={() => setIsDiagDismissed(true)}
               aria-label="진단 배너 닫기"
-              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
             >
               <X className="h-4 w-4" />
             </button>
@@ -609,8 +609,8 @@ export function MapView({
           title="실제 GPS 위치 조회"
           className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
             userLocation
-              ? 'border-sky-300 bg-sky-500 text-slate-950'
-              : 'border-emerald-500/45 bg-[#061c24]/95 text-sky-400'
+              ? 'border-[#0284c7] bg-[#0284c7] text-white'
+              : 'border-[#00a79d]/60 bg-white/96 text-[#0284c7] hover:bg-sky-50'
           }`}
         >
           <LocateFixed className="h-4 w-4 stroke-[2.4] sm:h-5 sm:w-5" />
@@ -621,9 +621,9 @@ export function MapView({
           onClick={onSimulateFieldGps}
           aria-label="통영·거제 해상 선박 GPS 시뮬레이션"
           title="통영·거제 해역 가상 선박 GPS 시뮬레이션"
-          className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500/70 bg-[#061c24]/95 text-amber-300 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
+          className="flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 border-amber-500 bg-white/96 text-amber-900 shadow-xl transition hover:bg-amber-50 active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
         >
-          <Compass className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
+          <Compass className="h-3.5 w-3.5 stroke-[2.3] text-amber-700 sm:h-4 sm:w-4" />
           <span className="text-[8px] leading-none font-black sm:text-[9px]">현장GPS</span>
         </button>
 
@@ -635,8 +635,8 @@ export function MapView({
           title="일반/순수위성/하이브리드 및 2.5D 지형·지적편집도·3D 로드뷰 선택"
           className={`relative flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
             isMapTypePopoverOpen || baseMapType !== 'roadmap' || overlayMapTypes.length > 0
-              ? 'border-emerald-300 bg-emerald-500 text-slate-950'
-              : 'border-emerald-500/45 bg-[#061c24]/95 text-emerald-300'
+              ? 'border-[#00846c] bg-[#00846c] text-white'
+              : 'border-[#00a79d]/60 bg-white/96 text-[#00846c] hover:bg-emerald-50'
           }`}
         >
           <Satellite className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
@@ -648,7 +648,7 @@ export function MapView({
                 : '지도·3D'}
           </span>
           {overlayMapTypes.length > 0 && (
-            <span className="absolute -top-1.5 -left-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-slate-950 bg-amber-400 px-1 text-[9px] font-black text-slate-950 shadow">
+            <span className="absolute -top-1.5 -left-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-amber-400 px-1 text-[9px] font-black text-slate-950 shadow">
               {overlayMapTypes.length}
             </span>
           )}
@@ -665,8 +665,8 @@ export function MapView({
           }
           className={`flex h-9 w-9 flex-col items-center justify-center rounded-xl border-2 shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl ${
             activeEngine === 'kakao'
-              ? 'border-yellow-400 bg-yellow-400 text-slate-950'
-              : 'border-emerald-500/45 bg-[#061c24]/95 text-yellow-300'
+              ? 'border-yellow-500 bg-yellow-400 text-slate-950'
+              : 'border-[#00a79d]/60 bg-white/96 text-[#003360] hover:bg-sky-50'
           }`}
         >
           <Globe className="h-3.5 w-3.5 stroke-[2.3] sm:h-4 sm:w-4" />
@@ -680,17 +680,17 @@ export function MapView({
           onClick={onResetBounds}
           aria-label="전체 해역 보기"
           title="통영·거제 전체 해역 보기"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-emerald-500/45 bg-[#061c24]/95 text-white shadow-xl transition active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-[#00a79d]/60 bg-white/96 text-[#003360] shadow-xl transition hover:bg-sky-50 active:scale-95 sm:h-11 sm:w-11 sm:rounded-2xl"
         >
           <Maximize className="h-4 w-4 stroke-[2.3] sm:h-5 sm:w-5" />
         </button>
 
-        <div className="flex flex-col overflow-hidden rounded-xl border-2 border-emerald-500/45 bg-[#061c24]/95 shadow-xl sm:rounded-2xl">
+        <div className="flex flex-col overflow-hidden rounded-xl border-2 border-[#00a79d]/60 bg-white/96 shadow-xl sm:rounded-2xl">
           <button
             type="button"
             onClick={() => setZoomStepTrigger({ delta: 1, nonce: Date.now() })}
             aria-label="지도 확대"
-            className="flex h-8 w-9 items-center justify-center border-b border-emerald-500/30 text-white active:bg-[#0a2733] sm:h-11 sm:w-11"
+            className="flex h-8 w-9 items-center justify-center border-b border-sky-200 text-[#003360] hover:bg-sky-50 active:bg-sky-100 sm:h-11 sm:w-11"
           >
             <Plus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
           </button>
@@ -698,7 +698,7 @@ export function MapView({
             type="button"
             onClick={() => setZoomStepTrigger({ delta: -1, nonce: Date.now() })}
             aria-label="지도 축소"
-            className="flex h-8 w-9 items-center justify-center text-white active:bg-[#0a2733] sm:h-11 sm:w-11"
+            className="flex h-8 w-9 items-center justify-center text-[#003360] hover:bg-sky-50 active:bg-sky-100 sm:h-11 sm:w-11"
           >
             <Minus className="h-4 w-4 stroke-[2.6] sm:h-5 sm:w-5" />
           </button>
@@ -710,12 +710,12 @@ export function MapView({
         <div
           role="dialog"
           aria-label="배경지도 및 2.5D 지형·3D 로드뷰 레이어 설정"
-          className="knps-modal-surface fixed top-[6.25rem] right-13 z-[920] w-[17.5rem] rounded-2xl border-2 border-emerald-400/80 bg-[#061c24]/98 p-3 text-white shadow-2xl backdrop-blur-md sm:top-[7.25rem] sm:right-16 sm:w-80 sm:p-3.5"
+          className="knps-modal-surface fixed top-[6.25rem] right-13 z-[920] w-[17.5rem] rounded-2xl border-2 border-[#00a79d]/70 bg-white/98 p-3 text-[#003360] shadow-2xl backdrop-blur-md sm:top-[7.25rem] sm:right-16 sm:w-80 sm:p-3.5"
         >
-          <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+          <div className="flex items-center justify-between border-b border-sky-200 pb-2">
             <div className="flex items-center gap-1.5">
-              <Layers className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-xs font-black text-white sm:text-sm">
+              <Layers className="h-4 w-4 text-[#00846c]" />
+              <h3 className="text-xs font-black text-[#003360] sm:text-sm">
                 배경지도 · 2.5D 지형 · 3D 뷰
               </h3>
             </div>
@@ -723,7 +723,7 @@ export function MapView({
               type="button"
               onClick={() => setIsMapTypePopoverOpen(false)}
               aria-label="지도유형 선택창 닫기"
-              className="flex h-6 w-6 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:text-white"
+              className="flex h-6 w-6 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -731,7 +731,7 @@ export function MapView({
 
           {/* 섹션 1: 현장 실무 원터치 프리셋 */}
           <div className="mt-2.5">
-            <p className="text-[10px] font-extrabold text-amber-300">
+            <p className="text-[10px] font-extrabold text-[#00846c]">
               현장 실무 원터치 프리셋
             </p>
             <div className="mt-1 grid grid-cols-3 gap-1">
@@ -742,8 +742,8 @@ export function MapView({
                   baseMapType === 'skyview' &&
                   overlayMapTypes.length === 1 &&
                   overlayMapTypes[0] === 'terrain'
-                    ? 'border-emerald-300 bg-emerald-500 text-slate-950'
-                    : 'border-slate-600 bg-slate-900/90 text-emerald-200'
+                    ? 'border-[#00846c] bg-[#00846c] text-white'
+                    : 'border-slate-300 bg-sky-50/70 text-[#003360] hover:bg-emerald-50'
                 }`}
               >
                 암초·선착장
@@ -758,8 +758,8 @@ export function MapView({
                   baseMapType === 'hybrid' &&
                   overlayMapTypes.length === 1 &&
                   overlayMapTypes[0] === 'use_district'
-                    ? 'border-amber-300 bg-amber-400 text-slate-950'
-                    : 'border-slate-600 bg-slate-900/90 text-amber-200'
+                    ? 'border-amber-500 bg-amber-400 text-slate-950'
+                    : 'border-slate-300 bg-sky-50/70 text-[#003360] hover:bg-amber-50'
                 }`}
               >
                 관할·지적도
@@ -774,8 +774,8 @@ export function MapView({
                   baseMapType === 'hybrid' &&
                   overlayMapTypes.length === 1 &&
                   overlayMapTypes[0] === 'roadview'
-                    ? 'border-sky-300 bg-sky-400 text-slate-950'
-                    : 'border-slate-600 bg-slate-900/90 text-sky-200'
+                    ? 'border-[#0284c7] bg-[#0284c7] text-white'
+                    : 'border-slate-300 bg-sky-50/70 text-[#003360] hover:bg-sky-100'
                 }`}
               >
                 3D 로드뷰
@@ -788,7 +788,7 @@ export function MapView({
 
           {/* 섹션 2: 기본 배경지도 (Base MapTypeId 3종) */}
           <div className="mt-2.5">
-            <p className="text-[10px] font-extrabold text-slate-300">
+            <p className="text-[10px] font-extrabold text-[#484843]">
               1. 기본 배경지도 (MapTypeId 베이스 3종)
             </p>
             <div className="mt-1 grid grid-cols-3 gap-1">
@@ -808,8 +808,8 @@ export function MapView({
                     aria-pressed={isSelected}
                     className={`rounded-xl border px-2 py-1.5 text-center transition active:scale-95 ${
                       isSelected
-                        ? 'border-sky-300 bg-sky-500 font-black text-slate-950 shadow'
-                        : 'border-slate-600 bg-slate-900/90 font-bold text-slate-200'
+                        ? 'border-[#003360] bg-[#003360] font-black text-white shadow-xs'
+                        : 'border-slate-300 bg-white font-bold text-[#003360] hover:bg-sky-50'
                     }`}
                   >
                     <span className="block text-[11px] leading-none font-black">
@@ -827,7 +827,7 @@ export function MapView({
           {/* 섹션 3: 중첩 오버레이 레이어 (Overlay MapTypeId 5종 다중 선택) */}
           <div className="mt-2.5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-extrabold text-slate-300">
+              <p className="text-[10px] font-extrabold text-[#484843]">
                 2. 중첩 레이어 (다중 선택 가능)
               </p>
               {overlayMapTypes.length > 0 && (
@@ -836,7 +836,7 @@ export function MapView({
                   onClick={() =>
                     setMapPrefs((prev) => ({ ...prev, overlayMapTypes: [] }))
                   }
-                  className="text-[10px] font-black text-rose-300 underline hover:text-rose-200"
+                  className="text-[10px] font-black text-[#b2415f] underline hover:text-[#870b41]"
                 >
                   오버레이 모두 끄기
                 </button>
@@ -885,19 +885,19 @@ export function MapView({
                     aria-pressed={isChecked}
                     className={`flex flex-col items-start rounded-xl border px-2 py-1.5 text-left transition active:scale-95 ${
                       isChecked
-                        ? 'border-emerald-300 bg-emerald-500/25 text-emerald-200 shadow'
-                        : 'border-slate-700 bg-slate-900/80 text-slate-300'
+                        ? 'border-[#00846c] bg-emerald-50 text-[#00846c] shadow-xs'
+                        : 'border-slate-300 bg-white text-[#003360] hover:bg-sky-50'
                     }`}
                   >
                     <span className="flex w-full items-center justify-between text-[11px] font-black">
                       <span>{ovl.label}</span>
                       <span
                         className={`h-2 w-2 rounded-full ${
-                          isChecked ? 'bg-emerald-400' : 'bg-slate-600'
+                          isChecked ? 'bg-[#00846c]' : 'bg-slate-300'
                         }`}
                       />
                     </span>
-                    <span className="mt-0.5 text-[9px] text-slate-400">
+                    <span className="mt-0.5 text-[9px] text-slate-600">
                       {ovl.sub}
                     </span>
                   </button>
@@ -907,7 +907,7 @@ export function MapView({
           </div>
 
           {/* 섹션 4: 현재 화면 중심 좌표 360° 3D 현장 로드뷰 바로 실행 */}
-          <div className="mt-2.5 border-t border-slate-700 pt-2">
+          <div className="mt-2.5 border-t border-sky-200 pt-2">
             <button
               type="button"
               onClick={() => {
@@ -918,7 +918,7 @@ export function MapView({
                   title: `현재 지도 중심 3D 현장뷰 (${viewport.lat.toFixed(4)}°N, ${viewport.lng.toFixed(4)}°E)`,
                 });
               }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-3 py-2 text-xs font-black text-slate-950 shadow active:scale-95"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#003360] px-3 py-2 text-xs font-black text-white shadow-xs hover:bg-[#0284c7] active:scale-95"
             >
               <Eye className="h-4 w-4 stroke-[2.5]" />
               <span>현재 화면 중심 360° 3D 로드뷰 열기</span>
@@ -931,18 +931,18 @@ export function MapView({
       {overlayMapTypes.includes('roadview') && (
         <div
           role="status"
-          className="fixed inset-x-3 top-[8.6rem] z-[880] mx-auto flex max-w-md items-center justify-between gap-2 rounded-2xl border-2 border-sky-400 bg-[#061c24]/95 px-3 py-2 text-xs text-sky-100 shadow-2xl backdrop-blur-md sm:top-[10.3rem]"
+          className="fixed inset-x-3 top-[8.6rem] z-[880] mx-auto flex max-w-md items-center justify-between gap-2 rounded-2xl border-2 border-[#0284c7] bg-white/96 px-3 py-2 text-xs text-[#003360] shadow-2xl backdrop-blur-md sm:top-[10.3rem]"
         >
           <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 shrink-0 text-sky-400" />
+            <Eye className="h-4 w-4 shrink-0 text-[#0284c7]" />
             <span className="text-[11px] leading-snug font-extrabold">
-              <strong className="text-sky-300">3D 로드뷰 탐색 켜짐:</strong> 파란색 해안도로·선착장 구간을 탭하면 360° 3D 현장뷰가 열립니다.
+              <strong className="text-[#0284c7]">3D 로드뷰 탐색 켜짐:</strong> 파란색 해안도로·선착장 구간을 탭하면 360° 3D 현장뷰가 열립니다.
             </span>
           </div>
           <button
             type="button"
             onClick={() => handleToggleOverlayMapType('roadview')}
-            className="shrink-0 rounded-lg border border-sky-400/60 bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 active:scale-95"
+            className="shrink-0 rounded-lg border border-sky-400 bg-sky-100 px-2 py-1 text-[10px] font-black text-[#003360] active:scale-95"
           >
             로드뷰 선 끄기
           </button>
@@ -953,9 +953,9 @@ export function MapView({
       {overlayMapTypes.includes('use_district') && (
         <div
           role="note"
-          className="pointer-events-none fixed bottom-20 left-2.5 z-[840] max-w-xs rounded-xl border border-amber-400/70 bg-slate-950/90 px-2.5 py-1 text-[10px] leading-tight font-bold text-amber-200 shadow-lg backdrop-blur-sm"
+          className="pointer-events-none fixed bottom-20 left-2.5 z-[840] max-w-xs rounded-xl border border-[#d6c6b2] bg-[#f7f4ee]/96 px-2.5 py-1 text-[10px] leading-tight font-bold text-[#484843] shadow-lg backdrop-blur-sm"
         >
-          <Mountain className="mr-1 inline h-3 w-3 text-amber-400" />
+          <Mountain className="mr-1 inline h-3 w-3 text-[#00846c]" />
           지적편집도는 현행 지적 정보와 일치하지 않을 수 있으며 참고 이외의 용도로 사용할 수 없습니다.
         </div>
       )}
@@ -979,36 +979,36 @@ export function MapView({
           role="dialog"
           aria-modal="true"
           aria-labelledby="kakao-diag-title"
-          className="fixed inset-0 z-[1400] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[1400] flex items-center justify-center bg-[#003360]/45 p-4 backdrop-blur-sm"
           onClick={() => setIsDiagModalOpen(false)}
         >
           <div
-            className="knps-modal-surface w-full max-w-md rounded-3xl border-2 border-amber-400/80 bg-[#061c24] p-5 text-white shadow-2xl"
+            className="knps-modal-surface w-full max-w-md rounded-3xl border-2 border-amber-500 bg-white p-5 text-[#003360] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+            <div className="flex items-center justify-between border-b border-sky-200 pb-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-400" />
-                <h2 id="kakao-diag-title" className="text-base font-black text-white">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <h2 id="kakao-diag-title" className="text-base font-black text-[#003360]">
                   Kakao Map GIS 연동 진단 및 조치 안내
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsDiagModalOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] hover:bg-slate-100"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="mt-4 space-y-3 text-xs leading-relaxed text-slate-200">
-              <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
-                <p className="font-extrabold text-sky-300">현재 GIS 엔진 진단 상태</p>
-                <ul className="mt-1.5 space-y-1 text-[11px] text-slate-300">
+            <div className="mt-4 space-y-3 text-xs leading-relaxed text-[#484843]">
+              <div className="rounded-2xl border border-sky-200 bg-sky-50/80 p-3">
+                <p className="font-extrabold text-[#003360]">현재 GIS 엔진 진단 상태</p>
+                <ul className="mt-1.5 space-y-1 text-[11px] text-[#484843]">
                   <li>
                     • 활성 엔진:{' '}
-                    <strong className="text-amber-300">
+                    <strong className="text-[#00846c]">
                       {activeEngine === 'kakao'
                         ? 'Kakao Maps SDK v3'
                         : 'Legacy Leaflet (OpenStreetMap 자동 폴백)'}
@@ -1016,35 +1016,35 @@ export function MapView({
                   </li>
                   <li>
                     • 인식된 API 키 (`.env`):{' '}
-                    <code className="rounded bg-slate-800 px-1.5 py-0.5 text-emerald-300">
+                    <code className="rounded bg-white px-1.5 py-0.5 text-[#00846c]">
                       {diagnostics.maskedKey}
                     </code>
                   </li>
                   <li>• 최근 점검 시각: {diagnostics.lastCheckedAt}</li>
                   {diagnostics.errorMessage && (
-                    <li className="text-rose-300">• 사유: {diagnostics.errorMessage}</li>
+                    <li className="text-[#870b41]">• 사유: {diagnostics.errorMessage}</li>
                   )}
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-amber-500/40 bg-amber-950/30 p-3">
-                <p className="font-extrabold text-amber-300">
+              <div className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3">
+                <p className="font-extrabold text-[#003360]">
                   [사용자 필수 조치] 카카오 개발자 콘솔 웹 도메인 등록
                 </p>
-                <p className="mt-1 text-[11px] text-slate-300">
+                <p className="mt-1 text-[11px] text-[#484843]">
                   카카오맵 JS SDK는 보안 정책상 등록된 도메인에서만 지도를 렌더링합니다.
                   카카오 개발자 콘솔(developers.kakao.com) ➔ <strong>내 애플리케이션</strong> ➔{' '}
                   <strong>앱 설정 &gt; 플랫폼 &gt; Web 사이트 도메인</strong>에 아래 주소를 추가해 주세요:
                 </p>
 
-                <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2">
-                  <code className="truncate font-mono text-xs font-bold text-sky-300">
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2">
+                  <code className="truncate font-mono text-xs font-bold text-[#003360]">
                     {diagnostics.currentOrigin}
                   </code>
                   <button
                     type="button"
                     onClick={handleCopyOrigin}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-sky-500 px-2.5 py-1 text-[11px] font-black text-slate-950 active:scale-95"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#003360] px-2.5 py-1 text-[11px] font-black text-white active:scale-95"
                   >
                     {copiedOrigin ? (
                       <>
@@ -1060,11 +1060,11 @@ export function MapView({
                   </button>
                 </div>
 
-                <p className="mt-2 text-[11px] text-slate-400">
+                <p className="mt-2 text-[11px] text-[#484843]">
                   권장 등록 도메인 목록:
-                  <br />• 로컬 개발: <code className="text-slate-200">http://localhost:5173</code>,{' '}
-                  <code className="text-slate-200">http://127.0.0.1:5173</code>
-                  <br />• 운영 배포: <code className="text-slate-200">https://gunnysis.github.io</code>
+                  <br />• 로컬 개발: <code className="font-bold text-[#003360]">http://localhost:5173</code>,{' '}
+                  <code className="font-bold text-[#003360]">http://127.0.0.1:5173</code>
+                  <br />• 운영 배포: <code className="font-bold text-[#003360]">https://gunnysis.github.io</code>
                 </p>
               </div>
             </div>
@@ -1076,7 +1076,7 @@ export function MapView({
                   setIsDiagModalOpen(false);
                   handleRetryKakaoEngine();
                 }}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-400 py-2.5 text-xs font-black text-slate-950 shadow active:scale-95"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#00846c] py-2.5 text-xs font-black text-white shadow-xs active:scale-95"
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>도메인 등록 완료 · 카카오맵 즉시 재연결</span>
@@ -1084,7 +1084,7 @@ export function MapView({
               <button
                 type="button"
                 onClick={() => setIsDiagModalOpen(false)}
-                className="rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-200"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-[#003360]"
               >
                 닫기
               </button>

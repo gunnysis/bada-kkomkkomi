@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowDown,
@@ -52,7 +52,6 @@ import {
   loadGitHubSyncConfig,
   saveGitHubSyncConfig,
 } from '../../services/githubLayerSyncService';
-import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface LayerControlModalProps {
   isOpen: boolean;
@@ -812,7 +811,17 @@ export function LayerControlModal({
     window.setTimeout(() => setGitHubConfigSavedMsg(null), 2500);
   }, [gitHubConfig]);
 
-  useEscapeKey(isOpen, onClose);
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen && !dialog.open) {
+      dialog.showModal();
+    } else if (!isOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -820,39 +829,45 @@ export function LayerControlModal({
     pendingNotes.length + parsedCandidates.filter((c) => c.selected).length;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
       aria-labelledby="layer-modal-title"
-      className="fixed inset-0 z-[1300] flex items-center justify-center bg-slate-950/80 p-2.5 backdrop-blur-sm sm:p-4"
-      onClick={onClose}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="bada-modal-dialog fixed inset-0 m-0 flex h-dvh max-h-none w-full max-w-none items-center justify-center border-none bg-transparent p-2.5 text-[#003360] sm:p-4"
     >
       <div
-        className="knps-modal-surface flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] text-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        className="knps-modal-surface flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-2 border-[#00a79d]/60 bg-white text-[#003360] shadow-2xl"
       >
         {/* 1. 상단 헤더 & 현재 운영 릴리스 상태 배지 */}
-        <div className="flex items-center justify-between border-b border-slate-700/90 px-4 py-3 sm:px-5">
+        <div className="flex items-center justify-between border-b border-sky-200 px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#00846c]/30 bg-emerald-50 text-[#00846c]">
               <Layers className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5">
                 <h2
                   id="layer-modal-title"
-                  className="text-base font-black tracking-tight text-white sm:text-lg"
+                  className="text-base font-black tracking-tight text-[#003360] sm:text-lg"
                 >
                   공간정보 레이어 관리
                 </h2>
-                <span className="rounded-md border border-emerald-400/50 bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[10px] font-black text-emerald-300">
+                <span className="rounded-md border border-[#00846c]/40 bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] font-black text-[#00846c]">
                   {releaseId}
                 </span>
                 <span
                   className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${
                     remoteSyncStatus === 'synced'
-                      ? 'bg-sky-500/20 text-sky-300'
-                      : 'bg-amber-500/20 text-amber-300'
+                      ? 'bg-sky-100 text-sky-900'
+                      : 'bg-amber-100 text-amber-900'
                   }`}
                 >
                   {remoteSyncStatus === 'synced'
@@ -860,9 +875,9 @@ export function LayerControlModal({
                     : '앱·기기 즉시 운영 반영됨'}
                 </span>
               </div>
-              <p className="mt-0.5 truncate text-[11px] text-slate-400">
+              <p className="mt-0.5 truncate text-[11px] font-bold text-[#484843]">
                 QGIS 멀티포맷(.gpkg · .zip/shp · .geojson · .kml) · 한국좌표계 자동변환 ·{' '}
-                <strong className="text-emerald-300">[저장] 클릭 시 즉시 운영 반영</strong>
+                <strong className="text-[#00846c]">[저장] 클릭 시 즉시 운영 반영</strong>
               </p>
             </div>
           </div>
@@ -870,21 +885,21 @@ export function LayerControlModal({
             type="button"
             onClick={onClose}
             aria-label="레이어 창 닫기"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white active:scale-95"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] hover:bg-slate-100 active:scale-95"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* 2. 4개 실무 워크스페이스 탭 네비게이션 */}
-        <div className="grid grid-cols-4 gap-1 border-b border-slate-700/80 bg-slate-900/90 px-3 py-2 sm:px-5">
+        <div className="grid grid-cols-4 gap-1 border-b border-sky-200 bg-sky-50/90 px-3 py-2 sm:px-5">
           <button
             type="button"
             onClick={() => setActiveTab('list')}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black transition ${
               activeTab === 'list'
-                ? 'bg-emerald-500 text-slate-950 shadow'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                ? 'bg-[#00846c] text-white shadow-xs'
+                : 'border border-sky-200 bg-white text-[#003360] hover:bg-sky-100'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -896,8 +911,8 @@ export function LayerControlModal({
             onClick={() => setActiveTab('import')}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black transition ${
               activeTab === 'import'
-                ? 'bg-sky-400 text-slate-950 shadow'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                ? 'bg-[#0284c7] text-white shadow-xs'
+                : 'border border-sky-200 bg-white text-[#003360] hover:bg-sky-100'
             }`}
           >
             <FileUp className="h-3.5 w-3.5" />
@@ -909,8 +924,8 @@ export function LayerControlModal({
             onClick={() => setActiveTab('features')}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black transition ${
               activeTab === 'features'
-                ? 'bg-amber-400 text-slate-950 shadow'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                ? 'bg-[#003360] text-white shadow-xs'
+                : 'border border-sky-200 bg-white text-[#003360] hover:bg-sky-100'
             }`}
           >
             <Edit3 className="h-3.5 w-3.5" />
@@ -922,8 +937,8 @@ export function LayerControlModal({
             onClick={() => setActiveTab('history')}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black transition ${
               activeTab === 'history'
-                ? 'bg-purple-400 text-slate-950 shadow'
-                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                ? 'bg-[#00a79d] text-white shadow-xs'
+                : 'border border-sky-200 bg-white text-[#003360] hover:bg-sky-100'
             }`}
           >
             <History className="h-3.5 w-3.5" />
@@ -939,12 +954,12 @@ export function LayerControlModal({
           {activeTab === 'list' && (
             <div className="space-y-3">
               {/* 상단 빠른 파일 등록 & 실무 샘플 원클릭 테스트 바 */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-sky-500/40 bg-sky-950/30 p-3">
-                <div className="text-xs text-sky-100">
-                  <p className="font-black text-sky-300">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-sky-300 bg-[#f0f9ff] p-3">
+                <div className="text-xs text-[#003360]">
+                  <p className="font-black text-[#003360]">
                     QGIS 실무 공간파일 원스톱 등록 (.gpkg · .zip/shp · .geojson · .kml)
                   </p>
-                  <p className="mt-0.5 text-[11px] text-slate-300">
+                  <p className="mt-0.5 text-[11px] font-bold text-[#484843]">
                     한국 좌표계(EPSG:5179/5186) 자동 재투영 및 한글(CP949) 자동 복원 지원
                   </p>
                 </div>
@@ -952,7 +967,7 @@ export function LayerControlModal({
                   <button
                     type="button"
                     onClick={() => setActiveTab('import')}
-                    className="inline-flex items-center gap-1 rounded-xl bg-sky-400 px-3 py-1.5 text-xs font-black text-slate-950 shadow active:scale-95"
+                    className="inline-flex items-center gap-1 rounded-xl bg-[#0284c7] px-3 py-1.5 text-xs font-black text-white shadow-xs active:scale-95"
                   >
                     <FileUp className="h-3.5 w-3.5" />
                     <span>QGIS 파일 올리기</span>
@@ -979,7 +994,7 @@ export function LayerControlModal({
                 return (
                   <div
                     key={layer.id}
-                    className="rounded-2xl border border-slate-700/90 bg-slate-900/85 p-3.5 transition hover:border-slate-500"
+                    className="rounded-2xl border border-sky-200 bg-white p-3.5 shadow-2xs transition hover:border-sky-400"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <label className="flex flex-1 cursor-pointer items-start gap-2.5">
@@ -988,27 +1003,27 @@ export function LayerControlModal({
                           checked={layer.visible}
                           onChange={() => handleToggleDraftLayer(layer.id)}
                           aria-label={`${layer.name} 표시 전환`}
-                          className="mt-1 h-5 w-5 rounded border-slate-600 bg-slate-800 text-emerald-500 accent-emerald-500"
+                          className="mt-1 h-5 w-5 rounded border-slate-400 bg-white accent-[#00846c]"
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span
-                              className="h-3.5 w-3.5 shrink-0 rounded-full border border-white/70"
+                              className="h-3.5 w-3.5 shrink-0 rounded-full border border-slate-700/30"
                               style={{ backgroundColor: layer.color }}
                             />
-                            <span className="text-sm font-black text-white">
+                            <span className="text-sm font-black text-[#003360]">
                               {layer.name}
                             </span>
-                            <span className="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] font-bold text-sky-300">
+                            <span className="rounded bg-sky-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-sky-900">
                               {geomTypesLabel} · {featureCount}건
                             </span>
                             {layer.sourceMeta?.detectedCrs && (
-                              <span className="rounded bg-emerald-950/90 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-[#00846c]">
                                 {layer.sourceMeta.detectedCrs}
                               </span>
                             )}
                           </div>
-                          <p className="mt-0.5 text-xs text-slate-400">
+                          <p className="mt-0.5 text-xs font-semibold text-[#484843]">
                             {layer.description}
                           </p>
                         </div>
@@ -1021,7 +1036,7 @@ export function LayerControlModal({
                           onClick={() => handleMoveLayerOrder(index, -1)}
                           disabled={index === 0}
                           title="레이어 순서 위로"
-                          className="rounded-lg border border-slate-700 bg-slate-800 p-1 text-slate-300 disabled:opacity-30"
+                          className="rounded-lg border border-slate-300 bg-white p-1 text-[#003360] hover:bg-sky-50 disabled:opacity-30"
                         >
                           <ArrowUp className="h-3.5 w-3.5" />
                         </button>
@@ -1030,7 +1045,7 @@ export function LayerControlModal({
                           onClick={() => handleMoveLayerOrder(index, 1)}
                           disabled={index === draftLayers.length - 1}
                           title="레이어 순서 아래로"
-                          className="rounded-lg border border-slate-700 bg-slate-800 p-1 text-slate-300 disabled:opacity-30"
+                          className="rounded-lg border border-slate-300 bg-white p-1 text-[#003360] hover:bg-sky-50 disabled:opacity-30"
                         >
                           <ArrowDown className="h-3.5 w-3.5" />
                         </button>
@@ -1039,13 +1054,13 @@ export function LayerControlModal({
 
                     {/* 레이어별 실무 액션 바 (시스템 고정 접안 마커 외 모든 공간 레이어) */}
                     {!isSystem && (
-                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-slate-800 pt-2.5">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-sky-100 pt-2.5">
                         <button
                           type="button"
                           onClick={() => handleFlyToLayerBounds(layer)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/90 px-2 py-1 text-[11px] font-bold text-sky-300 hover:border-sky-400"
+                          className="inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-bold text-[#003360] hover:bg-sky-100"
                         >
-                          <Eye className="h-3 w-3" />
+                          <Eye className="h-3 w-3 text-sky-700" />
                           <span>지도 위치보기</span>
                         </button>
 
@@ -1058,8 +1073,8 @@ export function LayerControlModal({
                           }
                           className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold ${
                             isStyleOpen
-                              ? 'border-amber-400 bg-amber-400/20 text-amber-200'
-                              : 'border-slate-700 bg-slate-800/90 text-slate-200 hover:border-slate-500'
+                              ? 'border-amber-500 bg-amber-100 text-amber-900'
+                              : 'border-slate-300 bg-white text-[#003360] hover:bg-sky-50'
                           }`}
                         >
                           <Palette className="h-3 w-3" />
@@ -1072,7 +1087,7 @@ export function LayerControlModal({
                             setSelectedFeatureLayerId(layer.id);
                             setActiveTab('features');
                           }}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/90 px-2 py-1 text-[11px] font-bold text-emerald-300 hover:border-emerald-400"
+                          className="inline-flex items-center gap-1 rounded-lg border border-[#00846c]/50 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-[#00846c] hover:bg-emerald-100"
                         >
                           <Edit3 className="h-3 w-3" />
                           <span>속성·피처 편집 ({featureCount})</span>
@@ -1081,7 +1096,7 @@ export function LayerControlModal({
                         <button
                           type="button"
                           onClick={() => handleExportLayerGeoJson(layer)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/90 px-2 py-1 text-[11px] font-bold text-slate-300 hover:border-slate-500"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-bold text-[#484843] hover:bg-slate-50"
                         >
                           <Download className="h-3 w-3" />
                           <span>GeoJSON 내보내기</span>
@@ -1090,7 +1105,7 @@ export function LayerControlModal({
                         <button
                           type="button"
                           onClick={() => handleDeleteLayer(layer)}
-                          className="ml-auto inline-flex items-center gap-1 rounded-lg border border-rose-500/40 bg-rose-950/40 px-2 py-1 text-[11px] font-bold text-rose-300 hover:bg-rose-900/50"
+                          className="ml-auto inline-flex items-center gap-1 rounded-lg border border-[#b2415f]/60 bg-rose-50 px-2 py-1 text-[11px] font-bold text-[#870b41] hover:bg-rose-100"
                         >
                           <Trash2 className="h-3 w-3" />
                           <span>삭제</span>
@@ -1100,10 +1115,10 @@ export function LayerControlModal({
 
                     {/* 인라인 스타일·라벨 편집 패널 */}
                     {!isSystem && isStyleOpen && (
-                      <div className="mt-3 space-y-2.5 rounded-xl border border-slate-700 bg-slate-950/90 p-3 text-xs">
+                      <div className="mt-3 space-y-2.5 rounded-xl border border-sky-200 bg-[#f0f9ff] p-3 text-xs">
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               레이어 이름
                             </label>
                             <input
@@ -1114,11 +1129,11 @@ export function LayerControlModal({
                                   name: e.target.value,
                                 })
                               }
-                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-white"
+                              className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 text-xs font-bold text-[#003360]"
                             />
                           </div>
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               레이어 설명
                             </label>
                             <input
@@ -1129,13 +1144,13 @@ export function LayerControlModal({
                                   description: e.target.value,
                                 })
                               }
-                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200"
+                              className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 text-xs font-semibold text-[#484843]"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <span className="block text-[11px] font-bold text-slate-400">
+                          <span className="block text-[11px] font-bold text-[#003360]">
                             대표 색상 (선·면 공통)
                           </span>
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -1151,7 +1166,7 @@ export function LayerControlModal({
                                 }
                                 className={`h-6 w-6 rounded-full border-2 ${
                                   layer.color === hex
-                                    ? 'scale-110 border-white'
+                                    ? 'scale-110 border-[#003360]'
                                     : 'border-transparent opacity-80'
                                 }`}
                                 style={{ backgroundColor: hex }}
@@ -1167,14 +1182,14 @@ export function LayerControlModal({
                                   fillColor: e.target.value,
                                 })
                               }
-                              className="h-6 w-8 cursor-pointer rounded border border-slate-600 bg-slate-900"
+                              className="h-6 w-8 cursor-pointer rounded border border-slate-400 bg-white"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-2">
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               선 종류
                             </label>
                             <select
@@ -1185,7 +1200,7 @@ export function LayerControlModal({
                                     .value as StrokeDashPattern,
                                 })
                               }
-                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-white"
+                              className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#003360]"
                             >
                               <option value="solid">실선 (Solid)</option>
                               <option value="shortdash">파선 (Dash)</option>
@@ -1194,7 +1209,7 @@ export function LayerControlModal({
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               선 굵기 ({layerStyle.strokeWidth}px)
                             </label>
                             <input
@@ -1208,12 +1223,12 @@ export function LayerControlModal({
                                   strokeWidth: Number(e.target.value),
                                 })
                               }
-                              className="mt-2 w-full accent-sky-400"
+                              className="mt-2 w-full accent-[#0284c7]"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               면 투명도 ({Math.round(layerStyle.fillOpacity * 100)}%)
                             </label>
                             <input
@@ -1227,13 +1242,13 @@ export function LayerControlModal({
                                   fillOpacity: Number(e.target.value),
                                 })
                               }
-                              className="mt-2 w-full accent-emerald-400"
+                              className="mt-2 w-full accent-[#00846c]"
                             />
                           </div>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                          <label className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                          <label className="flex items-center gap-2 text-xs font-bold text-[#003360]">
                             <input
                               type="checkbox"
                               checked={layerStyle.showLabels !== false}
@@ -1242,12 +1257,12 @@ export function LayerControlModal({
                                   showLabels: e.target.checked,
                                 })
                               }
-                              className="h-4 w-4 rounded accent-sky-400"
+                              className="h-4 w-4 rounded accent-[#00846c]"
                             />
                             <span>지도 위 피처 이름(라벨) 표시</span>
                           </label>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-[11px] font-bold text-[#484843]">
                               라벨 속성명:
                             </span>
                             <input
@@ -1258,7 +1273,7 @@ export function LayerControlModal({
                                   labelField: e.target.value,
                                 })
                               }
-                              className="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 font-mono text-xs text-sky-300"
+                              className="w-24 rounded border-2 border-slate-400 bg-white px-2 py-1 font-mono text-xs font-bold text-[#003360]"
                             />
                           </div>
                         </div>
@@ -1269,24 +1284,24 @@ export function LayerControlModal({
               })}
 
               {/* 개인 상괭이 관찰 표식 레이어 */}
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-teal-500/40 bg-teal-950/30 p-3.5 transition hover:border-teal-400">
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#00a79d]/50 bg-teal-50/70 p-3.5 transition hover:border-[#00a79d]">
                 <input
                   type="checkbox"
                   checked={showPorpoiseLayer}
                   onChange={onTogglePorpoiseLayer}
-                  className="mt-1 h-5 w-5 rounded border-teal-600 bg-slate-800 text-teal-400 accent-teal-400"
+                  className="mt-1 h-5 w-5 rounded border-slate-400 bg-white accent-[#00846c]"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-3 w-3 items-center justify-center rounded-full bg-teal-400" />
-                    <span className="text-sm font-extrabold text-teal-200">
+                    <span className="flex h-3 w-3 items-center justify-center rounded-full bg-[#00a79d]" />
+                    <span className="text-sm font-extrabold text-[#003360]">
                       개인 상괭이 관찰 표식
                     </span>
-                    <span className="rounded bg-teal-900/80 px-1.5 py-0.5 text-[10px] font-black text-teal-300">
+                    <span className="rounded bg-teal-100 px-1.5 py-0.5 text-[10px] font-black text-[#00846c]">
                       {porpoiseCount}건
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-400">
+                  <p className="mt-0.5 text-xs font-semibold text-[#484843]">
                     기기에 저장된 상괭이 목격 위치 핀 표시
                   </p>
                 </div>
@@ -1306,17 +1321,17 @@ export function LayerControlModal({
                   e.preventDefault();
                   handleFileInputChange(e.dataTransfer.files);
                 }}
-                className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-sky-400/70 bg-slate-900/90 p-5 text-center transition hover:border-sky-300"
+                className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#0284c7] bg-[#f0f9ff] p-5 text-center transition hover:border-[#00846c]"
               >
-                <FileUp className="h-8 w-8 text-sky-400" />
-                <p className="mt-2 text-sm font-black text-white">
+                <FileUp className="h-8 w-8 text-[#0284c7]" />
+                <p className="mt-2 text-sm font-black text-[#003360]">
                   QGIS 공간정보 파일을 이곳에 끌어다 놓거나 선택하세요
                 </p>
-                <p className="mt-1 text-xs text-slate-300">
-                  지원 포맷: <strong className="text-amber-300">.gpkg</strong> (GeoPackage) ·{' '}
-                  <strong className="text-amber-300">.zip / .shp+.dbf+.prj</strong> (Shapefile) ·{' '}
-                  <strong className="text-amber-300">.geojson / .json</strong> ·{' '}
-                  <strong className="text-amber-300">.kml / .kmz</strong>
+                <p className="mt-1 text-xs font-semibold text-[#484843]">
+                  지원 포맷: <strong className="text-[#00846c]">.gpkg</strong> (GeoPackage) ·{' '}
+                  <strong className="text-[#00846c]">.zip / .shp+.dbf+.prj</strong> (Shapefile) ·{' '}
+                  <strong className="text-[#00846c]">.geojson / .json</strong> ·{' '}
+                  <strong className="text-[#00846c]">.kml / .kmz</strong>
                 </p>
                 <input
                   ref={fileInputRef}
@@ -1330,7 +1345,7 @@ export function LayerControlModal({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-sky-400 px-4 py-2 text-xs font-black text-slate-950 shadow active:scale-95"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#0284c7] px-4 py-2 text-xs font-black text-white shadow-xs active:scale-95"
                   >
                     <FileUp className="h-4 w-4" />
                     <span>내 기기에서 QGIS 파일 선택</span>
@@ -1338,8 +1353,8 @@ export function LayerControlModal({
                 </div>
 
                 {/* 직원 실무 포맷(GPKG / Shapefile EPSG:5179) 즉시 체험 버튼 */}
-                <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5 border-t border-slate-800 pt-3">
-                  <span className="text-[11px] font-bold text-slate-400">
+                <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5 border-t border-sky-200 pt-3">
+                  <span className="text-[11px] font-bold text-[#484843]">
                     실무 포맷 자동변환 즉시 검증:
                   </span>
                   <button
@@ -1348,7 +1363,7 @@ export function LayerControlModal({
                       const sampleGpkg = createSampleGeoPackageFile();
                       handleFileInputChange([sampleGpkg]);
                     }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/60 bg-emerald-950/60 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-900/60"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#00846c] bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-[#00846c] hover:bg-emerald-100"
                   >
                     <Sparkles className="h-3 w-3" />
                     <span>샘플 .gpkg 로드 (EPSG:5179 구역)</span>
@@ -1359,7 +1374,7 @@ export function LayerControlModal({
                       const sampleShpZip = createSampleShapefileZip();
                       handleFileInputChange([sampleShpZip]);
                     }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-amber-500/60 bg-amber-950/60 px-2.5 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-900/60"
+                    className="inline-flex items-center gap-1 rounded-lg border border-amber-500 bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-200"
                   >
                     <Sparkles className="h-3 w-3" />
                     <span>샘플 .zip Shapefile 로드 (EPSG:5179 항로)</span>
@@ -1368,9 +1383,9 @@ export function LayerControlModal({
               </div>
 
               {/* 좌표계(CRS) · 한글 인코딩 · 경량화 옵션 바 */}
-              <div className="grid grid-cols-1 gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 p-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3 sm:grid-cols-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-300">
+                  <label className="block text-[11px] font-bold text-[#003360]">
                     원본 좌표계 (CRS 자동 감지/지정)
                   </label>
                   <select
@@ -1380,7 +1395,7 @@ export function LayerControlModal({
                         e.target.value as SupportedCrsCode,
                       )
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-1.5 text-xs font-bold text-sky-300"
+                    className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#003360]"
                   >
                     <option value="AUTO">자동 감지 (권장 · .prj/GPKG/범위)</option>
                     {Object.entries(KOREAN_CRS_DEFINITIONS).map(([code, meta]) => (
@@ -1392,7 +1407,7 @@ export function LayerControlModal({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-300">
+                  <label className="block text-[11px] font-bold text-[#003360]">
                     한글 속성 인코딩 (.dbf / 텍스트)
                   </label>
                   <select
@@ -1402,7 +1417,7 @@ export function LayerControlModal({
                         e.target.value as SupportedTextEncoding,
                       )
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-1.5 text-xs font-bold text-emerald-300"
+                    className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#00846c]"
                   >
                     <option value="AUTO">자동 감지 (UTF-8 / CP949·EUC-KR)</option>
                     <option value="EUC-KR">EUC-KR / CP949 (관공서 Shapefile)</option>
@@ -1411,7 +1426,7 @@ export function LayerControlModal({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-300">
+                  <label className="block text-[11px] font-bold text-[#003360]">
                     도형 정밀도 · 모바일 경량화
                   </label>
                   <select
@@ -1419,7 +1434,7 @@ export function LayerControlModal({
                     onChange={(e) =>
                       setSimplifyToleranceMeters(Number(e.target.value))
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-1.5 text-xs font-bold text-amber-300"
+                    className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-amber-900"
                   >
                     <option value={0}>원본 정밀도 유지 (단순화 안 함)</option>
                     <option value={1}>모바일 최적화 단순화 (허용오차 1m)</option>
@@ -1429,15 +1444,15 @@ export function LayerControlModal({
               </div>
 
               {isParsingFiles && (
-                <div className="flex items-center justify-center gap-2 rounded-2xl border border-sky-500/40 bg-sky-950/30 p-4 text-xs font-bold text-sky-200">
-                  <RefreshCw className="h-4 w-4 animate-spin text-sky-400" />
+                <div className="flex items-center justify-center gap-2 rounded-2xl border border-sky-300 bg-[#f0f9ff] p-4 text-xs font-bold text-[#003360]">
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#0284c7]" />
                   <span>공간 데이터 파싱 및 WGS 84 좌표 재투영 중...</span>
                 </div>
               )}
 
               {parseErrors.length > 0 && (
-                <div className="rounded-2xl border border-rose-500/70 bg-rose-950/60 p-3 text-xs text-rose-200">
-                  <p className="font-black text-rose-300">파일 확인 필요</p>
+                <div className="rounded-2xl border border-[#b2415f] bg-rose-50 p-3 text-xs text-[#870b41]">
+                  <p className="font-black text-[#870b41]">파일 확인 필요</p>
                   <ul className="mt-1 list-disc space-y-0.5 pl-4">
                     {parseErrors.map((err, i) => (
                       <li key={i}>{err}</li>
@@ -1450,13 +1465,13 @@ export function LayerControlModal({
               {parsedCandidates.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-emerald-300">
+                    <span className="text-xs font-black text-[#00846c]">
                       인식된 공간 레이어 ({parsedCandidates.length}건) — 하단 [저장 (운영 반영)] 클릭 시 즉시 반영됩니다
                     </span>
                     <button
                       type="button"
                       onClick={handleStageImportedCandidates}
-                      className="inline-flex items-center gap-1 rounded-xl bg-sky-500/20 px-2.5 py-1 text-xs font-black text-sky-300 hover:bg-sky-500/30"
+                      className="inline-flex items-center gap-1 rounded-xl border border-sky-400 bg-sky-100 px-2.5 py-1 text-xs font-black text-[#003360] hover:bg-sky-200"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>레이어 목록 탭으로 먼저 담기</span>
@@ -1468,10 +1483,10 @@ export function LayerControlModal({
                     return (
                       <div
                         key={candidate.candidateId}
-                        className="rounded-2xl border-2 border-emerald-500/60 bg-slate-900/95 p-3.5 text-xs"
+                        className="rounded-2xl border-2 border-[#00846c]/60 bg-white p-3.5 text-xs shadow-xs"
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <label className="flex items-center gap-2 font-black text-white">
+                          <label className="flex items-center gap-2 font-black text-[#003360]">
                             <input
                               type="checkbox"
                               checked={item.selected}
@@ -1484,31 +1499,31 @@ export function LayerControlModal({
                                   ),
                                 )
                               }
-                              className="h-4 w-4 rounded accent-emerald-400"
+                              className="h-4 w-4 rounded accent-[#00846c]"
                             />
-                            <span className="text-sm text-emerald-300">
+                            <span className="text-sm text-[#00846c]">
                               {candidate.sourceFileName}
                             </span>
                           </label>
-                          <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-black text-emerald-300 uppercase">
+                          <span className="rounded-md bg-emerald-100 px-2 py-0.5 font-mono text-[10px] font-black text-[#00846c] uppercase">
                             {candidate.sourceFormat} · {candidate.appliedCrs} ➔ EPSG:4326
                           </span>
                         </div>
 
                         <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-                          <span className="rounded bg-slate-800 px-2 py-0.5 text-sky-300">
+                          <span className="rounded bg-sky-100 px-2 py-0.5 font-bold text-sky-900">
                             도형: {candidate.geometryTypes.join(', ')}
                           </span>
-                          <span className="rounded bg-slate-800 px-2 py-0.5 text-amber-300">
+                          <span className="rounded bg-amber-100 px-2 py-0.5 font-bold text-amber-900">
                             피처: {candidate.featureCount}개 (꼭짓점 {candidate.vertexCount.toLocaleString()}개)
                           </span>
-                          <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-300">
+                          <span className="rounded bg-slate-200 px-2 py-0.5 font-bold text-slate-800">
                             인코딩: {candidate.detectedEncoding}
                           </span>
                         </div>
 
                         {candidate.autoHealedNotes.length > 0 && (
-                          <div className="mt-2 rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-2 text-[11px] text-emerald-200">
+                          <div className="mt-2 rounded-xl border border-[#00846c]/40 bg-emerald-50 p-2 text-[11px] font-bold text-[#00846c]">
                             {candidate.autoHealedNotes.map((note, nIdx) => (
                               <p key={nIdx}>✓ {note}</p>
                             ))}
@@ -1516,7 +1531,7 @@ export function LayerControlModal({
                         )}
 
                         {candidate.warnings.length > 0 && (
-                          <div className="mt-2 rounded-xl border border-amber-500/50 bg-amber-950/40 p-2 text-[11px] text-amber-200">
+                          <div className="mt-2 rounded-xl border border-amber-500 bg-amber-50 p-2 text-[11px] font-bold text-amber-900">
                             {candidate.warnings.map((w, wIdx) => (
                               <p key={wIdx}>⚠ {w}</p>
                             ))}
@@ -1525,7 +1540,7 @@ export function LayerControlModal({
 
                         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               반영 방식 (신규 추가 / 기존 교체)
                             </label>
                             <select
@@ -1539,7 +1554,7 @@ export function LayerControlModal({
                                   ),
                                 )
                               }
-                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs font-bold text-white"
+                              className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#003360]"
                             >
                               <option value="new">+ 신규 레이어로 추가</option>
                               {editableGeoLayers.map((existing) => (
@@ -1551,7 +1566,7 @@ export function LayerControlModal({
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               표시할 레이어명
                             </label>
                             <input
@@ -1566,12 +1581,12 @@ export function LayerControlModal({
                                   ),
                                 )
                               }
-                              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-white"
+                              className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 text-xs font-bold text-[#003360]"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400">
+                            <label className="block text-[11px] font-bold text-[#003360]">
                               색상 및 라벨 컬럼
                             </label>
                             <div className="mt-1 flex items-center gap-1.5">
@@ -1587,7 +1602,7 @@ export function LayerControlModal({
                                     ),
                                   )
                                 }
-                                className="h-7 w-9 cursor-pointer rounded border border-slate-600 bg-slate-950"
+                                className="h-7 w-9 cursor-pointer rounded border border-slate-400 bg-white"
                               />
                               <select
                                 value={item.customLabelField}
@@ -1603,7 +1618,7 @@ export function LayerControlModal({
                                     ),
                                   )
                                 }
-                                className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-sky-300"
+                                className="flex-1 rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#003360]"
                               >
                                 {candidate.attributeKeys.map((k) => (
                                   <option key={k} value={k}>
@@ -1628,15 +1643,15 @@ export function LayerControlModal({
           {activeTab === 'features' && (
             <div className="space-y-3">
               {/* 편집 대상 레이어 선택 및 검색 바 */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-sky-200 bg-[#f0f9ff] p-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-black text-slate-300">
+                  <span className="text-xs font-black text-[#003360]">
                     대상 레이어:
                   </span>
                   <select
                     value={activeFeatureLayer?.id ?? ''}
                     onChange={(e) => setSelectedFeatureLayerId(e.target.value)}
-                    className="rounded-xl border border-slate-600 bg-slate-950 px-3 py-1.5 text-xs font-black text-amber-300"
+                    className="rounded-xl border-2 border-slate-400 bg-white px-3 py-1.5 text-xs font-black text-[#003360]"
                   >
                     {editableGeoLayers.map((l) => (
                       <option key={l.id} value={l.id}>
@@ -1650,7 +1665,7 @@ export function LayerControlModal({
                   <button
                     type="button"
                     onClick={handleAddPointFeatureToLayer}
-                    className="inline-flex items-center gap-1 rounded-xl bg-emerald-500/20 px-2.5 py-1.5 text-xs font-black text-emerald-300 hover:bg-emerald-500/30"
+                    className="inline-flex items-center gap-1 rounded-xl border border-[#00846c] bg-emerald-50 px-2.5 py-1.5 text-xs font-black text-[#00846c] hover:bg-emerald-100"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>+ 피처(지점) 추가</span>
@@ -1661,13 +1676,13 @@ export function LayerControlModal({
               {/* 검색 및 새 컬럼 추가 */}
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute top-2.5 left-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <Search className="pointer-events-none absolute top-2.5 left-2.5 h-3.5 w-3.5 text-slate-500" />
                   <input
                     type="text"
                     value={featureSearchQuery}
                     onChange={(e) => setFeatureSearchQuery(e.target.value)}
                     placeholder="피처 ID, 이름, 속성값 검색..."
-                    className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2 pr-3 pl-8 text-xs text-white"
+                    className="w-full rounded-xl border-2 border-slate-400 bg-white py-2 pr-3 pl-8 text-xs font-bold text-[#003360] placeholder-slate-500"
                   />
                 </div>
                 <div className="flex gap-1.5">
@@ -1676,12 +1691,12 @@ export function LayerControlModal({
                     value={newColumnKey}
                     onChange={(e) => setNewColumnKey(e.target.value)}
                     placeholder="새 속성 필드명 (예: 관리담당자)"
-                    className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white"
+                    className="flex-1 rounded-xl border-2 border-slate-400 bg-white px-3 py-2 text-xs font-bold text-[#003360] placeholder-slate-500"
                   />
                   <button
                     type="button"
                     onClick={handleAddAttributeColumn}
-                    className="shrink-0 rounded-xl border border-sky-500/50 bg-sky-500/20 px-3 py-2 text-xs font-black text-sky-300"
+                    className="shrink-0 rounded-xl border border-sky-400 bg-sky-100 px-3 py-2 text-xs font-black text-[#003360] hover:bg-sky-200"
                   >
                     + 컬럼 추가
                   </button>
@@ -1706,14 +1721,14 @@ export function LayerControlModal({
                     return (
                       <div
                         key={String(feat.id ?? fIdx)}
-                        className="rounded-2xl border border-slate-700/80 bg-slate-900/80 p-3 text-xs"
+                        className="rounded-2xl border border-sky-200 bg-white p-3 text-xs shadow-2xs"
                       >
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center justify-between border-b border-sky-100 pb-2">
                           <div className="flex items-center gap-2">
-                            <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-[10px] font-black text-sky-300">
+                            <span className="rounded bg-sky-100 px-2 py-0.5 font-mono text-[10px] font-black text-sky-900">
                               #{fIdx + 1} · {feat.geometry.type}
                             </span>
-                            <span className="font-black text-white">
+                            <span className="font-black text-[#003360]">
                               {String(
                                 feat.properties?.name ??
                                   feat.properties?.id ??
@@ -1728,16 +1743,16 @@ export function LayerControlModal({
                                 onClick={() =>
                                   onFlyToPoint(centerPt[0], centerPt[1], 13)
                                 }
-                                className="inline-flex items-center gap-1 rounded-lg bg-sky-500/20 px-2 py-0.5 text-[11px] font-bold text-sky-300"
+                                className="inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-[#003360]"
                               >
-                                <MapPin className="h-3 w-3" />
+                                <MapPin className="h-3 w-3 text-sky-700" />
                                 <span>위치 이동</span>
                               </button>
                             )}
                             <button
                               type="button"
                               onClick={() => handleDeleteFeatureFromLayer(fIdx)}
-                              className="inline-flex items-center gap-1 rounded-lg bg-rose-500/20 px-2 py-0.5 text-[11px] font-bold text-rose-300"
+                              className="inline-flex items-center gap-1 rounded-lg border border-[#b2415f]/60 bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-[#870b41]"
                             >
                               <Trash2 className="h-3 w-3" />
                               <span>피처 삭제</span>
@@ -1748,7 +1763,7 @@ export function LayerControlModal({
                         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                           {activeLayerAttributeKeys.map((key) => (
                             <div key={key}>
-                              <label className="block font-mono text-[10px] font-bold text-slate-400">
+                              <label className="block font-mono text-[10px] font-bold text-[#484843]">
                                 {key}
                               </label>
                               <input
@@ -1761,7 +1776,7 @@ export function LayerControlModal({
                                     e.target.value,
                                   )
                                 }
-                                className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white"
+                                className="mt-0.5 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1 text-xs font-bold text-[#003360]"
                               />
                             </div>
                           ))}
@@ -1771,7 +1786,7 @@ export function LayerControlModal({
                   })}
                 </div>
               ) : (
-                <p className="py-6 text-center text-xs text-slate-400">
+                <p className="py-6 text-center text-xs font-bold text-[#484843]">
                   편집할 공간 레이어를 선택해 주세요.
                 </p>
               )}
@@ -1784,21 +1799,21 @@ export function LayerControlModal({
           {activeTab === 'history' && (
             <div className="space-y-4">
               {/* 1. 저장된 운영 버전 스냅샷 이력 및 원클릭 복원 */}
-              <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3.5">
+              <div className="rounded-2xl border border-sky-200 bg-[#f0f9ff] p-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-purple-400" />
-                    <h3 className="text-xs font-black text-white">
+                    <Database className="h-4 w-4 text-[#00846c]" />
+                    <h3 className="text-xs font-black text-[#003360]">
                       운영 반영(저장) 버전 스냅샷 이력 ({snapshots.length}건)
                     </h3>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] font-bold text-[#484843]">
                     이전 버전 선택 후 [저장]을 누르면 즉시 복원됩니다
                   </span>
                 </div>
 
                 {snapshots.length === 0 ? (
-                  <p className="mt-3 text-xs text-slate-400">
+                  <p className="mt-3 text-xs font-semibold text-[#484843]">
                     아직 기기에 기록된 신규 스냅샷이 없습니다. 하단 [저장 (운영 반영)]을 누르면 스냅샷이 자동 생성됩니다.
                   </p>
                 ) : (
@@ -1806,21 +1821,21 @@ export function LayerControlModal({
                     {snapshots.map((snap) => (
                       <div
                         key={snap.releaseId}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/90 px-3 py-2 text-xs"
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-200 bg-white px-3 py-2 text-xs shadow-2xs"
                       >
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono font-black text-purple-300">
+                            <span className="font-mono font-black text-[#00846c]">
                               {snap.releaseId}
                             </span>
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-[11px] font-semibold text-[#484843]">
                               {formatKoreanDateTime(snap.createdAt)}
                             </span>
-                            <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300">
+                            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-900">
                               레이어 {snap.layers.length}개
                             </span>
                           </div>
-                          <p className="mt-0.5 text-[11px] text-slate-300">
+                          <p className="mt-0.5 text-[11px] font-bold text-[#003360]">
                             {snap.summary}
                           </p>
                         </div>
@@ -1831,7 +1846,7 @@ export function LayerControlModal({
                               href={snap.remoteCommitUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="rounded-lg border border-sky-500/40 bg-sky-950/40 px-2 py-1 text-[11px] font-bold text-sky-300"
+                              className="rounded-lg border border-sky-400 bg-sky-50 px-2 py-1 text-[11px] font-bold text-[#003360]"
                             >
                               GitHub 커밋 보기
                             </a>
@@ -1839,7 +1854,7 @@ export function LayerControlModal({
                           <button
                             type="button"
                             onClick={() => handleRestoreSnapshotToDraft(snap)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-purple-500/25 px-2.5 py-1 text-[11px] font-black text-purple-200 hover:bg-purple-500/40"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#00846c] bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-[#00846c] hover:bg-emerald-100"
                           >
                             <RotateCcw className="h-3 w-3" />
                             <span>이 버전으로 복원 선택</span>
@@ -1852,20 +1867,20 @@ export function LayerControlModal({
               </div>
 
               {/* 2. 원격 GitHub 저장소 자동 커밋 연동 설정 */}
-              <div className="rounded-2xl border border-sky-500/40 bg-slate-900/90 p-3.5 text-xs">
+              <div className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3.5 text-xs">
                 <div className="flex items-center gap-2">
-                  <FolderGit2 className="h-4 w-4 text-sky-400" />
-                  <h3 className="font-black text-sky-300">
+                  <FolderGit2 className="h-4 w-4 text-[#003360]" />
+                  <h3 className="font-black text-[#003360]">
                     원격 GitHub 저장소(GitHub Pages) 자동 운영 배포 연동
                   </h3>
                 </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-300">
+                <p className="mt-1 text-[11px] leading-relaxed font-semibold text-[#484843]">
                   관리 화면에서 <strong>[저장 (운영 반영)]</strong> 클릭 시 기기 내 영속 저장소(`IndexedDB`)에는 토큰 없이도 100% 즉시 반영됩니다. 모든 직원 단말기에 배포되도록 원격 GitHub 저장소(`main`)까지 동시에 자동 커밋하려면 저장소 쓰기 토큰(`contents: write` 권한 Fine-grained PAT)을 입력하세요. (토큰은 외부로 노출되지 않고 현재 기기 내부에만 격리 보관됩니다.)
                 </p>
 
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400">
+                    <label className="block text-[10px] font-bold text-[#003360]">
                       GitHub Owner
                     </label>
                     <input
@@ -1877,11 +1892,11 @@ export function LayerControlModal({
                           owner: e.target.value,
                         }))
                       }
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 font-mono text-xs text-white"
+                      className="mt-0.5 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-[#003360]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400">
+                    <label className="block text-[10px] font-bold text-[#003360]">
                       Repository
                     </label>
                     <input
@@ -1893,11 +1908,11 @@ export function LayerControlModal({
                           repo: e.target.value,
                         }))
                       }
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 font-mono text-xs text-white"
+                      className="mt-0.5 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-[#003360]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400">
+                    <label className="block text-[10px] font-bold text-[#003360]">
                       운영 브랜치
                     </label>
                     <input
@@ -1909,13 +1924,13 @@ export function LayerControlModal({
                           branch: e.target.value,
                         }))
                       }
-                      className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 font-mono text-xs text-white"
+                      className="mt-0.5 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-[#003360]"
                     />
                   </div>
                 </div>
 
                 <div className="mt-2">
-                  <label className="block text-[10px] font-bold text-slate-400">
+                  <label className="block text-[10px] font-bold text-[#003360]">
                     GitHub Fine-grained Personal Access Token (`contents: write`)
                   </label>
                   <input
@@ -1928,12 +1943,12 @@ export function LayerControlModal({
                       }))
                     }
                     placeholder="github_pat_... (미입력 시 기기 내 즉시 운영 반영 모드로 동작)"
-                    className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 font-mono text-xs text-emerald-300"
+                    className="mt-0.5 w-full rounded-lg border-2 border-slate-400 bg-white px-2.5 py-1.5 font-mono text-xs font-bold text-[#00846c]"
                   />
                 </div>
 
                 <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
-                  <label className="flex items-center gap-2 font-bold text-slate-200">
+                  <label className="flex items-center gap-2 font-bold text-[#003360]">
                     <input
                       type="checkbox"
                       checked={gitHubConfig.autoCommitOnSave}
@@ -1943,7 +1958,7 @@ export function LayerControlModal({
                           autoCommitOnSave: e.target.checked,
                         }))
                       }
-                      className="h-4 w-4 rounded accent-sky-400"
+                      className="h-4 w-4 rounded accent-[#00846c]"
                     />
                     <span>[저장] 버튼 클릭 시 원격 GitHub 저장소 자동 커밋 수행</span>
                   </label>
@@ -1951,7 +1966,7 @@ export function LayerControlModal({
                   <button
                     type="button"
                     onClick={handleSaveGitHubConfig}
-                    className="inline-flex items-center gap-1 rounded-xl bg-sky-500 px-3 py-1.5 text-xs font-black text-slate-950 active:scale-95"
+                    className="inline-flex items-center gap-1 rounded-xl bg-[#003360] px-3 py-1.5 text-xs font-black text-white active:scale-95"
                   >
                     <Check className="h-3.5 w-3.5" />
                     <span>연동 설정 기기 저장</span>
@@ -1959,7 +1974,7 @@ export function LayerControlModal({
                 </div>
 
                 {gitHubConfigSavedMsg && (
-                  <p className="mt-2 text-[11px] font-bold text-emerald-300">
+                  <p className="mt-2 text-[11px] font-bold text-[#00846c]">
                     ✓ {gitHubConfigSavedMsg}
                   </p>
                 )}
@@ -1969,23 +1984,23 @@ export function LayerControlModal({
         </div>
 
         {/* 4. 하단 고정 [저장 = 즉시 운영 반영] 액션 바 */}
-        <div className="border-t border-slate-700/90 bg-slate-950/95 px-4 py-3 sm:px-5">
+        <div className="border-t border-sky-200 bg-sky-50/90 px-4 py-3 sm:px-5">
           {saveBanner && (
             <div
               role="status"
               className={`mb-2.5 flex items-start justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
                 saveBanner.type === 'success'
-                  ? 'border-emerald-400/70 bg-emerald-950/80 text-emerald-200'
+                  ? 'border-[#00846c] bg-emerald-50 text-[#00846c]'
                   : saveBanner.type === 'warning'
-                    ? 'border-amber-400/70 bg-amber-950/80 text-amber-200'
-                    : 'border-rose-400/70 bg-rose-950/80 text-rose-200'
+                    ? 'border-amber-500 bg-amber-50 text-amber-900'
+                    : 'border-[#b2415f] bg-rose-50 text-[#870b41]'
               }`}
             >
               <div className="flex items-start gap-2">
                 {saveBanner.type === 'success' ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#00846c]" />
                 ) : (
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 )}
                 <div>
                   <p>{saveBanner.message}</p>
@@ -1994,7 +2009,7 @@ export function LayerControlModal({
                       href={saveBanner.commitUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-0.5 inline-block underline text-sky-300"
+                      className="mt-0.5 inline-block underline text-[#0284c7]"
                     >
                       원격 GitHub 배포 커밋 확인하기 ↗
                     </a>
@@ -2004,7 +2019,7 @@ export function LayerControlModal({
               <button
                 type="button"
                 onClick={() => setSaveBanner(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -2014,11 +2029,11 @@ export function LayerControlModal({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-xs">
               {totalPendingChanges > 0 ? (
-                <span className="font-black text-amber-300">
+                <span className="font-black text-amber-800">
                   ● 미저장 변경사항 {totalPendingChanges}건 대기중 — [저장] 클릭 시 즉시 운영에 반영됩니다
                 </span>
               ) : (
-                <span className="font-bold text-slate-400">
+                <span className="font-bold text-[#484843]">
                   최근 운영 반영: {formatKoreanDateTime(lastSavedAt)}
                   {remoteCommitUrl && (
                     <>
@@ -2027,7 +2042,7 @@ export function LayerControlModal({
                         href={remoteCommitUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sky-400 underline"
+                        className="text-[#0284c7] underline"
                       >
                         원격 커밋
                       </a>
@@ -2042,7 +2057,7 @@ export function LayerControlModal({
                 <button
                   type="button"
                   onClick={handleResetDraftChanges}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2.5 text-xs font-bold text-slate-200 active:scale-95"
+                  className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs font-bold text-[#003360] hover:bg-slate-100 active:scale-95"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   <span>변경 취소</span>
@@ -2053,7 +2068,7 @@ export function LayerControlModal({
                 type="button"
                 disabled={isSaving}
                 onClick={() => void handleSaveToProduction()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-black text-slate-950 shadow-lg transition hover:bg-emerald-400 active:scale-95 disabled:opacity-50 sm:text-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#00846c] px-5 py-2.5 text-xs font-black text-white shadow-lg transition hover:bg-[#00a79d] active:scale-95 disabled:opacity-50 sm:text-sm"
               >
                 {isSaving ? (
                   <>
@@ -2071,6 +2086,6 @@ export function LayerControlModal({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

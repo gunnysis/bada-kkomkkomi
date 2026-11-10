@@ -221,33 +221,33 @@ export function WeatherThresholdSettings({
         }
       }}
       aria-labelledby="threshold-settings-title"
-      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1400] m-auto max-h-[90dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-2 border-emerald-500/55 bg-[#061c24] p-0 text-white shadow-2xl"
+      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1400] m-auto max-h-[90dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-2 border-[#00a79d]/65 bg-white p-0 text-[#003360] shadow-2xl"
     >
       {/* 상단 고정 헤더 */}
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-700/90 bg-[#061c24]/95 px-5 py-3.5 backdrop-blur-md">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-sky-200/90 bg-gradient-to-r from-sky-50 via-teal-50/70 to-white px-5 py-3.5 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-teal-400/40 bg-teal-500/20 text-teal-300 shadow">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#00a79d]/40 bg-teal-50 text-[#00846c] shadow-xs">
             <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
               <h2
                 id="threshold-settings-title"
-                className="text-base font-black tracking-tight text-white sm:text-lg"
+                className="text-base font-black tracking-tight text-[#003360] sm:text-lg"
               >
                 설정 및 이용 안내
               </h2>
               <span
                 className={`rounded-md border px-1.5 py-0.5 text-[10px] font-black ${
                   isCustomThresholds || !isMatchesDefault
-                    ? 'border-teal-400/60 bg-teal-950/90 text-teal-200'
-                    : 'border-slate-600 bg-slate-800 text-slate-300'
+                    ? 'border-[#00a79d] bg-teal-50 text-[#00846c]'
+                    : 'border-sky-300 bg-sky-50 text-[#0066b3]'
                 }`}
               >
                 {isCustomThresholds || !isMatchesDefault ? '사용자 설정' : '표준 기본값'}
               </span>
             </div>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs font-bold text-slate-600">
               기상 판정 기준은 기기에 자동 저장되어 다음 실행 시에도 유지됩니다
             </p>
           </div>
@@ -256,7 +256,7 @@ export function WeatherThresholdSettings({
           type="button"
           onClick={onClose}
           aria-label="설정 창 닫기"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white transition hover:border-slate-400 active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] shadow-xs transition hover:border-[#00a79d] active:scale-95"
         >
           <X className="h-5 w-5" />
         </button>
@@ -267,10 +267,10 @@ export function WeatherThresholdSettings({
         <section aria-labelledby="weather-threshold-section-title">
           <div className="mb-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
-              <Compass className="h-4 w-4 text-sky-400" aria-hidden="true" />
+              <Compass className="h-4 w-4 text-[#0066b3]" aria-hidden="true" />
               <h3
                 id="weather-threshold-section-title"
-                className="text-sm font-black tracking-tight text-white"
+                className="text-sm font-black tracking-tight text-[#003360]"
               >
                 바닷길 콕콕 기상 판정 기준 설정
               </h3>
@@ -280,7 +280,7 @@ export function WeatherThresholdSettings({
               onClick={handleResetToDefault}
               disabled={isMatchesDefault && !isCustomThresholds}
               title="풍속(14/20kn) 및 파고(1.0/1.8m) 표준 기본값으로 복원"
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-800/90 px-2.5 py-1 text-xs font-extrabold text-sky-300 transition hover:border-sky-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-extrabold text-[#0066b3] transition hover:border-[#0066b3] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
             >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
               <span>기본값 복원</span>
@@ -308,14 +308,14 @@ export function WeatherThresholdSettings({
                   onClick={() => handleApplyPreset(preset.thresholds)}
                   className={`flex flex-col items-center justify-center rounded-xl border px-2 py-1.5 text-center transition active:scale-95 ${
                     isSelectedPreset
-                      ? 'border-teal-400 bg-teal-950/90 text-teal-200 shadow'
-                      : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-500'
+                      ? 'border-[#00846c] bg-emerald-50 text-[#003360] shadow-xs ring-1 ring-[#00846c]/40'
+                      : 'border-slate-300 bg-slate-50/90 text-slate-700 hover:border-[#00a79d] hover:bg-sky-50/60'
                   }`}
                 >
                   <span className="text-[11px] font-black leading-tight">
                     {preset.label}
                   </span>
-                  <span className="mt-0.5 font-mono text-[10px] font-bold tabular-nums text-slate-400">
+                  <span className="mt-0.5 font-mono text-[10px] font-bold tabular-nums text-slate-600">
                     {preset.desc}
                   </span>
                 </button>
@@ -325,9 +325,9 @@ export function WeatherThresholdSettings({
 
           <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
             {/* 1-1. 풍속 판정 기준 (<fieldset> + <legend>) */}
-            <fieldset className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3.5 space-y-3">
-              <legend className="flex items-center gap-1.5 px-1 text-xs font-black text-sky-300">
-                <Wind className="h-3.5 w-3.5 text-sky-400" aria-hidden="true" />
+            <fieldset className="space-y-3 rounded-2xl border border-sky-200 bg-sky-50/65 p-3.5">
+              <legend className="flex items-center gap-1.5 rounded-lg bg-white px-2 py-0.5 text-xs font-black text-[#0066b3] shadow-2xs">
+                <Wind className="h-3.5 w-3.5 text-[#0066b3]" aria-hidden="true" />
                 <span>풍속 (knots) 판정 기준 (ECMWF IFS 10m)</span>
               </legend>
 
@@ -335,13 +335,15 @@ export function WeatherThresholdSettings({
                 <div>
                   <label
                     htmlFor="wind-good-input"
-                    className="mb-1 block text-xs font-bold text-slate-300"
+                    className="mb-1 block text-xs font-extrabold text-[#003360]"
                   >
                     좋음 상한선 (&lt;)
                   </label>
                   <div
-                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
-                      windError ? 'border-red-400' : 'border-slate-600 focus-within:border-sky-400'
+                    className={`flex min-h-12 items-center rounded-xl border-2 bg-white px-3 py-2 shadow-2xs ${
+                      windError
+                        ? 'border-red-500'
+                        : 'border-slate-400 focus-within:border-[#0066b3]'
                     }`}
                   >
                     <input
@@ -358,11 +360,11 @@ export function WeatherThresholdSettings({
                       aria-describedby={windError ? 'wind-threshold-error' : undefined}
                       onBlur={() => setWindTouched(true)}
                       onChange={(e) => setWindGoodStr(e.target.value)}
-                      className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
+                      className="w-full bg-transparent font-mono text-base font-black text-[#003360] focus:outline-none"
                     />
-                    <span className="ml-1 text-xs font-bold text-slate-300">kn</span>
+                    <span className="ml-1 text-xs font-extrabold text-slate-600">kn</span>
                   </div>
-                  <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-sky-300/90">
+                  <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-[#0066b3]">
                     ≈ {formatKnotsToMs(windGoodNum)} m/s 미만
                   </p>
                 </div>
@@ -370,13 +372,15 @@ export function WeatherThresholdSettings({
                 <div>
                   <label
                     htmlFor="wind-moderate-input"
-                    className="mb-1 block text-xs font-bold text-slate-300"
+                    className="mb-1 block text-xs font-extrabold text-[#003360]"
                   >
                     보통 상한선 (≤)
                   </label>
                   <div
-                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
-                      windError ? 'border-red-400' : 'border-slate-600 focus-within:border-sky-400'
+                    className={`flex min-h-12 items-center rounded-xl border-2 bg-white px-3 py-2 shadow-2xs ${
+                      windError
+                        ? 'border-red-500'
+                        : 'border-slate-400 focus-within:border-[#0066b3]'
                     }`}
                   >
                     <input
@@ -392,11 +396,11 @@ export function WeatherThresholdSettings({
                       aria-describedby={windError ? 'wind-threshold-error' : undefined}
                       onBlur={() => setWindTouched(true)}
                       onChange={(e) => setWindModStr(e.target.value)}
-                      className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
+                      className="w-full bg-transparent font-mono text-base font-black text-[#003360] focus:outline-none"
                     />
-                    <span className="ml-1 text-xs font-bold text-slate-300">kn</span>
+                    <span className="ml-1 text-xs font-extrabold text-slate-600">kn</span>
                   </div>
-                  <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-slate-300">
+                  <p className="mt-1 font-mono text-[11px] font-bold tabular-nums text-slate-600">
                     ≈ {formatKnotsToMs(windModNum)} m/s 이하
                   </p>
                 </div>
@@ -406,20 +410,20 @@ export function WeatherThresholdSettings({
                 <div
                   id="wind-threshold-error"
                   role="alert"
-                  className="flex items-start gap-1.5 rounded-xl border border-red-500/60 bg-red-950/80 px-2.5 py-2 text-xs font-bold text-red-200"
+                  className="flex items-start gap-1.5 rounded-xl border border-red-300 bg-red-50 px-2.5 py-2 text-xs font-bold text-red-800"
                 >
-                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" aria-hidden="true" />
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600" aria-hidden="true" />
                   <span>{windError}</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-extrabold tabular-nums">
-                  <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/60 px-1.5 py-1 text-emerald-300">
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-1.5 py-1 text-[#00846c]">
                     좋음: &lt;{windGoodNum || 0}kn
                   </div>
-                  <div className="rounded-lg border border-slate-500/50 bg-slate-800/90 px-1.5 py-1 text-slate-200">
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 px-1.5 py-1 text-amber-900">
                     보통: {windGoodNum || 0}~{windModNum || 0}kn
                   </div>
-                  <div className="rounded-lg border border-red-500/40 bg-red-950/60 px-1.5 py-1 text-red-300">
+                  <div className="rounded-lg border border-red-300 bg-red-50 px-1.5 py-1 text-red-800">
                     나쁨: &gt;{windModNum || 0}kn
                   </div>
                 </div>
@@ -427,9 +431,9 @@ export function WeatherThresholdSettings({
             </fieldset>
 
             {/* 1-2. 파고 판정 기준 (<fieldset> + <legend>) */}
-            <fieldset className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3.5 space-y-3">
-              <legend className="flex items-center gap-1.5 px-1 text-xs font-black text-teal-300">
-                <Waves className="h-3.5 w-3.5 text-teal-400" aria-hidden="true" />
+            <fieldset className="space-y-3 rounded-2xl border border-teal-200 bg-teal-50/55 p-3.5">
+              <legend className="flex items-center gap-1.5 rounded-lg bg-white px-2 py-0.5 text-xs font-black text-[#00846c] shadow-2xs">
+                <Waves className="h-3.5 w-3.5 text-[#00846c]" aria-hidden="true" />
                 <span>유의파고 (m) 판정 기준 (ECMWF WAM)</span>
               </legend>
 
@@ -437,13 +441,15 @@ export function WeatherThresholdSettings({
                 <div>
                   <label
                     htmlFor="wave-good-input"
-                    className="mb-1 block text-xs font-bold text-slate-300"
+                    className="mb-1 block text-xs font-extrabold text-[#003360]"
                   >
                     좋음 상한선 (&lt;)
                   </label>
                   <div
-                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
-                      waveError ? 'border-red-400' : 'border-slate-600 focus-within:border-teal-400'
+                    className={`flex min-h-12 items-center rounded-xl border-2 bg-white px-3 py-2 shadow-2xs ${
+                      waveError
+                        ? 'border-red-500'
+                        : 'border-slate-400 focus-within:border-[#00846c]'
                     }`}
                   >
                     <input
@@ -460,22 +466,24 @@ export function WeatherThresholdSettings({
                       aria-describedby={waveError ? 'wave-threshold-error' : undefined}
                       onBlur={() => setWaveTouched(true)}
                       onChange={(e) => setWaveGoodStr(e.target.value)}
-                      className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
+                      className="w-full bg-transparent font-mono text-base font-black text-[#003360] focus:outline-none"
                     />
-                    <span className="ml-1 text-xs font-bold text-slate-300">m</span>
+                    <span className="ml-1 text-xs font-extrabold text-slate-600">m</span>
                   </div>
                 </div>
 
                 <div>
                   <label
                     htmlFor="wave-moderate-input"
-                    className="mb-1 block text-xs font-bold text-slate-300"
+                    className="mb-1 block text-xs font-extrabold text-[#003360]"
                   >
                     보통 상한선 (≤)
                   </label>
                   <div
-                    className={`flex min-h-12 items-center rounded-xl border bg-slate-800 px-3 py-2 ${
-                      waveError ? 'border-red-400' : 'border-slate-600 focus-within:border-teal-400'
+                    className={`flex min-h-12 items-center rounded-xl border-2 bg-white px-3 py-2 shadow-2xs ${
+                      waveError
+                        ? 'border-red-500'
+                        : 'border-slate-400 focus-within:border-[#00846c]'
                     }`}
                   >
                     <input
@@ -491,9 +499,9 @@ export function WeatherThresholdSettings({
                       aria-describedby={waveError ? 'wave-threshold-error' : undefined}
                       onBlur={() => setWaveTouched(true)}
                       onChange={(e) => setWaveModStr(e.target.value)}
-                      className="w-full bg-transparent font-mono text-base font-black text-white focus:outline-none"
+                      className="w-full bg-transparent font-mono text-base font-black text-[#003360] focus:outline-none"
                     />
-                    <span className="ml-1 text-xs font-bold text-slate-300">m</span>
+                    <span className="ml-1 text-xs font-extrabold text-slate-600">m</span>
                   </div>
                 </div>
               </div>
@@ -502,20 +510,20 @@ export function WeatherThresholdSettings({
                 <div
                   id="wave-threshold-error"
                   role="alert"
-                  className="flex items-start gap-1.5 rounded-xl border border-red-500/60 bg-red-950/80 px-2.5 py-2 text-xs font-bold text-red-200"
+                  className="flex items-start gap-1.5 rounded-xl border border-red-300 bg-red-50 px-2.5 py-2 text-xs font-bold text-red-800"
                 >
-                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" aria-hidden="true" />
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600" aria-hidden="true" />
                   <span>{waveError}</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-extrabold tabular-nums">
-                  <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/60 px-1.5 py-1 text-emerald-300">
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-1.5 py-1 text-[#00846c]">
                     좋음: &lt;{waveGoodNum || 0}m
                   </div>
-                  <div className="rounded-lg border border-slate-500/50 bg-slate-800/90 px-1.5 py-1 text-slate-200">
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 px-1.5 py-1 text-amber-900">
                     보통: {waveGoodNum || 0}~{waveModNum || 0}m
                   </div>
-                  <div className="rounded-lg border border-red-500/40 bg-red-950/60 px-1.5 py-1 text-red-300">
+                  <div className="rounded-lg border border-red-300 bg-red-50 px-1.5 py-1 text-red-800">
                     나쁨: &gt;{waveModNum || 0}m
                   </div>
                 </div>
@@ -525,7 +533,7 @@ export function WeatherThresholdSettings({
             <button
               type="submit"
               disabled={(windTouched || waveTouched || hasSubmitted) && !isFormValid}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-400 to-sky-400 py-3 text-sm font-black text-slate-950 shadow-lg transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00854a] via-[#00846c] to-[#0066b3] py-3 text-sm font-black text-white shadow-md transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Check className="h-4 w-4 stroke-[2.8]" aria-hidden="true" />
               <span>기상 기준 저장 및 즉시 반영</span>
@@ -537,91 +545,97 @@ export function WeatherThresholdSettings({
         <section
           ref={guideSectionRef}
           aria-labelledby="usage-guide-section-title"
-          className="border-t border-slate-700/80 pt-4"
+          className="border-t border-slate-200 pt-4"
         >
           <div className="mb-2.5 flex items-center gap-1.5">
-            <BookOpen className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+            <BookOpen className="h-4 w-4 text-[#00846c]" aria-hidden="true" />
             <h3
               id="usage-guide-section-title"
-              className="text-sm font-black tracking-tight text-white"
+              className="text-sm font-black tracking-tight text-[#003360]"
             >
               간단한 이용 안내
             </h3>
           </div>
 
           <div className="space-y-2.5">
-            <div className="rounded-2xl border border-slate-700/90 bg-slate-900/80 p-3">
+            <div className="rounded-2xl border border-sky-200 bg-sky-50/75 p-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-sky-500/20 text-xs font-black text-sky-300">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#0066b3] text-xs font-black text-white">
                   1
                 </span>
-                <Anchor className="h-4 w-4 shrink-0 text-sky-400" aria-hidden="true" />
-                <span className="text-xs font-black text-white">
+                <Anchor className="h-4 w-4 shrink-0 text-[#0066b3]" aria-hidden="true" />
+                <span className="text-xs font-black text-[#003360]">
                   꼬미의 바다수첩 (접안지 55개소 · 공간 레이어)
                 </span>
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
-                한려해상(통영·거제) 주요 접안지의 암초·수심 위험요소와 현장 사진, 3D 로드뷰를 확인합니다. 기본으로 <strong className="text-red-300">위험주의(적색)</strong> 지점이 우선 표시되며, 상단 <strong className="text-emerald-300">[+ 등급 선택]</strong>에서 전체 등급을 켤 수 있습니다.
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
+                한려해상(통영·거제) 주요 접안지의 암초·수심 위험요소와 현장 사진, 3D 로드뷰를 확인합니다. 기본으로 <strong className="font-black text-[#870b41]">위험주의(적색)</strong> 지점이 우선 표시되며, 상단 <strong className="font-black text-[#00846c]">[+ 등급 선택]</strong>에서 전체 등급을 켤 수 있습니다.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-700/90 bg-slate-900/80 p-3">
+            <div className="rounded-2xl border border-teal-200 bg-teal-50/65 p-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-teal-500/20 text-xs font-black text-teal-300">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#00846c] text-xs font-black text-white">
                   2
                 </span>
-                <Compass className="h-4 w-4 shrink-0 text-teal-400" aria-hidden="true" />
-                <span className="text-xs font-black text-white">
+                <Compass className="h-4 w-4 shrink-0 text-[#00846c]" aria-hidden="true" />
+                <span className="text-xs font-black text-[#003360]">
                   바닷길 콕콕 (실항로 시간계산 · 해상기상 판정)
                 </span>
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
                 136개 항포구·선착장 간 육지·섬을 우회하는 해상 실항로 거리·소요시간을 계산합니다. 구간 카드를 탭하면 해당 구간이 자동 확대되며, 설정한 풍속·파고 기준치로 48시간 기상 신호등(좋음·보통·나쁨)을 즉시 판정합니다.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-700/90 bg-slate-900/80 p-3">
+            <div className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-xs font-black text-emerald-300">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#00854a] text-xs font-black text-white">
                   3
                 </span>
-                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
-                <span className="text-xs font-black text-white">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-[#00854a]" aria-hidden="true" />
+                <span className="text-xs font-black text-[#003360]">
                   현장 기록 & 오프라인 자동 보존
                 </span>
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-700">
                 상괭이 목격 좌표·개체수 기록과 기상 판정 기준은 기기 내부에 자동 저장되어 해상 통신 음영지역(오프라인)이나 앱 재실행 시에도 그대로 유지됩니다.
               </p>
             </div>
           </div>
         </section>
 
-        {/* 섹션 3: 앱 버전 및 데이터 기준 확인 */}
+        {/* 섹션 3: 앱 버전 및 데이터 기준 확인 (화이트 서피스와 자연 융화된 반달이 캐릭터 배지) */}
         <section
           aria-labelledby="app-version-section-title"
-          className="rounded-2xl border border-emerald-500/35 bg-slate-950/90 p-3.5"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-white p-3.5 shadow-xs"
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <Info className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Info className="h-4 w-4 text-[#00854a]" aria-hidden="true" />
               <h3
                 id="app-version-section-title"
-                className="text-xs font-black tracking-tight text-emerald-300"
+                className="text-xs font-black tracking-tight text-[#003360]"
               >
                 앱 버전 및 데이터 기준
               </h3>
+              <span className="rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-black text-[#00846c]">
+                {APP_VERSION_DISPLAY} ({APP_VERSION} · {APP_RELEASE_DATE})
+              </span>
             </div>
-            <span className="rounded-lg border border-emerald-400/50 bg-emerald-950 px-2 py-0.5 font-mono text-xs font-black text-emerald-200">
-              {APP_VERSION_DISPLAY} ({APP_VERSION} · {APP_RELEASE_DATE})
-            </span>
+            <p className="mt-1.5 text-[11px] font-bold text-slate-700">
+              {DATA_BASELINE_LABEL}
+            </p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
+              국립공원공단 한려해상국립공원 해양 현장업무 지원 PWA
+            </p>
           </div>
-          <p className="mt-1.5 text-[11px] font-bold text-slate-300">
-            {DATA_BASELINE_LABEL}
-          </p>
-          <p className="mt-0.5 text-[11px] text-slate-400">
-            국립공원공단 한려해상국립공원 해양 현장업무 지원 PWA
-          </p>
+          <img
+            src={`${import.meta.env.BASE_URL}images/brand/bandali_thumbsup.png`}
+            alt=""
+            aria-hidden="true"
+            className="h-14 w-14 shrink-0 object-contain"
+          />
         </section>
       </div>
     </dialog>

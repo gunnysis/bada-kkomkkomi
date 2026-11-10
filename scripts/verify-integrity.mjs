@@ -12,10 +12,11 @@ function assert(condition, message) {
   }
 }
 
-// 1. 버전 단일 정본(Single Source of Truth) 동기화 검증 (LEG-02 재발 방지)
+// 1. 버전 단일 정본(Single Source of Truth) 및 라이트 테마 동기화 검증 (LEG-02 / LEG-08 재발 방지)
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const appVersionTs = fs.readFileSync('src/config/appVersion.ts', 'utf8');
 const viteConfigTs = fs.readFileSync('vite.config.ts', 'utf8');
+const indexHtml = fs.readFileSync('index.html', 'utf8');
 
 const versionMatch = appVersionTs.match(/APP_VERSION\s*=\s*'([^']+)'/);
 const displayMatch = appVersionTs.match(/APP_VERSION_DISPLAY\s*=\s*'([^']+)'/);
@@ -29,6 +30,14 @@ assert(
 assert(
   viteConfigTs.includes(`[${displayMatch[1]}]`),
   `vite.config.ts PWA manifest description must include [${displayMatch[1]}]`,
+);
+assert(
+  indexHtml.includes(`[${displayMatch[1]}]`),
+  `index.html title/description must include [${displayMatch[1]}]`,
+);
+assert(
+  !indexHtml.includes('class="dark"') && !indexHtml.includes('#061c24'),
+  'index.html must not contain legacy dark mode class or #061c24 theme color',
 );
 
 // 2. app_config.json 및 기상 기본 기준치 검증
@@ -115,18 +124,16 @@ for (const file of fs.readdirSync(layersDir)) {
   }
 }
 
-// 5. 미참조 개발 시안/백업 에셋 빌드 오염 재발 방지 가드 (LEG-05)
-for (const legacyDir of ['public/dev', 'public/backup']) {
-  if (fs.existsSync(legacyDir)) {
-    const files = fs.readdirSync(legacyDir).filter((f) => !f.startsWith('.'));
-    assert(
-      files.length === 0,
-      `Legacy directory ${legacyDir} must be empty to prevent dist/ bloat, found: ${files.join(', ')}`,
-    );
-  }
+// 5. public/backup 레거시 백업 폴더 클린 확인 (public/dev는 개발·디자인 레퍼런스 보관용으로 보존하되 SW 프리캐시에서 제외)
+if (fs.existsSync('public/backup')) {
+  const backupFiles = fs.readdirSync('public/backup').filter((f) => !f.startsWith('.'));
+  assert(
+    backupFiles.length === 0,
+    `Legacy directory public/backup must be empty, found: ${backupFiles.join(', ')}`,
+  );
 }
 
-// 6. PWA Service Worker (dist/sw.js) 프리캐시 매니페스트 중복 URL 무결성 검증 (빌드 산출물 존재 시)
+// 6. PWA Service Worker (dist/sw.js) 프리캐시 매니페스트 중복 URL 및 dev/ 미포함 무결성 검증 (빌드 산출물 존재 시)
 let swPrecacheCount = 0;
 if (fs.existsSync('dist/sw.js')) {
   const swContent = fs.readFileSync('dist/sw.js', 'utf8');
@@ -135,6 +142,11 @@ if (fs.existsSync('dist/sw.js')) {
   assert(
     urlMatches.length > 0 && urlMatches.length === uniqueUrls.size,
     `Duplicate precache URLs detected in dist/sw.js: total=${urlMatches.length}, unique=${uniqueUrls.size}`,
+  );
+  const devUrls = urlMatches.filter((u) => u.startsWith('dev/') || u.includes('/dev/'));
+  assert(
+    devUrls.length === 0,
+    `public/dev reference files must not be precached in dist/sw.js, found: ${devUrls.join(', ')}`,
   );
   swPrecacheCount = uniqueUrls.size;
 }

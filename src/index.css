@@ -3,27 +3,39 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-    /* 국립공원공단(KNPS) 공식 CI 심볼마크(산림 생태 그린 #00854a · 청정 해양 블루 #0066b3) 기반 디자인 토큰 */
+    /* 국립공원공단(KNPS) 공식 CI 심볼마크 & 한려해상 깃대종 NPIP(팔색조 '알로', AS 920 ~ AS 923) 정품 디자인 토큰 */
     --knps-green-primary: #00854a;
     --knps-green-bright: #10b981;
     --knps-green-soft: #6ee7b7;
     --knps-blue-primary: #0066b3;
-    --knps-blue-bright: #0ea5e9;
-    --knps-teal-bright: #14b8a6;
+    --knps-blue-bright: #0284c7;
+    --knps-teal-bright: #00a79d;
 
-    /* 한려해상국립공원 다도해 심해·숲 야외 고대비 다크 HUD 서피스 토큰 */
-    --knps-bg-deep: #061c24;
-    --knps-bg-elevated: #0a2733;
-    --knps-bg-card: #0d3140;
-    --knps-border-subtle: rgba(16, 185, 129, 0.36);
-    --knps-border-strong: rgba(45, 212, 191, 0.55);
+    /* NPIP AS 920 ~ AS 923 10색 정품 컬러 토큰 */
+    --npip-navy-deep: #003360;       /* PANTONE 301C: RGB(0, 51, 96) */
+    --npip-turquoise: #00a79d;       /* PANTONE 7466C: RGB(0, 167, 157) */
+    --npip-emerald: #00846c;         /* PANTONE 321C: RGB(0, 132, 108) */
+    --npip-sand-beige: #a79d87;      /* PANTONE 7528C: RGB(167, 157, 135) */
+    --npip-sand-surface: #f7f4ee;    /* PANTONE 7528C 18% Tint — 현장 야장 보조 카드 */
+    --npip-sand-border: #d6c6b2;     /* PANTONE 7528C 42% Tint — 현장 야장 카드 보더 */
+    --npip-charcoal: #484843;        /* PANTONE 7540C: RGB(72, 72, 67) */
+    --npip-crimson: #870b41;         /* PANTONE 215C: RGB(135, 11, 65) */
+    --npip-rose: #b2415f;            /* PANTONE 7423C: RGB(178, 65, 95) */
+    --npip-olive-gold: #aca438;      /* PANTONE 612C: RGB(172, 164, 56) */
 
-    /* modern-web-guidance: brand-consistent-forms */
-    accent-color: var(--knps-green-bright);
+    /* 한려해상 데이라이트 브리즈(Daylight Breeze) 라이트 서피스 토큰 (KRDS 60-30-10 준수) */
+    --knps-bg-canvas: #e0f2fe;       /* Sky-100: 다도해 스카이 캔버스 */
+    --knps-bg-elevated: #ffffff;     /* Pure White: HUD & 모달 1차 서피스 */
+    --knps-bg-card: #f0f9ff;         /* Sky-50: 2차 정보 카드 서피스 */
+    --knps-border-subtle: rgba(0, 167, 157, 0.38);
+    --knps-border-strong: rgba(0, 132, 108, 0.62);
+
+    /* modern-web-guidance: brand-consistent-forms (#FFFFFF 대비 4.8:1 AA 충족, Safari/Android 체크마크 역전 버그 예방) */
+    accent-color: var(--npip-emerald);
   }
 
   html,
@@ -34,28 +46,32 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: var(--knps-bg-deep);
-    color: #f8fafc;
-    accent-color: var(--knps-green-bright);
+    background-color: var(--knps-bg-canvas);
+    color: var(--npip-navy-deep);
+    accent-color: var(--npip-emerald);
     /* 해상 야외 조작 중 당겨서 새로고침(Pull-to-refresh) 및 브라우저 좌우 스와이프 뒤로가기 오작동 차단 */
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
+  }
+
+  textarea {
+    resize: vertical;
   }
 }
 
-/* 국립공원공단(KNPS) 시그니처 HUD & 모달 서피스 시스템 */
+/* 국립공원공단(KNPS) & NPIP(AS 920) 데이라이트 브리즈 HUD & 모달 서피스 시스템 */
 .knps-hud-surface {
   background: linear-gradient(
     145deg,
-    rgba(6, 28, 36, 0.96) 0%,
-    rgba(9, 38, 49, 0.95) 55%,
-    rgba(6, 34, 32, 0.96) 100%
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(240, 249, 255, 0.96) 55%,
+    rgba(240, 253, 250, 0.97) 100%
   );
-  border-color: rgba(20, 184, 166, 0.48);
+  border-color: rgba(0, 167, 157, 0.55);
+  color: var(--npip-navy-deep);
   box-shadow:
-    0 14px 34px rgba(2, 12, 18, 0.78),
-    inset 0 1px 0 rgba(110, 231, 183, 0.22);
+    0 14px 32px rgba(0, 51, 96, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 /* modern-web-guidance: size-aware-styling & css-layout (하단 HUD 패널 인라인 컨테이너 쿼리 컨텍스트) */
@@ -65,29 +81,30 @@
 
 .knps-modal-surface {
   background:
-    radial-gradient(circle at top right, rgba(16, 185, 129, 0.14), transparent 45%),
-    radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.12), transparent 50%),
-    linear-gradient(180deg, #07222c 0%, #061c24 100%);
-  border-color: rgba(45, 212, 191, 0.52);
+    radial-gradient(circle at top right, rgba(0, 167, 157, 0.1), transparent 45%),
+    radial-gradient(circle at bottom left, rgba(2, 132, 199, 0.08), transparent 50%),
+    linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+  border-color: rgba(0, 167, 157, 0.58);
+  color: var(--npip-navy-deep);
   box-shadow:
-    0 24px 52px rgba(2, 10, 16, 0.88),
-    inset 0 1px 0 rgba(110, 231, 183, 0.25);
+    0 24px 52px rgba(0, 51, 96, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
 }
 
-/* 국립공원공단 공식 CI 심볼마크(산림 그린 · 해양 블루) 상단 시그니처 라인 */
+/* 국립공원공단 공식 CI 심볼마크 & NPIP(PANTONE 321C · 7466C · 301C) 상단 시그니처 라인 */
 .knps-tricolor-bar {
   background: linear-gradient(
     90deg,
     #00854a 0%,
-    #10b981 45%,
-    #0284c7 75%,
+    #00846c 35%,
+    #00a79d 70%,
     #0066b3 100%
   );
 }
 
 /* modern-web-guidance: contrast-color() with Relative Color Syntax (oklch) fallback */
 .knps-dynamic-badge {
-  --badge-bg: #00854a;
+  --badge-bg: #00846c;
   background-color: var(--badge-bg);
   color: #ffffff;
 }
@@ -126,27 +143,27 @@
 }
 
 .bada-map-viewport:focus-visible {
-  outline: 3px solid #10b981;
+  outline: 3px solid #00846c;
   outline-offset: -3px;
 }
 
-/* Leaflet 컨테이너 야외 직사광선 대비 강화 필터 */
+/* Leaflet 컨테이너: 타일 로딩 전 밝은 바다색(#bae6fd)으로 다크 플래시 차단 */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background-color: #061c24 !important;
+  background-color: #bae6fd !important;
   font-family: inherit;
 }
 
 .leaflet-tile-pane {
-  filter: contrast(1.06) saturate(1.08);
+  filter: contrast(1.05) saturate(1.06);
 }
 
 /* Kakao Maps v3 컨테이너 및 Tailwind CSS v4 Preflight(img max-width) 충돌 방지 가드 */
 .bada-kakao-map {
   width: 100%;
   height: 100%;
-  background-color: #061c24 !important;
+  background-color: #bae6fd !important;
   font-family: inherit;
 }
 
@@ -162,20 +179,23 @@
   -webkit-user-select: none;
 }
 
-/* 하단 우측 Leaflet 출처 배지: 하단 플로팅 패널과 겹치지 않는 초슬림 다크 테마 */
+/* 하단 우측 Leaflet 출처 배지: 데이라이트 브리즈 반투명 화이트 알약 배지 */
 .leaflet-control-attribution {
-  background: rgba(6, 28, 36, 0.82) !important;
-  color: #a7f3d0 !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: #003360 !important;
   font-size: 9px !important;
   line-height: 1.2 !important;
   padding: 1px 6px !important;
   border-top-left-radius: 6px;
+  border-top: 1px solid rgba(0, 167, 157, 0.35);
+  border-left: 1px solid rgba(0, 167, 157, 0.35);
   backdrop-filter: blur(4px);
   z-index: 400 !important;
 }
 
 .leaflet-control-attribution a {
-  color: #34d399 !important;
+  color: #00846c !important;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -206,6 +226,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  user-select: none;
   transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -243,7 +264,7 @@ dialog.bada-bottom-sheet::backdrop,
 dialog.bada-modal-dialog::backdrop {
   overflow: hidden;
   overscroll-behavior: contain;
-  background: rgba(2, 6, 23, 0.72);
+  background: rgba(0, 51, 96, 0.42);
   backdrop-filter: blur(4px);
 }
 
@@ -279,8 +300,8 @@ dialog.bada-modal-dialog::backdrop {
   @media (prefers-reduced-motion: no-preference) {
     @container scroll-state(snapped: x) {
       .bada-photo-card {
-        border-color: #10b981;
-        box-shadow: 0 10px 28px rgba(16, 185, 129, 0.28);
+        border-color: #00846c;
+        box-shadow: 0 10px 28px rgba(0, 132, 108, 0.22);
       }
     }
   }

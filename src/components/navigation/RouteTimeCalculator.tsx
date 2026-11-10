@@ -189,22 +189,22 @@ export function RouteTimeCalculator({
 
   return (
     <section
-      className="knps-hud-surface bada-hud-panel pointer-events-auto relative flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-emerald-500/45 bg-[#061c24]/95 p-2.5 text-white shadow-2xl backdrop-blur-md sm:p-3.5"
+      className="knps-hud-surface bada-hud-panel pointer-events-auto relative flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-[#00a79d]/60 bg-white/96 p-2.5 text-[#003360] shadow-2xl backdrop-blur-md sm:p-3.5"
       aria-label="바닷길 시간계산 패널"
     >
       <div
         aria-hidden="true"
-        className="knps-tricolor-bar pointer-events-none absolute inset-x-0 top-0 h-0.5 opacity-95"
+        className="knps-tricolor-bar pointer-events-none absolute inset-x-0 top-0 h-1 opacity-95"
       />
       {/* Zone 1: 2단 계층형 상단 HUD 헤더 (Row 1: 타이틀·선속·유틸 툴바 / Row 2: 전폭 100% 히어로 브리핑 박스) */}
       <div className="shrink-0">
         {/* Row 1: 좌측 타이틀·선속 배지 + 우측 유틸리티 컨트롤 툴바 (수평 정렬 100% 보장) */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-1.5">
-            <span className="shrink-0 text-[11px] font-black tracking-wider whitespace-nowrap text-sky-400 uppercase">
+            <span className="shrink-0 text-[11px] font-black tracking-wider whitespace-nowrap text-sky-700 uppercase">
               예상 소요시간
             </span>
-            <span className="shrink-0 rounded-md border border-amber-400/50 bg-amber-500/20 px-1.5 py-0.5 font-mono text-[10px] font-black whitespace-nowrap tabular-nums text-amber-300">
+            <span className="shrink-0 rounded-md border border-amber-500/80 bg-amber-100 px-1.5 py-0.5 font-mono text-[10px] font-black whitespace-nowrap tabular-nums text-amber-900">
               {speedKnots}kn
             </span>
           </div>
@@ -216,7 +216,7 @@ export function RouteTimeCalculator({
                 onClick={onFitRouteBounds}
                 aria-label="전체 항로 한눈에 보기"
                 title="출발지부터 도착지까지 전체 항로가 화면에 들어오도록 지도 맞춤"
-                className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-xl border border-emerald-400/70 bg-emerald-500/20 px-2 text-[11px] font-black whitespace-nowrap text-emerald-200 transition active:scale-95 sm:h-8.5"
+                className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-xl border border-[#00846c] bg-emerald-50 px-2 text-[11px] font-black whitespace-nowrap text-[#00846c] transition hover:bg-emerald-100 active:scale-95 sm:h-8.5"
               >
                 <Maximize2 className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden sm:inline">전체항로</span>
@@ -231,8 +231,8 @@ export function RouteTimeCalculator({
                 title="방금 추가·삭제·이동한 경로 되돌리기"
                 className={`flex h-8 w-8 shrink-0 items-center justify-center gap-1 rounded-xl border text-[11px] font-black whitespace-nowrap transition active:scale-95 sm:h-8.5 sm:w-auto sm:px-2.5 ${
                   canUndoRoute
-                    ? 'border-amber-400/90 bg-amber-500/25 text-amber-200 shadow'
-                    : 'cursor-not-allowed border-slate-700/80 bg-slate-900/60 text-slate-500'
+                    ? 'border-amber-500 bg-amber-100 text-amber-900 shadow-xs hover:bg-amber-200'
+                    : 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400'
                 }`}
               >
                 <Undo2 className="h-3.5 w-3.5 shrink-0" />
@@ -246,8 +246,8 @@ export function RouteTimeCalculator({
               title="출발·경유·도착 및 소요시간·방위각 브리핑 복사"
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 sm:h-8.5 sm:w-8.5 ${
                 copiedBriefing
-                  ? 'border-emerald-400 bg-emerald-500/25 text-emerald-300'
-                  : 'border-slate-600 bg-slate-800 text-slate-300 hover:border-sky-400'
+                  ? 'border-[#00846c] bg-emerald-100 text-[#00846c]'
+                  : 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
               }`}
             >
               {copiedBriefing ? (
@@ -261,7 +261,7 @@ export function RouteTimeCalculator({
               onClick={onReverseRoute}
               aria-label="출발지와 목적지 반전"
               title="출발 ↔ 도착 역방향 전환"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-sky-300 active:scale-95 sm:h-8.5 sm:w-8.5"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-sky-700 hover:border-sky-400 hover:bg-sky-50 active:scale-95 sm:h-8.5 sm:w-8.5"
             >
               <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
@@ -270,7 +270,7 @@ export function RouteTimeCalculator({
               onClick={onResetRoute}
               aria-label="경로 초기화"
               title="경로 기본값 복원"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-300 active:scale-95 sm:h-8.5 sm:w-8.5"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:border-sky-400 hover:bg-sky-50 active:scale-95 sm:h-8.5 sm:w-8.5"
             >
               <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
@@ -278,7 +278,7 @@ export function RouteTimeCalculator({
               type="button"
               onClick={() => setIsCollapsed((v) => !v)}
               aria-label={isCollapsed ? '계산기 패널 펼치기' : '계산기 패널 접기'}
-              className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-sky-400/60 bg-sky-500/20 px-2.5 text-xs font-black whitespace-nowrap text-sky-300 active:scale-95 sm:h-8.5"
+              className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-sky-400 bg-sky-100 px-2.5 text-xs font-black whitespace-nowrap text-[#003360] active:scale-95 sm:h-8.5"
             >
               <span>{isCollapsed ? '펼치기' : '접기'}</span>
               {isCollapsed ? (
@@ -291,17 +291,17 @@ export function RouteTimeCalculator({
         </div>
 
         {/* Row 2: 전폭(100%) 히어로 브리핑 박스 — 소요시간·실항로 거리·도착예정·안전주의 배지 무절단 노출 */}
-        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-2xl border border-emerald-500/30 bg-slate-950/70 px-2.5 py-1.5">
+        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-2xl border border-[#00a79d]/45 bg-[#f0f9ff] px-2.5 py-1.5">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className="shrink-0 text-xl leading-none font-black tracking-tight whitespace-nowrap tabular-nums text-white sm:text-2xl">
+            <span className="shrink-0 text-xl leading-none font-black tracking-tight whitespace-nowrap tabular-nums text-[#003360] sm:text-2xl">
               {timeFormatted}
             </span>
-            <span className="font-mono text-xs font-bold whitespace-nowrap tabular-nums text-slate-300">
+            <span className="font-mono text-xs font-bold whitespace-nowrap tabular-nums text-[#484843]">
               · 실항로{' '}
-              <strong className="font-extrabold text-amber-300">
+              <strong className="font-extrabold text-[#00846c]">
                 {calculation.totalDistanceNm.toFixed(1)} NM
               </strong>{' '}
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-slate-600">
                 ({calculation.totalDistanceKm.toFixed(1)}km · {calculation.legs.length}구간)
               </span>
             </span>
@@ -309,15 +309,15 @@ export function RouteTimeCalculator({
 
           <div className="flex shrink-0 flex-wrap items-center gap-1">
             <span
-              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-sky-400/50 bg-sky-500/15 px-1.5 py-0.5 font-mono text-[10px] font-extrabold whitespace-nowrap tabular-nums text-sky-200"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-sky-400 bg-white px-1.5 py-0.5 font-mono text-[10px] font-extrabold whitespace-nowrap tabular-nums text-[#003360]"
               title="현재 시각 출항 기준 예상 도착 시각 (KST)"
             >
-              <Clock className="h-2.5 w-2.5 shrink-0 text-sky-300" />
+              <Clock className="h-2.5 w-2.5 shrink-0 text-sky-700" />
               <span>{etaTimeKst} 도착예정</span>
             </span>
             {hasCautionOrDanger && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-500/60 bg-amber-950/90 px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-amber-300">
-                <AlertTriangle className="h-2.5 w-2.5 shrink-0 text-amber-400" />
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-500 bg-amber-100 px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-amber-900">
+                <AlertTriangle className="h-2.5 w-2.5 shrink-0 text-amber-700" />
                 <span>수심·암초주의</span>
               </span>
             )}
@@ -326,14 +326,14 @@ export function RouteTimeCalculator({
       </div>
 
       {!isCollapsed && (
-        <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto border-t border-slate-700/80 pt-2 pr-0.5">
+        <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto border-t border-sky-200 pt-2 pr-0.5">
           {/* Zone 2: 지도 탭 동작 모드 선택 바 (h-7 균일 규격 · 줄바꿈 제로) + 선착장 마커 토글 */}
-          <div className="flex items-center justify-between gap-1.5 overflow-x-auto rounded-xl border border-slate-700/90 bg-slate-900/90 px-2 py-1 scrollbar-none">
+          <div className="flex items-center justify-between gap-1.5 overflow-x-auto rounded-xl border border-sky-200 bg-sky-50/95 px-2 py-1 scrollbar-none">
             <div className="flex min-w-0 shrink-0 items-center gap-1">
               {mapTapMode === 'pan_only' ? (
-                <Hand className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                <Hand className="h-3.5 w-3.5 shrink-0 text-[#00846c]" />
               ) : (
-                <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+                <MousePointerClick className="h-3.5 w-3.5 shrink-0 text-sky-700" />
               )}
               <div className="flex items-center gap-1" role="group" aria-label="지도 탭 동작 모드">
                 {(
@@ -358,9 +358,9 @@ export function RouteTimeCalculator({
                       className={`inline-flex h-7 shrink-0 items-center justify-center rounded-lg px-2 text-[11px] font-black whitespace-nowrap transition active:scale-95 ${
                         isActive
                           ? item.mode === 'pan_only'
-                            ? 'bg-emerald-400 text-slate-950 shadow'
-                            : 'bg-sky-400 text-slate-950 shadow'
-                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-[#00846c] text-white shadow-xs'
+                            : 'bg-[#0284c7] text-white shadow-xs'
+                          : 'border border-slate-300 bg-white text-[#003360] hover:bg-sky-100'
                       }`}
                     >
                       {item.label}
@@ -378,8 +378,8 @@ export function RouteTimeCalculator({
                   aria-pressed={showDirectionArrows}
                   className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
                     showDirectionArrows
-                      ? 'border-cyan-400/80 bg-cyan-500/20 text-cyan-200'
-                      : 'border-slate-700 bg-slate-800 text-slate-400'
+                      ? 'border-[#00a79d] bg-teal-50 text-[#00846c]'
+                      : 'border-slate-300 bg-white text-slate-600'
                   }`}
                   title="지도 폴리라인 위 진행 방향 화살표(➤) 및 변침점 수로명 표시/숨김"
                 >
@@ -393,8 +393,8 @@ export function RouteTimeCalculator({
                   onClick={onTogglePortMarkersOnMap}
                   className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
                     showPortMarkersOnMap
-                      ? 'border-amber-400/70 bg-amber-500/20 text-amber-300'
-                      : 'border-slate-700 bg-slate-800 text-slate-400'
+                      ? 'border-amber-500 bg-amber-100 text-amber-900'
+                      : 'border-slate-300 bg-white text-slate-600'
                   }`}
                   title="지도에 소규모 선착장 및 항구 마커 표시/숨김"
                 >
@@ -411,7 +411,7 @@ export function RouteTimeCalculator({
 
           {/* Zone 3: 탭 전환 ([항구·선착장] vs [구간별 시간]) + 경유지 비우기/추가 (h-8 균일 규격) */}
           <div className="flex items-center justify-between gap-1.5">
-            <div className="grid h-8 min-w-0 flex-1 grid-cols-2 gap-1 rounded-xl bg-slate-900 p-0.5">
+            <div className="grid h-8 min-w-0 flex-1 grid-cols-2 gap-1 rounded-xl border border-sky-200 bg-sky-100/80 p-0.5">
               <button
                 type="button"
                 onClick={() => {
@@ -420,8 +420,8 @@ export function RouteTimeCalculator({
                 }}
                 className={`flex items-center justify-center rounded-lg px-1.5 text-[11px] font-black whitespace-nowrap tabular-nums transition ${
                   effectiveSubView === 'points'
-                    ? 'bg-slate-700 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#003360] text-white shadow-xs'
+                    : 'text-[#003360] hover:bg-white/70'
                 }`}
               >
                 항구·선착장 ({waypoints.length})
@@ -431,8 +431,8 @@ export function RouteTimeCalculator({
                 onClick={() => setActiveSubView('legs')}
                 className={`flex items-center justify-center rounded-lg px-1.5 text-[11px] font-black whitespace-nowrap tabular-nums transition ${
                   effectiveSubView === 'legs'
-                    ? 'bg-slate-700 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#003360] text-white shadow-xs'
+                    : 'text-[#003360] hover:bg-white/70'
                 }`}
               >
                 구간별 시간 ({calculation.legs.length})
@@ -446,16 +446,16 @@ export function RouteTimeCalculator({
                   onClick={onClearWaypoints}
                   aria-label={`중간 경유지 ${intermediateCount}곳 모두 취소`}
                   title="출발지와 목적지만 남기고 중간 경유지 모두 비우기"
-                  className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-red-400/70 bg-red-950/80 px-2 text-[11px] font-black whitespace-nowrap text-red-200 shadow active:scale-95"
+                  className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-[#b2415f] bg-rose-50 px-2 text-[11px] font-black whitespace-nowrap text-[#870b41] shadow-xs active:scale-95"
                 >
-                  <Trash2 className="h-3 w-3 shrink-0 text-red-300" />
+                  <Trash2 className="h-3 w-3 shrink-0 text-[#b2415f]" />
                   <span>비우기({intermediateCount})</span>
                 </button>
               )}
               <button
                 type="button"
                 onClick={onAddWaypoint}
-                className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-amber-400/60 bg-amber-500/20 px-2.5 text-[11px] font-black whitespace-nowrap text-amber-300 active:scale-95"
+                className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-amber-500 bg-amber-100 px-2.5 text-[11px] font-black whitespace-nowrap text-amber-900 hover:bg-amber-200 active:scale-95"
               >
                 <Plus className="h-3 w-3 shrink-0" />
                 <span>경유지</span>
@@ -472,10 +472,10 @@ export function RouteTimeCalculator({
               {waypoints.map((wp, idx) => {
                 const badgeColor =
                   wp.type === 'start'
-                    ? 'bg-emerald-500 text-slate-950'
+                    ? 'bg-[#00846c] text-white'
                     : wp.type === 'end'
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-amber-400 text-slate-950';
+                      ? 'bg-[#b2415f] text-white'
+                      : 'bg-amber-500 text-slate-950';
                 const roleLabel =
                   wp.type === 'start'
                     ? '출발'
@@ -499,8 +499,8 @@ export function RouteTimeCalculator({
                     data-waypoint-row={wp.type}
                     className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 ${
                       wp.type === 'waypoint'
-                        ? 'border-amber-500/50 bg-slate-900/95'
-                        : 'border-slate-700/80 bg-slate-900/90'
+                        ? 'border-amber-400 bg-amber-50/70'
+                        : 'border-sky-200 bg-white'
                     }`}
                   >
                     <button
@@ -516,12 +516,12 @@ export function RouteTimeCalculator({
                         >
                           {roleLabel}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-xs font-extrabold text-white">
+                        <span className="min-w-0 flex-1 truncate text-xs font-extrabold text-[#003360]">
                           {wp.name}
                         </span>
                         {pointEtaKst && (
                           <span
-                            className="shrink-0 rounded border border-sky-400/40 bg-sky-500/15 px-1.5 py-0.2 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-200"
+                            className="shrink-0 rounded border border-sky-300 bg-sky-50 px-1.5 py-0.2 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-900"
                             title={`출발 후 약 ${cumMinsToPoint}분 경과 (${pointEtaKst} 도착예정)`}
                           >
                             +{cumMinsToPoint}분·{pointEtaKst}
@@ -534,10 +534,10 @@ export function RouteTimeCalculator({
                         <span
                           className={`shrink-0 rounded px-1.5 py-0.2 text-[9px] font-bold whitespace-nowrap ${
                             wp.isCustomCoord
-                              ? 'bg-slate-800 text-slate-300'
+                              ? 'bg-slate-200 text-slate-800'
                               : isSmallBerth
-                                ? 'bg-amber-500/20 text-amber-300'
-                                : 'bg-sky-500/20 text-sky-300'
+                                ? 'bg-amber-100 text-amber-900'
+                                : 'bg-sky-100 text-sky-900'
                           }`}
                         >
                           {wp.isCustomCoord
@@ -545,18 +545,18 @@ export function RouteTimeCalculator({
                             : wp.facilityLabel || (isSmallBerth ? '선착장' : '항구')}
                         </span>
                         {wp.minDepthMeters !== undefined && (
-                          <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-slate-800 px-1.5 py-0.2 font-mono text-[9px] font-bold whitespace-nowrap tabular-nums text-sky-300">
-                            <Waves className="h-2.5 w-2.5 shrink-0" />
+                          <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-sky-100 px-1.5 py-0.2 font-mono text-[9px] font-bold whitespace-nowrap tabular-nums text-sky-900">
+                            <Waves className="h-2.5 w-2.5 shrink-0 text-sky-700" />
                             {wp.minDepthMeters.toFixed(1)}m
                           </span>
                         )}
                         <span className="min-w-0 flex-1 truncate tabular-nums">
                           {wp.hazards && wp.hazards.length > 0 ? (
-                            <span className="font-bold text-amber-300">
+                            <span className="font-bold text-amber-800">
                               ⚠️ {wp.hazards[0]}
                             </span>
                           ) : (
-                            <span className="font-mono text-slate-400">
+                            <span className="font-mono text-slate-600">
                               {wp.lat.toFixed(4)}°N, {wp.lng.toFixed(4)}°E
                             </span>
                           )}
@@ -575,8 +575,8 @@ export function RouteTimeCalculator({
                             title="경유 순서 앞으로 이동"
                             className={`flex h-7 w-6 items-center justify-center rounded-md border transition active:scale-90 ${
                               canMoveUp
-                                ? 'border-slate-600 bg-slate-800 text-slate-200 hover:border-sky-400'
-                                : 'cursor-not-allowed border-slate-800 bg-slate-950/50 text-slate-600'
+                                ? 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
+                                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
                             }`}
                           >
                             <ArrowUp className="h-3 w-3" />
@@ -589,8 +589,8 @@ export function RouteTimeCalculator({
                             title="경유 순서 뒤로 이동"
                             className={`flex h-7 w-6 items-center justify-center rounded-md border transition active:scale-90 ${
                               canMoveDown
-                                ? 'border-slate-600 bg-slate-800 text-slate-200 hover:border-sky-400'
-                                : 'cursor-not-allowed border-slate-800 bg-slate-950/50 text-slate-600'
+                                ? 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
+                                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
                             }`}
                           >
                             <ArrowDown className="h-3 w-3" />
@@ -601,9 +601,9 @@ export function RouteTimeCalculator({
                       <button
                         type="button"
                         onClick={() => onOpenPortSelector(wp.id, roleLabel)}
-                        className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-sky-400/50 bg-sky-500/15 px-2 text-[11px] font-black whitespace-nowrap text-sky-300 active:scale-95"
+                        className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-sky-400 bg-sky-100 px-2 text-[11px] font-black whitespace-nowrap text-[#003360] hover:bg-sky-200 active:scale-95"
                       >
-                        <MapPin className="h-3 w-3 shrink-0" />
+                        <MapPin className="h-3 w-3 shrink-0 text-sky-700" />
                         <span>항구선택</span>
                       </button>
 
@@ -613,9 +613,9 @@ export function RouteTimeCalculator({
                           onClick={() => onRemoveWaypoint(wp.id)}
                           aria-label={`${roleLabel} 취소`}
                           title="이 경유지 취소(삭제)"
-                          className="flex h-7 w-7 shrink-0 items-center justify-center gap-0.5 rounded-lg border border-red-400/70 bg-red-950/80 text-[11px] font-black whitespace-nowrap text-red-200 shadow transition hover:bg-red-900/90 active:scale-95 sm:w-auto sm:px-2"
+                          className="flex h-7 w-7 shrink-0 items-center justify-center gap-0.5 rounded-lg border border-[#b2415f] bg-rose-50 text-[11px] font-black whitespace-nowrap text-[#870b41] shadow-xs transition hover:bg-rose-100 active:scale-95 sm:w-auto sm:px-2"
                         >
-                          <X className="h-3.5 w-3.5 shrink-0 stroke-[2.8] text-red-300" />
+                          <X className="h-3.5 w-3.5 shrink-0 stroke-[2.8] text-[#b2415f]" />
                           <span className="hidden sm:inline">취소</span>
                         </button>
                       )}
@@ -644,8 +644,8 @@ export function RouteTimeCalculator({
                     key={leg.id}
                     className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 text-xs transition ${
                       isSelected
-                        ? 'border-emerald-400 bg-emerald-950/45 shadow-md'
-                        : 'border-slate-700/80 bg-slate-900/90 hover:border-sky-400/50'
+                        ? 'border-2 border-[#00846c] bg-emerald-50 shadow-sm'
+                        : 'border-sky-200 bg-white hover:border-sky-400'
                     }`}
                   >
                     <button
@@ -661,44 +661,44 @@ export function RouteTimeCalculator({
                         <span
                           className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-black ${
                             isSelected
-                              ? 'bg-emerald-400 text-slate-950'
-                              : 'bg-sky-500/20 text-sky-300'
+                              ? 'bg-[#00846c] text-white'
+                              : 'bg-sky-100 text-sky-900'
                           }`}
                         >
                           {leg.index}
                         </span>
-                        <span className="min-w-0 flex-1 truncate font-extrabold text-slate-100">
+                        <span className="min-w-0 flex-1 truncate font-extrabold text-[#003360]">
                           {leg.from.name} → {leg.to.name}
                         </span>
-                        <span className="shrink-0 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-200">
+                        <span className="shrink-0 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-800">
                           {legEtaKst} 도착
                         </span>
                       </div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-slate-400">
-                        <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-sky-300">
-                          <Compass className="h-3 w-3 shrink-0" />
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-slate-600">
+                        <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-sky-800">
+                          <Compass className="h-3 w-3 shrink-0 text-sky-700" />
                           출항 {leg.bearingDeg}°({leg.cardinal})
                           {hasBearingTurn
                             ? ` → 입항 ${leg.arrivalBearingDeg}°(${leg.arrivalCardinal})`
                             : ''}
                         </span>
                         <span>·</span>
-                        <span className="whitespace-nowrap text-slate-200">
+                        <span className="whitespace-nowrap font-bold text-[#003360]">
                           {leg.distanceNm.toFixed(2)}NM ({leg.distanceKm.toFixed(1)}km)
                         </span>
                         {leg.detourFactor && leg.detourFactor > 1.05 && (
-                          <span className="whitespace-nowrap text-amber-300">
+                          <span className="whitespace-nowrap font-bold text-amber-800">
                             (우회 {leg.detourFactor.toFixed(2)}x)
                           </span>
                         )}
                       </div>
                       {leg.waypointNames && leg.waypointNames.length > 0 && (
-                        <p className="mt-0.5 truncate text-[10px] text-cyan-200/90">
+                        <p className="mt-0.5 truncate text-[10px] font-bold text-[#00846c]">
                           ◆ 수로 경유: {leg.waypointNames.join(' → ')}
                         </p>
                       )}
                       {leg.safetyNote && (
-                        <p className="mt-0.5 truncate text-[10px] font-bold text-amber-300">
+                        <p className="mt-0.5 truncate text-[10px] font-bold text-amber-800">
                           ⚠️ {leg.safetyNote}
                         </p>
                       )}
@@ -717,15 +717,17 @@ export function RouteTimeCalculator({
                           }
                           aria-label={`${leg.index}구간 해상기상 확인`}
                           title="이 구간 중점 해역의 ECMWF 풍속·파고 판정 보기"
-                          className="flex h-7 shrink-0 items-center gap-0.5 rounded-lg border border-sky-400/60 bg-sky-500/15 px-1.5 text-[10px] font-black whitespace-nowrap text-sky-300 active:scale-95"
+                          className="flex h-7 shrink-0 items-center gap-0.5 rounded-lg border border-sky-400 bg-sky-100 px-1.5 text-[10px] font-black whitespace-nowrap text-[#003360] hover:bg-sky-200 active:scale-95"
                         >
-                          <Wind className="h-3 w-3 shrink-0" />
+                          <Wind className="h-3 w-3 shrink-0 text-sky-700" />
                           <span>기상</span>
                         </button>
                       )}
                       <span
-                        className={`shrink-0 rounded-lg px-2 py-1 font-mono text-xs font-black whitespace-nowrap tabular-nums text-slate-950 ${
-                          isSelected ? 'bg-emerald-400' : 'bg-amber-400'
+                        className={`shrink-0 rounded-lg px-2 py-1 font-mono text-xs font-black whitespace-nowrap tabular-nums ${
+                          isSelected
+                            ? 'bg-[#00846c] text-white'
+                            : 'bg-amber-400 text-slate-950'
                         }`}
                       >
                         {Math.round(leg.durationMinutes)}분
@@ -737,11 +739,11 @@ export function RouteTimeCalculator({
             </div>
           )}
 
-          {/* Zone 5: 선박 속력(knots) 프리셋 + 슬라이더 */}
-          <div className="rounded-xl border border-slate-700/90 bg-slate-900/90 px-2.5 py-1.5">
+          {/* Zone 5: 선박 속력(knots) 프리셋 + 슬라이더 — NPIP 해안 사구 베이지(#F7F4EE) 카드 */}
+          <div className="rounded-xl border border-[#d6c6b2] bg-[#f7f4ee] px-2.5 py-1.5">
             <div className="flex items-center justify-between gap-1.5">
-              <span className="flex shrink-0 items-center gap-1 text-[11px] font-extrabold whitespace-nowrap text-slate-200">
-                <Gauge className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+              <span className="flex shrink-0 items-center gap-1 text-[11px] font-extrabold whitespace-nowrap text-[#003360]">
+                <Gauge className="h-3.5 w-3.5 shrink-0 text-[#00846c]" />
                 <span>선박 속력</span>
               </span>
               <div className="flex shrink-0 gap-1">
@@ -752,8 +754,8 @@ export function RouteTimeCalculator({
                     onClick={() => onChangeSpeed(p.knots)}
                     className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-black whitespace-nowrap tabular-nums transition active:scale-95 ${
                       speedKnots === p.knots
-                        ? 'bg-amber-400 text-slate-950 shadow'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        ? 'bg-[#003360] text-white shadow-xs'
+                        : 'border border-[#d6c6b2] bg-white text-[#484843] hover:bg-amber-50'
                     }`}
                   >
                     {p.label}
@@ -771,9 +773,9 @@ export function RouteTimeCalculator({
                 value={speedKnots}
                 onChange={(e) => onChangeSpeed(Number(e.target.value))}
                 aria-label="선박 예상 속력 슬라이더"
-                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-slate-700 accent-sky-400"
+                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-[#d6c6b2] accent-[#00846c]"
               />
-              <span className="w-12 shrink-0 text-right font-mono text-[11px] font-black whitespace-nowrap tabular-nums text-amber-300">
+              <span className="w-12 shrink-0 text-right font-mono text-[11px] font-black whitespace-nowrap tabular-nums text-[#003360]">
                 {speedKnots} kn
               </span>
             </div>

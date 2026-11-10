@@ -1,6 +1,8 @@
 
 #backup
 public/backup/*
+public/dev/*
+tmp/
 
 # Logs
 logs

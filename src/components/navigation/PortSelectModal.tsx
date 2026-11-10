@@ -90,22 +90,22 @@ export function PortSelectModal({
         }
       }}
       aria-labelledby="port-select-title"
-      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1350] m-auto max-h-[88dvh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-3xl border-2 border-emerald-500/50 bg-[#061c24] p-4 text-white shadow-2xl sm:p-5"
+      className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1350] m-auto max-h-[88dvh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-3xl border-2 border-[#00a79d]/65 bg-white p-4 text-[#003360] shadow-2xl sm:p-5"
     >
       <div className="flex max-h-[calc(88dvh-2.5rem)] min-h-0 flex-col">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700/90 pb-3">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-sky-200 pb-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 text-sky-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-200 bg-sky-50 text-[#0066b3]">
               <Anchor className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <h2
                 id="port-select-title"
-                className="truncate text-base font-black tracking-tight text-white"
+                className="truncate text-base font-black tracking-tight text-[#003360]"
               >
                 {targetLabel} 항포구·소규모 선착장 선택
               </h2>
-              <p className="truncate text-xs text-slate-400">
+              <p className="truncate text-xs font-bold text-slate-600">
                 정규 어항·소규모 접안시설({ports.length}개소) 초성·별칭·섬 이름 검색 지원
               </p>
             </div>
@@ -114,7 +114,7 @@ export function PortSelectModal({
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] shadow-2xs active:scale-95"
           >
             <X className="h-5 w-5" />
           </button>
@@ -127,22 +127,22 @@ export function PortSelectModal({
             onSelectUserGps();
             onClose();
           }}
-          className="mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border border-sky-400/60 bg-sky-950/60 px-3.5 py-2 text-left transition active:scale-[0.99] hover:border-sky-400"
+          className="mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border border-sky-300 bg-sky-50/90 px-3.5 py-2 text-left transition hover:border-[#0066b3] active:scale-[0.99]"
         >
           <div className="flex min-w-0 items-center gap-2.5">
-            <LocateFixed className="h-5 w-5 shrink-0 text-sky-400" />
+            <LocateFixed className="h-5 w-5 shrink-0 text-[#0066b3]" />
             <div className="min-w-0">
-              <p className="truncate text-xs font-black text-sky-200">
+              <p className="truncate text-xs font-black text-[#003360]">
                 내 선박 현재 GPS 위치로 설정
               </p>
-              <p className="truncate font-mono text-[11px] tabular-nums text-slate-400">
+              <p className="truncate font-mono text-[11px] font-bold tabular-nums text-slate-600">
                 {userLocation
                   ? `${userLocation.lat.toFixed(4)}°N, ${userLocation.lng.toFixed(4)}°E`
                   : '클릭 시 GPS 신호 수신 또는 통영·거제 해역 기준점 적용'}
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-lg bg-sky-500 px-2.5 py-1 text-[11px] font-black text-slate-950">
+          <span className="shrink-0 rounded-lg bg-[#0066b3] px-2.5 py-1 text-[11px] font-black text-white shadow-2xs">
             즉시 적용
           </span>
         </button>
@@ -152,20 +152,20 @@ export function PortSelectModal({
           <label htmlFor="port-select-search-input" className="sr-only">
             항포구 및 소규모 선착장 검색
           </label>
-          <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             id="port-select-search-input"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="항구·선착장·섬·초성 검색 (예: ㅅㄷㅎ, 원항, 노대도, 부잔교, 제승당)"
-            className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 py-2 pr-4 pl-10 text-base font-bold text-white placeholder-slate-500 focus:border-sky-400 focus:outline-none"
+            className="min-h-11 w-full rounded-xl border-2 border-slate-400 bg-white py-2 pr-4 pl-10 text-base font-bold text-[#003360] placeholder-slate-400 shadow-2xs focus:border-[#0066b3] focus:outline-none"
           />
         </div>
 
         {/* 빠른 검색 추천 칩 */}
         <div className="mt-2 flex shrink-0 items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-          <span className="shrink-0 text-[10px] font-extrabold text-slate-400">추천:</span>
+          <span className="shrink-0 text-[10px] font-extrabold text-slate-500">추천:</span>
           {QUICK_SEARCH_CHIPS.map((chip) => (
             <button
               key={chip}
@@ -173,8 +173,8 @@ export function PortSelectModal({
               onClick={() => setQuery((prev) => (prev === chip ? '' : chip))}
               className={`shrink-0 rounded-lg border px-2 py-0.5 text-[11px] font-extrabold transition ${
                 query === chip
-                  ? 'border-amber-400 bg-amber-400 text-slate-950'
-                  : 'border-slate-700/90 bg-slate-900/90 text-slate-300 hover:border-sky-400/60'
+                  ? 'border-amber-500 bg-amber-400 text-slate-950'
+                  : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-[#0066b3]'
               }`}
             >
               {chip}
@@ -200,8 +200,8 @@ export function PortSelectModal({
               onClick={() => setActiveFilter(tab.key)}
               className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-extrabold tabular-nums transition ${
                 activeFilter === tab.key
-                  ? 'border-sky-400 bg-sky-500 text-slate-950'
-                  : 'border-slate-700 bg-slate-900 text-slate-300'
+                  ? 'border-[#0066b3] bg-[#0066b3] text-white shadow-2xs'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-sky-50'
               }`}
             >
               {tab.label}
@@ -216,10 +216,10 @@ export function PortSelectModal({
               port.subCategory === 'small_berth' || port.category === 'docking';
             const tidalBadge =
               port.tidalSensitivity === 'HIGH'
-                ? 'border-red-500/50 bg-red-500/20 text-red-300'
+                ? 'border-red-300 bg-red-50 text-red-800'
                 : port.tidalSensitivity === 'MEDIUM'
-                  ? 'border-amber-500/50 bg-amber-500/20 text-amber-300'
-                  : 'border-emerald-500/50 bg-emerald-500/20 text-emerald-300';
+                  ? 'border-amber-300 bg-amber-50 text-amber-900'
+                  : 'border-emerald-300 bg-emerald-50 text-[#00846c]';
 
             return (
               <button
@@ -229,15 +229,15 @@ export function PortSelectModal({
                   onSelectPort(port);
                   onClose();
                 }}
-                className="flex w-full items-start justify-between gap-2.5 rounded-2xl border border-slate-700/80 bg-slate-900/90 p-3 text-left transition active:scale-[0.99] hover:border-sky-400/70"
+                className="flex w-full items-start justify-between gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-2xs transition hover:border-[#00a79d] hover:bg-sky-50/50 active:scale-[0.99]"
               >
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span
                       className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${
                         isSmallBerth
-                          ? 'border border-amber-500/40 bg-amber-500/20 text-amber-300'
-                          : 'border border-sky-500/40 bg-sky-500/20 text-sky-300'
+                          ? 'border border-amber-300 bg-amber-50 text-amber-900'
+                          : 'border border-sky-300 bg-sky-50 text-[#0066b3]'
                       }`}
                     >
                       {isSmallBerth
@@ -246,7 +246,7 @@ export function PortSelectModal({
                     </span>
 
                     {port.islandName && (
-                      <span className="shrink-0 rounded border border-teal-500/40 bg-teal-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-teal-300">
+                      <span className="shrink-0 rounded border border-teal-300 bg-teal-50 px-1.5 py-0.5 text-[10px] font-extrabold text-[#00846c]">
                         {port.islandName}
                       </span>
                     )}
@@ -262,41 +262,41 @@ export function PortSelectModal({
                   </div>
 
                   <div className="flex flex-wrap items-baseline gap-1.5">
-                    <span className="text-sm font-extrabold text-white">{port.name}</span>
+                    <span className="text-sm font-extrabold text-[#003360]">{port.name}</span>
                     {port.eupmyeondong && (
-                      <span className="text-[11px] font-bold text-slate-400">
+                      <span className="text-[11px] font-bold text-slate-500">
                         ({port.region} {port.eupmyeondong})
                       </span>
                     )}
                     {port.aliases && port.aliases.length > 0 && (
-                      <span className="text-[10px] font-semibold text-sky-300/90">
+                      <span className="text-[10px] font-bold text-[#0066b3]">
                         · 별칭: {port.aliases.slice(0, 2).join(', ')}
                       </span>
                     )}
                   </div>
 
-                  <p className="line-clamp-2 text-xs leading-snug text-slate-300">
+                  <p className="line-clamp-2 text-xs leading-snug text-slate-600">
                     {port.description}
                   </p>
 
                   {port.hazards && port.hazards.length > 0 && (
-                    <p className="flex items-center gap-1 text-[11px] font-bold text-amber-300/95">
-                      <AlertTriangle className="h-3 w-3 shrink-0 text-amber-400" />
+                    <p className="flex items-center gap-1 text-[11px] font-bold text-[#870b41]">
+                      <AlertTriangle className="h-3 w-3 shrink-0 text-red-600" />
                       <span className="truncate">주의: {port.hazards.join(' · ')}</span>
                     </p>
                   )}
                 </div>
 
-                <div className="flex shrink-0 flex-col items-end font-mono text-[11px] tabular-nums text-slate-400">
-                  <span className="flex items-center gap-0.5 rounded-lg bg-sky-500/20 px-2 py-0.5 font-sans text-[11px] font-black text-sky-300">
+                <div className="flex shrink-0 flex-col items-end font-mono text-[11px] font-bold tabular-nums text-slate-500">
+                  <span className="flex items-center gap-0.5 rounded-lg border border-sky-200 bg-sky-50 px-2 py-0.5 font-sans text-[11px] font-black text-[#0066b3]">
                     <MapPin className="h-3 w-3" />
                     선택
                   </span>
                   <span className="mt-1">{port.lat.toFixed(3)}°N</span>
                   <span>{port.lng.toFixed(3)}°E</span>
                   {port.maxVesselTons !== undefined && (
-                    <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-bold text-slate-300">
-                      <Compass className="h-2.5 w-2.5 text-sky-400" />≤{port.maxVesselTons}t
+                    <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-bold text-slate-600">
+                      <Compass className="h-2.5 w-2.5 text-[#0066b3]" />≤{port.maxVesselTons}t
                     </span>
                   )}
                 </div>
@@ -305,7 +305,7 @@ export function PortSelectModal({
           })}
 
           {filteredPorts.length === 0 && (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 text-center text-xs text-slate-400">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-xs font-bold text-slate-600">
               검색어와 일치하는 항포구·소규모 선착장이 없습니다. 지도에서 직접 핀을 드래그하거나 탭하여 지정할 수 있습니다.
             </div>
           )}

@@ -43,14 +43,14 @@ export default defineConfig({
         name: '바다꼼꼬미 — 국립공원공단 해양 현장업무 접안·항해 지원 PWA',
         short_name: '바다꼼꼬미',
         description:
-          '국립공원공단 한려해상(통영·거제 해역) 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 136개 항포구·선착장) 오프라인 PWA [v2.1]',
+          '국립공원공단 한려해상(통영·거제 해역) 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 136개 항포구·선착장) 오프라인 PWA [v2.2]',
         lang: 'ko',
         start_url: base,
         scope: base,
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#061c24',
-        theme_color: '#061c24',
+        background_color: '#e0f2fe',
+        theme_color: '#0284c7',
         categories: ['navigation', 'utilities', 'productivity'],
         icons: [
           {
