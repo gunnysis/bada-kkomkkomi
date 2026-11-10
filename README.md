@@ -52,7 +52,7 @@
   - `바닷길 콕콕` 진입 시 상단 탭에서 **`시간계산 (실항로·소규모 선착장)`**과 **`기상상태판정`** 독립 화면을 즉시 전환합니다.
 - **C. 바닷길 시간계산기 (`RouteTimeCalculator` + `PortSelectModal` + `routeGeoService`)**:
   - **통영·거제 136개 항포구·소규모 선착장 사전 & 초성·별칭·섬 검색 (`PortSelectModal`)**: 국가·지방·어촌정주·소규모어항(81개소), 소규모 선착장·접안시설(50개소), 공식 조사선 접안지(5개소) 등 총 **136개소**(`public/data/ports.json`, `docking_points.geojson` 55개소와 100% ID 정합)에 대해 한글 초성(`ㅅㄷㅎ`, `ㅈㅅㅍ`), 읍면동·옛지명·별칭(`원항`, `강구안`), 21개 부속 섬 이름(`욕지도`, `사량도`, `노대도`), 시설 유형(`부잔교`, `슬립웨이`), 최저수심·위험요소 배지 확인 및 원터치 선택을 지원합니다.
-  - **해상 변침점(35개소) A* 우회 실항로 계산 (`routeGeoService`)**: 미륵도·거제도·한산도·사량도 등 육지/섬 관통을 방지하기 위해 방파제 외측 진입점(`seaApproach`)과 35개 해상 변침점(`waypoints`)을 경유하는 A* 최단 해상 실항로 폴리라인과 우회 계수(`detourFactor`), 접안 수심·위험 경고를 자동 산출합니다.
+  - **실측 해안선(378폴리곤·12,794정점) 및 해상 변침점(300개소) 2계층 하이브리드 A*·가시성 그래프 우회 실항로 계산 (`routeGeoService` + `coastlinePolygons`)**: 미륵도·거제도·한산도·사량도·좌도·송도·비산도 등 유·무인도와 리아스식 반도 관통을 100% 차단하기 위해 OpenStreetMap(`natural=coastline`) 실측 해안선 폴리곤 378개(`12,794`정점)와 이중 공간 인덱스(`Spatial Grid` + `Latitude Slab`), 방파제 외측 진입점(`seaApproach`), 300개 해상 변침점(`waypoints`), C-Space 외향 법선 가시성 그래프(`Visibility Graph`) 및 `Theta*` String-Pulling(좌·우현 95m 안전 여유폭 보장)을 결합해 최단 해상 실항로 폴리라인과 우회 계수(`detourFactor`), 접안 수심·위험 경고를 자동 산출합니다 (**136개 항포구 전 조합 18,360쌍 육지 관통 0건 전수 검증 통과**).
   - **경유지 직관적 취소·순서 변경·일괄 비우기·Undo 히스토리 & 브리핑 복사**: 지도 탭 모드 4종(`[✋이동만]`, `[+경유추가]`, `[출발지정]`, `[도착지정]`), 지도 마커 인라인 `[✕]` 취소 버튼, 패널 행 `[✕ 취소]`·`[▲/▼]` 순서 변경, `[경유지 비우기 (N)]`, 최대 10단계 `[↩ 실행취소]`, **KST 예상 도착시각(`HH:MM 도착예정`)**, **`[📋 브리핑복사]`(무전·단톡방 공유)**, 구간별 **`[🌊 기상]` 원터치 기상 확인**을 지원합니다.
   - **지도 마커 드래그 & 500m 스마트 스냅 (`resolveSmartWaypoint`)**: 지도 위 출발·경유·도착 마커를 드래그하거나 지도 위 선착장 마커를 탭하면 Haversine 거리 `500m` 이내의 항구·소규모 선착장으로 자동 스냅되며, 반경 밖 해상은 `해상 좌표`로 실시간 동기화됩니다.
   - **지도 항로 폴리라인 구간 배지**: 각 구간(Leg) 중점에 `14분 · 3.5NM (142°SE)` 형태의 소요시간·해리·방위각(8방위) 캡슐 배지를 표시합니다.
@@ -79,8 +79,8 @@ bada-kkomkkomi/
 │   ├── config/
 │   │   └── app_config.json            # 운영자 수신 이메일, 기본 해역, 속력·기상 기본값, 공간레이어 정의
 │   ├── data/
-│   │   ├── docking_points.geojson     # 갯바위 접안 포인트 및 소규모 선착장 (55개소, 5색 안전 등급)
-│   │   ├── ports.json                 # 통영·거제 136개 항포구·선착장 사전 및 35개 해상 변침점 그래프
+│   │   ├── docking_points.geojson     # 갯바위 접안 포인트 및 소규모 선착장 (55개소, 5색 안전 등급, OSM 해안선 보정 완료)
+│   │   ├── ports.json                 # 통영·거제 136개 항포구·선착장 사전 및 300개 해상 변침점 단일 연결 그래프
 │   │   └── layers/
 │   │       ├── national_park.geojson  # 한려해상국립공원 경계 폴리곤
 │   │       └── protected_area.geojson # 특별보호구역 폴리곤
@@ -110,7 +110,10 @@ bada-kkomkkomi/
 │   │       ├── MarineWeatherPanel.tsx       # ECMWF 전용 해상 기상상태 3단계 판정 패널 (항로 해역 칩 연동)
 │   │       └── WeatherThresholdSettings.tsx # 기상 판정 기준값(풍속·파고) 설정 모달
 │   ├── config/
-│   │   └── appVersion.ts              # 앱 릴리즈 버전(APP_VERSION) 및 데이터셋 버전 단일 정본
+│   │   ├── appVersion.ts              # 앱 릴리즈 버전(APP_VERSION) 및 데이터셋 버전 단일 정본
+│   │   └── dataSources.ts             # 6대 데이터·API·지도·알고리즘 출처 및 오프라인 동작 매트릭스 단일 정본(SSOT)
+│   ├── data/
+│   │   └── coastlinePolygons.ts       # 한려해상(통영·거제·고성·창원) 378개 실측 해안선·도서 폴리곤(12,794정점) 정본
 │   ├── hooks/
 │   │   ├── useAppRoute.ts             # URL Query 딥링크, Depth-Aware 히스토리 라우터(navigateHome), 프리셋 관리
 │   │   ├── useAppConfig.ts            # app_config.json + IndexedDB 레이어 통합 로더 및 즉시 운영 반영
@@ -125,7 +128,9 @@ bada-kkomkkomi/
 │   │   ├── githubLayerSyncService.ts  # [저장] 시 GitHub Git Data API 기반 원격 main 브랜치 원자적 자동 커밋
 │   │   ├── ecmwfWeatherService.ts     # ECMWF IFS(풍속) + WAM(파고) 전용 URL 생성 및 KST 타임스탬프 결합기
 │   │   ├── emailReportService.ts      # 이메일 제보 전문 포맷팅, mailto URI 생성, 클립보드 복사
-│   │   └── routeGeoService.ts         # Haversine 거리(NM), 출항 침로(°/8방위), 초성 검색, 35개 변침점 A* 우회, 500m 스냅
+│   │   └── routeGeoService.ts         # 378개 실측 해안선 이중 공간 인덱싱, 300개 변침점 2계층 A*·가시성 그래프 우회, Theta* String-Pulling
+│   ├── tests/
+│   │   └── coreServices.test.ts       # 핵심 도메인(해상 항로·기상·딥링크·워크스페이스·출처 SSOT) 단위 테스트 (13 tests)
 │   └── types/                         # 도메인별 TypeScript 엄격 타입 정의 (kakao, config, spatialLayer, docking, port, route, weather, porpoise, report)
 ├── DEPLOY_GUIDE.md                    # 비개발자 운영자용 데이터 교체 및 무상 배포 가이드
 ├── README.md                          # 프로젝트 개요 문서
@@ -140,11 +145,17 @@ bada-kkomkkomi/
 # 의존성 설치
 npm install
 
+# 단위 테스트 실행 (Node.js 내장 테스트 러너 · 13개 핵심 도메인 검증)
+npm test
+
 # 정적 린트 검사 (oxlint 116개 규칙)
 npm run lint
 
 # 프로덕션 빌드 (TypeScript 타입 검증 + Vite 번들링 + Workbox 서비스 워커 생성)
 npm run build
+
+# 전사 데이터·버전·항로 그래프·SW 프리캐시 무결성 검증
+npm run verify
 
 # 로컬 개발 서버 실행
 npm run dev

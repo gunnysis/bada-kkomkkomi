@@ -6,6 +6,7 @@ import type {
   RouteDirectionArrowPoint,
   RouteWaypointGuidePoint,
 } from '../types/route';
+import { REAL_COASTLINE_POLYGONS, type CoastlineBarrierPolygon } from '../data/coastlinePolygons.ts';
 
 const CHOSUNG_LIST = [
   'ㄱ',
@@ -211,7 +212,7 @@ export function calculateDurationMinutes(distanceNm: number, speedKnots: number)
 }
 
 /**
- * 지능형 항구/소규모 선착장/좌표 스냅 판정 (500m 이내 항포구/접안지 자동 매칭, 그 외 해상 좌표 표기)
+ * 지능형 항구/소규모 선착장/좌표 스냅 판정 (500m 이내 항포구/접안지 자동 매칭, 육지 산악/내륙 클릭 시 최근접 해상/항포구 자동 보정)
  */
 export function resolveSmartWaypoint(
   lat: number,
@@ -256,6 +257,34 @@ export function resolveSmartWaypoint(
       tidalSensitivity: closestPort.tidalSensitivity,
       maxVesselTons: closestPort.maxVesselTons,
       hazards: closestPort.hazards,
+    };
+  }
+
+  // [RC-UX-05 해결]: 지도 클릭 좌표가 실측 해안선 폴리곤 내부(육지/섬 내륙)인 경우 최근접 항포구 또는 해안선 외측 해상으로 자동 스냅 보정
+  if (isPointInAnyLandBarrier(lat, lng)) {
+    const snapped = snapLandPointToNearestSea(lat, lng, ports);
+    if (snapped.snappedPort) {
+      const p = snapped.snappedPort;
+      return {
+        name: p.name,
+        lat: p.lat,
+        lng: p.lng,
+        matchedPortId: p.id,
+        isCustomCoord: false,
+        subCategory: p.subCategory,
+        facilityLabel: p.facilityLabel,
+        minDepthMeters: p.minDepthMeters,
+        tidalSensitivity: p.tidalSensitivity,
+        maxVesselTons: p.maxVesselTons,
+        hazards: p.hazards,
+      };
+    }
+    return {
+      name: `${fallbackLabel}·해상보정 (${snapped.lat.toFixed(3)}°N, ${snapped.lng.toFixed(3)}°E)`,
+      lat: snapped.lat,
+      lng: snapped.lng,
+      matchedPortId: undefined,
+      isCustomCoord: true,
     };
   }
 
@@ -312,220 +341,117 @@ export function describeNearestPortArea(
 }
 
 /**
- * 한려해상국립공원(통영·거제) 20대 주요 도서·반도 육지 배리어 코어 폴리곤 (WGS84 [lat, lng][])
- * - 단거리 직선 분기(sharesWaypoint/sameLocalArea) 및 양단 오버슈트 프루닝(pruneTerminalOvershoot) 시
- *   해상 선분이 섬이나 반도 산악 지형을 가로지르는 것을 원천 차단(Zero Land Crossing)합니다.
+ * 한려해상국립공원(통영·거제·고성·남해·진해만) 378개 실측 해안선·도서 폴리곤 (OpenStreetMap natural=coastline 정본, 12,794개 정점)
+ * - 레거시 수동 67개 근사 다각형을 완전 폐기하고, 실측 본토 해안선 및 유·무인도(한산면 좌도·송도·유자도·비산도 등 전수 포함) 폴리곤을 사용합니다.
  */
-export const LANDMASS_BARRIER_POLYGONS: ReadonlyArray<{
+export const LANDMASS_BARRIER_POLYGONS: readonly CoastlineBarrierPolygon[] =
+  REAL_COASTLINE_POLYGONS;
+
+/**
+ * 378개 실측 해안선 폴리곤의 사전 연산 AABB 바운딩 박스 ($O(1)$ 고속 조기 기각용)
+ */
+const BARRIER_BBOXES: ReadonlyArray<{
   id: string;
-  name: string;
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
   polygon: ReadonlyArray<readonly [number, number]>;
-}> = [
-  {
-    id: 'BARRIER-HANSAN',
-    name: '한산도 본섬(망산)',
-    polygon: [
-      [34.784, 128.474],
-      [34.78, 128.488],
-      [34.768, 128.494],
-      [34.764, 128.484],
-      [34.769, 128.47],
-    ],
-  },
-  {
-    id: 'BARRIER-CHUBONG',
-    name: '추봉도',
-    polygon: [
-      [34.756, 128.498],
-      [34.756, 128.503],
-      [34.751, 128.503],
-      [34.751, 128.498],
-    ],
-  },
-  {
-    id: 'BARRIER-MIREUK',
-    name: '미륵도 본섬(미륵산)',
-    polygon: [
-      [34.82, 128.397],
-      [34.82, 128.424],
-      [34.798, 128.426],
-      [34.776, 128.404],
-      [34.778, 128.39],
-      [34.796, 128.387],
-    ],
-  },
-  {
-    id: 'BARRIER-TY-PENINSULA',
-    name: '통영 본토 반도(정량·용남)',
-    polygon: [
-      [34.864, 128.416],
-      [34.864, 128.45],
-      [34.842, 128.448],
-      [34.842, 128.42],
-    ],
-  },
-  {
-    id: 'BARRIER-TY-DOSAN-GWANGDO',
-    name: '통영 도산·광도 본토',
-    polygon: [
-      [34.91, 128.34],
-      [34.91, 128.41],
-      [34.868, 128.408],
-      [34.868, 128.355],
-    ],
-  },
-  {
-    id: 'BARRIER-SARYANG-UPPER',
-    name: '사량도 상도',
-    polygon: [
-      [34.842, 128.24],
-      [34.842, 128.254],
-      [34.832, 128.254],
-      [34.832, 128.234],
-    ],
-  },
-  {
-    id: 'BARRIER-SARYANG-LOWER',
-    name: '사량도 하도',
-    polygon: [
-      [34.824, 128.232],
-      [34.824, 128.252],
-      [34.815, 128.25],
-      [34.815, 128.232],
-    ],
-  },
-  {
-    id: 'BARRIER-YOKJI',
-    name: '욕지도 본섬',
-    polygon: [
-      [34.648, 128.25],
-      [34.648, 128.278],
-      [34.628, 128.275],
-      [34.628, 128.255],
-    ],
-  },
-  {
-    id: 'BARRIER-YEONHWA',
-    name: '연화도',
-    polygon: [
-      [34.638, 128.362],
-      [34.638, 128.378],
-      [34.632, 128.378],
-      [34.632, 128.362],
-    ],
-  },
-  {
-    id: 'BARRIER-BIJIN',
-    name: '비진도',
-    polygon: [
-      [34.727, 128.456],
-      [34.727, 128.462],
-      [34.721, 128.462],
-      [34.721, 128.456],
-    ],
-  },
-  {
-    id: 'BARRIER-MAEMUL',
-    name: '대매물도',
-    polygon: [
-      [34.639, 128.564],
-      [34.639, 128.571],
-      [34.634, 128.571],
-      [34.634, 128.564],
-    ],
-  },
-  {
-    id: 'BARRIER-GAJO',
-    name: '가조도',
-    polygon: [
-      [34.932, 128.466],
-      [34.932, 128.476],
-      [34.916, 128.468],
-      [34.916, 128.456],
-    ],
-  },
-  {
-    id: 'BARRIER-SANDAL',
-    name: '산달도',
-    polygon: [
-      [34.82, 128.533],
-      [34.82, 128.546],
-      [34.806, 128.546],
-      [34.806, 128.533],
-    ],
-  },
-  {
-    id: 'BARRIER-CHILCHEON',
-    name: '칠천도',
-    polygon: [
-      [34.99, 128.612],
-      [34.99, 128.628],
-      [34.968, 128.628],
-      [34.968, 128.602],
-    ],
-  },
-  {
-    id: 'BARRIER-GEOJE-DUNDEOK-SADEUNG',
-    name: '거제 둔덕·사등 본토',
-    polygon: [
-      [34.906, 128.496],
-      [34.906, 128.56],
-      [34.846, 128.56],
-      [34.846, 128.496],
-    ],
-  },
-  {
-    id: 'BARRIER-GEOJE-CORE',
-    name: '거제도 중앙·동부 본토',
-    polygon: [
-      [34.93, 128.6],
-      [34.93, 128.695],
-      [34.812, 128.68],
-      [34.812, 128.596],
-    ],
-  },
-  {
-    id: 'BARRIER-GEOJE-NAMBU-PENINSULA',
-    name: '거제 남부면 망산·여차 반도',
-    polygon: [
-      [34.792, 128.592],
-      [34.792, 128.66],
-      [34.732, 128.662],
-      [34.732, 128.598],
-      [34.765, 128.582],
-    ],
-  },
-  {
-    id: 'BARRIER-GEOJE-GABAE-PENINSULA',
-    name: '거제 동부면 가배·구영 반도',
-    polygon: [
-      [34.782, 128.573],
-      [34.782, 128.584],
-      [34.766, 128.584],
-      [34.766, 128.573],
-    ],
-  },
-  {
-    id: 'BARRIER-GEOJE-JISEPO-JANGSEUNGPO',
-    name: '거제 일운·장승포 서이말 반도',
-    polygon: [
-      [34.858, 128.708],
-      [34.858, 128.73],
-      [34.832, 128.732],
-      [34.832, 128.708],
-    ],
-  },
-  {
-    id: 'BARRIER-GEOJE-JANGMOK',
-    name: '거제 장목 반도',
-    polygon: [
-      [34.992, 128.655],
-      [34.992, 128.685],
-      [34.948, 128.698],
-      [34.948, 128.655],
-    ],
-  },
-];
+}> = LANDMASS_BARRIER_POLYGONS.map((b) => {
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+  for (const [pLat, pLng] of b.polygon) {
+    if (pLat < minLat) minLat = pLat;
+    if (pLat > maxLat) maxLat = pLat;
+    if (pLng < minLng) minLng = pLng;
+    if (pLng > maxLng) maxLng = pLng;
+  }
+  return {
+    id: b.id,
+    minLat,
+    maxLat,
+    minLng,
+    maxLng,
+    polygon: b.polygon,
+  };
+});
+
+/**
+ * 12,794개 실측 해안선 선분(Edge)을:
+ * 1) 0.01° × 0.01° (~1km) 격자로 인덱싱한 공간 해시 그리드 (EDGE_SPATIAL_GRID)
+ * 2) 0.005° (~550m) 위도 슬랩(Latitude Slab)으로 인덱싱한 Ray-Casting 인덱스 (LAT_SLAB_INDEX)
+ * 로 이중 인덱싱하여 점 포함 판정(isPointInAnyLandBarrier)과 선분 교차 판정(doesSegmentCrossLand)을 마이크로초 단위로 가속합니다.
+ */
+const EDGE_GRID_CELL_DEG = 0.01;
+const LAT_SLAB_DEG = 0.005;
+
+const EDGE_SPATIAL_GRID: ReadonlyMap<
+  string,
+  ReadonlyArray<readonly [number, number, number, number]>
+> = (() => {
+  const grid = new Map<string, Array<readonly [number, number, number, number]>>();
+  for (const b of LANDMASS_BARRIER_POLYGONS) {
+    const poly = b.polygon;
+    const len = poly.length;
+    for (let i = 0; i < len; i++) {
+      const p1 = poly[i];
+      const p2 = poly[(i + 1) % len];
+      const minR = Math.floor(Math.min(p1[0], p2[0]) / EDGE_GRID_CELL_DEG);
+      const maxR = Math.floor(Math.max(p1[0], p2[0]) / EDGE_GRID_CELL_DEG);
+      const minC = Math.floor(Math.min(p1[1], p2[1]) / EDGE_GRID_CELL_DEG);
+      const maxC = Math.floor(Math.max(p1[1], p2[1]) / EDGE_GRID_CELL_DEG);
+      const edge: readonly [number, number, number, number] = [p1[0], p1[1], p2[0], p2[1]];
+      for (let r = minR; r <= maxR; r++) {
+        for (let c = minC; c <= maxC; c++) {
+          const key = `${r}:${c}`;
+          let bucket = grid.get(key);
+          if (!bucket) {
+            bucket = [];
+            grid.set(key, bucket);
+          }
+          bucket.push(edge);
+        }
+      }
+    }
+  }
+  return grid;
+})();
+
+// [yi, xi, yj, xj, polyIndex]
+const LAT_SLAB_INDEX: ReadonlyMap<
+  number,
+  ReadonlyArray<readonly [number, number, number, number, number]>
+> = (() => {
+  const slabs = new Map<number, Array<readonly [number, number, number, number, number]>>();
+  for (let pIdx = 0; pIdx < LANDMASS_BARRIER_POLYGONS.length; pIdx++) {
+    const poly = LANDMASS_BARRIER_POLYGONS[pIdx].polygon;
+    const len = poly.length;
+    for (let i = 0, j = len - 1; i < len; j = i++) {
+      const yi = poly[i][0];
+      const xi = poly[i][1];
+      const yj = poly[j][0];
+      const xj = poly[j][1];
+      if (yi === yj) continue;
+      const minSlab = Math.floor(Math.min(yi, yj) / LAT_SLAB_DEG);
+      const maxSlab = Math.floor(Math.max(yi, yj) / LAT_SLAB_DEG);
+      const entry: readonly [number, number, number, number, number] = [yi, xi, yj, xj, pIdx];
+      for (let s = minSlab; s <= maxSlab; s++) {
+        let list = slabs.get(s);
+        if (!list) {
+          list = [];
+          slabs.set(s, list);
+        }
+        list.push(entry);
+      }
+    }
+  }
+  return slabs;
+})();
+
+const POLY_HIT_PARITY = new Uint8Array(LANDMASS_BARRIER_POLYGONS.length);
+const TOUCHED_POLYS: number[] = [];
 
 function ccw(
   ax: number,
@@ -534,8 +460,8 @@ function ccw(
   by: number,
   cx: number,
   cy: number,
-): number {
-  return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+): boolean {
+  return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax);
 }
 
 function doSegmentsProperlyIntersect(
@@ -548,33 +474,154 @@ function doSegmentsProperlyIntersect(
   dLat: number,
   dLng: number,
 ): boolean {
-  const d1 = ccw(aLng, aLat, bLng, bLat, cLng, cLat);
-  const d2 = ccw(aLng, aLat, bLng, bLat, dLng, dLat);
-  const d3 = ccw(cLng, cLat, dLng, dLat, aLng, aLat);
-  const d4 = ccw(cLng, cLat, dLng, dLat, bLng, bLat);
-  return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+  if (
+    Math.max(aLat, bLat) < Math.min(cLat, dLat) ||
+    Math.min(aLat, bLat) > Math.max(cLat, dLat) ||
+    Math.max(aLng, bLng) < Math.min(cLng, dLng) ||
+    Math.min(aLng, bLng) > Math.max(cLng, dLng)
+  ) {
+    return false;
+  }
+  return (
+    ccw(aLng, aLat, cLng, cLat, dLng, dLat) !== ccw(bLng, bLat, cLng, cLat, dLng, dLat) &&
+    ccw(aLng, aLat, bLng, bLat, cLng, cLat) !== ccw(aLng, aLat, bLng, bLat, dLng, dLat)
+  );
 }
 
-function isPointInsidePolygon(
-  lat: number,
-  lng: number,
-  polygon: ReadonlyArray<readonly [number, number]>,
-): boolean {
+/**
+ * 단일 좌표가 378개 실측 해안선·도서 폴리곤 내부(육지)에 속하는지 $O(1)$ 위도 슬랩 인덱스로 판정
+ */
+export function isPointInAnyLandBarrier(lat: number, lng: number): boolean {
+  const slabKey = Math.floor(lat / LAT_SLAB_DEG);
+  const edges = LAT_SLAB_INDEX.get(slabKey);
+  if (!edges) return false;
+
+  for (let i = 0; i < edges.length; i++) {
+    const e: readonly [number, number, number, number, number] = edges[i];
+    const yi = e[0];
+    const yj = e[2];
+    if (yi > lat !== yj > lat) {
+      const xi = e[1];
+      const xj = e[3];
+      const xIntersect = ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+      if (lng < xIntersect) {
+        const pIdx = e[4];
+        if (POLY_HIT_PARITY[pIdx] === 0) {
+          TOUCHED_POLYS.push(pIdx);
+        }
+        POLY_HIT_PARITY[pIdx] ^= 1;
+      }
+    }
+  }
+
   let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const yi = polygon[i][0];
-    const xi = polygon[i][1];
-    const yj = polygon[j][0];
-    const xj = polygon[j][1];
-    const intersect =
-      yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi + 1e-12) + xi;
-    if (intersect) inside = !inside;
+  while (TOUCHED_POLYS.length > 0) {
+    const pIdx = TOUCHED_POLYS.pop()!;
+    if (POLY_HIT_PARITY[pIdx] === 1) {
+      inside = true;
+    }
+    POLY_HIT_PARITY[pIdx] = 0;
   }
   return inside;
 }
 
 /**
- * 두 해상 좌표 간 선분이 주요 도서·반도 육지 배리어 폴리곤을 관통하는지 판정
+ * 육지 내륙/산악 클릭 좌표를 가장 가까운 항포구 또는 실측 해안선 외측 해상으로 자동 보정
+ */
+export function snapLandPointToNearestSea(
+  lat: number,
+  lng: number,
+  ports: MarinePort[] = [],
+): {
+  lat: number;
+  lng: number;
+  snappedPort?: MarinePort;
+  wasOnLand: boolean;
+} {
+  if (!isPointInAnyLandBarrier(lat, lng)) {
+    return { lat, lng, wasOnLand: false };
+  }
+
+  let closestPort: MarinePort | undefined;
+  let minPortKm = Infinity;
+  for (const port of ports) {
+    const dKm = calculateHaversineKm(lat, lng, port.lat, port.lng);
+    if (dKm < minPortKm) {
+      minPortKm = dKm;
+      closestPort = port;
+    }
+  }
+  if (closestPort && minPortKm <= 2.4) {
+    return {
+      lat: closestPort.lat,
+      lng: closestPort.lng,
+      snappedPort: closestPort,
+      wasOnLand: true,
+    };
+  }
+
+  const cosLat = Math.cos((lat * Math.PI) / 180);
+  let bestLat = lat;
+  let bestLng = lng;
+  let bestDistSq = Infinity;
+
+  for (const b of BARRIER_BBOXES) {
+    if (
+      lat < b.minLat - 0.03 ||
+      lat > b.maxLat + 0.03 ||
+      lng < b.minLng - 0.03 ||
+      lng > b.maxLng + 0.03
+    ) {
+      continue;
+    }
+    const poly = b.polygon;
+    for (let i = 0; i < poly.length; i++) {
+      const [aLat, aLng] = poly[i];
+      const [dLat, dLng] = poly[(i + 1) % poly.length];
+      const dx = (dLng - aLng) * cosLat;
+      const dy = dLat - aLat;
+      const lenSq = dx * dx + dy * dy;
+      const t =
+        lenSq > 1e-12
+          ? Math.max(0, Math.min(1, (((lng - aLng) * cosLat) * dx + (lat - aLat) * dy) / lenSq))
+          : 0;
+      const projLat = aLat + t * (dLat - aLat);
+      const projLng = aLng + t * (dLng - aLng);
+      const distSq = (lat - projLat) ** 2 + ((lng - projLng) * cosLat) ** 2;
+      if (distSq < bestDistSq) {
+        const len = Math.sqrt(lenSq) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+        for (const sign of [1, -1]) {
+          const candLat = Number((projLat + sign * ny * 0.0012).toFixed(5));
+          const candLng = Number((projLng + (sign * nx * 0.0012) / cosLat).toFixed(5));
+          if (!isPointInAnyLandBarrier(candLat, candLng)) {
+            bestDistSq = distSq;
+            bestLat = candLat;
+            bestLng = candLng;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (isPointInAnyLandBarrier(bestLat, bestLng) && closestPort) {
+    return {
+      lat: closestPort.seaApproachLat ?? closestPort.lat,
+      lng: closestPort.seaApproachLng ?? closestPort.lng,
+      snappedPort: closestPort,
+      wasOnLand: true,
+    };
+  }
+
+  return { lat: bestLat, lng: bestLng, wasOnLand: true };
+}
+
+/**
+ * 두 해상 좌표 간 선분이 378개 실측 해안선·도서 폴리곤(12,794개 해안선 선분)을 관통하는지 판정
+ * - 1) 양 끝점 및 중점의 육지 폴리곤 포함 여부 검사
+ * - 2) 0.01° × 0.01° 공간 해시 그리드(EDGE_SPATIAL_GRID)를 통한 고속 선분-해안선 교차 판정
  */
 export function doesSegmentCrossLand(
   lat1: number,
@@ -582,43 +629,28 @@ export function doesSegmentCrossLand(
   lat2: number,
   lng2: number,
 ): boolean {
-  const midLat = (lat1 + lat2) / 2;
-  const midLng = (lng1 + lng2) / 2;
-  const segMinLat = Math.min(lat1, lat2);
-  const segMaxLat = Math.max(lat1, lat2);
-  const segMinLng = Math.min(lng1, lng2);
-  const segMaxLng = Math.max(lng1, lng2);
+  if (
+    isPointInAnyLandBarrier(lat1, lng1) ||
+    isPointInAnyLandBarrier(lat2, lng2) ||
+    isPointInAnyLandBarrier((lat1 + lat2) * 0.5, (lng1 + lng2) * 0.5)
+  ) {
+    return true;
+  }
 
-  for (const barrier of LANDMASS_BARRIER_POLYGONS) {
-    const poly = barrier.polygon;
-    let pMinLat = Infinity;
-    let pMaxLat = -Infinity;
-    let pMinLng = Infinity;
-    let pMaxLng = -Infinity;
-    for (const [pLat, pLng] of poly) {
-      if (pLat < pMinLat) pMinLat = pLat;
-      if (pLat > pMaxLat) pMaxLat = pLat;
-      if (pLng < pMinLng) pMinLng = pLng;
-      if (pLng > pMaxLng) pMaxLng = pLng;
-    }
-    if (
-      segMaxLat < pMinLat ||
-      segMinLat > pMaxLat ||
-      segMaxLng < pMinLng ||
-      segMinLng > pMaxLng
-    ) {
-      continue;
-    }
+  const minR = Math.floor(Math.min(lat1, lat2) / EDGE_GRID_CELL_DEG);
+  const maxR = Math.floor(Math.max(lat1, lat2) / EDGE_GRID_CELL_DEG);
+  const minC = Math.floor(Math.min(lng1, lng2) / EDGE_GRID_CELL_DEG);
+  const maxC = Math.floor(Math.max(lng1, lng2) / EDGE_GRID_CELL_DEG);
 
-    if (isPointInsidePolygon(midLat, midLng, poly)) {
-      return true;
-    }
-
-    for (let i = 0; i < poly.length; i++) {
-      const [cLat, cLng] = poly[i];
-      const [dLat, dLng] = poly[(i + 1) % poly.length];
-      if (doSegmentsProperlyIntersect(lat1, lng1, lat2, lng2, cLat, cLng, dLat, dLng)) {
-        return true;
+  for (let r = minR; r <= maxR; r++) {
+    for (let c = minC; c <= maxC; c++) {
+      const bucket = EDGE_SPATIAL_GRID.get(`${r}:${c}`);
+      if (!bucket) continue;
+      for (let i = 0; i < bucket.length; i++) {
+        const edge = bucket[i];
+        if (doSegmentsProperlyIntersect(lat1, lng1, lat2, lng2, edge[0], edge[1], edge[2], edge[3])) {
+          return true;
+        }
       }
     }
   }
@@ -627,8 +659,6 @@ export function doesSegmentCrossLand(
 
 /**
  * 세 지점 A -> B -> C에서 꼭짓점 B의 내부 사잇각(0° ~ 180°) 계산
- * - 180°: 완전 일직선 통과
- * - 0°에 가까울수록: B를 찍고 거의 정반대(U턴)로 되돌아오는 예각 스파이크
  */
 export function calculateInteriorTurnAngleDeg(
   aLat: number,
@@ -651,10 +681,206 @@ export function calculateInteriorTurnAngleDeg(
 }
 
 /**
- * 해상 변침점(Waypoint Graph) 기반 True End-to-End A* 최단 해상 항로 탐색
- * - [RC-ROUTE-01 해결]: 시작 지점(startLat, startLng)에서 후보 시작 변침점(sId)까지의 진입 거리 및
- *   후보 종료 변침점(eId)에서 도착 지점(endLat, endLng)까지의 이탈 거리를 정확히 합산하여
- *   전역 최단 실항로를 선택합니다.
+ * [Tier-2 국지 해안 가시성 그래프 자동 우회 엔진 (C-Space Outward Normal Visibility Graph + Theta*)]
+ * - 임의 해상 클릭 지점이나 항포구 진출입 구간이 국지 소도서·곶(Cape)과 교차할 때,
+ *   주변 실측 해안선 폴리곤의 외곽 법선 이격 정점(Offset Vertices)을 추출해 가시성 그래프 A* 최단 우회선을 산출합니다.
+ */
+export function solveCoastalVisibilityDetour(
+  aLat: number,
+  aLng: number,
+  bLat: number,
+  bLng: number,
+  marginDeg = 0.04,
+  offsetMeters = 115,
+): [number, number][] | null {
+  if (!doesSegmentCrossLand(aLat, aLng, bLat, bLng)) {
+    return [
+      [aLat, aLng],
+      [bLat, bLng],
+    ];
+  }
+
+  const minLat = Math.min(aLat, bLat) - marginDeg;
+  const maxLat = Math.max(aLat, bLat) + marginDeg;
+  const minLng = Math.min(aLng, bLng) - marginDeg;
+  const maxLng = Math.max(aLng, bLng) + marginDeg;
+  const cosLat = Math.cos(((aLat + bLat) * 0.5 * Math.PI) / 180);
+
+  const nodes: [number, number][] = [
+    [aLat, aLng],
+    [bLat, bLng],
+  ];
+
+  for (const b of BARRIER_BBOXES) {
+    if (maxLat < b.minLat || minLat > b.maxLat || maxLng < b.minLng || minLng > b.maxLng) {
+      continue;
+    }
+    const poly = b.polygon;
+    const n = poly.length;
+    const step = n > 500 ? 2 : 1;
+    for (let i = 0; i < n; i += step) {
+      const curr = poly[i];
+      if (curr[0] < minLat || curr[0] > maxLat || curr[1] < minLng || curr[1] > maxLng) {
+        continue;
+      }
+      const prev = poly[(i - 1 + n) % n];
+      const next = poly[(i + 1) % n];
+
+      const e1x = (curr[1] - prev[1]) * cosLat;
+      const e1y = curr[0] - prev[0];
+      const l1 = Math.hypot(e1x, e1y) || 1;
+      const n1x = -e1y / l1;
+      const n1y = e1x / l1;
+
+      const e2x = (next[1] - curr[1]) * cosLat;
+      const e2y = next[0] - curr[0];
+      const l2 = Math.hypot(e2x, e2y) || 1;
+      const n2x = -e2y / l2;
+      const n2y = e2x / l2;
+
+      let bx = n1x + n2x;
+      let by = n1y + n2y;
+      const bl = Math.hypot(bx, by);
+      if (bl < 1e-6) {
+        bx = n1x;
+        by = n1y;
+      } else {
+        bx /= bl;
+        by /= bl;
+      }
+
+      for (const mult of [1, 1.8]) {
+        let added = false;
+        for (const sign of [1, -1]) {
+          const candLat = Number((curr[0] + (sign * by * offsetMeters * mult) / 111320).toFixed(5));
+          const candLng = Number(
+            (curr[1] + (sign * bx * offsetMeters * mult) / (111320 * cosLat)).toFixed(5),
+          );
+          if (!isPointInAnyLandBarrier(candLat, candLng)) {
+            nodes.push([candLat, candLng]);
+            added = true;
+            break;
+          }
+        }
+        if (added) break;
+      }
+    }
+  }
+
+  const N = nodes.length;
+  const gScore = new Float64Array(N).fill(Infinity);
+  const fScore = new Float64Array(N).fill(Infinity);
+  const parent = new Int32Array(N).fill(-1);
+  const closed = new Uint8Array(N);
+
+  gScore[0] = 0;
+  fScore[0] = calculateHaversineKm(aLat, aLng, bLat, bLng);
+  const open: number[] = [0];
+
+  while (open.length > 0) {
+    let bestIdx = 0;
+    for (let i = 1; i < open.length; i++) {
+      if (fScore[open[i]] < fScore[open[bestIdx]]) bestIdx = i;
+    }
+    const u = open[bestIdx];
+    open.splice(bestIdx, 1);
+
+    if (u === 1) {
+      const rawPath: [number, number][] = [];
+      let cur = 1;
+      while (cur !== -1) {
+        rawPath.unshift(nodes[cur]);
+        cur = parent[cur];
+      }
+      // Theta* Any-Angle Line-of-Sight String-Pulling
+      const smoothed: [number, number][] = [rawPath[0]];
+      let idx = 0;
+      while (idx < rawPath.length - 1) {
+        let nextIdx = idx + 1;
+        for (let probe = rawPath.length - 1; probe > idx + 1; probe--) {
+          if (
+            !doesSegmentCrossLand(
+              rawPath[idx][0],
+              rawPath[idx][1],
+              rawPath[probe][0],
+              rawPath[probe][1],
+            )
+          ) {
+            nextIdx = probe;
+            break;
+          }
+        }
+        smoothed.push(rawPath[nextIdx]);
+        idx = nextIdx;
+      }
+      return smoothed;
+    }
+
+    closed[u] = 1;
+    const uPt = nodes[u];
+
+    for (let v = 1; v < N; v++) {
+      if (closed[v]) continue;
+      const vPt = nodes[v];
+      const d = calculateHaversineKm(uPt[0], uPt[1], vPt[0], vPt[1]);
+      if (v !== 1 && d > 12.0) continue;
+      const tentativeG = gScore[u] + d;
+      if (tentativeG >= gScore[v]) continue;
+      if (doesSegmentCrossLand(uPt[0], uPt[1], vPt[0], vPt[1])) continue;
+
+      parent[v] = u;
+      gScore[v] = tentativeG;
+      fScore[v] = tentativeG + calculateHaversineKm(vPt[0], vPt[1], bLat, bLng);
+      if (!open.includes(v)) open.push(v);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 항포구 전면 해상(seaLat, seaLng)에서 정적 연결 변침점 + 가시선(Line-of-Sight)이 확보된 근접 변침점 결합
+ */
+function resolveVisibleWaypointIds(
+  seaLat: number,
+  seaLng: number,
+  baseWpIds: string[],
+  waypoints: MarineWaypointNode[],
+  maxRadiusKm = 18.0,
+  maxExtraCount = 5,
+): string[] {
+  const result = new Set<string>();
+  for (const id of baseWpIds) {
+    result.add(id);
+  }
+  const visibleExtras: Array<{ id: string; dist: number }> = [];
+  for (const wp of waypoints) {
+    if (result.has(wp.id)) continue;
+    const dist = calculateHaversineKm(seaLat, seaLng, wp.lat, wp.lng);
+    if (dist <= maxRadiusKm && !doesSegmentCrossLand(seaLat, seaLng, wp.lat, wp.lng)) {
+      visibleExtras.push({ id: wp.id, dist });
+    }
+  }
+  visibleExtras.sort((a, b) => a.dist - b.dist);
+  for (let i = 0; i < Math.min(maxExtraCount, visibleExtras.length); i++) {
+    result.add(visibleExtras[i].id);
+  }
+  return [...result];
+}
+
+const VALIDATED_WP_EDGE_CACHE = new Map<string, boolean>();
+
+function isWaypointEdgeClear(u: MarineWaypointNode, v: MarineWaypointNode): boolean {
+  const key = u.id < v.id ? `${u.id}:${v.id}` : `${v.id}:${u.id}`;
+  const cached = VALIDATED_WP_EDGE_CACHE.get(key);
+  if (cached !== undefined) return cached;
+  const clear = !doesSegmentCrossLand(u.lat, u.lng, v.lat, v.lng);
+  VALIDATED_WP_EDGE_CACHE.set(key, clear);
+  return clear;
+}
+
+/**
+ * 해상 변침점(Waypoint Graph) 기반 Hard-Block True End-to-End A* 최단 해상 항로 탐색
  */
 function findShortestWaypointPath(
   startWpIds: string[],
@@ -677,9 +903,10 @@ function findShortestWaypointPath(
 
   for (const sId of validStarts) {
     const node = waypointMap.get(sId)!;
-    const entryDistKm = calculateHaversineKm(startLat, startLng, node.lat, node.lng);
-    const landPenaltyKm = doesSegmentCrossLand(startLat, startLng, node.lat, node.lng) ? 35 : 0;
-    const initialG = entryDistKm + landPenaltyKm;
+    if (doesSegmentCrossLand(startLat, startLng, node.lat, node.lng)) {
+      continue;
+    }
+    const initialG = calculateHaversineKm(startLat, startLng, node.lat, node.lng);
     if (initialG < (gScore.get(sId) ?? Infinity)) {
       gScore.set(sId, initialG);
       fScore.set(sId, initialG + calculateHaversineKm(node.lat, node.lng, endLat, endLng));
@@ -717,18 +944,12 @@ function findShortestWaypointPath(
 
     const currentG = gScore.get(currentId) ?? Infinity;
 
-    // 현재 변침점이 도착 후보군에 속하면 도착 진입점(endLat, endLng)까지의 이탈 비용을 합산해 GOAL_ID 후보 갱신
-    if (validEnds.has(currentId)) {
+    if (
+      validEnds.has(currentId) &&
+      !doesSegmentCrossLand(currentNode.lat, currentNode.lng, endLat, endLng)
+    ) {
       const exitDistKm = calculateHaversineKm(currentNode.lat, currentNode.lng, endLat, endLng);
-      const exitPenaltyKm = doesSegmentCrossLand(
-        currentNode.lat,
-        currentNode.lng,
-        endLat,
-        endLng,
-      )
-        ? 35
-        : 0;
-      const totalGoalCost = currentG + exitDistKm + exitPenaltyKm;
+      const totalGoalCost = currentG + exitDistKm;
       if (totalGoalCost < (gScore.get(GOAL_ID) ?? Infinity)) {
         cameFrom.set(GOAL_ID, currentId);
         gScore.set(GOAL_ID, totalGoalCost);
@@ -740,6 +961,9 @@ function findShortestWaypointPath(
     for (const neighborId of currentNode.neighbors) {
       const neighbor = waypointMap.get(neighborId);
       if (!neighbor) continue;
+      if (!isWaypointEdgeClear(currentNode, neighbor)) {
+        continue;
+      }
       const edgeDistKm = calculateHaversineKm(
         currentNode.lat,
         currentNode.lng,
@@ -764,9 +988,39 @@ function findShortestWaypointPath(
 }
 
 /**
- * [RC-ROUTE-02 해결]: 수로 중간에 위치한 항포구가 양단 변침점까지 초과 직진한 뒤
- * 예각(내각 < 75°, 즉 105° 이상 급반전 U턴)으로 되돌아오는 오버슈트 스파이크를 제거합니다.
- * - 단, 변침점을 생략했을 때 육지 배리어(doesSegmentCrossLand)를 관통하면 절대 생략하지 않습니다.
+ * 선분 [A -> B]가 해안선과 교차하지 않을 뿐 아니라 좌·우현 양측으로 최소 안전 수로 여유폭(clearanceDeg, 기본 약 95m)을 확보하는지 판정
+ */
+function hasSafeChannelClearance(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+  clearanceDeg = 0.00085,
+): boolean {
+  if (doesSegmentCrossLand(lat1, lng1, lat2, lng2)) return false;
+  const cosLat = Math.cos(((lat1 + lat2) * 0.5 * Math.PI) / 180);
+  const dx = (lng2 - lng1) * cosLat;
+  const dy = lat2 - lat1;
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-9) return true;
+  const nLat = (dx / len) * clearanceDeg;
+  const nLng = ((-dy / len) * clearanceDeg) / cosLat;
+
+  // 시작·끝점 자체가 연안 접안점(해안 95m 이내)일 수 있으므로 선분의 내부 15% ~ 85% 구간에 대해 좌·우현 여유폭 검증
+  const sLat = lat1 + (lat2 - lat1) * 0.15;
+  const sLng = lng1 + (lng2 - lng1) * 0.15;
+  const eLat = lat1 + (lat2 - lat1) * 0.85;
+  const eLng = lng1 + (lng2 - lng1) * 0.85;
+
+  if (doesSegmentCrossLand(sLat + nLat, sLng + nLng, eLat + nLat, eLng + nLng)) return false;
+  if (doesSegmentCrossLand(sLat - nLat, sLng - nLng, eLat - nLat, eLng - nLng)) return false;
+  return true;
+}
+
+/**
+ * [Any-Angle Theta* String-Pulling & 양단 오버슈트 프루닝]
+ * - 378개 실측 OSM 해안선 폴리곤으로부터 최소 약 95m 좌·우현 수로 안전 여유폭을 확보하는 범위 내에서만,
+ *   불필요한 역방향 오버슈트와 미세 우회 지그재그 정점(WP-AUTO-*)을 직선 가시선(Line-of-Sight)으로 당겨 최적화합니다.
  */
 function pruneTerminalOvershoot(
   fromSeaLat: number,
@@ -775,75 +1029,68 @@ function pruneTerminalOvershoot(
   toSeaLng: number,
   wpPath: MarineWaypointNode[],
 ): MarineWaypointNode[] {
-  const pruned = [...wpPath];
+  if (wpPath.length === 0) return [];
 
-  // 1) 출발단(Start) 오버슈트 프루닝
-  while (pruned.length >= 1) {
-    const firstWp = pruned[0];
-    const nextLat = pruned.length >= 2 ? pruned[1].lat : toSeaLat;
-    const nextLng = pruned.length >= 2 ? pruned[1].lng : toSeaLng;
+  // Theta* Any-Angle Line-of-Sight String-Pulling over [fromSea, ...wpPath, toSea]
+  interface AnchorPoint {
+    lat: number;
+    lng: number;
+    wp?: MarineWaypointNode;
+  }
+  const chain: AnchorPoint[] = [
+    { lat: fromSeaLat, lng: fromSeaLng },
+    ...wpPath.map((wp) => ({ lat: wp.lat, lng: wp.lng, wp })),
+    { lat: toSeaLat, lng: toSeaLng },
+  ];
 
-    const turnAngle = calculateInteriorTurnAngleDeg(
-      fromSeaLat,
-      fromSeaLng,
-      firstWp.lat,
-      firstWp.lng,
-      nextLat,
-      nextLng,
-    );
-    const viaDist =
-      calculateHaversineKm(fromSeaLat, fromSeaLng, firstWp.lat, firstWp.lng) +
-      calculateHaversineKm(firstWp.lat, firstWp.lng, nextLat, nextLng);
-    const shortcutDist = calculateHaversineKm(fromSeaLat, fromSeaLng, nextLat, nextLng);
-
-    if (
-      turnAngle < 75 &&
-      shortcutDist + 0.15 < viaDist &&
-      shortcutDist <= 14.0 &&
-      !doesSegmentCrossLand(fromSeaLat, fromSeaLng, nextLat, nextLng)
-    ) {
-      pruned.shift();
-    } else {
-      break;
-    }
+  // Calculate cumulative distances along the raw chain
+  const cumDist = new Float64Array(chain.length);
+  for (let i = 1; i < chain.length; i++) {
+    cumDist[i] =
+      cumDist[i - 1] +
+      calculateHaversineKm(chain[i - 1].lat, chain[i - 1].lng, chain[i].lat, chain[i].lng);
   }
 
-  // 2) 도착단(End) 오버슈트 프루닝
-  while (pruned.length >= 1) {
-    const lastWp = pruned[pruned.length - 1];
-    const prevLat = pruned.length >= 2 ? pruned[pruned.length - 2].lat : fromSeaLat;
-    const prevLng = pruned.length >= 2 ? pruned[pruned.length - 2].lng : fromSeaLng;
+  const keptWaypoints: MarineWaypointNode[] = [];
+  let currIdx = 0;
 
-    const turnAngle = calculateInteriorTurnAngleDeg(
-      prevLat,
-      prevLng,
-      lastWp.lat,
-      lastWp.lng,
-      toSeaLat,
-      toSeaLng,
-    );
-    const viaDist =
-      calculateHaversineKm(prevLat, prevLng, lastWp.lat, lastWp.lng) +
-      calculateHaversineKm(lastWp.lat, lastWp.lng, toSeaLat, toSeaLng);
-    const shortcutDist = calculateHaversineKm(prevLat, prevLng, toSeaLat, toSeaLng);
+  while (currIdx < chain.length - 1) {
+    let bestNextIdx = currIdx + 1;
+    const currPt = chain[currIdx];
 
-    if (
-      turnAngle < 75 &&
-      shortcutDist + 0.15 < viaDist &&
-      shortcutDist <= 14.0 &&
-      !doesSegmentCrossLand(prevLat, prevLng, toSeaLat, toSeaLng)
-    ) {
-      pruned.pop();
-    } else {
-      break;
+    for (let probeIdx = chain.length - 1; probeIdx > currIdx + 1; probeIdx--) {
+      // Do not collapse the entire route to 0 waypoints unless direct distance <= 1.1km
+      if (currIdx === 0 && probeIdx === chain.length - 1) {
+        const totalDirect = calculateHaversineKm(fromSeaLat, fromSeaLng, toSeaLat, toSeaLng);
+        if (totalDirect > 1.1) continue;
+      }
+
+      const probePt = chain[probeIdx];
+      const directKm = calculateHaversineKm(currPt.lat, currPt.lng, probePt.lat, probePt.lng);
+      const chainKm = cumDist[probeIdx] - cumDist[currIdx];
+
+      // Allow string-pulling when direct line across open water is unobstructed with >=95m lateral channel clearance
+      if (
+        directKm <= 14.0 &&
+        directKm + 0.04 < chainKm &&
+        hasSafeChannelClearance(currPt.lat, currPt.lng, probePt.lat, probePt.lng, 0.00085)
+      ) {
+        bestNextIdx = probeIdx;
+        break;
+      }
     }
+
+    if (bestNextIdx < chain.length - 1 && chain[bestNextIdx].wp) {
+      keptWaypoints.push(chain[bestNextIdx].wp!);
+    }
+    currIdx = bestNextIdx;
   }
 
-  return pruned;
+  return keptWaypoints;
 }
 
 /**
- * [RC-ROUTE-05 해결]: 폴리라인 전체 누적 호장(Arc-Length)의 정확한 50% 진중점 좌표 산출
+ * 폴리라인 전체 누적 호장(Arc-Length)의 정확한 50% 진중점 좌표 산출
  */
 export function getPolylineArcMidpoint(coords: [number, number][]): {
   midLat: number;
@@ -914,8 +1161,7 @@ export function getPolylineArcMidpoint(coords: [number, number][]): {
 }
 
 /**
- * [RC-VIS-01 해결]: 구간 폴리라인을 따라 등간격 진행 방향 화살표(➤) 위치 및 회전 방위각 샘플링
- * - 출항/입항 마커 반경(220m) 및 구간 중앙 배지 반경(220m)과의 겹침을 자동 회피합니다.
+ * 구간 폴리라인을 따라 등간격 진행 방향 화살표(➤) 위치 및 회전 방위각 샘플링
  */
 export function samplePolylineDirectionArrows(
   coords: [number, number][],
@@ -942,20 +1188,17 @@ export function samplePolylineDirectionArrows(
   const targetDistancesKm: number[] = [];
 
   if (totalKm < 1.6) {
-    // 단거리 구간(0.35 ~ 1.6km): 중앙 배지와 겹치지 않는 30% 및 72% 지점에 최대 2개 배치
     targetDistancesKm.push(totalKm * 0.28);
     if (totalKm >= 0.9) {
       targetDistancesKm.push(totalKm * 0.74);
     }
   } else {
-    // 중·장거리 구간: 약 1.35km 간격(최소 2개 ~ 최대 8개)으로 등간격 샘플링하되 중앙 배지(±0.24km) 회피
     const desiredCount = Math.max(2, Math.min(8, Math.floor(totalKm / 1.35)));
     const stepKm = totalKm / (desiredCount + 1);
     for (let k = 1; k <= desiredCount; k++) {
       const dKm = stepKm * k;
       if (dKm < 0.22 || totalKm - dKm < 0.22) continue;
       if (Math.abs(dKm - halfKm) < 0.24) {
-        // 중앙 배지와 너무 가까우면 살짝 앞뒤로 오프셋
         const shifted = dKm < halfKm ? halfKm - 0.32 : halfKm + 0.32;
         if (shifted > 0.24 && totalKm - shifted > 0.24) {
           targetDistancesKm.push(shifted);
@@ -996,13 +1239,13 @@ export function samplePolylineDirectionArrows(
 }
 
 /**
- * 가장 가까운 해상 변침점 ID 2개 조회 (커스텀 해상 좌표용)
+ * 가장 가까운 해상 변침점 ID 조회 (커스텀 해상 좌표용)
  */
 function findNearestWaypointIds(
   lat: number,
   lng: number,
   waypoints: MarineWaypointNode[],
-  count = 2,
+  count = 4,
 ): string[] {
   if (waypoints.length === 0) return [];
   const sorted = [...waypoints]
@@ -1015,7 +1258,7 @@ function findNearestWaypointIds(
 }
 
 /**
- * 두 지점 간 해상 우회 항로(True End-to-End A* Waypoint Graph + Land Barrier Guard + Overshoot Pruning) 계산
+ * 두 지점 간 2계층 하이브리드 해상 항로(Tier-1 Fairway A* + Tier-2 C-Space Visibility Graph Detour + Theta* String-Pulling) 계산
  */
 function computeSeaRouteSegment(
   from: RouteWaypoint,
@@ -1035,13 +1278,25 @@ function computeSeaRouteSegment(
   midLat: number;
   midLng: number;
 } {
-  const directDistanceKm = calculateHaversineKm(from.lat, from.lng, to.lat, to.lng);
+  // 출발/도착지가 만약 육지 폴리곤 내부라면 해수면으로 안전 투영
+  const safeFrom = isPointInAnyLandBarrier(from.lat, from.lng)
+    ? snapLandPointToNearestSea(from.lat, from.lng)
+    : { lat: from.lat, lng: from.lng };
+  const safeTo = isPointInAnyLandBarrier(to.lat, to.lng)
+    ? snapLandPointToNearestSea(to.lat, to.lng)
+    : { lat: to.lat, lng: to.lng };
+
+  const directDistanceKm = calculateHaversineKm(safeFrom.lat, safeFrom.lng, safeTo.lat, safeTo.lng);
   const directPositions: [number, number][] = [
-    [from.lat, from.lng],
-    [to.lat, to.lng],
+    [safeFrom.lat, safeFrom.lng],
+    [safeTo.lat, safeTo.lng],
   ];
 
-  if (waypoints.length === 0 || directDistanceKm < 0.35) {
+  if (
+    waypoints.length === 0 ||
+    (directDistanceKm < 0.35 &&
+      !doesSegmentCrossLand(safeFrom.lat, safeFrom.lng, safeTo.lat, safeTo.lng))
+  ) {
     const mid = getPolylineArcMidpoint(directPositions);
     return {
       distanceKm: directDistanceKm,
@@ -1059,47 +1314,47 @@ function computeSeaRouteSegment(
   const fromPort = from.matchedPortId ? portMap.get(from.matchedPortId) : undefined;
   const toPort = to.matchedPortId ? portMap.get(to.matchedPortId) : undefined;
 
-  const fromSeaLat = fromPort?.seaApproachLat ?? from.lat;
-  const fromSeaLng = fromPort?.seaApproachLng ?? from.lng;
-  const toSeaLat = toPort?.seaApproachLat ?? to.lat;
-  const toSeaLng = toPort?.seaApproachLng ?? to.lng;
+  const fromSeaLat = fromPort?.seaApproachLat ?? safeFrom.lat;
+  const fromSeaLng = fromPort?.seaApproachLng ?? safeFrom.lng;
+  const toSeaLat = toPort?.seaApproachLat ?? safeTo.lat;
+  const toSeaLng = toPort?.seaApproachLng ?? safeTo.lng;
 
   const fromWpIds =
     fromPort?.connectedWaypointIds && fromPort.connectedWaypointIds.length > 0
       ? fromPort.connectedWaypointIds
-      : findNearestWaypointIds(fromSeaLat, fromSeaLng, waypoints, 2);
+      : resolveVisibleWaypointIds(
+          fromSeaLat,
+          fromSeaLng,
+          findNearestWaypointIds(fromSeaLat, fromSeaLng, waypoints, 4),
+          waypoints,
+        );
   const toWpIds =
     toPort?.connectedWaypointIds && toPort.connectedWaypointIds.length > 0
       ? toPort.connectedWaypointIds
-      : findNearestWaypointIds(toSeaLat, toSeaLng, waypoints, 2);
+      : resolveVisibleWaypointIds(
+          toSeaLat,
+          toSeaLng,
+          findNearestWaypointIds(toSeaLat, toSeaLng, waypoints, 4),
+          waypoints,
+        );
 
   const sharedWpIds = fromWpIds.filter((id) => toWpIds.includes(id));
   const sharesWaypoint = sharedWpIds.length > 0;
-  const sameLocalArea =
-    fromPort &&
-    toPort &&
-    ((fromPort.islandName && fromPort.islandName === toPort.islandName) ||
-      (fromPort.eupmyeondong && fromPort.eupmyeondong === toPort.eupmyeondong));
 
-  // [RC-ROUTE-03 해결]: 단거리 연안 직접 진입은 반드시 육지 배리어를 관통하지 않을 때만 허용!
   const directSeaCrossesLand =
     doesSegmentCrossLand(fromSeaLat, fromSeaLng, toSeaLat, toSeaLng) ||
-    doesSegmentCrossLand(from.lat, from.lng, fromSeaLat, fromSeaLng) ||
-    doesSegmentCrossLand(toSeaLat, toSeaLng, to.lat, to.lng);
+    doesSegmentCrossLand(safeFrom.lat, safeFrom.lng, fromSeaLat, fromSeaLng) ||
+    doesSegmentCrossLand(toSeaLat, toSeaLng, safeTo.lat, safeTo.lng);
 
-  if (
-    !directSeaCrossesLand &&
-    sharesWaypoint &&
-    (directDistanceKm <= 4.2 || (sameLocalArea && directDistanceKm <= 5.5))
-  ) {
-    const pts: [number, number][] = [[from.lat, from.lng]];
+  if (!directSeaCrossesLand && sharesWaypoint && directDistanceKm <= 1.1) {
+    const pts: [number, number][] = [[safeFrom.lat, safeFrom.lng]];
     if (fromPort?.seaApproachLat && fromPort?.seaApproachLng) {
       pts.push([fromPort.seaApproachLat, fromPort.seaApproachLng]);
     }
     if (toPort?.seaApproachLat && toPort?.seaApproachLng) {
       pts.push([toPort.seaApproachLat, toPort.seaApproachLng]);
     }
-    pts.push([to.lat, to.lng]);
+    pts.push([safeTo.lat, safeTo.lng]);
 
     let distKm = 0;
     for (let i = 0; i < pts.length - 1; i++) {
@@ -1119,7 +1374,7 @@ function computeSeaRouteSegment(
     };
   }
 
-  const rawWpPath = findShortestWaypointPath(
+  let rawWpPath = findShortestWaypointPath(
     fromWpIds,
     toWpIds,
     fromSeaLat,
@@ -1130,34 +1385,106 @@ function computeSeaRouteSegment(
   );
 
   if (rawWpPath.length === 0) {
-    const mid = getPolylineArcMidpoint(directPositions);
+    const wideFromWpIds = resolveVisibleWaypointIds(
+      fromSeaLat,
+      fromSeaLng,
+      fromWpIds,
+      waypoints,
+      35.0,
+      16,
+    );
+    const wideToWpIds = resolveVisibleWaypointIds(
+      toSeaLat,
+      toSeaLng,
+      toWpIds,
+      waypoints,
+      35.0,
+      16,
+    );
+    rawWpPath = findShortestWaypointPath(
+      wideFromWpIds,
+      wideToWpIds,
+      fromSeaLat,
+      fromSeaLng,
+      toSeaLat,
+      toSeaLng,
+      waypointMap,
+    );
+  }
+
+  // Tier-1 경로를 찾지 못한 경우(예: 좁은 만 내부 임의 클릭): Tier-2 국지 C-Space 가시성 그래프 탐색기 직접 호출
+  if (rawWpPath.length === 0) {
+    const localDetour = solveCoastalVisibilityDetour(
+      fromSeaLat,
+      fromSeaLng,
+      toSeaLat,
+      toSeaLng,
+      0.06,
+      110,
+    );
+    const fallbackCoords: [number, number][] = [[safeFrom.lat, safeFrom.lng]];
+    if (localDetour && localDetour.length >= 2) {
+      for (const pt of localDetour) {
+        fallbackCoords.push(pt);
+      }
+    } else {
+      fallbackCoords.push([fromSeaLat, fromSeaLng], [toSeaLat, toSeaLng]);
+    }
+    fallbackCoords.push([safeTo.lat, safeTo.lng]);
+
+    let fallbackKm = 0;
+    for (let i = 0; i < fallbackCoords.length - 1; i++) {
+      fallbackKm += calculateHaversineKm(
+        fallbackCoords[i][0],
+        fallbackCoords[i][1],
+        fallbackCoords[i + 1][0],
+        fallbackCoords[i + 1][1],
+      );
+    }
+    const mid = getPolylineArcMidpoint(fallbackCoords);
     return {
-      distanceKm: directDistanceKm,
+      distanceKm: Math.max(fallbackKm, directDistanceKm),
       directDistanceKm,
-      detourFactor: 1.0,
-      pathPositions: directPositions,
-      waypointNames: [],
+      detourFactor: directDistanceKm > 0 ? Math.max(1.0, fallbackKm / directDistanceKm) : 1.0,
+      pathPositions: fallbackCoords,
+      waypointNames: ['해안 가시성 우회 수로'],
       activeWaypoints: [],
-      directionArrows: samplePolylineDirectionArrows(directPositions, legIndex),
+      directionArrows: samplePolylineDirectionArrows(fallbackCoords, legIndex),
       midLat: mid.midLat,
       midLng: mid.midLng,
     };
   }
 
-  // 양단 변침점 오버슈트(U턴 역주행) 프루닝 수행
+  // Theta* Line-of-Sight String-Pulling 수행
   const wpPath = pruneTerminalOvershoot(fromSeaLat, fromSeaLng, toSeaLat, toSeaLng, rawWpPath);
 
-  const coords: [number, number][] = [[from.lat, from.lng]];
+  const rawCoords: [number, number][] = [[safeFrom.lat, safeFrom.lng]];
   if (fromPort?.seaApproachLat && fromPort?.seaApproachLng) {
-    coords.push([fromPort.seaApproachLat, fromPort.seaApproachLng]);
+    rawCoords.push([fromPort.seaApproachLat, fromPort.seaApproachLng]);
   }
   for (const node of wpPath) {
-    coords.push([node.lat, node.lng]);
+    rawCoords.push([node.lat, node.lng]);
   }
   if (toPort?.seaApproachLat && toPort?.seaApproachLng) {
-    coords.push([toPort.seaApproachLat, toPort.seaApproachLng]);
+    rawCoords.push([toPort.seaApproachLat, toPort.seaApproachLng]);
   }
-  coords.push([to.lat, to.lng]);
+  rawCoords.push([safeTo.lat, safeTo.lng]);
+
+  // 최종 안전망(Tier-2 Guard): 만약 양단 진입/이탈 선분 중 해안선과 교차하는 구간이 있으면 C-Space 가시성 우회선으로 자동 보정
+  const coords: [number, number][] = [rawCoords[0]];
+  for (let i = 0; i < rawCoords.length - 1; i++) {
+    const [aLat, aLng] = rawCoords[i];
+    const [bLat, bLng] = rawCoords[i + 1];
+    if (doesSegmentCrossLand(aLat, aLng, bLat, bLng)) {
+      const subDetour = solveCoastalVisibilityDetour(aLat, aLng, bLat, bLng, 0.035, 95);
+      if (subDetour && subDetour.length > 2) {
+        for (let k = 1; k < subDetour.length - 1; k++) {
+          coords.push(subDetour[k]);
+        }
+      }
+    }
+    coords.push([bLat, bLng]);
+  }
 
   let totalKm = 0;
   for (let i = 0; i < coords.length - 1; i++) {
@@ -1170,7 +1497,10 @@ function computeSeaRouteSegment(
   }
 
   const mid = getPolylineArcMidpoint(coords);
-  const activeWaypoints: RouteWaypointGuidePoint[] = wpPath.map((w) => ({
+  // 지도상 주요 변침점 배지는 가독성을 위해 주항로 변침점(WP-AUTO-*가 아닌 주요 수로 또는 최대 6개 핵심 변침점) 위주로 표시
+  const majorWpPath = wpPath.filter((w) => !w.id.startsWith('WP-AUTO-'));
+  const displayWps = majorWpPath.length > 0 ? majorWpPath : wpPath.slice(0, 4);
+  const activeWaypoints: RouteWaypointGuidePoint[] = displayWps.map((w) => ({
     id: w.id,
     name: w.name,
     lat: w.lat,
@@ -1183,7 +1513,7 @@ function computeSeaRouteSegment(
     directDistanceKm,
     detourFactor: directDistanceKm > 0 ? Math.max(1.0, totalKm / directDistanceKm) : 1.0,
     pathPositions: coords,
-    waypointNames: wpPath.length > 0 ? wpPath.map((w) => w.name) : ['연안 직접 진입'],
+    waypointNames: displayWps.length > 0 ? displayWps.map((w) => w.name) : ['해안 우회 수로'],
     activeWaypoints,
     directionArrows: samplePolylineDirectionArrows(coords, legIndex),
     midLat: mid.midLat,
@@ -1241,7 +1571,6 @@ export function calculateRouteSummary(
     const directBearingDeg = calculateBearingDegrees(from.lat, from.lng, to.lat, to.lng);
     const directCardinal = bearingToCardinal8(directBearingDeg);
 
-    // A* 우회 수로가 있는 경우 출발지에서 첫 유효 해상 변침점(50m 이상 이격)으로 향하는 실제 출항 침로 산출
     let bearingDeg = directBearingDeg;
     if (seg.pathPositions.length >= 2) {
       for (let pIdx = 1; pIdx < seg.pathPositions.length; pIdx++) {
@@ -1255,7 +1584,6 @@ export function calculateRouteSummary(
     }
     const cardinal = bearingToCardinal8(bearingDeg);
 
-    // 최종 도착지 진입 직전 유효 구간(50m 이상)의 입항 침로 산출
     let arrivalBearingDeg = bearingDeg;
     if (seg.pathPositions.length >= 2) {
       for (let pIdx = seg.pathPositions.length - 2; pIdx >= 0; pIdx--) {

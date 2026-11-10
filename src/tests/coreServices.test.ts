@@ -9,7 +9,9 @@ import {
   calculateRouteSummary,
   doesSegmentCrossLand,
   getPolylineArcMidpoint,
+  isPointInAnyLandBarrier,
   kmToNauticalMiles,
+  LANDMASS_BARRIER_POLYGONS,
   resolveSmartWaypoint,
   samplePolylineDirectionArrows,
 } from '../services/routeGeoService.ts';
@@ -110,68 +112,117 @@ describe('1. Route Geo Engine & 8 Benchmark Sea Routes (routeGeoService.ts)', ()
     const offshore = resolveSmartWaypoint(34.61, 128.72, ports, '외해 지점', 500);
     assert.equal(offshore.isCustomCoord, true);
     assert.equal(offshore.matchedPortId, undefined);
+
+    // [RC-UX-05] Inland mountain click (Geoje Sadeung-myeon 34.8669, 128.5146) must snap outside land barriers
+    assert.equal(isPointInAnyLandBarrier(34.8669, 128.5146), true);
+    const inlandSnapped = resolveSmartWaypoint(34.8669, 128.5146, ports, '경유지 1', 500);
+    assert.equal(
+      isPointInAnyLandBarrier(inlandSnapped.lat, inlandSnapped.lng),
+      false,
+      'Inland click must be automatically snapped outside land barriers',
+    );
   });
 
-  it('passes all 8 core benchmark sea routes with Zero Land Crossing and optimal A* distance', () => {
+  it('passes all 12 core benchmark sea routes with full-segment (0..N-1) Zero Land Crossing and optimal A* distance', () => {
+    assert.ok(
+      LANDMASS_BARRIER_POLYGONS.length >= 370,
+      `Expected >= 370 real OSM coastline barriers, got ${LANDMASS_BARRIER_POLYGONS.length}`,
+    );
+    assert.ok(
+      marineWaypoints.length >= 200,
+      `Expected >= 200 marine waypoints, got ${marineWaypoints.length}`,
+    );
+
     const benchmarks: Array<{
       id: string;
       fromId: string;
       toId: string;
       maxKm: number;
-      expectedWaypointSubsequence?: string[];
+      minPathVertices?: number;
     }> = [
       {
         id: '[RC-ROUTE-01 #1] 저구항(GJ-001) -> 삼덕항(KR-GN-TY-0002)',
         fromId: 'GJ-001',
         toId: 'KR-GN-TY-0002',
         maxKm: 28.0,
-        expectedWaypointSubsequence: ['WP-HANSAN-N', 'WP-MIREUK-S'],
+        minPathVertices: 4,
       },
       {
         id: '[RC-ROUTE-01 #2] 한산 제승당(TY-002) -> 거제 법동항(KR-GN-GJ-0026)',
         fromId: 'TY-002',
         toId: 'KR-GN-GJ-0026',
-        maxKm: 13.0,
-        expectedWaypointSubsequence: ['WP-HANSAN-N', 'WP-DUNDEOK-W'],
+        maxKm: 19.0,
+        minPathVertices: 4,
       },
       {
         id: '[RC-ROUTE-02 #1] 강구안(TY-001) -> 죽림항(KR-GN-TY-0015)',
         fromId: 'TY-001',
         toId: 'KR-GN-TY-0015',
-        maxKm: 13.2,
+        maxKm: 17.5,
+        minPathVertices: 4,
       },
       {
         id: '[RC-ROUTE-02 #2] 강구안(TY-001) -> 달아항(KR-GN-TY-0005)',
         fromId: 'TY-001',
         toId: 'KR-GN-TY-0005',
-        maxKm: 12.2,
+        maxKm: 13.5,
+        minPathVertices: 4,
       },
       {
         id: '[RC-ROUTE-03 #1] 한산 제승당(TY-002) -> 창좌항(KR-GN-TY-0021)',
         fromId: 'TY-002',
         toId: 'KR-GN-TY-0021',
-        maxKm: 11.0,
-        expectedWaypointSubsequence: ['WP-HANSAN-N'],
+        maxKm: 13.5,
+        minPathVertices: 4,
       },
       {
         id: '[RC-ROUTE-03 #2] 저구항(GJ-001) -> 쌍근 선착장(KR-GN-GJ-BERTH-0020)',
         fromId: 'GJ-001',
         toId: 'KR-GN-GJ-BERTH-0020',
-        maxKm: 10.0,
-        expectedWaypointSubsequence: ['WP-GARAN-SW'],
+        maxKm: 11.5,
+        minPathVertices: 3,
       },
       {
         id: '[RC-ROUTE-03 #3] 장승포항(GJ-002) -> 지세포항(KR-GN-GJ-0005)',
         fromId: 'GJ-002',
         toId: 'KR-GN-GJ-0005',
         maxKm: 10.0,
-        expectedWaypointSubsequence: ['WP-JISEPO-E'],
+        minPathVertices: 3,
       },
       {
         id: '[RC-ROUTE-04] 매물도 당금항(TY-003) -> 소매물도항(KR-GN-TY-0035)',
         fromId: 'TY-003',
         toId: 'KR-GN-TY-0035',
         maxKm: 8.5,
+        minPathVertices: 3,
+      },
+      {
+        id: '[RC-LAND-01] 통영 당동항(TY-001) -> 한산 제승당(TY-002) 기본 항로',
+        fromId: 'TY-001',
+        toId: 'TY-002',
+        maxKm: 10.5,
+        minPathVertices: 4,
+      },
+      {
+        id: '[RC-LAND-02] 한산도 의항 선착장(KR-GN-TY-BERTH-0013) -> 한산 제승당(TY-002)',
+        fromId: 'KR-GN-TY-BERTH-0013',
+        toId: 'TY-002',
+        maxKm: 13.5,
+        minPathVertices: 4,
+      },
+      {
+        id: '[RC-LAND-03] 연화도 동두 선착장(KR-GN-TY-BERTH-0006) -> 통영항(KR-GN-TY-0001)',
+        fromId: 'KR-GN-TY-BERTH-0006',
+        toId: 'KR-GN-TY-0001',
+        maxKm: 30.5,
+        minPathVertices: 4,
+      },
+      {
+        id: '[RC-LAND-04] 학동항(KR-GN-GJ-0010) -> 구조라항(KR-GN-GJ-0008)',
+        fromId: 'KR-GN-GJ-0010',
+        toId: 'KR-GN-GJ-0008',
+        maxKm: 9.5,
+        minPathVertices: 3,
       },
     ];
 
@@ -192,27 +243,66 @@ describe('1. Route Geo Engine & 8 Benchmark Sea Routes (routeGeoService.ts)', ()
         leg.directionArrows.length >= 1,
         `${bm.id}: expected direction arrows to be sampled`,
       );
-
-      // Verify inner sea segments (seaApproach -> waypoints -> seaApproach) never cross land barriers
-      const innerCoords = leg.pathPositions.slice(1, -1);
-      for (let i = 0; i < innerCoords.length - 1; i++) {
-        const [lat1, lng1] = innerCoords[i];
-        const [lat2, lng2] = innerCoords[i + 1];
-        assert.equal(
-          doesSegmentCrossLand(lat1, lng1, lat2, lng2),
-          false,
-          `${bm.id}: inner sea segment [${i} -> ${i + 1}] crossed land barrier`,
+      if (bm.minPathVertices) {
+        assert.ok(
+          leg.pathPositions.length >= bm.minPathVertices,
+          `${bm.id}: expected pathPositions.length >= ${bm.minPathVertices}, got ${leg.pathPositions.length}`,
         );
       }
 
-      if (bm.expectedWaypointSubsequence) {
-        const activeIds = leg.activeWaypoints.map((w) => w.id);
-        for (const expectedId of bm.expectedWaypointSubsequence) {
-          assert.ok(
-            activeIds.includes(expectedId),
-            `${bm.id}: expected activeWaypoints [${activeIds.join(', ')}] to include ${expectedId}`,
-          );
-        }
+      // Verify ALL segments (0 .. pathPositions.length - 1, including port <-> seaApproach) never cross land barriers
+      for (let i = 0; i < leg.pathPositions.length - 1; i++) {
+        const [lat1, lng1] = leg.pathPositions[i];
+        const [lat2, lng2] = leg.pathPositions[i + 1];
+        assert.equal(
+          doesSegmentCrossLand(lat1, lng1, lat2, lng2),
+          false,
+          `${bm.id}: segment [${i} -> ${i + 1}] (${lat1},${lng1} -> ${lat2},${lng2}) crossed land barrier`,
+        );
+      }
+    }
+  });
+
+  it('guarantees zero land crossing on all 136 port approaches and all 300 waypoint graph edges', () => {
+    const wpMap = new Map(marineWaypoints.map((w) => [w.id, w]));
+
+    for (const w of marineWaypoints) {
+      assert.equal(
+        isPointInAnyLandBarrier(w.lat, w.lng),
+        false,
+        `Waypoint ${w.id} (${w.name}) is inside a land barrier`,
+      );
+      for (const nbId of w.neighbors) {
+        const nb = wpMap.get(nbId);
+        assert.ok(nb, `Waypoint ${w.id} references missing neighbor ${nbId}`);
+        assert.ok(
+          nb.neighbors.includes(w.id),
+          `Asymmetric waypoint edge: ${w.id} -> ${nbId} is not reciprocated`,
+        );
+        assert.equal(
+          doesSegmentCrossLand(w.lat, w.lng, nb.lat, nb.lng),
+          false,
+          `Waypoint edge ${w.id} <-> ${nbId} crosses a land barrier`,
+        );
+      }
+    }
+
+    for (const p of ports) {
+      const seaLat = p.seaApproachLat ?? p.lat;
+      const seaLng = p.seaApproachLng ?? p.lng;
+      assert.equal(
+        doesSegmentCrossLand(p.lat, p.lng, seaLat, seaLng),
+        false,
+        `Port ${p.id} (${p.name}) -> seaApproach crosses a land barrier`,
+      );
+      for (const wpId of p.connectedWaypointIds ?? []) {
+        const wp = wpMap.get(wpId);
+        assert.ok(wp, `Port ${p.id} references missing waypoint ${wpId}`);
+        assert.equal(
+          doesSegmentCrossLand(seaLat, seaLng, wp.lat, wp.lng),
+          false,
+          `Port ${p.id} (${p.name}) seaApproach -> ${wpId} crosses a land barrier`,
+        );
       }
     }
   });

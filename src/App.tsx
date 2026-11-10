@@ -383,7 +383,7 @@ export function App() {
     () => initialWorkspaceDraft.routeWaypoints,
   );
   const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
-  const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('add_waypoint');
+  const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('pan_only');
 
   // 항로 웨이포인트·선속·등급 필터·권역 필터 변경 시 WorkspaceDraftRepository에 자동 영속화 (앱 재시작·SW 업데이트 시 보존)
   useEffect(() => {

@@ -196,7 +196,7 @@ export function RouteTimeCalculator({
 
   return (
     <section
-      className="knps-hud-surface bada-hud-panel pointer-events-auto relative flex max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-[#00a79d]/60 bg-white/96 p-2.5 text-[#003360] shadow-2xl backdrop-blur-md sm:p-3.5"
+      className="knps-hud-surface bada-hud-panel pointer-events-auto relative flex h-auto max-h-[calc(100dvh-10.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] w-full flex-col overflow-hidden rounded-3xl border-2 border-[#00a79d]/60 bg-white/96 px-2.5 pt-2.5 pb-3 text-[#003360] shadow-2xl backdrop-blur-md sm:p-3.5"
       aria-label="바닷길 시간계산 패널"
     >
       <div
@@ -332,7 +332,7 @@ export function RouteTimeCalculator({
         </div>
 
         {/* Row 2: 전폭(100%) 히어로 브리핑 박스 — 소요시간·실항로 거리·도착예정·안전주의 배지 무절단 노출 */}
-        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-2xl border border-[#00a79d]/45 bg-[#f0f9ff] px-2.5 py-1.5">
+        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 rounded-2xl border border-[#00a79d]/45 bg-[#f0f9ff] px-2.5 py-2">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
             <span className="shrink-0 text-xl leading-none font-black tracking-tight whitespace-nowrap tabular-nums text-[#003360] sm:text-2xl">
               {timeFormatted}
@@ -837,7 +837,7 @@ export function RouteTimeCalculator({
           <div className="space-y-1 px-1">
             <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-bold text-slate-600">
               <span>
-                🧭 <strong className="font-extrabold text-[#003360]">자체 A* 실항로</strong> (35변침점·20섬 우회 · 오프라인 연산)
+                🧭 <strong className="font-extrabold text-[#003360]">자체 A* 실항로</strong> (300변침점·378실측해안선 우회 · 오프라인 연산)
               </span>
               {onOpenSourcesInfo && (
                 <button

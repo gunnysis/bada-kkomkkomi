@@ -47,8 +47,14 @@ assert(
 );
 assert(
   fs.existsSync('docs/DATA_AND_TECH_SOURCES.md') &&
+    fs.existsSync('docs/ARCHITECTURE_AND_DESIGN.md') &&
     fs.existsSync('src/config/dataSources.ts'),
-  'Source provenance documentation (docs/DATA_AND_TECH_SOURCES.md) and SSOT module (src/config/dataSources.ts) must exist',
+  'Master design doc (docs/ARCHITECTURE_AND_DESIGN.md), source provenance doc (docs/DATA_AND_TECH_SOURCES.md), and SSOT module (src/config/dataSources.ts) must exist',
+);
+assert(
+  !fs.existsSync('docs/SEA_ROUTE_LAND_CROSSING_ROOT_CAUSE_PLAN.md') &&
+    !fs.existsSync('docs/SOURCE_CREDIBILITY_UX_DESIGN.md'),
+  'Legacy duplicate planning documents must remain merged into docs/ARCHITECTURE_AND_DESIGN.md (LEG-22)',
 );
 assert(
   !indexHtml.includes('class="dark"') && !indexHtml.includes('#061c24'),
@@ -71,7 +77,11 @@ assert(
   'Invalid app_config.json: wave_threshold_meter must satisfy 0 < good < moderate',
 );
 
-// 3. docking_points.geojson (55개소) 및 ports.json (136개소 + 35개 변침점) 무결성 검증
+// 3. docking_points.geojson (55개소) 및 ports.json (136개소 + 300개 변침점) + coastlinePolygons.ts (378개 실측 해안선 폴리곤) 무결성 검증
+assert(
+  fs.existsSync('src/data/coastlinePolygons.ts'),
+  'src/data/coastlinePolygons.ts (378 real OpenStreetMap coastline polygons) must exist',
+);
 const dockingFc = JSON.parse(
   fs.readFileSync('public/data/docking_points.geojson', 'utf8'),
 );
@@ -87,17 +97,25 @@ assert(
   Array.isArray(portsData.ports) &&
     portsData.ports.length >= 136 &&
     Array.isArray(portsData.waypoints) &&
-    portsData.waypoints.length >= 35,
-  'Invalid ports.json: expected >=136 ports and >=35 waypoints',
+    portsData.waypoints.length >= 300,
+  'Invalid ports.json: expected >=136 ports and >=300 waypoints',
 );
 
 const portIdSet = new Set(portsData.ports.map((p) => p.id));
+const portById = new Map(portsData.ports.map((p) => [p.id, p]));
 const wpIdSet = new Set(portsData.waypoints.map((w) => w.id));
+const wpById = new Map(portsData.waypoints.map((w) => [w.id, w]));
 
 for (const f of dockingFc.features) {
   assert(
     portIdSet.has(f.properties.id),
     `Missing docking feature ID in ports.json: ${f.properties.id}`,
+  );
+  const matchingPort = portById.get(f.properties.id);
+  const [fLng, fLat] = f.geometry.coordinates;
+  assert(
+    Math.abs(matchingPort.lat - fLat) < 1e-5 && Math.abs(matchingPort.lng - fLng) < 1e-5,
+    `Coordinate drift between docking_points.geojson and ports.json for ${f.properties.id}: geojson=[${fLat},${fLng}] vs ports.json=[${matchingPort.lat},${matchingPort.lng}]`,
   );
 }
 
@@ -123,6 +141,11 @@ for (const w of portsData.waypoints) {
     assert(
       wpIdSet.has(nbId),
       `Waypoint ${w.id} references unknown neighbor ID: ${nbId}`,
+    );
+    const nb = wpById.get(nbId);
+    assert(
+      nb && Array.isArray(nb.neighbors) && nb.neighbors.includes(w.id),
+      `Asymmetric waypoint edge detected in ports.json: ${w.id} -> ${nbId} is not reciprocated`,
     );
   }
 }
@@ -161,6 +184,20 @@ assert(
   !settingsModalTsx.includes('className="truncate font-extrabold text-[#003360]"') &&
     !settingsModalTsx.includes('className="truncate text-xs font-black text-[#003360] sm:text-sm"'),
   'WeatherThresholdSettings.tsx: source accordion titles and offline matrix labels must wrap cleanly ([word-break:keep-all]) instead of truncating with ellipsis',
+);
+
+// 바닷길 시간계산기 기본 지도 탭 모드가 'pan_only'이고 300변침점·378실측해안선 표기가 정합하는지 확인 (RC-UX-04 / RC-UX-05 / LEG-21)
+const appTsx = fs.readFileSync('src/App.tsx', 'utf8');
+const routeCalcTsx = fs.readFileSync('src/components/navigation/RouteTimeCalculator.tsx', 'utf8');
+assert(
+  appTsx.includes("useState<RouteMapTapMode>('pan_only')"),
+  "src/App.tsx: routeMapTapMode must default to 'pan_only' to prevent accidental inland waypoint creation",
+);
+assert(
+  routeCalcTsx.includes('300변침점·378실측해안선 우회') &&
+    !routeCalcTsx.includes('35변침점·20섬 우회') &&
+    !routeCalcTsx.includes('56변침점·67해안장벽 우회'),
+  'RouteTimeCalculator.tsx: provenance badge must display 300변침점·378실측해안선 우회',
 );
 
 // 6. public/backup 레거시 백업 폴더 클린 확인 (public/dev는 개발·디자인 레퍼런스 보관용으로 보존하되 SW 프리캐시에서 제외)

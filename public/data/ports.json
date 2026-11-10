@@ -10,8 +10,8 @@
       "subCategory": "official_docking",
       "lat": 34.8378,
       "lng": 128.4278,
-      "seaApproachLat": 34.834,
-      "seaApproachLng": 128.4285,
+      "seaApproachLat": 34.835,
+      "seaApproachLng": 128.431,
       "description": "해양조사선 정기 채수 및 관측장비 하역 (대조기 간조 수심 1.4m·수중 폐로프 주의)",
       "aliases": [
         "당동항",
@@ -31,8 +31,10 @@
         "대조기 간조 시 수심 1.4m 주의 (만조 전후 2시간 접안 권장)"
       ],
       "connectedWaypointIds": [
-        "WP-TY-CANAL-E",
-        "WP-TY-BAY"
+        "WP-TY-BAY",
+        "WP-AUTO-001",
+        "WP-AUTO-005",
+        "WP-AUTO-006"
       ],
       "parentPortId": "KR-GN-TY-0001"
     },
@@ -44,8 +46,8 @@
       "subCategory": "official_docking",
       "lat": 34.7735,
       "lng": 128.4621,
-      "seaApproachLat": 34.7785,
-      "seaApproachLng": 128.459,
+      "seaApproachLat": 34.77439,
+      "seaApproachLng": 128.46157,
       "description": "상시 접안 가능 폰툰 · 도서지역 긴급 방제자재 보급 및 인력 승하선 (여객선 항주파 주의)",
       "aliases": [
         "제승당항",
@@ -65,8 +67,11 @@
         "창조류 유속 1.8kt 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N",
-        "WP-MIREUK-E"
+        "WP-MIREUK-SE",
+        "WP-AUTO-026",
+        "WP-AUTO-030",
+        "WP-AUTO-203",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": "KR-GN-TY-0023"
     },
@@ -76,10 +81,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "official_docking",
-      "lat": 34.8012,
-      "lng": 128.5914,
-      "seaApproachLat": 34.7995,
-      "seaApproachLng": 128.5855,
+      "lat": 34.80158,
+      "lng": 128.58494,
+      "seaApproachLat": 34.80064,
+      "seaApproachLng": 128.58458,
       "description": "적조 예찰 드론 운용 및 소형 단정(RIB) 양륙 슬립웨이 · 양식장 부표줄 주의",
       "aliases": [
         "저구항선착장",
@@ -98,9 +103,11 @@
         "간조 시 슬립웨이 하단 청태 매우 미끄러움"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW",
-        "WP-GEOJE-S-DADAE",
-        "WP-MAEMUL-N"
+        "WP-SANDAL-E",
+        "WP-AUTO-086",
+        "WP-AUTO-088",
+        "WP-AUTO-168",
+        "WP-AUTO-169"
       ],
       "parentPortId": "KR-GN-GJ-0013"
     },
@@ -133,7 +140,11 @@
       ],
       "connectedWaypointIds": [
         "WP-JANGSEUNGPO-E",
-        "WP-JISEPO-E"
+        "WP-AUTO-146",
+        "WP-AUTO-145",
+        "WP-AUTO-147",
+        "WP-AUTO-155",
+        "WP-AUTO-163"
       ],
       "parentPortId": "KR-GN-GJ-0001"
     },
@@ -143,8 +154,8 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "official_docking",
-      "lat": 34.6408,
-      "lng": 128.5728,
+      "lat": 34.64239,
+      "lng": 128.57141,
       "seaApproachLat": 34.6445,
       "seaApproachLng": 128.5715,
       "description": "외해 돌풍·기상 악화 시 소형 조사선 긴급 피항 및 임시 계류 (방파제 내측 평균 수심 2.9m)",
@@ -167,7 +178,7 @@
       ],
       "connectedWaypointIds": [
         "WP-MAEMUL-N",
-        "WP-MAEMUL-S"
+        "WP-AUTO-204"
       ],
       "parentPortId": "KR-GN-TY-0026"
     },
@@ -177,8 +188,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8394,
-      "lng": 128.4203,
+      "lat": 34.83906,
+      "lng": 128.42041,
       "seaApproachLat": 34.834,
       "seaApproachLng": 128.4235,
       "description": "[무역/연안항] 통영 항남동 서호동 · 기상악화 대피 가능 · 연결도서: 한산도·비진도·욕지도",
@@ -200,8 +211,7 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-TY-BAY",
-        "WP-TY-CANAL-E"
+        "WP-AUTO-005"
       ],
       "parentPortId": null
     },
@@ -233,8 +243,11 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-W",
-        "WP-MIREUK-S"
+        "WP-MIREUK-S",
+        "WP-AUTO-022",
+        "WP-AUTO-023",
+        "WP-AUTO-114",
+        "WP-AUTO-119"
       ],
       "parentPortId": null
     },
@@ -244,10 +257,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.6368,
-      "lng": 128.2672,
-      "seaApproachLat": 34.6385,
-      "seaApproachLng": 128.288,
+      "lat": 34.63473,
+      "lng": 128.26987,
+      "seaApproachLat": 34.63472,
+      "seaApproachLng": 128.27107,
       "description": "[국가어항] 통영 욕지면 (욕지도) · 기상악화 대피 가능 · 연결도서: 욕지도·연화도·우도",
       "aliases": [
         "동항",
@@ -266,8 +279,7 @@
         "욕지도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-E",
-        "WP-YOKJI-N"
+        "WP-AUTO-115"
       ],
       "parentPortId": null
     },
@@ -277,10 +289,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7492,
-      "lng": 128.3965,
-      "seaApproachLat": 34.7525,
-      "seaApproachLng": 128.3975,
+      "lat": 34.7528,
+      "lng": 128.4095,
+      "seaApproachLat": 34.7552,
+      "seaApproachLng": 128.4098,
       "description": "[국가어항] 통영 산양읍 (학림도) · 기상악화 대피 가능 · 연결도서: 학림도·저도·송도",
       "aliases": [
         "학림도항",
@@ -298,7 +310,9 @@
         "학림도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-S"
+        "WP-AUTO-026",
+        "WP-AUTO-021",
+        "WP-AUTO-029"
       ],
       "parentPortId": null
     },
@@ -329,7 +343,11 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-S"
+        "WP-MIREUK-S",
+        "WP-AUTO-031",
+        "WP-AUTO-021",
+        "WP-AUTO-026",
+        "WP-AUTO-030"
       ],
       "parentPortId": null
     },
@@ -339,8 +357,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7825,
-      "lng": 128.4275,
+      "lat": 34.78536,
+      "lng": 128.4297,
       "seaApproachLat": 34.784,
       "seaApproachLng": 128.435,
       "description": "[국가어항] 통영 산양읍 연화리 · 기상악화 대피 가능",
@@ -360,8 +378,11 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
+        "WP-JESEUNGDANG-W",
         "WP-MIREUK-E",
-        "WP-MIREUK-S"
+        "WP-AUTO-037",
+        "WP-AUTO-203",
+        "WP-AUTO-207"
       ],
       "parentPortId": null
     },
@@ -394,7 +415,9 @@
       ],
       "connectedWaypointIds": [
         "WP-MIREUK-E",
-        "WP-HANSAN-N"
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-037",
+        "WP-AUTO-027"
       ],
       "parentPortId": null
     },
@@ -404,8 +427,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7738,
-      "lng": 128.4235,
+      "lat": 34.77124,
+      "lng": 128.42557,
       "seaApproachLat": 34.773,
       "seaApproachLng": 128.431,
       "description": "[무역/연안항] 통영 산양읍 연화리 · 기상악화 대피 가능",
@@ -425,8 +448,12 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-E",
-        "WP-MIREUK-S"
+        "WP-MIREUK-SE",
+        "WP-AUTO-026",
+        "WP-AUTO-030",
+        "WP-AUTO-203",
+        "WP-JESEUNGDANG-W",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": null
     },
@@ -436,10 +463,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7975,
-      "lng": 128.3742,
-      "seaApproachLat": 34.795,
-      "seaApproachLng": 128.3715,
+      "lat": 34.79862,
+      "lng": 128.3727,
+      "seaApproachLat": 34.79932,
+      "seaApproachLng": 128.37185,
       "description": "[지방어항] 통영 산양읍 풍화리 · 기상악화 대피 가능 · 연결도서: 오비도",
       "aliases": [
         "산양궁항",
@@ -457,7 +484,7 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-W"
+        "WP-AUTO-117"
       ],
       "parentPortId": null
     },
@@ -467,10 +494,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.812,
-      "lng": 128.3935,
-      "seaApproachLat": 34.8155,
-      "seaApproachLng": 128.389,
+      "lat": 34.81523,
+      "lng": 128.38761,
+      "seaApproachLat": 34.81622,
+      "seaApproachLng": 128.38765,
       "description": "[지방어항] 통영 산양읍 신전리 · 기상악화 대피 가능",
       "aliases": [
         "산양세포항",
@@ -488,8 +515,7 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-TY-CANAL-W",
-        "WP-MIREUK-W"
+        "WP-AUTO-120"
       ],
       "parentPortId": null
     },
@@ -521,7 +547,10 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-N"
+        "WP-SARYANG-N",
+        "WP-SARYANG-E",
+        "WP-JARAN-E",
+        "WP-AUTO-050"
       ],
       "parentPortId": null
     },
@@ -552,7 +581,12 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JARAN-E"
+        "WP-JARAN-E",
+        "WP-AUTO-024",
+        "WP-AUTO-010",
+        "WP-AUTO-020",
+        "WP-AUTO-025",
+        "WP-AUTO-019"
       ],
       "parentPortId": null
     },
@@ -583,7 +617,11 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JARAN-E"
+        "WP-JARAN-E",
+        "WP-AUTO-025",
+        "WP-AUTO-024",
+        "WP-AUTO-020",
+        "WP-AUTO-048"
       ],
       "parentPortId": null
     },
@@ -595,8 +633,8 @@
       "subCategory": "port",
       "lat": 34.9362,
       "lng": 128.431,
-      "seaApproachLat": 34.928,
-      "seaApproachLng": 128.4355,
+      "seaApproachLat": 34.9353,
+      "seaApproachLng": 128.43149,
       "description": "[지방어항] 통영 광도면 안정리 · 기상악화 대피 가능 · 연결도서: 가조도",
       "aliases": [
         "예포항",
@@ -614,7 +652,10 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-W"
+        "WP-GYEON-N",
+        "WP-AUTO-077",
+        "WP-AUTO-080",
+        "WP-AUTO-208"
       ],
       "parentPortId": null
     },
@@ -624,8 +665,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8852,
-      "lng": 128.4198,
+      "lat": 34.88634,
+      "lng": 128.42205,
       "seaApproachLat": 34.892,
       "seaApproachLng": 128.427,
       "description": "[어촌정주어항] 통영 광도면 죽림리 · 기상악화 대피 가능",
@@ -657,8 +698,8 @@
       "subCategory": "port",
       "lat": 34.8685,
       "lng": 128.4635,
-      "seaApproachLat": 34.8645,
-      "seaApproachLng": 128.4695,
+      "seaApproachLat": 34.86788,
+      "seaApproachLng": 128.46443,
       "description": "[지방어항] 통영 용남면 화삼리 · 기상악화 대피 가능 · 연결도서: 해간도",
       "aliases": [
         "화삼항",
@@ -677,8 +718,9 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GYEON-S",
-        "WP-TY-BAY"
+        "WP-AUTO-073",
+        "WP-AUTO-002",
+        "WP-AUTO-076"
       ],
       "parentPortId": null
     },
@@ -688,10 +730,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8895,
-      "lng": 128.4585,
-      "seaApproachLat": 34.895,
-      "seaApproachLng": 128.465,
+      "lat": 34.89292,
+      "lng": 128.4652,
+      "seaApproachLat": 34.89391,
+      "seaApproachLng": 128.46511,
       "description": "[지방어항] 통영 용남면 원평리 · 기상악화 대피 가능",
       "aliases": [
         "용남원평항",
@@ -709,8 +751,8 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GYEON-N",
-        "WP-GYEON-S"
+        "WP-AUTO-125",
+        "WP-AUTO-126"
       ],
       "parentPortId": null
     },
@@ -741,8 +783,10 @@
         "어의도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N",
-        "WP-GYEON-S"
+        "WP-TY-BAY",
+        "WP-AUTO-076",
+        "WP-AUTO-002",
+        "WP-AUTO-210"
       ],
       "parentPortId": null
     },
@@ -752,8 +796,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7918,
-      "lng": 128.4745,
+      "lat": 34.79386,
+      "lng": 128.4736,
       "seaApproachLat": 34.7975,
       "seaApproachLng": 128.471,
       "description": "[소규모항포구] 통영 한산면 (한산도) · 기상악화 대피 가능 · 연결도서: 한산도·추봉도",
@@ -775,7 +819,9 @@
         "한산도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N"
+        "WP-AUTO-027",
+        "WP-AUTO-014",
+        "WP-AUTO-076"
       ],
       "parentPortId": null
     },
@@ -785,10 +831,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7705,
-      "lng": 128.5042,
-      "seaApproachLat": 34.766,
-      "seaApproachLng": 128.512,
+      "lat": 34.76649,
+      "lng": 128.50516,
+      "seaApproachLat": 34.7664,
+      "seaApproachLng": 128.50636,
       "description": "[지방어항] 통영 한산면 (한산도) · 기상악화 대피 가능 · 연결도서: 한산도·추봉도",
       "aliases": [
         "한산진두항",
@@ -806,7 +852,7 @@
         "한산도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-E"
+        "WP-AUTO-039"
       ],
       "parentPortId": null
     },
@@ -818,8 +864,8 @@
       "subCategory": "port",
       "lat": 34.7795,
       "lng": 128.5085,
-      "seaApproachLat": 34.7735,
-      "seaApproachLng": 128.515,
+      "seaApproachLat": 34.7815,
+      "seaApproachLng": 128.5125,
       "description": "[지방어항] 통영 한산면 (한산도) · 기상악화 대피 가능 · 연결도서: 한산도",
       "aliases": [
         "한산창좌항",
@@ -838,8 +884,13 @@
         "한산도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-E",
-        "WP-HANSAN-N"
+        "WP-UIHANG-E",
+        "WP-GARAN-SW",
+        "WP-AUTO-046",
+        "WP-AUTO-043",
+        "WP-AUTO-089",
+        "WP-AUTO-042",
+        "WP-AUTO-041"
       ],
       "parentPortId": null
     },
@@ -872,7 +923,9 @@
         "비진도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-S"
+        "WP-HANSAN-S",
+        "WP-BIJIN-E",
+        "WP-AUTO-047"
       ],
       "parentPortId": null
     },
@@ -906,7 +959,8 @@
       ],
       "connectedWaypointIds": [
         "WP-SARYANG-E",
-        "WP-SARYANG-N"
+        "WP-SARYANG-N",
+        "WP-AUTO-018"
       ],
       "parentPortId": null
     },
@@ -916,10 +970,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8465,
-      "lng": 128.2115,
-      "seaApproachLat": 34.855,
-      "seaApproachLng": 128.225,
+      "lat": 34.84309,
+      "lng": 128.2122,
+      "seaApproachLat": 34.8434,
+      "seaApproachLng": 128.21334,
       "description": "[지방어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
       "aliases": [
         "내지항",
@@ -937,8 +991,9 @@
         "사량도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-N",
-        "WP-SARYANG-W"
+        "WP-AUTO-052",
+        "WP-AUTO-051",
+        "WP-AUTO-053"
       ],
       "parentPortId": null
     },
@@ -972,7 +1027,8 @@
       ],
       "connectedWaypointIds": [
         "WP-SARYANG-N",
-        "WP-SARYANG-E"
+        "WP-SARYANG-E",
+        "WP-AUTO-050"
       ],
       "parentPortId": null
     },
@@ -1004,7 +1060,9 @@
         "사량도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-W"
+        "WP-SARYANG-W",
+        "WP-AUTO-054",
+        "WP-AUTO-056"
       ],
       "parentPortId": null
     },
@@ -1014,8 +1072,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.819,
-      "lng": 128.252,
+      "lat": 34.82265,
+      "lng": 128.25534,
       "seaApproachLat": 34.8185,
       "seaApproachLng": 128.266,
       "description": "[어촌정주어항] 통영 사량면 (사량도) · 기상악화 대피 가능 · 연결도서: 사량도",
@@ -1035,7 +1093,9 @@
         "사량도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-E"
+        "WP-SARYANG-E",
+        "WP-SARYANG-N",
+        "WP-AUTO-018"
       ],
       "parentPortId": null
     },
@@ -1068,7 +1128,12 @@
         "욕지도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-N"
+        "WP-YOKJI-N",
+        "WP-YOKJI-NE",
+        "WP-AUTO-061",
+        "WP-AUTO-116",
+        "WP-AUTO-212",
+        "WP-AUTO-214"
       ],
       "parentPortId": null
     },
@@ -1101,7 +1166,7 @@
       ],
       "connectedWaypointIds": [
         "WP-YOKJI-S",
-        "WP-YOKJI-E"
+        "WP-AUTO-064"
       ],
       "parentPortId": null
     },
@@ -1113,8 +1178,8 @@
       "subCategory": "port",
       "lat": 34.6695,
       "lng": 128.2345,
-      "seaApproachLat": 34.677,
-      "seaApproachLng": 128.229,
+      "seaApproachLat": 34.67035,
+      "seaApproachLng": 128.23388,
       "description": "[지방어항] 통영 욕지면 (노대도) · 기상악화 대피 가능 · 연결도서: 노대도·욕지도",
       "aliases": [
         "노대항",
@@ -1134,8 +1199,8 @@
         "노대도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-W",
-        "WP-YOKJI-N"
+        "WP-AUTO-129",
+        "WP-AUTO-132"
       ],
       "parentPortId": null
     },
@@ -1145,10 +1210,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.6462,
-      "lng": 128.3615,
-      "seaApproachLat": 34.6445,
-      "seaApproachLng": 128.352,
+      "lat": 34.64743,
+      "lng": 128.36063,
+      "seaApproachLat": 34.64781,
+      "seaApproachLng": 128.35952,
       "description": "[지방어항] 통영 욕지면 (연화도) · 기상악화 대피 가능 · 연결도서: 연화도·우도·욕지도",
       "aliases": [
         "연화도항",
@@ -1167,8 +1232,7 @@
         "연화도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-E",
-        "WP-YOKJI-N"
+        "WP-AUTO-135"
       ],
       "parentPortId": null
     },
@@ -1200,8 +1264,10 @@
         "우도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-E",
-        "WP-YOKJI-N"
+        "WP-YOKJI-N",
+        "WP-AUTO-139",
+        "WP-AUTO-140",
+        "WP-AUTO-068"
       ],
       "parentPortId": null
     },
@@ -1211,8 +1277,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.6415,
-      "lng": 128.5735,
+      "lat": 34.64239,
+      "lng": 128.57141,
       "seaApproachLat": 34.651,
       "seaApproachLng": 128.562,
       "description": "[지방어항] 통영 한산면 (대매물도) · 기상악화 대피 가능 · 연결도서: 대매물도·소매물도",
@@ -1233,7 +1299,12 @@
         "대매물도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MAEMUL-N"
+        "WP-MAEMUL-N",
+        "WP-AUTO-069",
+        "WP-AUTO-093",
+        "WP-AUTO-204",
+        "WP-AUTO-205",
+        "WP-AUTO-206"
       ],
       "parentPortId": null
     },
@@ -1243,8 +1314,8 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.6365,
-      "lng": 128.5665,
+      "lat": 34.63853,
+      "lng": 128.56518,
       "seaApproachLat": 34.6475,
       "seaApproachLng": 128.559,
       "description": "[어촌정주어항] 통영 한산면 (대매물도) · 기상악화 대피 가능 · 연결도서: 대매물도",
@@ -1265,7 +1336,12 @@
         "대매물도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MAEMUL-N"
+        "WP-MAEMUL-N",
+        "WP-AUTO-070",
+        "WP-AUTO-069",
+        "WP-AUTO-204",
+        "WP-AUTO-205",
+        "WP-AUTO-206"
       ],
       "parentPortId": null
     },
@@ -1275,10 +1351,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.6242,
-      "lng": 128.5485,
-      "seaApproachLat": 34.621,
-      "seaApproachLng": 128.5505,
+      "lat": 34.6246,
+      "lng": 128.54756,
+      "seaApproachLat": 34.62386,
+      "seaApproachLng": 128.54677,
       "description": "[지방어항] 통영 한산면 (소매물도) · 기상악화 대피 가능 · 연결도서: 소매물도·대매물도",
       "aliases": [
         "소매물도선착장",
@@ -1297,8 +1373,7 @@
         "소매물도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MAEMUL-S",
-        "WP-MAEMUL-N"
+        "WP-AUTO-141"
       ],
       "parentPortId": null
     },
@@ -1308,10 +1383,10 @@
       "region": "통영",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7565,
-      "lng": 128.2915,
-      "seaApproachLat": 34.764,
-      "seaApproachLng": 128.298,
+      "lat": 34.75722,
+      "lng": 128.28877,
+      "seaApproachLat": 34.75796,
+      "seaApproachLng": 128.28797,
       "description": "[어촌정주어항] 통영 산양읍 (추도) · 기상악화 대피 가능 · 연결도서: 추도",
       "aliases": [
         "추도대항",
@@ -1329,8 +1404,7 @@
         "추도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-E",
-        "WP-YOKJI-W"
+        "WP-AUTO-144"
       ],
       "parentPortId": null
     },
@@ -1363,7 +1437,12 @@
       ],
       "connectedWaypointIds": [
         "WP-YOKJI-W",
-        "WP-SARYANG-E"
+        "WP-SARYANG-E",
+        "WP-SARYANG-S",
+        "WP-AUTO-058",
+        "WP-AUTO-057",
+        "WP-AUTO-056",
+        "WP-AUTO-061"
       ],
       "parentPortId": null
     },
@@ -1375,8 +1454,8 @@
       "subCategory": "port",
       "lat": 34.7295,
       "lng": 128.3975,
-      "seaApproachLat": 34.738,
-      "seaApproachLng": 128.398,
+      "seaApproachLat": 34.73049,
+      "seaApproachLng": 128.39756,
       "description": "[어촌정주어항] 통영 산양읍 (연대도) · 기상악화 대피 가능 · 연결도서: 연대도·만지도",
       "aliases": [
         "연대도항",
@@ -1395,7 +1474,8 @@
         "연대도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-S"
+        "WP-HAKRIM-W",
+        "WP-CHUDO-E"
       ],
       "parentPortId": null
     },
@@ -1407,8 +1487,8 @@
       "subCategory": "port",
       "lat": 34.7318,
       "lng": 128.3902,
-      "seaApproachLat": 34.7405,
-      "seaApproachLng": 128.393,
+      "seaApproachLat": 34.73276,
+      "seaApproachLng": 128.39051,
       "description": "[어촌정주어항] 통영 산양읍 (만지도) · 기상악화 대피 가능 · 연결도서: 만지도·연대도",
       "aliases": [
         "만지도항",
@@ -1427,7 +1507,8 @@
         "만지도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-S"
+        "WP-HAKRIM-W",
+        "WP-CHUDO-E"
       ],
       "parentPortId": null
     },
@@ -1460,7 +1541,12 @@
       ],
       "connectedWaypointIds": [
         "WP-MIREUK-E",
-        "WP-HANSAN-N"
+        "WP-MIREUK-SE",
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-026",
+        "WP-AUTO-207",
+        "WP-AUTO-203",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": null
     },
@@ -1472,8 +1558,8 @@
       "subCategory": "port",
       "lat": 34.8655,
       "lng": 128.7265,
-      "seaApproachLat": 34.8595,
-      "seaApproachLng": 128.742,
+      "seaApproachLat": 34.86508,
+      "seaApproachLng": 128.72759,
       "description": "[무역/연안항] 거제 장승포동 장승포동 · 기상악화 대피 가능 · 연결도서: 지심도·외도",
       "aliases": [
         "장승포여객선터미널",
@@ -1491,8 +1577,8 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JANGSEUNGPO-E",
-        "WP-JISEPO-E"
+        "WP-AUTO-145",
+        "WP-AUTO-163"
       ],
       "parentPortId": null
     },
@@ -1502,10 +1588,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8942,
-      "lng": 128.6985,
-      "seaApproachLat": 34.899,
-      "seaApproachLng": 128.732,
+      "lat": 34.89094,
+      "lng": 128.6984,
+      "seaApproachLat": 34.89117,
+      "seaApproachLng": 128.69723,
       "description": "[무역/연안항] 거제 옥포동 옥포동 · 기상악화 대피 가능",
       "aliases": [
         "옥포무역항",
@@ -1523,7 +1609,7 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-OKPO-E"
+        "WP-AUTO-148"
       ],
       "parentPortId": null
     },
@@ -1533,10 +1619,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8955,
-      "lng": 128.6215,
-      "seaApproachLat": 34.922,
-      "seaApproachLng": 128.591,
+      "lat": 34.89573,
+      "lng": 128.62381,
+      "seaApproachLat": 34.89668,
+      "seaApproachLng": 128.62348,
       "description": "[무역/연안항] 거제 고현동 고현동 · 기상악화 대피 가능 · 연결도서: 칠천도·가조도",
       "aliases": [
         "거제고현항",
@@ -1554,7 +1640,7 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GOHYEON-BAY"
+        "WP-AUTO-156"
       ],
       "parentPortId": null
     },
@@ -1564,8 +1650,8 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8785,
-      "lng": 128.7365,
+      "lat": 34.87803,
+      "lng": 128.73883,
       "seaApproachLat": 34.881,
       "seaApproachLng": 128.748,
       "description": "[국가어항] 거제 능포동 능포동 · 기상악화 대피 가능",
@@ -1586,7 +1672,9 @@
       ],
       "connectedWaypointIds": [
         "WP-JANGSEUNGPO-E",
-        "WP-OKPO-E"
+        "WP-OKPO-S",
+        "WP-AUTO-155",
+        "WP-AUTO-105"
       ],
       "parentPortId": null
     },
@@ -1596,10 +1684,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8285,
-      "lng": 128.7055,
-      "seaApproachLat": 34.8225,
-      "seaApproachLng": 128.726,
+      "lat": 34.82954,
+      "lng": 128.70672,
+      "seaApproachLat": 34.82914,
+      "seaApproachLng": 128.70782,
       "description": "[국가어항] 거제 일운면 지세포리 · 기상악화 대피 가능 · 연결도서: 지심도",
       "aliases": [
         "지세포국가어항",
@@ -1618,7 +1706,8 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JISEPO-E"
+        "WP-AUTO-157",
+        "WP-AUTO-160"
       ],
       "parentPortId": null
     },
@@ -1628,8 +1717,8 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7375,
-      "lng": 128.6345,
+      "lat": 34.73465,
+      "lng": 128.63766,
       "seaApproachLat": 34.725,
       "seaApproachLng": 128.641,
       "description": "[국가어항] 거제 남부면 다대리 · 기상악화 대피 가능 · 연결도서: 대매물도·소매물도",
@@ -1651,8 +1740,9 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GEOJE-S-DADAE",
-        "WP-HAEGEUMGANG-SE"
+        "WP-AUTO-108",
+        "WP-AUTO-195",
+        "WP-AUTO-196"
       ],
       "parentPortId": null
     },
@@ -1662,8 +1752,8 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.9465,
-      "lng": 128.7185,
+      "lat": 34.94963,
+      "lng": 128.72078,
       "seaApproachLat": 34.949,
       "seaApproachLng": 128.732,
       "description": "[국가어항] 거제 장목면 외포리 · 기상악화 대피 가능 · 연결도서: 이수도",
@@ -1684,7 +1774,13 @@
       ],
       "connectedWaypointIds": [
         "WP-JANGMOK-E",
-        "WP-OKPO-E"
+        "WP-OKPO-E",
+        "WP-AUTO-153",
+        "WP-AUTO-152",
+        "WP-AUTO-191",
+        "WP-AUTO-192",
+        "WP-AUTO-193",
+        "WP-AUTO-190"
       ],
       "parentPortId": null
     },
@@ -1696,8 +1792,8 @@
       "subCategory": "port",
       "lat": 34.8055,
       "lng": 128.6905,
-      "seaApproachLat": 34.796,
-      "seaApproachLng": 128.694,
+      "seaApproachLat": 34.80455,
+      "seaApproachLng": 128.69085,
       "description": "[국가어항] 거제 일운면 구조라리 · 기상악화 대피 가능 · 연결도서: 외도·내도",
       "aliases": [
         "구조라유람선터미널",
@@ -1715,7 +1811,8 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GUJORA-S"
+        "WP-AUTO-164",
+        "WP-AUTO-165"
       ],
       "parentPortId": null
     },
@@ -1747,7 +1844,10 @@
       ],
       "connectedWaypointIds": [
         "WP-GUJORA-S",
-        "WP-JISEPO-E"
+        "WP-HAKDONG-E",
+        "WP-AUTO-166",
+        "WP-AUTO-215",
+        "WP-AUTO-217"
       ],
       "parentPortId": null
     },
@@ -1778,8 +1878,11 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
+        "WP-HAKDONG-E",
         "WP-GUJORA-S",
-        "WP-HAEGEUMGANG-SE"
+        "WP-HAEGEUMGANG-SE",
+        "WP-AUTO-166",
+        "WP-AUTO-215"
       ],
       "parentPortId": null
     },
@@ -1811,7 +1914,10 @@
       ],
       "connectedWaypointIds": [
         "WP-HAEGEUMGANG-SE",
-        "WP-GUJORA-S"
+        "WP-GUJORA-S",
+        "WP-HAKDONG-E",
+        "WP-AUTO-166",
+        "WP-AUTO-179"
       ],
       "parentPortId": null
     },
@@ -1821,10 +1927,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7405,
-      "lng": 128.6745,
-      "seaApproachLat": 34.736,
-      "seaApproachLng": 128.685,
+      "lat": 34.73867,
+      "lng": 128.67175,
+      "seaApproachLat": 34.73782,
+      "seaApproachLng": 128.67237,
       "description": "[지방어항] 거제 남부면 갈곶리 · 기상악화 대피 가능 · 연결도서: 외도",
       "aliases": [
         "갈곶항",
@@ -1842,7 +1948,11 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HAEGEUMGANG-SE"
+        "WP-AUTO-108",
+        "WP-AUTO-109",
+        "WP-AUTO-195",
+        "WP-AUTO-196",
+        "WP-AUTO-219"
       ],
       "parentPortId": null
     },
@@ -1854,8 +1964,8 @@
       "subCategory": "port",
       "lat": 34.7245,
       "lng": 128.5875,
-      "seaApproachLat": 34.716,
-      "seaApproachLng": 128.591,
+      "seaApproachLat": 34.72356,
+      "seaApproachLng": 128.58789,
       "description": "[지방어항] 거제 남부면 저구리 · 기상악화 대피 가능 · 연결도서: 대매물도·소매물도·장사도",
       "aliases": [
         "저구여객선터미널",
@@ -1874,8 +1984,9 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GEOJE-S-DADAE",
-        "WP-MAEMUL-N"
+        "WP-AUTO-091",
+        "WP-AUTO-090",
+        "WP-AUTO-222"
       ],
       "parentPortId": null
     },
@@ -1885,10 +1996,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7165,
-      "lng": 128.5925,
-      "seaApproachLat": 34.712,
-      "seaApproachLng": 128.5935,
+      "lat": 34.71704,
+      "lng": 128.58798,
+      "seaApproachLat": 34.71638,
+      "seaApproachLng": 128.58709,
       "description": "[지방어항] 거제 남부면 저구리 · 기상악화 대피 가능",
       "aliases": [
         "명사해수욕장항",
@@ -1906,7 +2017,9 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GEOJE-S-DADAE"
+        "WP-AUTO-091",
+        "WP-AUTO-090",
+        "WP-AUTO-222"
       ],
       "parentPortId": null
     },
@@ -1937,7 +2050,10 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GEOJE-S-DADAE"
+        "WP-GEOJE-S-DADAE",
+        "WP-MAEMUL-E",
+        "WP-AUTO-112",
+        "WP-AUTO-093"
       ],
       "parentPortId": null
     },
@@ -1969,7 +2085,11 @@
       ],
       "connectedWaypointIds": [
         "WP-GEOJE-S-DADAE",
-        "WP-MAEMUL-N"
+        "WP-MAEMUL-N",
+        "WP-MAEMUL-E",
+        "WP-AUTO-112",
+        "WP-AUTO-093",
+        "WP-AUTO-111"
       ],
       "parentPortId": null
     },
@@ -1981,8 +2101,8 @@
       "subCategory": "port",
       "lat": 34.7125,
       "lng": 128.5695,
-      "seaApproachLat": 34.7105,
-      "seaApproachLng": 128.562,
+      "seaApproachLat": 34.7122,
+      "seaApproachLng": 128.56836,
       "description": "[어촌정주어항] 거제 남부면 저구리 · 기상악화 대피 가능 · 연결도서: 대병대도·소병대도",
       "aliases": [
         "남부홍포항",
@@ -2000,8 +2120,10 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GEOJE-S-DADAE",
-        "WP-GARAN-SW"
+        "WP-AUTO-092",
+        "WP-AUTO-069",
+        "WP-AUTO-091",
+        "WP-AUTO-222"
       ],
       "parentPortId": null
     },
@@ -2013,8 +2135,8 @@
       "subCategory": "port",
       "lat": 34.7695,
       "lng": 128.5735,
-      "seaApproachLat": 34.7685,
-      "seaApproachLng": 128.559,
+      "seaApproachLat": 34.76942,
+      "seaApproachLng": 128.5723,
       "description": "[지방어항] 거제 동부면 가배리 · 기상악화 대피 가능 · 연결도서: 한산도·추봉도",
       "aliases": [
         "동부가배항",
@@ -2032,7 +2154,8 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW"
+        "WP-AUTO-090",
+        "WP-AUTO-091"
       ],
       "parentPortId": null
     },
@@ -2042,10 +2165,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7895,
-      "lng": 128.5625,
-      "seaApproachLat": 34.782,
-      "seaApproachLng": 128.555,
+      "lat": 34.7908,
+      "lng": 128.56276,
+      "seaApproachLat": 34.7909,
+      "seaApproachLng": 128.56156,
       "description": "[지방어항] 거제 동부면 구천리 · 기상악화 대피 가능",
       "aliases": [
         "동부구영항",
@@ -2063,8 +2186,7 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW",
-        "WP-DUNDEOK-W"
+        "WP-AUTO-168"
       ],
       "parentPortId": null
     },
@@ -2096,7 +2218,8 @@
       ],
       "connectedWaypointIds": [
         "WP-GAJO-N",
-        "WP-GYEON-N"
+        "WP-AUTO-081",
+        "WP-AUTO-125"
       ],
       "parentPortId": null
     },
@@ -2108,8 +2231,8 @@
       "subCategory": "port",
       "lat": 34.9285,
       "lng": 128.4685,
-      "seaApproachLat": 34.918,
-      "seaApproachLng": 128.452,
+      "seaApproachLat": 34.9315,
+      "seaApproachLng": 128.4785,
       "description": "[지방어항] 거제 사등면 (가조도) · 기상악화 대피 가능 · 연결도서: 가조도",
       "aliases": [
         "창호항",
@@ -2128,8 +2251,12 @@
         "가조도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-W",
-        "WP-GYEON-N"
+        "WP-GAJO-E",
+        "WP-GAJO-N",
+        "WP-AUTO-085",
+        "WP-AUTO-080",
+        "WP-AUTO-077",
+        "WP-AUTO-078"
       ],
       "parentPortId": null
     },
@@ -2161,7 +2288,10 @@
         "가조도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-N"
+        "WP-GAJO-N",
+        "WP-AUTO-084",
+        "WP-AUTO-085",
+        "WP-AUTO-081"
       ],
       "parentPortId": null
     },
@@ -2194,8 +2324,9 @@
         "가조도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-N",
-        "WP-GAJO-W"
+        "WP-AUTO-085",
+        "WP-AUTO-080",
+        "WP-AUTO-081"
       ],
       "parentPortId": null
     },
@@ -2205,10 +2336,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8545,
-      "lng": 128.4985,
-      "seaApproachLat": 34.857,
-      "seaApproachLng": 128.481,
+      "lat": 34.85536,
+      "lng": 128.48115,
+      "seaApproachLat": 34.85529,
+      "seaApproachLng": 128.47995,
       "description": "[어촌정주어항] 거제 둔덕면 학산리 · 기상악화 대피 가능",
       "aliases": [
         "학산항",
@@ -2226,8 +2357,8 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GYEON-S",
-        "WP-DUNDEOK-W"
+        "WP-DONAM-NE",
+        "WP-AUTO-223"
       ],
       "parentPortId": null
     },
@@ -2237,10 +2368,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8385,
-      "lng": 128.5165,
-      "seaApproachLat": 34.833,
-      "seaApproachLng": 128.5175,
+      "lat": 34.83219,
+      "lng": 128.524,
+      "seaApproachLat": 34.83121,
+      "seaApproachLng": 128.52382,
       "description": "[어촌정주어항] 거제 둔덕면 시목리 · 기상악화 대피 가능",
       "aliases": [
         "시목항",
@@ -2258,7 +2389,7 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-DUNDEOK-W"
+        "WP-AUTO-170"
       ],
       "parentPortId": null
     },
@@ -2268,10 +2399,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8195,
-      "lng": 128.5455,
-      "seaApproachLat": 34.8235,
-      "seaApproachLng": 128.526,
+      "lat": 34.8198,
+      "lng": 128.54757,
+      "seaApproachLat": 34.82074,
+      "seaApproachLng": 128.54719,
       "description": "[지방어항] 거제 거제면 법동리 · 기상악화 대피 가능 · 연결도서: 산달도",
       "aliases": [
         "법동항",
@@ -2289,8 +2420,9 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-DUNDEOK-W",
-        "WP-GARAN-SW"
+        "WP-AUTO-169",
+        "WP-AUTO-168",
+        "WP-AUTO-225"
       ],
       "parentPortId": null
     },
@@ -2321,7 +2453,12 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-DUNDEOK-W"
+        "WP-AUTO-171",
+        "WP-AUTO-172",
+        "WP-AUTO-170",
+        "WP-AUTO-227",
+        "WP-AUTO-226",
+        "WP-AUTO-228"
       ],
       "parentPortId": null
     },
@@ -2333,8 +2470,8 @@
       "subCategory": "port",
       "lat": 35.0015,
       "lng": 128.6545,
-      "seaApproachLat": 35.012,
-      "seaApproachLng": 128.653,
+      "seaApproachLat": 35.00248,
+      "seaApproachLng": 128.65436,
       "description": "[지방어항] 거제 하청면 유계리 · 기상악화 대피 가능 · 연결도서: 칠천도",
       "aliases": [
         "유계항",
@@ -2352,7 +2489,13 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N"
+        "WP-AUTO-104",
+        "WP-AUTO-103",
+        "WP-AUTO-098",
+        "WP-AUTO-177",
+        "WP-AUTO-184",
+        "WP-AUTO-176",
+        "WP-AUTO-175"
       ],
       "parentPortId": null
     },
@@ -2383,7 +2526,9 @@
         "칠천도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-W"
+        "WP-CHILCHEON-W",
+        "WP-GOHYEON-BAY",
+        "WP-AUTO-084"
       ],
       "parentPortId": null
     },
@@ -2393,10 +2538,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 35.0085,
-      "lng": 128.6345,
-      "seaApproachLat": 35.0165,
-      "seaApproachLng": 128.644,
+      "lat": 35.0106,
+      "lng": 128.6336,
+      "seaApproachLat": 35.01116,
+      "seaApproachLng": 128.63459,
       "description": "[지방어항] 거제 하청면 (칠천도) · 기상악화 대피 가능 · 연결도서: 칠천도·황덕도",
       "aliases": [
         "연구항",
@@ -2415,8 +2560,9 @@
         "칠천도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N",
-        "WP-CHILCHEON-W"
+        "WP-AUTO-095",
+        "WP-AUTO-181",
+        "WP-AUTO-185"
       ],
       "parentPortId": null
     },
@@ -2448,7 +2594,9 @@
         "칠천도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-W"
+        "WP-CHILCHEON-W",
+        "WP-GOHYEON-BAY",
+        "WP-AUTO-084"
       ],
       "parentPortId": null
     },
@@ -2460,8 +2608,8 @@
       "subCategory": "port",
       "lat": 35.0025,
       "lng": 128.6785,
-      "seaApproachLat": 35.015,
-      "seaApproachLng": 128.665,
+      "seaApproachLat": 35.00324,
+      "seaApproachLng": 128.6777,
       "description": "[지방어항] 거제 장목면 장목리 · 기상악화 대피 가능",
       "aliases": [
         "장목진항",
@@ -2479,7 +2627,9 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N"
+        "WP-AUTO-175",
+        "WP-AUTO-176",
+        "WP-AUTO-184"
       ],
       "parentPortId": null
     },
@@ -2489,10 +2639,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 35.0165,
-      "lng": 128.6985,
-      "seaApproachLat": 35.021,
-      "seaApproachLng": 128.685,
+      "lat": 35.00813,
+      "lng": 128.70468,
+      "seaApproachLat": 35.00754,
+      "seaApproachLng": 128.70371,
       "description": "[지방어항] 거제 장목면 농소리 · 기상악화 대피 가능 · 연결도서: 저도",
       "aliases": [
         "궁농항",
@@ -2511,8 +2661,8 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N",
-        "WP-JANGMOK-E"
+        "WP-JANGMOK-E",
+        "WP-AUTO-229"
       ],
       "parentPortId": null
     },
@@ -2543,7 +2693,11 @@
         "항내 어선 입출항 교차 및 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JANGMOK-E"
+        "WP-JANGMOK-E",
+        "WP-AUTO-102",
+        "WP-AUTO-189",
+        "WP-AUTO-188",
+        "WP-AUTO-229"
       ],
       "parentPortId": null
     },
@@ -2553,10 +2707,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.9685,
-      "lng": 128.7275,
-      "seaApproachLat": 34.9705,
-      "seaApproachLng": 128.734,
+      "lat": 34.96674,
+      "lng": 128.72673,
+      "seaApproachLat": 34.96628,
+      "seaApproachLng": 128.7278,
       "description": "[지방어항] 거제 장목면 (이수도) · 기상악화 대피 가능 · 연결도서: 이수도",
       "aliases": [
         "이수도항",
@@ -2575,7 +2729,10 @@
         "이수도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JANGMOK-E"
+        "WP-OKPO-E",
+        "WP-AUTO-191",
+        "WP-AUTO-192",
+        "WP-AUTO-232"
       ],
       "parentPortId": null
     },
@@ -2585,8 +2742,8 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8195,
-      "lng": 128.7485,
+      "lat": 34.81969,
+      "lng": 128.74766,
       "seaApproachLat": 34.819,
       "seaApproachLng": 128.741,
       "description": "[소규모항포구] 거제 일운면 (지심도) · 연안 작업 거점 · 연결도서: 지심도",
@@ -2607,7 +2764,12 @@
       ],
       "connectedWaypointIds": [
         "WP-JISEPO-E",
-        "WP-JANGSEUNGPO-E"
+        "WP-JANGSEUNGPO-E",
+        "WP-AUTO-167",
+        "WP-AUTO-159",
+        "WP-AUTO-162",
+        "WP-AUTO-161",
+        "WP-AUTO-158"
       ],
       "parentPortId": null
     },
@@ -2617,10 +2779,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7865,
-      "lng": 128.7145,
-      "seaApproachLat": 34.782,
-      "seaApproachLng": 128.707,
+      "lat": 34.7862,
+      "lng": 128.71629,
+      "seaApproachLat": 34.78525,
+      "seaApproachLng": 128.71595,
       "description": "[소규모항포구] 거제 일운면 (내도) · 연안 작업 거점 · 연결도서: 내도·외도",
       "aliases": [
         "내도선착장",
@@ -2639,7 +2801,8 @@
         "내도 도서 해역 수로 조류 및 어구 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GUJORA-S"
+        "WP-AUTO-178",
+        "WP-AUTO-218"
       ],
       "parentPortId": null
     },
@@ -2649,8 +2812,8 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.7695,
-      "lng": 128.7115,
+      "lat": 34.77023,
+      "lng": 128.70962,
       "seaApproachLat": 34.772,
       "seaApproachLng": 128.704,
       "description": "[소규모항포구] 거제 일운면 (외도) · 연안 작업 거점 · 연결도서: 외도·내도",
@@ -2671,7 +2834,11 @@
       ],
       "connectedWaypointIds": [
         "WP-GUJORA-S",
-        "WP-HAEGEUMGANG-SE"
+        "WP-HAEGEUMGANG-SE",
+        "WP-HAKDONG-E",
+        "WP-AUTO-166",
+        "WP-AUTO-179",
+        "WP-AUTO-217"
       ],
       "parentPortId": null
     },
@@ -2681,8 +2848,8 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.9095,
-      "lng": 128.7095,
+      "lat": 34.91067,
+      "lng": 128.71087,
       "seaApproachLat": 34.907,
       "seaApproachLng": 128.732,
       "description": "[어촌정주어항] 거제 옥포동 덕포동 · 기상악화 대피 가능",
@@ -2703,7 +2870,11 @@
       ],
       "connectedWaypointIds": [
         "WP-OKPO-E",
-        "WP-JANGMOK-E"
+        "WP-JANGMOK-E",
+        "WP-AUTO-152",
+        "WP-AUTO-153",
+        "WP-AUTO-151",
+        "WP-AUTO-154"
       ],
       "parentPortId": null
     },
@@ -2734,8 +2905,12 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
+        "WP-HAKDONG-E",
         "WP-GUJORA-S",
-        "WP-HAEGEUMGANG-SE"
+        "WP-HAEGEUMGANG-SE",
+        "WP-AUTO-166",
+        "WP-AUTO-221",
+        "WP-AUTO-215"
       ],
       "parentPortId": null
     },
@@ -2745,10 +2920,10 @@
       "region": "거제",
       "category": "port",
       "subCategory": "port",
-      "lat": 34.8765,
-      "lng": 128.6965,
-      "seaApproachLat": 34.892,
-      "seaApproachLng": 128.728,
+      "lat": 34.87598,
+      "lng": 128.69818,
+      "seaApproachLat": 34.87652,
+      "seaApproachLng": 128.69919,
       "description": "[어촌정주어항] 거제 아주동 아주동 · 기상악화 대피 가능",
       "aliases": [
         "아주동항",
@@ -2766,7 +2941,8 @@
         "방파제 등대 미설치 — 야간 입출항 시 시계 확보 주의"
       ],
       "connectedWaypointIds": [
-        "WP-OKPO-E"
+        "WP-AUTO-151",
+        "WP-AUTO-233"
       ],
       "parentPortId": null
     },
@@ -2778,8 +2954,8 @@
       "subCategory": "small_berth",
       "lat": 34.6708,
       "lng": 128.2425,
-      "seaApproachLat": 34.6745,
-      "seaApproachLng": 128.2445,
+      "seaApproachLat": 34.6712,
+      "seaApproachLng": 128.2414,
       "description": "[부잔교(폰툰)] 수심 2.2m · 최대 15t · 진입로 우측 150m 가두리 및 굴 수하식 양식장 주의",
       "aliases": [
         "탄항선착장",
@@ -2798,8 +2974,8 @@
         "상·하노대 협수로 조류 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-N",
-        "WP-YOKJI-W"
+        "WP-AUTO-132",
+        "WP-AUTO-129"
       ],
       "parentPortId": "KR-GN-TY-0030"
     },
@@ -2831,8 +3007,13 @@
         "노대수로 동측 가두리 양식장 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-W",
-        "WP-YOKJI-N"
+        "WP-YOKJI-N",
+        "WP-YOKJI-E",
+        "WP-AUTO-129",
+        "WP-AUTO-130",
+        "WP-AUTO-116",
+        "WP-AUTO-213",
+        "WP-AUTO-212"
       ],
       "parentPortId": "KR-GN-TY-0030"
     },
@@ -2865,7 +3046,9 @@
       ],
       "connectedWaypointIds": [
         "WP-YOKJI-W",
-        "WP-SARYANG-W"
+        "WP-SARYANG-W",
+        "WP-AUTO-131",
+        "WP-AUTO-061"
       ],
       "parentPortId": "KR-GN-TY-0028"
     },
@@ -2897,7 +3080,8 @@
         "접안 경사로 이끼 미끄럼 및 간조 수심 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-W"
+        "WP-YOKJI-W",
+        "WP-AUTO-061"
       ],
       "parentPortId": "KR-GN-TY-0028"
     },
@@ -2929,8 +3113,9 @@
         "강한 조류 시 횡압류 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-W",
-        "WP-YOKJI-N"
+        "WP-AUTO-132",
+        "WP-AUTO-129",
+        "WP-AUTO-130"
       ],
       "parentPortId": "KR-GN-TY-0028"
     },
@@ -2961,7 +3146,9 @@
         "용머리 해안 암초 지대 인접으로 야간 진입 시 우측 암초 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-E"
+        "WP-YEONHWA-E",
+        "WP-YEONHWA-S",
+        "WP-AUTO-067"
       ],
       "parentPortId": "KR-GN-TY-0031"
     },
@@ -2993,8 +3180,10 @@
         "북서측 수중여 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-E",
-        "WP-YOKJI-N"
+        "WP-YOKJI-N",
+        "WP-AUTO-139",
+        "WP-AUTO-140",
+        "WP-AUTO-068"
       ],
       "parentPortId": "KR-GN-TY-0032"
     },
@@ -3004,10 +3193,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.6378,
-      "lng": 128.2682,
-      "seaApproachLat": 34.6385,
-      "seaApproachLng": 128.288,
+      "lat": 34.63473,
+      "lng": 128.26987,
+      "seaApproachLat": 34.63472,
+      "seaApproachLng": 128.27107,
       "description": "[부잔교(폰툰)] 수심 3m · 최대 25t · 욕지 카페리 여객선 입출항 시간대 항주파 및 교차 항해 주의",
       "aliases": [
         "욕지 소형선 부잔교",
@@ -3025,8 +3214,7 @@
         "욕지 카페리 여객선 입출항 시간대 항주파 및 교차 항해 주의"
       ],
       "connectedWaypointIds": [
-        "WP-YOKJI-E",
-        "WP-YOKJI-N"
+        "WP-AUTO-115"
       ],
       "parentPortId": "KR-GN-TY-0003"
     },
@@ -3036,10 +3224,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.6402,
-      "lng": 128.2695,
-      "seaApproachLat": 34.6385,
-      "seaApproachLng": 128.288,
+      "lat": 34.64124,
+      "lng": 128.27116,
+      "seaApproachLat": 34.64105,
+      "seaApproachLng": 128.27234,
       "description": "[물양장 안벽] 수심 2m · 최대 15t · 동항만 입구 양식장 작업선 왕래 빈번",
       "aliases": [
         "좌부랑개선착장",
@@ -3059,7 +3247,11 @@
       ],
       "connectedWaypointIds": [
         "WP-YOKJI-E",
-        "WP-YOKJI-N"
+        "WP-YOKJI-NE",
+        "WP-AUTO-116",
+        "WP-AUTO-133",
+        "WP-AUTO-212",
+        "WP-AUTO-235"
       ],
       "parentPortId": "KR-GN-TY-0003"
     },
@@ -3091,7 +3283,9 @@
         "간조 시 선단 수심 1.5m 이하 얕음"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-W"
+        "WP-SARYANG-W",
+        "WP-AUTO-054",
+        "WP-AUTO-056"
       ],
       "parentPortId": "KR-GN-TY-0026"
     },
@@ -3122,7 +3316,8 @@
         "사량대교 하부 동강(사량수로) 협수로 강조류 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-E"
+        "WP-SARYANG-E",
+        "WP-SARYANG-N"
       ],
       "parentPortId": "KR-GN-TY-0023"
     },
@@ -3132,10 +3327,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.8485,
-      "lng": 128.2025,
-      "seaApproachLat": 34.851,
-      "seaApproachLng": 128.2055,
+      "lat": 34.84278,
+      "lng": 128.2066,
+      "seaApproachLat": 34.84289,
+      "seaApproachLng": 128.2078,
       "description": "[방파제 내측] 수심 2.2m · 최대 25t · 해골바위·매바위 인근 해안 수중 암초 주의",
       "aliases": [
         "수우도포구",
@@ -3153,8 +3348,9 @@
         "해골바위·매바위 인근 해안 수중 암초 주의"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-W",
-        "WP-SARYANG-N"
+        "WP-AUTO-052",
+        "WP-AUTO-051",
+        "WP-AUTO-053"
       ],
       "parentPortId": "KR-GN-TY-0024"
     },
@@ -3166,8 +3362,8 @@
       "subCategory": "small_berth",
       "lat": 34.7895,
       "lng": 128.5015,
-      "seaApproachLat": 34.7925,
-      "seaApproachLng": 128.5065,
+      "seaApproachLat": 34.78852,
+      "seaApproachLng": 128.50161,
       "description": "[경사식 슬립웨이] 수심 1.4m · 최대 15t · 전면 해역 굴 수하식 양식장 밀집으로 지정 진입 수로 준수 필수",
       "aliases": [
         "의항포구",
@@ -3185,8 +3381,7 @@
         "전면 해역 굴 수하식 양식장 밀집으로 지정 진입 수로 준수 필수"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N",
-        "WP-HANSAN-E"
+        "WP-AUTO-046"
       ],
       "parentPortId": "KR-GN-TY-0021"
     },
@@ -3217,8 +3412,14 @@
         "만 내측 얕은 수심 및 뗏목 계류줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N",
-        "WP-MIREUK-E"
+        "WP-YONGCHO-N",
+        "WP-JESEUNGDANG-W",
+        "WP-MIREUK-S",
+        "WP-MIREUK-SE",
+        "WP-AUTO-203",
+        "WP-AUTO-030",
+        "WP-AUTO-026",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": "KR-GN-TY-0019"
     },
@@ -3228,10 +3429,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7565,
-      "lng": 128.5265,
-      "seaApproachLat": 34.7595,
-      "seaApproachLng": 128.5235,
+      "lat": 34.75519,
+      "lng": 128.52791,
+      "seaApproachLat": 34.75477,
+      "seaApproachLng": 128.52682,
       "description": "[돌제식 선착장] 수심 2.1m · 최대 20t · 죽도-한산도 본섬 사이 수로 양식장 부표 주의",
       "aliases": [
         "한산 죽도항",
@@ -3249,7 +3450,9 @@
         "죽도-한산도 본섬 사이 수로 양식장 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-E"
+        "WP-YONGCHO-N",
+        "WP-AUTO-092",
+        "WP-AUTO-237"
       ],
       "parentPortId": "KR-GN-TY-0020"
     },
@@ -3261,8 +3464,8 @@
       "subCategory": "small_berth",
       "lat": 34.8125,
       "lng": 128.4815,
-      "seaApproachLat": 34.8085,
-      "seaApproachLng": 128.4765,
+      "seaApproachLat": 34.81181,
+      "seaApproachLng": 128.48064,
       "description": "[부잔교(폰툰)] 수심 2m · 최대 12t · 비산도 주변 사방 굴 수하식 양식장 극밀집 해역으로 야간 항해 엄금",
       "aliases": [
         "비산도포구",
@@ -3280,8 +3483,8 @@
         "비산도 주변 사방 굴 수하식 양식장 극밀집 해역으로 야간 항해 엄금"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N",
-        "WP-GYEON-S"
+        "WP-HANSAN-NE",
+        "WP-AUTO-238"
       ],
       "parentPortId": "KR-GN-TY-0019"
     },
@@ -3312,8 +3515,13 @@
         "좌도 북동측 간출암 및 양식장 뗏목 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-N",
-        "WP-MIREUK-E"
+        "WP-JESEUNGDANG-W",
+        "WP-MIREUK-SE",
+        "WP-MIREUK-E",
+        "WP-AUTO-203",
+        "WP-AUTO-207",
+        "WP-AUTO-037",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": "KR-GN-TY-0040"
     },
@@ -3323,8 +3531,8 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7445,
-      "lng": 128.4745,
+      "lat": 34.74568,
+      "lng": 128.47359,
       "seaApproachLat": 34.7485,
       "seaApproachLng": 128.4745,
       "description": "[경사식 슬립웨이] 수심 1.9m · 최대 40t · 용초도 북측 해안 미역·다시마 양식장 로프 주의",
@@ -3344,8 +3552,12 @@
         "용초도 북측 해안 미역·다시마 양식장 로프 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-S",
-        "WP-HANSAN-E"
+        "WP-YONGCHO-N",
+        "WP-MIREUK-SE",
+        "WP-AUTO-039",
+        "WP-AUTO-038",
+        "WP-AUTO-040",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": "KR-GN-TY-0022"
     },
@@ -3355,10 +3567,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7438,
-      "lng": 128.4915,
-      "seaApproachLat": 34.7475,
-      "seaApproachLng": 128.4955,
+      "lat": 34.74724,
+      "lng": 128.48778,
+      "seaApproachLat": 34.74797,
+      "seaApproachLng": 128.48859,
       "description": "[방파제 내측] 수심 2m · 최대 30t · 동측 한산수로 여객선 통항로 인접 항주파 주의",
       "aliases": [
         "호두포구",
@@ -3376,8 +3588,10 @@
         "동측 한산수로 여객선 통항로 인접 항주파 주의"
       ],
       "connectedWaypointIds": [
-        "WP-HANSAN-E",
-        "WP-HANSAN-S"
+        "WP-YONGCHO-N",
+        "WP-AUTO-040",
+        "WP-AUTO-042",
+        "WP-HANSAN-BAY-S"
       ],
       "parentPortId": "KR-GN-TY-0022"
     },
@@ -3387,10 +3601,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7265,
-      "lng": 128.4642,
-      "seaApproachLat": 34.7255,
-      "seaApproachLng": 128.4585,
+      "lat": 34.72467,
+      "lng": 128.46727,
+      "seaApproachLat": 34.72553,
+      "seaApproachLng": 128.46787,
       "description": "[부잔교(폰툰)] 수심 2.4m · 최대 20t · 내항만 입구 서측 간출암 및 정치망 어구 주의",
       "aliases": [
         "비진도 내항포구",
@@ -3408,8 +3622,9 @@
         "내항만 입구 서측 간출암 및 정치망 어구 주의"
       ],
       "connectedWaypointIds": [
+        "WP-BIJIN-E",
         "WP-HANSAN-S",
-        "WP-MIREUK-S"
+        "WP-AUTO-047"
       ],
       "parentPortId": "KR-GN-TY-0022"
     },
@@ -3440,7 +3655,9 @@
         "삼덕-곤리도 구간 가두리 및 굴 양식장 밀집으로 유도 수로 준수"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-W"
+        "WP-MIREUK-W",
+        "WP-AUTO-016",
+        "WP-AUTO-119"
       ],
       "parentPortId": "KR-GN-TY-0002"
     },
@@ -3450,10 +3667,10 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7425,
-      "lng": 128.4115,
-      "seaApproachLat": 34.7465,
-      "seaApproachLng": 128.4095,
+      "lat": 34.7555,
+      "lng": 128.3965,
+      "seaApproachLat": 34.7572,
+      "seaApproachLng": 128.3965,
       "description": "[물양장 안벽] 수심 1.6m · 최대 12t · 학림도-저도-송도 사이 얕은 여밭 및 양식장 로프 주의",
       "aliases": [
         "산양 저도포구",
@@ -3471,7 +3688,13 @@
         "학림도-저도-송도 사이 얕은 여밭 및 양식장 로프 주의"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-S"
+        "WP-MIREUK-S",
+        "WP-MIREUK-SW",
+        "WP-AUTO-031",
+        "WP-AUTO-021",
+        "WP-AUTO-026",
+        "WP-AUTO-030",
+        "WP-AUTO-114"
       ],
       "parentPortId": "KR-GN-TY-0004"
     },
@@ -3502,7 +3725,8 @@
         "송도 북서측 암초 및 가두리 양식장 경계등 확인 필수"
       ],
       "connectedWaypointIds": [
-        "WP-MIREUK-S"
+        "WP-YONGCHO-N",
+        "WP-AUTO-240"
       ],
       "parentPortId": "KR-GN-TY-0004"
     },
@@ -3533,7 +3757,12 @@
         "사량도 카페리 여객선 선회 구역 침범 금지"
       ],
       "connectedWaypointIds": [
-        "WP-SARYANG-N"
+        "WP-SARYANG-N",
+        "WP-SARYANG-E",
+        "WP-JARAN-E",
+        "WP-AUTO-050",
+        "WP-AUTO-020",
+        "WP-AUTO-024"
       ],
       "parentPortId": "KR-GN-TY-0011"
     },
@@ -3543,8 +3772,8 @@
       "region": "통영",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.9525,
-      "lng": 128.4265,
+      "lat": 34.95252,
+      "lng": 128.42952,
       "seaApproachLat": 34.9505,
       "seaApproachLng": 128.4345,
       "description": "[물양장 안벽] 수심 1.8m · 최대 15t · 안정만 LNG 기지 및 조선소 인접 보안 해역 항행 제한 구역 주의",
@@ -3564,8 +3793,12 @@
         "안정만 LNG 기지 및 조선소 인접 보안 해역 항행 제한 구역 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-W",
-        "WP-GAJO-N"
+        "WP-GAJO-E",
+        "WP-AUTO-078",
+        "WP-AUTO-080",
+        "WP-AUTO-077",
+        "WP-AUTO-243",
+        "WP-AUTO-244"
       ],
       "parentPortId": "KR-GN-TY-0014"
     },
@@ -3598,7 +3831,9 @@
       ],
       "connectedWaypointIds": [
         "WP-GYEON-N",
-        "WP-GAJO-W"
+        "WP-AUTO-128",
+        "WP-AUTO-077",
+        "WP-AUTO-125"
       ],
       "parentPortId": "KR-GN-TY-0017"
     },
@@ -3608,8 +3843,8 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.8125,
-      "lng": 128.5345,
+      "lat": 34.81387,
+      "lng": 128.531,
       "seaApproachLat": 34.8145,
       "seaApproachLng": 128.5285,
       "description": "[경사식 슬립웨이] 수심 1.7m · 최대 30t · 산달연륙교 교각 인근 통과 시 형하공간 및 조류 주의",
@@ -3631,7 +3866,11 @@
       ],
       "connectedWaypointIds": [
         "WP-DUNDEOK-W",
-        "WP-GARAN-SW"
+        "WP-AUTO-036",
+        "WP-AUTO-174",
+        "WP-AUTO-173",
+        "WP-AUTO-228",
+        "WP-AUTO-172"
       ],
       "parentPortId": "KR-GN-GJ-0026"
     },
@@ -3662,8 +3901,12 @@
         "산달도 동측 수로 수하식 양식장 밀집으로 주간 저속 진입 필수"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW",
-        "WP-DUNDEOK-W"
+        "WP-SANDAL-E",
+        "WP-AUTO-169",
+        "WP-AUTO-086",
+        "WP-AUTO-094",
+        "WP-AUTO-168",
+        "WP-AUTO-088"
       ],
       "parentPortId": "KR-GN-GJ-0026"
     },
@@ -3694,7 +3937,10 @@
         "산달도 북서측 굴 양식장 뗏목 및 작업선 왕래 주의"
       ],
       "connectedWaypointIds": [
-        "WP-DUNDEOK-W"
+        "WP-DUNDEOK-W",
+        "WP-AUTO-173",
+        "WP-AUTO-036",
+        "WP-AUTO-174"
       ],
       "parentPortId": "KR-GN-GJ-0026"
     },
@@ -3704,10 +3950,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.8495,
-      "lng": 128.4875,
-      "seaApproachLat": 34.8535,
-      "seaApproachLng": 128.4825,
+      "lat": 34.85223,
+      "lng": 128.48069,
+      "seaApproachLat": 34.85312,
+      "seaApproachLng": 128.48017,
       "description": "[경사식 슬립웨이] 수심 1.8m · 최대 80t · 견내량 남측 출구 조류 영향 및 호곡-화도 차도선 항로 중첩 주의",
       "aliases": [
         "둔덕 화도항",
@@ -3725,8 +3971,11 @@
         "견내량 남측 출구 조류 영향 및 호곡-화도 차도선 항로 중첩 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GYEON-S",
-        "WP-DUNDEOK-W"
+        "WP-TY-BAY",
+        "WP-AUTO-002",
+        "WP-DONAM-NE",
+        "WP-AUTO-223",
+        "WP-AUTO-224"
       ],
       "parentPortId": "KR-GN-GJ-0024"
     },
@@ -3758,7 +4007,9 @@
       ],
       "connectedWaypointIds": [
         "WP-GAJO-N",
-        "WP-GYEON-N"
+        "WP-AUTO-081",
+        "WP-AUTO-080",
+        "WP-AUTO-125"
       ],
       "parentPortId": "KR-GN-GJ-0020"
     },
@@ -3789,8 +4040,14 @@
         "황덕교 교량 하부 소형선 외 통항 불가로 북단 외해 우회 필수"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N",
-        "WP-CHILCHEON-W"
+        "WP-CHILCHEON-W",
+        "WP-AUTO-095",
+        "WP-AUTO-096",
+        "WP-AUTO-097",
+        "WP-AUTO-185",
+        "WP-AUTO-181",
+        "WP-AUTO-180",
+        "WP-AUTO-182"
       ],
       "parentPortId": "KR-GN-GJ-0030"
     },
@@ -3822,7 +4079,7 @@
       ],
       "connectedWaypointIds": [
         "WP-CHILCHEON-W",
-        "WP-CHILCHEON-N"
+        "WP-AUTO-095"
       ],
       "parentPortId": "KR-GN-GJ-0029"
     },
@@ -3832,10 +4089,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.9965,
-      "lng": 128.6365,
-      "seaApproachLat": 35.0045,
-      "seaApproachLng": 128.6425,
+      "lat": 34.99893,
+      "lng": 128.63425,
+      "seaApproachLat": 34.99983,
+      "seaApproachLng": 128.63375,
       "description": "[부잔교(폰툰)] 수심 2.2m · 최대 15t · 칠천연륙교 북측 협수로 조류 및 양식 작업선 주의",
       "aliases": [
         "칠천 금곡포구",
@@ -3853,7 +4110,8 @@
         "칠천연륙교 북측 협수로 조류 및 양식 작업선 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N"
+        "WP-AUTO-180",
+        "WP-AUTO-185"
       ],
       "parentPortId": "KR-GN-GJ-0029"
     },
@@ -3884,7 +4142,9 @@
         "성포-가조도 사이 구 도선 항로 해역 양식장 로프 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-N"
+        "WP-GAJO-N",
+        "WP-AUTO-081",
+        "WP-AUTO-082"
       ],
       "parentPortId": "KR-GN-GJ-0021"
     },
@@ -3915,8 +4175,12 @@
         "가조도 서측 죽림만 해역 굴 수하식 양식장 밀집 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GAJO-W",
-        "WP-GAJO-N"
+        "WP-GAJO-E",
+        "WP-AUTO-080",
+        "WP-AUTO-085",
+        "WP-AUTO-243",
+        "WP-AUTO-208",
+        "WP-AUTO-244"
       ],
       "parentPortId": "KR-GN-GJ-0023"
     },
@@ -3926,10 +4190,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 35.0195,
-      "lng": 128.7165,
-      "seaApproachLat": 35.0165,
-      "seaApproachLng": 128.7125,
+      "lat": 35.01992,
+      "lng": 128.71998,
+      "seaApproachLat": 35.01906,
+      "seaApproachLng": 128.72057,
       "description": "[돌제식 선착장] 수심 2.8m · 최대 50t · 거가대교 교각 보호구역 접근 제한 및 허가 선박 외 무단 접안 제한",
       "aliases": [
         "거제 저도항",
@@ -3947,8 +4211,7 @@
         "거가대교 교각 보호구역 접근 제한 및 허가 선박 외 무단 접안 제한"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N",
-        "WP-JANGMOK-E"
+        "WP-AUTO-186"
       ],
       "parentPortId": "KR-GN-GJ-0033"
     },
@@ -3958,8 +4221,8 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.9625,
-      "lng": 128.7162,
+      "lat": 34.96268,
+      "lng": 128.71793,
       "seaApproachLat": 34.9645,
       "seaApproachLng": 128.721,
       "description": "[경사식 슬립웨이] 수심 2m · 최대 35t · 시방-이수도 간 도선 왕복 항로 상시 횡단 주의",
@@ -3979,7 +4242,11 @@
         "시방-이수도 간 도선 왕복 항로 상시 횡단 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JANGMOK-E"
+        "WP-OKPO-E",
+        "WP-AUTO-187",
+        "WP-AUTO-190",
+        "WP-AUTO-232",
+        "WP-AUTO-191"
       ],
       "parentPortId": "KR-GN-GJ-0034"
     },
@@ -4010,7 +4277,11 @@
         "황포만 입구 북서측 수중 암초 및 양식장 부표 주의"
       ],
       "connectedWaypointIds": [
-        "WP-CHILCHEON-N"
+        "WP-CHILCHEON-N",
+        "WP-AUTO-103",
+        "WP-AUTO-183",
+        "WP-AUTO-184",
+        "WP-AUTO-097"
       ],
       "parentPortId": "KR-GN-GJ-0032"
     },
@@ -4020,10 +4291,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.9688,
-      "lng": 128.7268,
-      "seaApproachLat": 34.9715,
-      "seaApproachLng": 128.7295,
+      "lat": 34.96891,
+      "lng": 128.72473,
+      "seaApproachLat": 34.96885,
+      "seaApproachLng": 128.72353,
       "description": "[부잔교(폰툰)] 수심 2.4m · 최대 25t · 이수도 주변 정치망 어장 그물 및 낚시어선 밀집 주의",
       "aliases": [
         "이수도 플로팅피어",
@@ -4041,7 +4312,7 @@
         "이수도 주변 정치망 어장 그물 및 낚시어선 밀집 주의"
       ],
       "connectedWaypointIds": [
-        "WP-JANGMOK-E"
+        "WP-AUTO-188"
       ],
       "parentPortId": "KR-GN-GJ-0035"
     },
@@ -4051,8 +4322,8 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.8182,
-      "lng": 128.7488,
+      "lat": 34.81821,
+      "lng": 128.7477,
       "seaApproachLat": 34.8175,
       "seaApproachLng": 128.7425,
       "description": "[돌제식 선착장] 수심 2.5m · 최대 30t · 남동풍·남서풍 시 외해 너울 유입 및 해안 절벽 암초 주의",
@@ -4073,7 +4344,12 @@
       ],
       "connectedWaypointIds": [
         "WP-JISEPO-E",
-        "WP-JANGSEUNGPO-E"
+        "WP-JANGSEUNGPO-E",
+        "WP-AUTO-167",
+        "WP-AUTO-159",
+        "WP-AUTO-106",
+        "WP-AUTO-162",
+        "WP-AUTO-161"
       ],
       "parentPortId": "KR-GN-GJ-0036"
     },
@@ -4083,10 +4359,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7868,
-      "lng": 128.7142,
-      "seaApproachLat": 34.7855,
-      "seaApproachLng": 128.7095,
+      "lat": 34.78643,
+      "lng": 128.71635,
+      "seaApproachLat": 34.78551,
+      "seaApproachLng": 128.71593,
       "description": "[부잔교(폰툰)] 수심 2.3m · 최대 20t · 구조라-내도 협수로 조류 및 유람선 항로 교차 주의",
       "aliases": [
         "내도 도선장",
@@ -4104,7 +4380,8 @@
         "구조라-내도 협수로 조류 및 유람선 항로 교차 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GUJORA-S"
+        "WP-AUTO-178",
+        "WP-AUTO-218"
       ],
       "parentPortId": "KR-GN-GJ-0037"
     },
@@ -4114,10 +4391,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7698,
-      "lng": 128.7118,
-      "seaApproachLat": 34.7725,
-      "seaApproachLng": 128.7075,
+      "lat": 34.77043,
+      "lng": 128.71344,
+      "seaApproachLat": 34.77122,
+      "seaApproachLng": 128.71272,
       "description": "[돌제식 선착장] 수심 3.2m · 최대 60t · 외해 파랑 노출 구역으로 기상 악화 시 접안 통제",
       "aliases": [
         "외도 동측 잔교",
@@ -4136,8 +4413,10 @@
         "서관도 암초 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GUJORA-S",
-        "WP-HAEGEUMGANG-SE"
+        "WP-AUTO-179",
+        "WP-AUTO-178",
+        "WP-AUTO-107",
+        "WP-AUTO-245"
       ],
       "parentPortId": "KR-GN-GJ-0038"
     },
@@ -4149,8 +4428,8 @@
       "subCategory": "small_berth",
       "lat": 34.8042,
       "lng": 128.6895,
-      "seaApproachLat": 34.7985,
-      "seaApproachLng": 128.6925,
+      "seaApproachLat": 34.80329,
+      "seaApproachLng": 128.68998,
       "description": "[부잔교(폰툰)] 수심 2.4m · 최대 15t · 윤돌도 주변 암초 및 서측 해수욕장 수상레저 구역 주의",
       "aliases": [
         "윤돌도 인근 부잔교",
@@ -4168,7 +4447,9 @@
         "윤돌도 주변 암초 및 서측 해수욕장 수상레저 구역 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GUJORA-S"
+        "WP-AUTO-164",
+        "WP-AUTO-165",
+        "WP-AUTO-216"
       ],
       "parentPortId": "KR-GN-GJ-0008"
     },
@@ -4178,10 +4459,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.7368,
-      "lng": 128.6335,
-      "seaApproachLat": 34.7295,
-      "seaApproachLng": 128.6365,
+      "lat": 34.73532,
+      "lng": 128.63007,
+      "seaApproachLat": 34.73435,
+      "seaApproachLng": 128.63032,
       "description": "[부잔교(폰툰)] 수심 2.2m · 최대 15t · 다대만 입구 수하식 양식장 및 정치망 어장 줄 주의",
       "aliases": [
         "다대마을 부잔교",
@@ -4199,8 +4480,7 @@
         "다대만 입구 수하식 양식장 및 정치망 어장 줄 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GEOJE-S-DADAE",
-        "WP-HAEGEUMGANG-SE"
+        "WP-AUTO-194"
       ],
       "parentPortId": "KR-GN-GJ-0006"
     },
@@ -4231,8 +4511,10 @@
         "쌍근-왕조도 사이 협수로 굴 양식장 뗏목 밀집 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW",
-        "WP-GEOJE-S-DADAE"
+        "WP-AUTO-091",
+        "WP-AUTO-090",
+        "WP-AUTO-092",
+        "WP-AUTO-222"
       ],
       "parentPortId": "KR-GN-GJ-0013"
     },
@@ -4263,8 +4545,11 @@
         "탑포만 내측 간조 시 수심 급감 및 양식장 작업선 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW",
-        "WP-GEOJE-S-DADAE"
+        "WP-AUTO-091",
+        "WP-AUTO-092",
+        "WP-HANSAN-E",
+        "WP-AUTO-222",
+        "WP-AUTO-237"
       ],
       "parentPortId": "KR-GN-GJ-0013"
     },
@@ -4295,7 +4580,10 @@
         "가배만 입구 어구 및 굴 수하식 양식장 밀집 해역 주의"
       ],
       "connectedWaypointIds": [
-        "WP-GARAN-SW"
+        "WP-GARAN-SW",
+        "WP-AUTO-090",
+        "WP-AUTO-091",
+        "WP-AUTO-087"
       ],
       "parentPortId": "KR-GN-GJ-0018"
     },
@@ -4305,10 +4593,10 @@
       "region": "거제",
       "category": "docking",
       "subCategory": "small_berth",
-      "lat": 34.8415,
-      "lng": 128.5285,
-      "seaApproachLat": 34.8355,
-      "seaApproachLng": 128.5245,
+      "lat": 34.83344,
+      "lng": 128.52938,
+      "seaApproachLat": 34.83339,
+      "seaApproachLng": 128.52818,
       "description": "[경사식 슬립웨이] 수심 1.4m · 최대 12t · 둔덕만 내측 간조 시 수심 매우 얕음(1.4m)",
       "aliases": [
         "둔덕 방하포구",
@@ -4327,7 +4615,10 @@
         "굴 패각 작업선 진출입 주의"
       ],
       "connectedWaypointIds": [
-        "WP-DUNDEOK-W"
+        "WP-AUTO-170",
+        "WP-AUTO-172",
+        "WP-AUTO-227",
+        "WP-AUTO-228"
       ],
       "parentPortId": "KR-GN-GJ-0025"
     },
@@ -4359,7 +4650,8 @@
       ],
       "connectedWaypointIds": [
         "WP-GAJO-N",
-        "WP-GYEON-N"
+        "WP-AUTO-081",
+        "WP-AUTO-080"
       ],
       "parentPortId": "KR-GN-GJ-0020"
     }
@@ -4367,26 +4659,33 @@
   "waypoints": [
     {
       "id": "WP-TY-BAY",
-      "name": "통영만 중앙 수로",
-      "lat": 34.828,
-      "lng": 128.438,
+      "name": "통영항 외항 도남동 동북 수로",
+      "lat": 34.8355,
+      "lng": 128.4445,
       "description": "통영항(강구안·서호만·동호만) 앞바다와 한산만·견내량을 연결하는 통영만 중심 해역 변침점",
       "neighbors": [
-        "WP-TY-CANAL-E",
-        "WP-GYEON-S",
-        "WP-HANSAN-N",
-        "WP-MIREUK-E"
+        "WP-MIREUK-E",
+        "WP-DONAM-NE",
+        "WP-AUTO-001",
+        "WP-AUTO-002",
+        "WP-AUTO-004",
+        "WP-AUTO-005",
+        "WP-AUTO-006",
+        "WP-AUTO-015",
+        "WP-AUTO-027",
+        "WP-AUTO-028",
+        "WP-AUTO-076"
       ]
     },
     {
       "id": "WP-TY-CANAL-E",
       "name": "통영운하 동측 진입부",
-      "lat": 34.8315,
-      "lng": 128.4215,
+      "lat": 34.83236,
+      "lng": 128.42476,
       "description": "통영항 서호만 외곽 및 통영대교·충무교 동측 통영운하 진입 수로",
       "neighbors": [
-        "WP-TY-BAY",
-        "WP-TY-CANAL-W"
+        "WP-AUTO-001",
+        "WP-AUTO-005"
       ]
     },
     {
@@ -4396,22 +4695,32 @@
       "lng": 128.396,
       "description": "통영운하(판데목) 서측 출구 해역으로 미륵도 서측(산양), 광도(죽림), 도산 해역으로 분기하는 요충지",
       "neighbors": [
-        "WP-TY-CANAL-E",
-        "WP-MIREUK-W",
-        "WP-GAJO-W",
-        "WP-JARAN-E"
+        "WP-AUTO-008",
+        "WP-AUTO-009",
+        "WP-AUTO-011",
+        "WP-AUTO-013",
+        "WP-AUTO-025",
+        "WP-AUTO-123"
       ]
     },
     {
       "id": "WP-MIREUK-E",
-      "name": "미륵도 동측 영운·연명 수로",
-      "lat": 34.798,
-      "lng": 128.442,
+      "name": "미륵도 동측 영운·수륙 외해 수로",
+      "lat": 34.805,
+      "lng": 128.4495,
       "description": "미륵도 동부 영운항(이운항)·연명항·중화항 앞바다와 한산만을 잇는 연안 수로",
       "neighbors": [
         "WP-TY-BAY",
-        "WP-HANSAN-N",
-        "WP-MIREUK-S"
+        "WP-DONAM-NE",
+        "WP-JESEUNGDANG-W",
+        "WP-MIREUK-SE",
+        "WP-AUTO-014",
+        "WP-AUTO-027",
+        "WP-AUTO-028",
+        "WP-AUTO-037",
+        "WP-AUTO-076",
+        "WP-AUTO-203",
+        "WP-AUTO-207"
       ]
     },
     {
@@ -4421,10 +4730,10 @@
       "lng": 128.372,
       "description": "산양읍 삼덕항(원항)·궁항·세포항 외곽 해역으로 사량도·학림도·욕지도 항로가 교차하는 수로",
       "neighbors": [
-        "WP-TY-CANAL-W",
-        "WP-JARAN-E",
-        "WP-SARYANG-E",
-        "WP-MIREUK-S"
+        "WP-AUTO-016",
+        "WP-AUTO-021",
+        "WP-AUTO-022",
+        "WP-AUTO-119"
       ]
     },
     {
@@ -4434,55 +4743,55 @@
       "lng": 128.398,
       "description": "미륵도 최남단 달아항·학림도·연대도·만지도 인근 해역으로 한산만과 욕지 해역을 연결하는 변침점",
       "neighbors": [
-        "WP-MIREUK-W",
-        "WP-MIREUK-E",
-        "WP-HANSAN-N",
-        "WP-HANSAN-S",
-        "WP-YOKJI-N",
-        "WP-SARYANG-E"
+        "WP-MIREUK-SW",
+        "WP-AUTO-021",
+        "WP-AUTO-026",
+        "WP-AUTO-029",
+        "WP-AUTO-030",
+        "WP-AUTO-031",
+        "WP-AUTO-114"
       ]
     },
     {
       "id": "WP-HANSAN-N",
       "name": "한산만 북측 제승당 수로",
-      "lat": 34.802,
-      "lng": 128.468,
+      "lat": 34.8205,
+      "lng": 128.4785,
       "description": "한산도 제승당항·어의항·화삼항 사이 한산만 북측 중심 수로",
       "neighbors": [
-        "WP-TY-BAY",
-        "WP-MIREUK-E",
-        "WP-MIREUK-S",
-        "WP-GYEON-S",
-        "WP-DUNDEOK-W",
-        "WP-HANSAN-E",
-        "WP-GARAN-SW"
+        "WP-DONAM-NE",
+        "WP-HANSAN-NE",
+        "WP-AUTO-004",
+        "WP-AUTO-015",
+        "WP-AUTO-028",
+        "WP-AUTO-032",
+        "WP-AUTO-033",
+        "WP-AUTO-211",
+        "WP-AUTO-239"
       ]
     },
     {
       "id": "WP-HANSAN-E",
       "name": "한산도 동측 진두·추봉 수로",
-      "lat": 34.762,
-      "lng": 128.518,
+      "lat": 34.75741,
+      "lng": 128.51506,
       "description": "한산도 동남측 진두항·창좌항 및 추봉도 동측 해역으로 거제 남서부(가배·저구)와 비진도를 연결",
       "neighbors": [
-        "WP-HANSAN-N",
-        "WP-HANSAN-S",
-        "WP-GARAN-SW",
-        "WP-GEOJE-S-DADAE"
+        "WP-AUTO-038",
+        "WP-YONGCHO-N",
+        "WP-AUTO-237"
       ]
     },
     {
       "id": "WP-HANSAN-S",
       "name": "한산도 남단 비진도 해역",
-      "lat": 34.712,
-      "lng": 128.465,
+      "lat": 34.7134,
+      "lng": 128.46681,
       "description": "비진도 내항·외항 인근 해역으로 통영항~비진도~매물도 항로의 중간 변침점",
       "neighbors": [
-        "WP-MIREUK-S",
-        "WP-HANSAN-E",
-        "WP-YOKJI-N",
         "WP-MAEMUL-N",
-        "WP-GEOJE-S-DADAE"
+        "WP-BIJIN-E",
+        "WP-AUTO-047"
       ]
     },
     {
@@ -4492,9 +4801,15 @@
       "lng": 128.348,
       "description": "통영시 도산면 저산항·수월항 앞바다와 사량도 북측 해역을 잇는 연안 수로",
       "neighbors": [
-        "WP-TY-CANAL-W",
-        "WP-MIREUK-W",
-        "WP-SARYANG-N"
+        "WP-SARYANG-N",
+        "WP-AUTO-010",
+        "WP-AUTO-020",
+        "WP-AUTO-012",
+        "WP-AUTO-048",
+        "WP-AUTO-011",
+        "WP-AUTO-013",
+        "WP-AUTO-024",
+        "WP-AUTO-025"
       ]
     },
     {
@@ -4506,7 +4821,7 @@
       "neighbors": [
         "WP-JARAN-E",
         "WP-SARYANG-E",
-        "WP-SARYANG-W"
+        "WP-AUTO-050"
       ]
     },
     {
@@ -4517,11 +4832,12 @@
       "description": "사량도 상도·하도 사이 사량대교 동측 해역(진촌항·백학항 진입부) 및 삼덕·욕지 방면 연결 수로",
       "neighbors": [
         "WP-SARYANG-N",
-        "WP-SARYANG-W",
-        "WP-MIREUK-W",
-        "WP-MIREUK-S",
-        "WP-YOKJI-N",
-        "WP-YOKJI-W"
+        "WP-YOKJI-W",
+        "WP-CHUDO-E",
+        "WP-AUTO-029",
+        "WP-AUTO-055",
+        "WP-AUTO-057",
+        "WP-AUTO-059"
       ]
     },
     {
@@ -4531,9 +4847,9 @@
       "lng": 128.202,
       "description": "사량도 서남단 외지항 및 추도 북서측 외해 변침점",
       "neighbors": [
-        "WP-SARYANG-N",
-        "WP-SARYANG-E",
-        "WP-YOKJI-W"
+        "WP-YOKJI-W",
+        "WP-AUTO-054",
+        "WP-AUTO-056"
       ]
     },
     {
@@ -4545,8 +4861,9 @@
       "neighbors": [
         "WP-SARYANG-E",
         "WP-SARYANG-W",
-        "WP-YOKJI-N",
-        "WP-YOKJI-S"
+        "WP-SARYANG-S",
+        "WP-AUTO-061",
+        "WP-AUTO-131"
       ]
     },
     {
@@ -4556,12 +4873,14 @@
       "lng": 128.315,
       "description": "욕지도 북측(도동항) 및 연화도·우도 북서측을 연결하는 다도해 핵심 분기 변침점",
       "neighbors": [
-        "WP-MIREUK-S",
-        "WP-SARYANG-E",
-        "WP-HANSAN-S",
-        "WP-YOKJI-W",
-        "WP-YOKJI-E",
-        "WP-YOKJI-S"
+        "WP-CHUDO-E",
+        "WP-SARYANG-S",
+        "WP-YOKJI-NE",
+        "WP-YEONHWA-E",
+        "WP-AUTO-058",
+        "WP-AUTO-061",
+        "WP-AUTO-062",
+        "WP-AUTO-068"
       ]
     },
     {
@@ -4571,10 +4890,13 @@
       "lng": 128.345,
       "description": "욕지항(동항) 입구와 연화도(연화항)·우도(우도항) 사이 주 여객선 항로 변침점",
       "neighbors": [
-        "WP-YOKJI-N",
-        "WP-YOKJI-S",
-        "WP-MAEMUL-N",
-        "WP-MAEMUL-S"
+        "WP-YOKJI-NE",
+        "WP-YEONHWA-S",
+        "WP-AUTO-064",
+        "WP-AUTO-065",
+        "WP-AUTO-062",
+        "WP-AUTO-068",
+        "WP-AUTO-140"
       ]
     },
     {
@@ -4584,9 +4906,9 @@
       "lng": 128.268,
       "description": "욕지도 최남단 유동항 외곽 해역으로 욕지도 남측 우회 항로를 형성하는 변침점",
       "neighbors": [
-        "WP-YOKJI-W",
-        "WP-YOKJI-N",
-        "WP-YOKJI-E"
+        "WP-YEONHWA-S",
+        "WP-AUTO-063",
+        "WP-AUTO-064"
       ]
     },
     {
@@ -4597,10 +4919,15 @@
       "description": "대매물도(당금항·대항) 북서측 진입 해역으로 한산도(비진도)·거제 남단(저구/다대)과 매물도를 연결",
       "neighbors": [
         "WP-HANSAN-S",
-        "WP-YOKJI-E",
-        "WP-GEOJE-S-DADAE",
         "WP-HAEGEUMGANG-SE",
-        "WP-MAEMUL-S"
+        "WP-BIJIN-E",
+        "WP-YEONHWA-E",
+        "WP-AUTO-067",
+        "WP-AUTO-069",
+        "WP-AUTO-070",
+        "WP-AUTO-072",
+        "WP-AUTO-204",
+        "WP-AUTO-206"
       ]
     },
     {
@@ -4610,9 +4937,8 @@
       "lng": 128.552,
       "description": "소매물도항 및 등대섬 인근 해역 변침점",
       "neighbors": [
-        "WP-MAEMUL-N",
-        "WP-YOKJI-E",
-        "WP-HAEGEUMGANG-SE"
+        "WP-AUTO-071",
+        "WP-AUTO-143"
       ]
     },
     {
@@ -4622,22 +4948,24 @@
       "lng": 128.472,
       "description": "통영 용남면(화삼항·원평항)과 거제 둔덕면(학산항) 사이 견내량 협수로 남측 진입점",
       "neighbors": [
-        "WP-TY-BAY",
-        "WP-HANSAN-N",
-        "WP-GYEON-N",
-        "WP-DUNDEOK-W"
+        "WP-AUTO-003",
+        "WP-AUTO-032",
+        "WP-AUTO-073",
+        "WP-AUTO-076",
+        "WP-AUTO-224"
       ]
     },
     {
       "id": "WP-GYEON-N",
       "name": "견내량 북측 거제대교 출구",
-      "lat": 34.908,
-      "lng": 128.468,
+      "lat": 34.90668,
+      "lng": 128.46423,
       "description": "신거제대교·거제대교 북측 해역으로 광도만(죽림·예포) 및 가조도 서측·성포 해역으로 이어지는 변침점",
       "neighbors": [
-        "WP-GYEON-S",
-        "WP-GAJO-W",
-        "WP-GAJO-N"
+        "WP-AUTO-075",
+        "WP-AUTO-077",
+        "WP-AUTO-128",
+        "WP-AUTO-125"
       ]
     },
     {
@@ -4647,9 +4975,8 @@
       "lng": 128.432,
       "description": "통영시 광도면(죽림항·예포항)과 거제 가조도 서측(창호항) 사이 내만 수로",
       "neighbors": [
-        "WP-TY-CANAL-W",
-        "WP-GYEON-N",
-        "WP-GAJO-N"
+        "WP-AUTO-079",
+        "WP-AUTO-209"
       ]
     },
     {
@@ -4659,22 +4986,21 @@
       "lng": 128.498,
       "description": "거제 사등면 성포항과 가조도 북단(계도항·유교항)을 아우르며 고현만·칠천도로 연결되는 변침점",
       "neighbors": [
-        "WP-GYEON-N",
-        "WP-GAJO-W",
-        "WP-GOHYEON-BAY",
-        "WP-CHILCHEON-W"
+        "WP-AUTO-081",
+        "WP-AUTO-084",
+        "WP-AUTO-085"
       ]
     },
     {
       "id": "WP-DUNDEOK-W",
       "name": "거제 서부 둔덕·거제만 해역",
-      "lat": 34.828,
-      "lng": 128.518,
+      "lat": 34.82174,
+      "lng": 128.52132,
       "description": "거제시 둔덕면(시목항·학산항) 및 거제면(법동항·외간항) 서측 거제만 입구 수로",
       "neighbors": [
-        "WP-GYEON-S",
-        "WP-HANSAN-N",
-        "WP-GARAN-SW"
+        "WP-AUTO-036",
+        "WP-AUTO-173",
+        "WP-AUTO-174"
       ]
     },
     {
@@ -4684,10 +5010,14 @@
       "lng": 128.552,
       "description": "거제시 동부면 가배항·구영항 및 남부면 홍포항 북서측 해역 변침점",
       "neighbors": [
-        "WP-DUNDEOK-W",
-        "WP-HANSAN-N",
-        "WP-HANSAN-E",
-        "WP-GEOJE-S-DADAE"
+        "WP-UIHANG-E",
+        "WP-AUTO-041",
+        "WP-AUTO-087",
+        "WP-AUTO-090",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-046",
+        "WP-AUTO-089"
       ]
     },
     {
@@ -4697,8 +5027,9 @@
       "lng": 128.575,
       "description": "거제 고현항 및 삼성중공업 조선소 해역 진입 수로",
       "neighbors": [
-        "WP-GAJO-N",
-        "WP-CHILCHEON-W"
+        "WP-CHILCHEON-W",
+        "WP-AUTO-083",
+        "WP-AUTO-156"
       ]
     },
     {
@@ -4708,9 +5039,9 @@
       "lng": 128.582,
       "description": "칠천도 서측(어온항·송포항) 및 하청면 해역을 연결하는 진해만 남부 수로",
       "neighbors": [
-        "WP-GAJO-N",
         "WP-GOHYEON-BAY",
-        "WP-CHILCHEON-N"
+        "WP-AUTO-084",
+        "WP-AUTO-095"
       ]
     },
     {
@@ -4720,8 +5051,11 @@
       "lng": 128.652,
       "description": "칠천도 북단(연구항·유계항)과 장목면(장목항·궁농항)을 연결하는 북부 해역 변침점",
       "neighbors": [
-        "WP-CHILCHEON-W",
-        "WP-JANGMOK-E"
+        "WP-AUTO-097",
+        "WP-AUTO-098",
+        "WP-AUTO-103",
+        "WP-AUTO-176",
+        "WP-AUTO-183"
       ]
     },
     {
@@ -4731,8 +5065,10 @@
       "lng": 128.738,
       "description": "거제 북동부 장목면 대금항·외포항·이수도항 앞바다로 거제 동해안 남북 항로의 북측 기점",
       "neighbors": [
-        "WP-CHILCHEON-N",
-        "WP-OKPO-E"
+        "WP-OKPO-E",
+        "WP-AUTO-102",
+        "WP-AUTO-189",
+        "WP-AUTO-191"
       ]
     },
     {
@@ -4743,7 +5079,10 @@
       "description": "옥포항·아주항·덕포항이 위치한 옥포만 입구 동측 해상 변침점",
       "neighbors": [
         "WP-JANGMOK-E",
-        "WP-JANGSEUNGPO-E"
+        "WP-AUTO-105",
+        "WP-AUTO-151",
+        "WP-AUTO-152",
+        "WP-AUTO-153"
       ]
     },
     {
@@ -4753,8 +5092,14 @@
       "lng": 128.758,
       "description": "능포항과 장승포항 동측 외해로 거제 동부 해안 항로의 중심 변침점",
       "neighbors": [
-        "WP-OKPO-E",
-        "WP-JISEPO-E"
+        "WP-JISEPO-E",
+        "WP-OKPO-S",
+        "WP-AUTO-105",
+        "WP-AUTO-146",
+        "WP-AUTO-147",
+        "WP-AUTO-155",
+        "WP-AUTO-162",
+        "WP-AUTO-163"
       ]
     },
     {
@@ -4765,7 +5110,13 @@
       "description": "지세포항 입구와 지심도항, 와현항 북동측을 연결하는 해상 변침점",
       "neighbors": [
         "WP-JANGSEUNGPO-E",
-        "WP-GUJORA-S"
+        "WP-AUTO-106",
+        "WP-AUTO-159",
+        "WP-AUTO-160",
+        "WP-AUTO-161",
+        "WP-AUTO-162",
+        "WP-AUTO-163",
+        "WP-AUTO-167"
       ]
     },
     {
@@ -4775,8 +5126,14 @@
       "lng": 128.698,
       "description": "구조라항·와현항·내도항·외도선착장·학동항·수양항을 연결하는 거제 동남부 핵심 유람선/어선 해역",
       "neighbors": [
-        "WP-JISEPO-E",
-        "WP-HAEGEUMGANG-SE"
+        "WP-HAEGEUMGANG-SE",
+        "WP-HAKDONG-E",
+        "WP-AUTO-107",
+        "WP-AUTO-164",
+        "WP-AUTO-179",
+        "WP-AUTO-166",
+        "WP-AUTO-215",
+        "WP-AUTO-217"
       ]
     },
     {
@@ -4787,9 +5144,12 @@
       "description": "거제 해금강(갈곶도) 및 도장포항·해금강항 남동단 외해 우회 변침점으로 동해안과 남부(다대·저구) 해역을 연결",
       "neighbors": [
         "WP-GUJORA-S",
-        "WP-GEOJE-S-DADAE",
         "WP-MAEMUL-N",
-        "WP-MAEMUL-S"
+        "WP-HAKDONG-E",
+        "WP-AUTO-108",
+        "WP-AUTO-113",
+        "WP-AUTO-219",
+        "WP-AUTO-221"
       ]
     },
     {
@@ -4799,11 +5159,3711 @@
       "lng": 128.595,
       "description": "거제 남부면 다대다포항·저구항·명사항·근포항·대포항·홍포항 외곽을 아우르는 거제 남단 해역 변침점",
       "neighbors": [
-        "WP-HAEGEUMGANG-SE",
-        "WP-GARAN-SW",
+        "WP-AUTO-069",
+        "WP-AUTO-093",
+        "WP-AUTO-112"
+      ]
+    },
+    {
+      "id": "WP-DONAM-NE",
+      "name": "도남동 마리나 동측 수로",
+      "lat": 34.8235,
+      "lng": 128.449,
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-MIREUK-E",
+        "WP-HANSAN-N",
+        "WP-AUTO-076",
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-002",
+        "WP-AUTO-004",
+        "WP-AUTO-015",
+        "WP-AUTO-027",
+        "WP-AUTO-028",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-JESEUNGDANG-W",
+      "name": "한산 제승당 서측 진입 수로",
+      "lat": 34.786,
+      "lng": 128.4585,
+      "neighbors": [
+        "WP-MIREUK-E",
+        "WP-AUTO-037",
+        "WP-DONAM-NE",
+        "WP-MIREUK-SE",
+        "WP-AUTO-014",
+        "WP-AUTO-026",
+        "WP-AUTO-030",
+        "WP-AUTO-203",
+        "WP-AUTO-207"
+      ]
+    },
+    {
+      "id": "WP-MIREUK-SE",
+      "name": "미륵도 남동단 연명·중화 수로",
+      "lat": 34.772,
+      "lng": 128.436,
+      "neighbors": [
+        "WP-MIREUK-E",
+        "WP-YONGCHO-N",
+        "WP-AUTO-026",
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-030",
+        "WP-AUTO-037",
+        "WP-AUTO-207",
+        "WP-AUTO-203",
+        "WP-AUTO-241",
+        "WP-AUTO-242",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-HANSAN-NE",
+      "name": "한산도 북동 의항·창좌 수로",
+      "lat": 34.8165,
+      "lng": 128.5045,
+      "neighbors": [
+        "WP-HANSAN-N",
+        "WP-AUTO-045",
+        "WP-AUTO-033",
+        "WP-AUTO-004",
+        "WP-AUTO-032",
+        "WP-AUTO-211",
+        "WP-AUTO-238",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-YONGCHO-N",
+      "name": "한산·용초도 사이 수로",
+      "lat": 34.7495,
+      "lng": 128.478,
+      "neighbors": [
+        "WP-MIREUK-SE",
+        "WP-AUTO-030",
         "WP-HANSAN-E",
+        "WP-AUTO-038",
+        "WP-AUTO-039",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-BIJIN-E",
+      "name": "비진도 동측 외해 수로",
+      "lat": 34.728,
+      "lng": 128.474,
+      "neighbors": [
         "WP-HANSAN-S",
+        "WP-MAEMUL-N",
+        "WP-AUTO-047"
+      ]
+    },
+    {
+      "id": "WP-HAKRIM-W",
+      "name": "산양 학림·연대·만지 서측 수로",
+      "lat": 34.742,
+      "lng": 128.368,
+      "neighbors": [
+        "WP-CHUDO-E",
+        "WP-AUTO-022",
+        "WP-AUTO-031",
+        "WP-AUTO-114",
+        "WP-AUTO-021",
+        "WP-AUTO-023",
+        "WP-AUTO-029"
+      ]
+    },
+    {
+      "id": "WP-CHUDO-E",
+      "name": "추도·부지도 남서 수로",
+      "lat": 34.715,
+      "lng": 128.365,
+      "neighbors": [
+        "WP-HAKRIM-W",
+        "WP-YOKJI-N",
+        "WP-SARYANG-E",
+        "WP-YEONHWA-E",
+        "WP-AUTO-114"
+      ]
+    },
+    {
+      "id": "WP-MIREUK-SW",
+      "name": "산양 곤리·삼덕 서남 수로",
+      "lat": 34.775,
+      "lng": 128.368,
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-AUTO-023",
+        "WP-AUTO-114",
+        "WP-AUTO-029",
+        "WP-AUTO-031"
+      ]
+    },
+    {
+      "id": "WP-TY-WEST",
+      "name": "통영 평림·풍화 서측 수로",
+      "lat": 34.82655,
+      "lng": 128.3773,
+      "neighbors": [
+        "WP-AUTO-012",
+        "WP-AUTO-121",
+        "WP-AUTO-122"
+      ]
+    },
+    {
+      "id": "WP-INPYEONG-W",
+      "name": "통영 인평·민양 서북 수로",
+      "lat": 34.84356,
+      "lng": 128.38369,
+      "neighbors": [
+        "WP-AUTO-013",
+        "WP-AUTO-049"
+      ]
+    },
+    {
+      "id": "WP-SARYANG-S",
+      "name": "사량도 하도 남단 수로",
+      "lat": 34.795,
+      "lng": 128.248,
+      "neighbors": [
+        "WP-YOKJI-W",
+        "WP-YOKJI-N",
+        "WP-AUTO-060",
+        "WP-AUTO-056",
+        "WP-AUTO-055",
+        "WP-AUTO-144"
+      ]
+    },
+    {
+      "id": "WP-YOKJI-NE",
+      "name": "욕지항 동북 입구 수로",
+      "lat": 34.642,
+      "lng": 128.298,
+      "neighbors": [
+        "WP-YOKJI-N",
+        "WP-YOKJI-E",
+        "WP-AUTO-068",
+        "WP-AUTO-065",
+        "WP-AUTO-116",
+        "WP-AUTO-235"
+      ]
+    },
+    {
+      "id": "WP-YEONHWA-E",
+      "name": "연화도 동두 외해 수로",
+      "lat": 34.642,
+      "lng": 128.395,
+      "neighbors": [
+        "WP-YOKJI-N",
+        "WP-YEONHWA-S",
+        "WP-MAEMUL-N",
+        "WP-CHUDO-E",
+        "WP-AUTO-047",
+        "WP-AUTO-067"
+      ]
+    },
+    {
+      "id": "WP-YEONHWA-S",
+      "name": "연화도 남단 우회 수로",
+      "lat": 34.622,
+      "lng": 128.368,
+      "neighbors": [
+        "WP-YOKJI-E",
+        "WP-YEONHWA-E",
+        "WP-YOKJI-S",
+        "WP-AUTO-065",
+        "WP-AUTO-066"
+      ]
+    },
+    {
+      "id": "WP-MAEMUL-E",
+      "name": "대매물도 동북 외해 수로",
+      "lat": 34.648,
+      "lng": 128.582,
+      "neighbors": [
+        "WP-AUTO-072",
+        "WP-AUTO-113"
+      ]
+    },
+    {
+      "id": "WP-HAKDONG-E",
+      "name": "거제 학동·수양만 동측 수로",
+      "lat": 34.762,
+      "lng": 128.678,
+      "neighbors": [
+        "WP-GUJORA-S",
+        "WP-HAEGEUMGANG-SE",
+        "WP-AUTO-221",
+        "WP-AUTO-166"
+      ]
+    },
+    {
+      "id": "WP-SANDAL-E",
+      "name": "거제만 산달도 남동 수로",
+      "lat": 34.798,
+      "lng": 128.548,
+      "neighbors": [
+        "WP-AUTO-094",
+        "WP-AUTO-086",
+        "WP-UIHANG-E",
+        "WP-AUTO-041",
+        "WP-AUTO-043",
+        "WP-AUTO-045",
+        "WP-AUTO-046",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-168",
+        "WP-AUTO-169",
+        "WP-AUTO-225"
+      ]
+    },
+    {
+      "id": "WP-GAJO-E",
+      "name": "가조도 동측 창호·성포 수로",
+      "lat": 34.932,
+      "lng": 128.485,
+      "neighbors": [
+        "WP-AUTO-085",
+        "WP-AUTO-078",
+        "WP-AUTO-079",
+        "WP-AUTO-080"
+      ]
+    },
+    {
+      "id": "WP-CHILCHEON-E",
+      "name": "칠천도 동측 황덕·송진포 수로",
+      "lat": 34.98887,
+      "lng": 128.6494,
+      "neighbors": [
+        "WP-AUTO-104",
+        "WP-AUTO-175",
+        "WP-AUTO-177"
+      ]
+    },
+    {
+      "id": "WP-OKPO-S",
+      "name": "거제 능포·양지암 동측 외해",
+      "lat": 34.882,
+      "lng": 128.756,
+      "neighbors": [
+        "WP-JANGSEUNGPO-E",
+        "WP-AUTO-105",
+        "WP-AUTO-147",
+        "WP-AUTO-155"
+      ]
+    },
+    {
+      "id": "WP-UIHANG-E",
+      "name": "한산 의항·좌도 남동 수로",
+      "lat": 34.7885,
+      "lng": 128.5135,
+      "description": "한산도 의항·창좌항과 좌도(동좌)·송도 사이 여객선 진입 수로",
+      "neighbors": [
+        "WP-GARAN-SW",
+        "WP-AUTO-046",
+        "WP-AUTO-089",
+        "WP-AUTO-044",
+        "WP-SANDAL-E",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-087"
+      ]
+    },
+    {
+      "id": "WP-AUTO-001",
+      "name": "통영항 우회점 #1",
+      "lat": 34.83464,
+      "lng": 128.42884,
+      "description": "통영항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-TY-CANAL-E",
+        "WP-AUTO-004",
+        "WP-AUTO-005",
+        "WP-AUTO-006",
+        "WP-AUTO-015",
+        "WP-AUTO-028",
+        "WP-AUTO-076"
+      ]
+    },
+    {
+      "id": "WP-AUTO-002",
+      "name": "통영항 우회점 #2",
+      "lat": 34.85007,
+      "lng": 128.46048,
+      "description": "통영항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-AUTO-003",
+        "WP-DONAM-NE",
+        "WP-AUTO-032",
+        "WP-AUTO-076",
+        "WP-AUTO-210",
+        "WP-AUTO-223"
+      ]
+    },
+    {
+      "id": "WP-AUTO-003",
+      "name": "통영항 우회점 #3",
+      "lat": 34.86031,
+      "lng": 128.46932,
+      "description": "통영항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-002",
+        "WP-GYEON-S",
+        "WP-AUTO-073",
+        "WP-AUTO-076",
+        "WP-AUTO-224"
+      ]
+    },
+    {
+      "id": "WP-AUTO-004",
+      "name": "통영항 우회점 #4",
+      "lat": 34.82095,
+      "lng": 128.47186,
+      "description": "통영항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-BAY",
+        "WP-HANSAN-N",
+        "WP-DONAM-NE",
+        "WP-HANSAN-NE",
+        "WP-AUTO-001",
+        "WP-AUTO-005",
+        "WP-AUTO-014",
+        "WP-AUTO-015",
+        "WP-AUTO-027",
+        "WP-AUTO-028",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-AUTO-005",
+      "name": "통영운하 우회점 #5",
+      "lat": 34.83527,
+      "lng": 128.42507,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-CANAL-E",
+        "WP-AUTO-006",
+        "WP-TY-BAY",
+        "WP-AUTO-001",
+        "WP-AUTO-004",
+        "WP-AUTO-076"
+      ]
+    },
+    {
+      "id": "WP-AUTO-006",
+      "name": "통영운하 우회점 #6",
+      "lat": 34.83557,
+      "lng": 128.41965,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-005",
+        "WP-AUTO-007",
+        "WP-TY-BAY",
+        "WP-AUTO-001",
+        "WP-AUTO-076"
+      ]
+    },
+    {
+      "id": "WP-AUTO-007",
+      "name": "통영운하 우회점 #7",
+      "lat": 34.83492,
+      "lng": 128.41089,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-006",
+        "WP-AUTO-008"
+      ]
+    },
+    {
+      "id": "WP-AUTO-008",
+      "name": "통영운하 우회점 #8",
+      "lat": 34.83357,
+      "lng": 128.40667,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-007",
+        "WP-TY-CANAL-W"
+      ]
+    },
+    {
+      "id": "WP-AUTO-009",
+      "name": "통영운하 우회점 #9",
+      "lat": 34.83506,
+      "lng": 128.38162,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-AUTO-010",
+        "WP-AUTO-011",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-025",
+        "WP-AUTO-121",
+        "WP-AUTO-123",
+        "WP-AUTO-124"
+      ]
+    },
+    {
+      "id": "WP-AUTO-010",
+      "name": "통영운하 우회점 #10",
+      "lat": 34.85075,
+      "lng": 128.35631,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-009",
+        "WP-JARAN-E",
+        "WP-AUTO-011",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-024",
+        "WP-AUTO-025",
+        "WP-AUTO-048"
+      ]
+    },
+    {
+      "id": "WP-AUTO-011",
+      "name": "통영운하 우회점 #11",
+      "lat": 34.82989,
+      "lng": 128.38574,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-AUTO-012",
+        "WP-JARAN-E",
+        "WP-AUTO-009",
+        "WP-AUTO-010",
+        "WP-AUTO-013",
+        "WP-AUTO-025",
+        "WP-AUTO-048",
+        "WP-AUTO-122",
+        "WP-AUTO-123"
+      ]
+    },
+    {
+      "id": "WP-AUTO-012",
+      "name": "통영운하 우회점 #12",
+      "lat": 34.82999,
+      "lng": 128.3793,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-011",
+        "WP-TY-WEST",
+        "WP-JARAN-E",
+        "WP-AUTO-013",
+        "WP-AUTO-009",
+        "WP-AUTO-010",
+        "WP-AUTO-025",
+        "WP-AUTO-048",
+        "WP-AUTO-120",
+        "WP-AUTO-121",
+        "WP-AUTO-122",
+        "WP-AUTO-123",
+        "WP-AUTO-124"
+      ]
+    },
+    {
+      "id": "WP-AUTO-013",
+      "name": "통영운하 우회점 #13",
+      "lat": 34.83617,
+      "lng": 128.37843,
+      "description": "통영운하 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-INPYEONG-W",
+        "WP-AUTO-012",
+        "WP-JARAN-E",
+        "WP-AUTO-009",
+        "WP-AUTO-010",
+        "WP-AUTO-011",
+        "WP-AUTO-025",
+        "WP-AUTO-048",
+        "WP-AUTO-049",
+        "WP-AUTO-120",
+        "WP-AUTO-121",
+        "WP-AUTO-123",
+        "WP-AUTO-124"
+      ]
+    },
+    {
+      "id": "WP-AUTO-014",
+      "name": "미륵도 우회점 #14",
+      "lat": 34.81256,
+      "lng": 128.46056,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-E",
+        "WP-AUTO-015",
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-004",
+        "WP-AUTO-027",
+        "WP-AUTO-028",
+        "WP-AUTO-037",
+        "WP-AUTO-076"
+      ]
+    },
+    {
+      "id": "WP-AUTO-015",
+      "name": "미륵도 우회점 #15",
+      "lat": 34.81761,
+      "lng": 128.46715,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-014",
+        "WP-HANSAN-N",
+        "WP-TY-BAY",
+        "WP-DONAM-NE",
+        "WP-AUTO-001",
+        "WP-AUTO-004",
+        "WP-AUTO-027",
+        "WP-AUTO-028",
+        "WP-AUTO-037",
+        "WP-AUTO-076",
+        "WP-AUTO-211"
+      ]
+    },
+    {
+      "id": "WP-AUTO-016",
+      "name": "미륵도 우회점 #16",
+      "lat": 34.79427,
+      "lng": 128.36412,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-W",
+        "WP-AUTO-017",
+        "WP-AUTO-119"
+      ]
+    },
+    {
+      "id": "WP-AUTO-017",
+      "name": "미륵도 우회점 #17",
+      "lat": 34.81784,
+      "lng": 128.33491,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-016",
+        "WP-AUTO-018",
+        "WP-AUTO-118"
+      ]
+    },
+    {
+      "id": "WP-AUTO-018",
+      "name": "미륵도 우회점 #18",
+      "lat": 34.82436,
+      "lng": 128.32978,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-017",
+        "WP-AUTO-019"
+      ]
+    },
+    {
+      "id": "WP-AUTO-019",
+      "name": "미륵도 우회점 #19",
+      "lat": 34.83007,
+      "lng": 128.32893,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-018",
+        "WP-AUTO-020"
+      ]
+    },
+    {
+      "id": "WP-AUTO-020",
+      "name": "미륵도 우회점 #20",
+      "lat": 34.8405,
+      "lng": 128.33569,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-019",
+        "WP-JARAN-E"
+      ]
+    },
+    {
+      "id": "WP-AUTO-021",
+      "name": "미륵도 우회점 #21",
+      "lat": 34.76398,
+      "lng": 128.39348,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-W",
+        "WP-MIREUK-S",
+        "WP-HAKRIM-W",
+        "WP-AUTO-030",
+        "WP-AUTO-031"
+      ]
+    },
+    {
+      "id": "WP-AUTO-022",
+      "name": "미륵도 우회점 #22",
+      "lat": 34.78146,
+      "lng": 128.37501,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-W",
+        "WP-HAKRIM-W",
+        "WP-AUTO-023",
+        "WP-AUTO-031",
+        "WP-AUTO-114"
+      ]
+    },
+    {
+      "id": "WP-AUTO-023",
+      "name": "미륵도 우회점 #23",
+      "lat": 34.77638,
+      "lng": 128.37315,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-022",
+        "WP-MIREUK-SW",
+        "WP-HAKRIM-W",
+        "WP-AUTO-029",
+        "WP-AUTO-114"
+      ]
+    },
+    {
+      "id": "WP-AUTO-024",
+      "name": "미륵도 우회점 #24",
+      "lat": 34.8433,
+      "lng": 128.33836,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-JARAN-E",
+        "WP-AUTO-010",
+        "WP-AUTO-025"
+      ]
+    },
+    {
+      "id": "WP-AUTO-025",
+      "name": "미륵도 우회점 #25",
+      "lat": 34.84245,
+      "lng": 128.35592,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-TY-CANAL-W",
+        "WP-JARAN-E",
+        "WP-AUTO-009",
+        "WP-AUTO-010",
+        "WP-AUTO-011",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-024",
+        "WP-AUTO-048",
+        "WP-AUTO-049",
+        "WP-AUTO-121"
+      ]
+    },
+    {
+      "id": "WP-AUTO-026",
+      "name": "미륵도 우회점 #26",
+      "lat": 34.76126,
+      "lng": 128.42443,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-AUTO-027",
+        "WP-MIREUK-SE",
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-030",
+        "WP-AUTO-031",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-027",
+      "name": "미륵도 우회점 #27",
+      "lat": 34.81352,
+      "lng": 128.46456,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-026",
+        "WP-AUTO-028",
+        "WP-AUTO-037",
+        "WP-TY-BAY",
+        "WP-MIREUK-E",
+        "WP-DONAM-NE",
+        "WP-AUTO-004",
+        "WP-AUTO-014",
+        "WP-AUTO-015",
+        "WP-AUTO-076"
+      ]
+    },
+    {
+      "id": "WP-AUTO-028",
+      "name": "미륵도 우회점 #28",
+      "lat": 34.8189,
+      "lng": 128.46984,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-027",
+        "WP-HANSAN-N",
+        "WP-TY-BAY",
+        "WP-MIREUK-E",
+        "WP-DONAM-NE",
+        "WP-AUTO-001",
+        "WP-AUTO-004",
+        "WP-AUTO-014",
+        "WP-AUTO-015",
+        "WP-AUTO-076",
+        "WP-AUTO-211",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-AUTO-029",
+      "name": "미륵도 우회점 #29",
+      "lat": 34.76997,
+      "lng": 128.3651,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-SARYANG-E",
+        "WP-HAKRIM-W",
+        "WP-MIREUK-SW",
+        "WP-AUTO-023",
+        "WP-AUTO-031"
+      ]
+    },
+    {
+      "id": "WP-AUTO-030",
+      "name": "미륵도 우회점 #30",
+      "lat": 34.75598,
+      "lng": 128.42618,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-YONGCHO-N",
+        "WP-JESEUNGDANG-W",
+        "WP-MIREUK-SE",
+        "WP-AUTO-021",
+        "WP-AUTO-026",
+        "WP-AUTO-242",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-031",
+      "name": "미륵도 우회점 #31",
+      "lat": 34.75598,
+      "lng": 128.39425,
+      "description": "미륵도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-S",
+        "WP-HAKRIM-W",
+        "WP-MIREUK-SW",
+        "WP-AUTO-021",
+        "WP-AUTO-022",
+        "WP-AUTO-026",
+        "WP-AUTO-029",
+        "WP-AUTO-114"
+      ]
+    },
+    {
+      "id": "WP-AUTO-032",
+      "name": "한산만 우회점 #32",
+      "lat": 34.82571,
+      "lng": 128.48042,
+      "description": "한산만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HANSAN-N",
+        "WP-GYEON-S",
+        "WP-HANSAN-NE",
+        "WP-AUTO-002",
+        "WP-AUTO-033",
+        "WP-AUTO-210",
+        "WP-AUTO-211",
+        "WP-AUTO-224",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-AUTO-033",
+      "name": "한산만 우회점 #33",
+      "lat": 34.80912,
+      "lng": 128.50899,
+      "description": "한산만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HANSAN-N",
+        "WP-AUTO-034",
+        "WP-HANSAN-NE",
+        "WP-AUTO-087",
+        "WP-AUTO-086",
+        "WP-AUTO-032",
+        "WP-AUTO-045",
+        "WP-AUTO-094",
+        "WP-AUTO-211",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-AUTO-034",
+      "name": "한산만 우회점 #34",
+      "lat": 34.80803,
+      "lng": 128.51603,
+      "description": "한산만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-033",
+        "WP-AUTO-035",
+        "WP-AUTO-044",
+        "WP-AUTO-045",
+        "WP-AUTO-088",
+        "WP-AUTO-094"
+      ]
+    },
+    {
+      "id": "WP-AUTO-035",
+      "name": "한산만 우회점 #35",
+      "lat": 34.80862,
+      "lng": 128.51801,
+      "description": "한산만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-034",
+        "WP-AUTO-036",
+        "WP-AUTO-086",
+        "WP-AUTO-088",
+        "WP-AUTO-094",
+        "WP-AUTO-172",
+        "WP-AUTO-173",
+        "WP-AUTO-174",
+        "WP-AUTO-227",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-036",
+      "name": "한산만 우회점 #36",
+      "lat": 34.81626,
+      "lng": 128.52493,
+      "description": "한산만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-035",
+        "WP-DUNDEOK-W",
+        "WP-AUTO-086",
+        "WP-AUTO-088",
+        "WP-AUTO-044",
+        "WP-AUTO-174",
+        "WP-AUTO-172",
+        "WP-AUTO-173",
+        "WP-AUTO-227",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-037",
+      "name": "한산만 우회점 #37",
+      "lat": 34.80573,
+      "lng": 128.46004,
+      "description": "한산만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-027",
+        "WP-JESEUNGDANG-W",
+        "WP-MIREUK-E",
+        "WP-MIREUK-SE",
+        "WP-AUTO-014",
+        "WP-AUTO-015",
+        "WP-AUTO-207"
+      ]
+    },
+    {
+      "id": "WP-AUTO-038",
+      "name": "한산도 우회점 #38",
+      "lat": 34.75776,
+      "lng": 128.50986,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HANSAN-E",
+        "WP-AUTO-039",
+        "WP-YONGCHO-N",
+        "WP-AUTO-237"
+      ]
+    },
+    {
+      "id": "WP-AUTO-039",
+      "name": "한산도 우회점 #39",
+      "lat": 34.75882,
+      "lng": 128.50676,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-038",
+        "WP-AUTO-040",
+        "WP-AUTO-042",
+        "WP-YONGCHO-N",
+        "WP-AUTO-088",
+        "WP-AUTO-089"
+      ]
+    },
+    {
+      "id": "WP-AUTO-040",
+      "name": "한산도 우회점 #40",
+      "lat": 34.76603,
+      "lng": 128.50929,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-039",
+        "WP-AUTO-041",
+        "WP-YONGCHO-N",
+        "WP-AUTO-042",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-094",
+        "WP-CHUBONG-CHANNEL"
+      ]
+    },
+    {
+      "id": "WP-AUTO-041",
+      "name": "한산도 우회점 #41",
+      "lat": 34.76744,
+      "lng": 128.5133,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-040",
+        "WP-GARAN-SW",
+        "WP-YONGCHO-N",
+        "WP-SANDAL-E",
+        "WP-UIHANG-E",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-044",
+        "WP-AUTO-046",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-094",
+        "WP-CHUBONG-CHANNEL"
+      ]
+    },
+    {
+      "id": "WP-AUTO-042",
+      "name": "한산도 우회점 #42",
+      "lat": 34.76796,
+      "lng": 128.50996,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-039",
+        "WP-GARAN-SW",
+        "WP-UIHANG-E",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-094",
+        "WP-CHUBONG-CHANNEL"
+      ]
+    },
+    {
+      "id": "WP-AUTO-043",
+      "name": "한산도 우회점 #43",
+      "lat": 34.77613,
+      "lng": 128.51111,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-044",
+        "WP-GARAN-SW",
+        "WP-SANDAL-E",
+        "WP-UIHANG-E",
+        "WP-AUTO-041",
+        "WP-AUTO-046",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-090",
+        "WP-AUTO-094",
+        "WP-CHUBONG-CHANNEL"
+      ]
+    },
+    {
+      "id": "WP-AUTO-044",
+      "name": "한산도 우회점 #44",
+      "lat": 34.79581,
+      "lng": 128.5096,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-043",
+        "WP-AUTO-045",
+        "WP-UIHANG-E",
+        "WP-AUTO-034",
+        "WP-AUTO-036",
+        "WP-AUTO-041",
+        "WP-AUTO-046",
+        "WP-AUTO-174"
+      ]
+    },
+    {
+      "id": "WP-AUTO-045",
+      "name": "한산도 우회점 #45",
+      "lat": 34.79936,
+      "lng": 128.51131,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-044",
+        "WP-HANSAN-NE",
+        "WP-SANDAL-E",
+        "WP-AUTO-033",
+        "WP-AUTO-034",
+        "WP-AUTO-086",
+        "WP-AUTO-172",
+        "WP-AUTO-174",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-046",
+      "name": "한산도 우회점 #46",
+      "lat": 34.77847,
+      "lng": 128.51211,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-UIHANG-E",
+        "WP-GARAN-SW",
+        "WP-SANDAL-E",
+        "WP-AUTO-041",
+        "WP-AUTO-043",
+        "WP-AUTO-044",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-090",
+        "WP-AUTO-094",
+        "WP-CHUBONG-CHANNEL"
+      ]
+    },
+    {
+      "id": "WP-AUTO-047",
+      "name": "한산도 우회점 #47",
+      "lat": 34.7078,
+      "lng": 128.46802,
+      "description": "한산도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HANSAN-S",
+        "WP-YEONHWA-E",
+        "WP-BIJIN-E"
+      ]
+    },
+    {
+      "id": "WP-AUTO-048",
+      "name": "도산·자란만 우회점 #48",
+      "lat": 34.84032,
+      "lng": 128.37511,
+      "description": "도산·자란만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-JARAN-E",
+        "WP-AUTO-049",
+        "WP-AUTO-010",
+        "WP-AUTO-011",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-025",
+        "WP-AUTO-120",
+        "WP-AUTO-121",
+        "WP-AUTO-124"
+      ]
+    },
+    {
+      "id": "WP-AUTO-049",
+      "name": "도산·자란만 우회점 #49",
+      "lat": 34.83916,
+      "lng": 128.38169,
+      "description": "도산·자란만 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-048",
+        "WP-INPYEONG-W",
+        "WP-AUTO-013",
+        "WP-AUTO-025"
+      ]
+    },
+    {
+      "id": "WP-AUTO-050",
+      "name": "사량도 우회점 #50",
+      "lat": 34.84254,
+      "lng": 128.22988,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-SARYANG-N",
+        "WP-AUTO-051"
+      ]
+    },
+    {
+      "id": "WP-AUTO-051",
+      "name": "사량도 우회점 #51",
+      "lat": 34.83918,
+      "lng": 128.21979,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-050",
+        "WP-AUTO-052"
+      ]
+    },
+    {
+      "id": "WP-AUTO-052",
+      "name": "사량도 우회점 #52",
+      "lat": 34.83863,
+      "lng": 128.21578,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-051",
+        "WP-AUTO-053"
+      ]
+    },
+    {
+      "id": "WP-AUTO-053",
+      "name": "사량도 우회점 #53",
+      "lat": 34.82613,
+      "lng": 128.20063,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-052",
+        "WP-AUTO-054"
+      ]
+    },
+    {
+      "id": "WP-AUTO-054",
+      "name": "사량도 우회점 #54",
+      "lat": 34.81983,
+      "lng": 128.19873,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-053",
+        "WP-SARYANG-W"
+      ]
+    },
+    {
+      "id": "WP-AUTO-055",
+      "name": "사량도 우회점 #55",
+      "lat": 34.7996,
+      "lng": 128.24914,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-SARYANG-E",
+        "WP-AUTO-056",
+        "WP-SARYANG-S",
+        "WP-AUTO-059",
+        "WP-AUTO-060"
+      ]
+    },
+    {
+      "id": "WP-AUTO-056",
+      "name": "사량도 우회점 #56",
+      "lat": 34.79429,
+      "lng": 128.24291,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-055",
+        "WP-SARYANG-W",
+        "WP-SARYANG-S",
+        "WP-AUTO-060"
+      ]
+    },
+    {
+      "id": "WP-AUTO-057",
+      "name": "사량도 우회점 #57",
+      "lat": 34.755,
+      "lng": 128.28658,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-SARYANG-E",
+        "WP-AUTO-058"
+      ]
+    },
+    {
+      "id": "WP-AUTO-058",
+      "name": "사량도 우회점 #58",
+      "lat": 34.75097,
+      "lng": 128.28783,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-057",
+        "WP-YOKJI-N"
+      ]
+    },
+    {
+      "id": "WP-AUTO-059",
+      "name": "사량도 우회점 #59",
+      "lat": 34.81002,
+      "lng": 128.2621,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-SARYANG-E",
+        "WP-AUTO-060",
+        "WP-AUTO-055"
+      ]
+    },
+    {
+      "id": "WP-AUTO-060",
+      "name": "사량도 우회점 #60",
+      "lat": 34.80623,
+      "lng": 128.25598,
+      "description": "사량도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-059",
+        "WP-SARYANG-S",
+        "WP-AUTO-055",
+        "WP-AUTO-056"
+      ]
+    },
+    {
+      "id": "WP-AUTO-061",
+      "name": "욕지도 우회점 #61",
+      "lat": 34.68339,
+      "lng": 128.2565,
+      "description": "욕지도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-YOKJI-W",
+        "WP-YOKJI-N",
+        "WP-AUTO-134",
+        "WP-AUTO-214"
+      ]
+    },
+    {
+      "id": "WP-AUTO-062",
+      "name": "욕지도 우회점 #62",
+      "lat": 34.63262,
+      "lng": 128.2972,
+      "description": "욕지도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-YOKJI-N",
+        "WP-AUTO-063",
+        "WP-AUTO-068",
+        "WP-YOKJI-E",
+        "WP-AUTO-064"
+      ]
+    },
+    {
+      "id": "WP-AUTO-063",
+      "name": "욕지도 우회점 #63",
+      "lat": 34.62061,
+      "lng": 128.2909,
+      "description": "욕지도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-062",
+        "WP-YOKJI-S",
+        "WP-AUTO-064"
+      ]
+    },
+    {
+      "id": "WP-AUTO-064",
+      "name": "욕지항·연화항 우회점 #64",
+      "lat": 34.62618,
+      "lng": 128.30186,
+      "description": "욕지항·연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-YOKJI-E",
+        "WP-YOKJI-S",
+        "WP-AUTO-062",
+        "WP-AUTO-063",
+        "WP-AUTO-065",
+        "WP-AUTO-068"
+      ]
+    },
+    {
+      "id": "WP-AUTO-065",
+      "name": "욕지항·연화항 우회점 #65",
+      "lat": 34.639,
+      "lng": 128.34991,
+      "description": "욕지항·연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-YOKJI-E",
+        "WP-AUTO-066",
+        "WP-YOKJI-NE",
+        "WP-YEONHWA-S",
+        "WP-AUTO-064",
+        "WP-AUTO-068"
+      ]
+    },
+    {
+      "id": "WP-AUTO-066",
+      "name": "욕지항·연화항 우회점 #66",
+      "lat": 34.6347,
+      "lng": 128.37584,
+      "description": "욕지항·연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-065",
+        "WP-AUTO-067",
+        "WP-YEONHWA-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-067",
+      "name": "욕지항·연화항 우회점 #67",
+      "lat": 34.63475,
+      "lng": 128.37889,
+      "description": "욕지항·연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-066",
+        "WP-MAEMUL-N",
+        "WP-YEONHWA-E"
+      ]
+    },
+    {
+      "id": "WP-AUTO-068",
+      "name": "욕지도 우회점 #68",
+      "lat": 34.64005,
+      "lng": 128.30019,
+      "description": "욕지도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-062",
+        "WP-YOKJI-NE",
+        "WP-YOKJI-N",
+        "WP-YOKJI-E",
+        "WP-AUTO-064",
+        "WP-AUTO-065",
+        "WP-AUTO-116"
+      ]
+    },
+    {
+      "id": "WP-AUTO-069",
+      "name": "매물도 우회점 #69",
+      "lat": 34.68528,
+      "lng": 128.5745,
+      "description": "매물도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MAEMUL-N",
+        "WP-GEOJE-S-DADAE",
+        "WP-AUTO-092",
+        "WP-AUTO-093"
+      ]
+    },
+    {
+      "id": "WP-AUTO-070",
+      "name": "매물도 우회점 #70",
+      "lat": 34.62967,
+      "lng": 128.55637,
+      "description": "매물도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MAEMUL-N",
+        "WP-AUTO-071"
+      ]
+    },
+    {
+      "id": "WP-AUTO-071",
+      "name": "매물도 우회점 #71",
+      "lat": 34.62529,
+      "lng": 128.55496,
+      "description": "매물도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-070",
+        "WP-MAEMUL-S",
+        "WP-AUTO-143"
+      ]
+    },
+    {
+      "id": "WP-AUTO-072",
+      "name": "매물도 우회점 #72",
+      "lat": 34.65049,
+      "lng": 128.58022,
+      "description": "매물도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MAEMUL-N",
+        "WP-MAEMUL-E",
+        "WP-AUTO-206"
+      ]
+    },
+    {
+      "id": "WP-AUTO-073",
+      "name": "견내량 우회점 #73",
+      "lat": 34.87273,
+      "lng": 128.47091,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GYEON-S",
+        "WP-AUTO-074",
+        "WP-AUTO-003"
+      ]
+    },
+    {
+      "id": "WP-AUTO-074",
+      "name": "견내량 우회점 #74",
+      "lat": 34.88398,
+      "lng": 128.47491,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-073",
+        "WP-AUTO-075"
+      ]
+    },
+    {
+      "id": "WP-AUTO-075",
+      "name": "견내량 우회점 #75",
+      "lat": 34.88633,
+      "lng": 128.47885,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-074",
+        "WP-GYEON-N",
+        "WP-AUTO-125"
+      ]
+    },
+    {
+      "id": "WP-AUTO-076",
+      "name": "견내량 우회점 #76",
+      "lat": 34.83608,
+      "lng": 128.45449,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GYEON-S",
+        "WP-DONAM-NE",
+        "WP-TY-BAY",
+        "WP-MIREUK-E",
+        "WP-AUTO-001",
+        "WP-AUTO-002",
+        "WP-AUTO-003",
+        "WP-AUTO-005",
+        "WP-AUTO-006",
+        "WP-AUTO-014",
+        "WP-AUTO-015",
+        "WP-AUTO-027",
+        "WP-AUTO-028"
+      ]
+    },
+    {
+      "id": "WP-AUTO-077",
+      "name": "견내량 우회점 #77",
+      "lat": 34.91429,
+      "lng": 128.45436,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GYEON-N",
+        "WP-AUTO-078",
+        "WP-AUTO-080",
+        "WP-AUTO-085",
+        "WP-AUTO-125",
+        "WP-AUTO-128",
+        "WP-AUTO-208",
+        "WP-AUTO-209"
+      ]
+    },
+    {
+      "id": "WP-AUTO-078",
+      "name": "견내량 우회점 #78",
+      "lat": 34.91615,
+      "lng": 128.45061,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-077",
+        "WP-AUTO-079",
+        "WP-GAJO-E",
+        "WP-AUTO-080",
+        "WP-AUTO-085",
+        "WP-AUTO-208",
+        "WP-AUTO-209",
+        "WP-AUTO-243",
+        "WP-AUTO-244"
+      ]
+    },
+    {
+      "id": "WP-AUTO-079",
+      "name": "견내량 우회점 #79",
+      "lat": 34.91413,
+      "lng": 128.44006,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-078",
+        "WP-GAJO-W",
+        "WP-GAJO-E",
+        "WP-AUTO-080",
+        "WP-AUTO-085",
+        "WP-AUTO-209"
+      ]
+    },
+    {
+      "id": "WP-AUTO-080",
+      "name": "견내량 우회점 #80",
+      "lat": 34.92185,
+      "lng": 128.46465,
+      "description": "견내량 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GAJO-E",
+        "WP-AUTO-077",
+        "WP-AUTO-078",
+        "WP-AUTO-079",
+        "WP-AUTO-085",
+        "WP-AUTO-209",
+        "WP-AUTO-243"
+      ]
+    },
+    {
+      "id": "WP-AUTO-081",
+      "name": "가조도 우회점 #81",
+      "lat": 34.92999,
+      "lng": 128.51752,
+      "description": "가조도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GAJO-N",
+        "WP-AUTO-082"
+      ]
+    },
+    {
+      "id": "WP-AUTO-082",
+      "name": "가조도 우회점 #82",
+      "lat": 34.92797,
+      "lng": 128.5228,
+      "description": "가조도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-081",
+        "WP-AUTO-083"
+      ]
+    },
+    {
+      "id": "WP-AUTO-083",
+      "name": "가조도 우회점 #83",
+      "lat": 34.92762,
+      "lng": 128.52765,
+      "description": "가조도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-082",
+        "WP-GOHYEON-BAY"
+      ]
+    },
+    {
+      "id": "WP-AUTO-084",
+      "name": "가조도 우회점 #84",
+      "lat": 34.97571,
+      "lng": 128.51743,
+      "description": "가조도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GAJO-N",
+        "WP-CHILCHEON-W"
+      ]
+    },
+    {
+      "id": "WP-AUTO-085",
+      "name": "가조도 우회점 #85",
+      "lat": 34.93453,
+      "lng": 128.48365,
+      "description": "가조도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GAJO-N",
+        "WP-GAJO-E",
+        "WP-AUTO-077",
+        "WP-AUTO-078",
+        "WP-AUTO-079",
+        "WP-AUTO-080"
+      ]
+    },
+    {
+      "id": "WP-AUTO-086",
+      "name": "거제 우회점 #86",
+      "lat": 34.80177,
+      "lng": 128.52761,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-036",
+        "WP-AUTO-087",
+        "WP-AUTO-033",
+        "WP-SANDAL-E",
+        "WP-AUTO-035",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-045",
+        "WP-AUTO-046",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-094",
+        "WP-AUTO-168",
+        "WP-AUTO-169"
+      ]
+    },
+    {
+      "id": "WP-AUTO-087",
+      "name": "거제 우회점 #87",
+      "lat": 34.77497,
+      "lng": 128.54152,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-086",
+        "WP-GARAN-SW",
+        "WP-AUTO-033",
+        "WP-AUTO-094",
+        "WP-UIHANG-E",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-046",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-090"
+      ]
+    },
+    {
+      "id": "WP-AUTO-088",
+      "name": "거제 우회점 #88",
+      "lat": 34.79423,
+      "lng": 128.52196,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-036",
+        "WP-AUTO-089",
+        "WP-SANDAL-E",
+        "WP-AUTO-034",
+        "WP-AUTO-035",
+        "WP-AUTO-039",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-046",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-094",
+        "WP-AUTO-169",
+        "WP-AUTO-173"
+      ]
+    },
+    {
+      "id": "WP-AUTO-089",
+      "name": "거제 우회점 #89",
+      "lat": 34.79122,
+      "lng": 128.52032,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-088",
+        "WP-UIHANG-E",
+        "WP-GARAN-SW",
+        "WP-SANDAL-E",
+        "WP-AUTO-039",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-046",
+        "WP-AUTO-086",
+        "WP-AUTO-087",
+        "WP-AUTO-169"
+      ]
+    },
+    {
+      "id": "WP-AUTO-090",
+      "name": "거제 우회점 #90",
+      "lat": 34.76077,
+      "lng": 128.55916,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GARAN-SW",
+        "WP-AUTO-091",
+        "WP-AUTO-043",
+        "WP-AUTO-046",
+        "WP-AUTO-087"
+      ]
+    },
+    {
+      "id": "WP-AUTO-091",
+      "name": "거제 우회점 #91",
+      "lat": 34.75598,
+      "lng": 128.56178,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-090",
+        "WP-AUTO-092"
+      ]
+    },
+    {
+      "id": "WP-AUTO-092",
+      "name": "거제 우회점 #92",
+      "lat": 34.70907,
+      "lng": 128.56603,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-091",
+        "WP-AUTO-093",
+        "WP-AUTO-069",
+        "WP-AUTO-222"
+      ]
+    },
+    {
+      "id": "WP-AUTO-093",
+      "name": "거제 우회점 #93",
+      "lat": 34.70146,
+      "lng": 128.57832,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-092",
+        "WP-GEOJE-S-DADAE",
+        "WP-AUTO-069",
+        "WP-AUTO-110",
+        "WP-AUTO-111",
+        "WP-AUTO-112"
+      ]
+    },
+    {
+      "id": "WP-AUTO-094",
+      "name": "거제 우회점 #94",
+      "lat": 34.78701,
+      "lng": 128.53752,
+      "description": "거제 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-087",
+        "WP-SANDAL-E",
+        "WP-AUTO-033",
+        "WP-AUTO-034",
+        "WP-AUTO-035",
+        "WP-AUTO-040",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-043",
+        "WP-AUTO-046",
+        "WP-AUTO-086",
+        "WP-AUTO-088",
+        "WP-AUTO-169"
+      ]
+    },
+    {
+      "id": "WP-AUTO-095",
+      "name": "칠천도 우회점 #95",
+      "lat": 35.01333,
+      "lng": 128.62175,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-CHILCHEON-W",
+        "WP-AUTO-096",
+        "WP-AUTO-185",
+        "WP-AUTO-180",
+        "WP-AUTO-181",
+        "WP-AUTO-182"
+      ]
+    },
+    {
+      "id": "WP-AUTO-096",
+      "name": "칠천도 우회점 #96",
+      "lat": 35.02013,
+      "lng": 128.63791,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-095",
+        "WP-AUTO-097",
+        "WP-AUTO-098",
+        "WP-AUTO-181",
+        "WP-AUTO-182",
+        "WP-AUTO-185"
+      ]
+    },
+    {
+      "id": "WP-AUTO-097",
+      "name": "칠천도 우회점 #97",
+      "lat": 35.02338,
+      "lng": 128.64861,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-096",
+        "WP-CHILCHEON-N",
+        "WP-AUTO-098",
+        "WP-AUTO-182",
+        "WP-AUTO-183",
+        "WP-AUTO-176"
+      ]
+    },
+    {
+      "id": "WP-AUTO-098",
+      "name": "칠천도 우회점 #98",
+      "lat": 35.04136,
+      "lng": 128.67474,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-CHILCHEON-N",
+        "WP-AUTO-099",
+        "WP-AUTO-096",
+        "WP-AUTO-097",
+        "WP-AUTO-103",
+        "WP-AUTO-183"
+      ]
+    },
+    {
+      "id": "WP-AUTO-099",
+      "name": "칠천도 우회점 #99",
+      "lat": 35.03975,
+      "lng": 128.6853,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-098",
+        "WP-AUTO-100"
+      ]
+    },
+    {
+      "id": "WP-AUTO-100",
+      "name": "칠천도 우회점 #100",
+      "lat": 35.03758,
+      "lng": 128.69844,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-099",
+        "WP-AUTO-101"
+      ]
+    },
+    {
+      "id": "WP-AUTO-101",
+      "name": "칠천도 우회점 #101",
+      "lat": 35.03275,
+      "lng": 128.71321,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-100",
+        "WP-AUTO-102"
+      ]
+    },
+    {
+      "id": "WP-AUTO-102",
+      "name": "칠천도 우회점 #102",
+      "lat": 35.02515,
+      "lng": 128.72139,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-101",
+        "WP-JANGMOK-E",
+        "WP-AUTO-187"
+      ]
+    },
+    {
+      "id": "WP-AUTO-103",
+      "name": "칠천도 우회점 #103",
+      "lat": 35.01385,
+      "lng": 128.65501,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-CHILCHEON-N",
+        "WP-AUTO-104",
+        "WP-AUTO-098",
+        "WP-AUTO-175",
+        "WP-AUTO-183",
+        "WP-AUTO-184",
+        "WP-AUTO-176"
+      ]
+    },
+    {
+      "id": "WP-AUTO-104",
+      "name": "칠천도 우회점 #104",
+      "lat": 34.99477,
+      "lng": 128.65314,
+      "description": "칠천도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-103",
+        "WP-CHILCHEON-E",
+        "WP-AUTO-177",
+        "WP-AUTO-184"
+      ]
+    },
+    {
+      "id": "WP-AUTO-105",
+      "name": "옥포만·덕포 우회점 #105",
+      "lat": 34.89427,
+      "lng": 128.7537,
+      "description": "옥포만·덕포 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-OKPO-E",
+        "WP-JANGSEUNGPO-E",
+        "WP-OKPO-S",
+        "WP-AUTO-154",
+        "WP-AUTO-155"
+      ]
+    },
+    {
+      "id": "WP-AUTO-106",
+      "name": "지세포·지심도 우회점 #106",
+      "lat": 34.79217,
+      "lng": 128.74077,
+      "description": "지세포·지심도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-JISEPO-E",
+        "WP-AUTO-107",
+        "WP-AUTO-167"
+      ]
+    },
+    {
+      "id": "WP-AUTO-107",
+      "name": "지세포·지심도 우회점 #107",
+      "lat": 34.78646,
+      "lng": 128.74107,
+      "description": "지세포·지심도 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-106",
+        "WP-GUJORA-S",
+        "WP-AUTO-166",
+        "WP-AUTO-179",
+        "WP-AUTO-245"
+      ]
+    },
+    {
+      "id": "WP-AUTO-108",
+      "name": "해금강(갈곶도) 우회점 #108",
+      "lat": 34.71254,
+      "lng": 128.64518,
+      "description": "해금강(갈곶도) 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HAEGEUMGANG-SE",
+        "WP-AUTO-109",
+        "WP-AUTO-194",
+        "WP-AUTO-195",
+        "WP-AUTO-196",
+        "WP-AUTO-219",
+        "WP-AUTO-220"
+      ]
+    },
+    {
+      "id": "WP-AUTO-109",
+      "name": "해금강(갈곶도) 우회점 #109",
+      "lat": 34.70886,
+      "lng": 128.63731,
+      "description": "해금강(갈곶도) 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-108",
+        "WP-AUTO-110",
+        "WP-AUTO-113",
+        "WP-AUTO-196"
+      ]
+    },
+    {
+      "id": "WP-AUTO-110",
+      "name": "해금강(갈곶도) 우회점 #110",
+      "lat": 34.70134,
+      "lng": 128.61136,
+      "description": "해금강(갈곶도) 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-109",
+        "WP-AUTO-111",
+        "WP-AUTO-093",
+        "WP-AUTO-113"
+      ]
+    },
+    {
+      "id": "WP-AUTO-111",
+      "name": "해금강(갈곶도) 우회점 #111",
+      "lat": 34.70109,
+      "lng": 128.60788,
+      "description": "해금강(갈곶도) 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-110",
+        "WP-AUTO-112",
+        "WP-AUTO-093"
+      ]
+    },
+    {
+      "id": "WP-AUTO-112",
+      "name": "해금강(갈곶도) 우회점 #112",
+      "lat": 34.70333,
+      "lng": 128.59985,
+      "description": "해금강(갈곶도) 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-111",
+        "WP-GEOJE-S-DADAE",
+        "WP-AUTO-093"
+      ]
+    },
+    {
+      "id": "WP-AUTO-113",
+      "name": "해금강(갈곶도) 우회점 #113",
+      "lat": 34.68185,
+      "lng": 128.628,
+      "description": "해금강(갈곶도) 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HAEGEUMGANG-SE",
+        "WP-MAEMUL-E",
+        "WP-AUTO-109",
+        "WP-AUTO-110"
+      ]
+    },
+    {
+      "id": "WP-AUTO-114",
+      "name": "산양 우회점 #114",
+      "lat": 34.77212,
+      "lng": 128.36943,
+      "description": "산양 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HAKRIM-W",
+        "WP-MIREUK-SW",
+        "WP-CHUDO-E",
+        "WP-MIREUK-S",
+        "WP-AUTO-022",
+        "WP-AUTO-023",
+        "WP-AUTO-031"
+      ]
+    },
+    {
+      "id": "WP-AUTO-115",
+      "name": "욕지항 우회점 #115",
+      "lat": 34.63354,
+      "lng": 128.27269,
+      "description": "욕지항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-116",
+        "WP-AUTO-236"
+      ]
+    },
+    {
+      "id": "WP-AUTO-116",
+      "name": "욕지항 우회점 #116",
+      "lat": 34.64149,
+      "lng": 128.29059,
+      "description": "욕지항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-115",
+        "WP-AUTO-068",
+        "WP-YOKJI-NE",
+        "WP-AUTO-212",
+        "WP-AUTO-235",
+        "WP-AUTO-236"
+      ]
+    },
+    {
+      "id": "WP-AUTO-117",
+      "name": "궁항 우회점 #117",
+      "lat": 34.80243,
+      "lng": 128.37066,
+      "description": "궁항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-118"
+      ]
+    },
+    {
+      "id": "WP-AUTO-118",
+      "name": "궁항 우회점 #118",
+      "lat": 34.7981,
+      "lng": 128.36419,
+      "description": "궁항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-117",
+        "WP-AUTO-119",
+        "WP-AUTO-017"
+      ]
+    },
+    {
+      "id": "WP-AUTO-119",
+      "name": "궁항 우회점 #119",
+      "lat": 34.78764,
+      "lng": 128.36047,
+      "description": "궁항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-118",
+        "WP-MIREUK-W",
+        "WP-AUTO-016"
+      ]
+    },
+    {
+      "id": "WP-AUTO-120",
+      "name": "세포항 우회점 #120",
+      "lat": 34.81663,
+      "lng": 128.38579,
+      "description": "세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-121",
+        "WP-AUTO-124",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-048"
+      ]
+    },
+    {
+      "id": "WP-AUTO-121",
+      "name": "세포항 우회점 #121",
+      "lat": 34.82761,
+      "lng": 128.38277,
+      "description": "세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-120",
+        "WP-AUTO-122",
+        "WP-TY-WEST",
+        "WP-AUTO-009",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-025",
+        "WP-AUTO-048",
+        "WP-AUTO-124"
+      ]
+    },
+    {
+      "id": "WP-AUTO-122",
+      "name": "세포항 우회점 #122",
+      "lat": 34.83373,
+      "lng": 128.38661,
+      "description": "세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-121",
+        "WP-AUTO-123",
+        "WP-TY-WEST",
+        "WP-AUTO-011",
+        "WP-AUTO-012"
+      ]
+    },
+    {
+      "id": "WP-AUTO-123",
+      "name": "세포항 우회점 #123",
+      "lat": 34.82906,
+      "lng": 128.39204,
+      "description": "세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-122",
+        "WP-TY-CANAL-W",
+        "WP-AUTO-009",
+        "WP-AUTO-011",
+        "WP-AUTO-012",
+        "WP-AUTO-013"
+      ]
+    },
+    {
+      "id": "WP-AUTO-124",
+      "name": "세포항 우회점 #124",
+      "lat": 34.82483,
+      "lng": 128.38268,
+      "description": "세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-120",
+        "WP-AUTO-009",
+        "WP-AUTO-012",
+        "WP-AUTO-013",
+        "WP-AUTO-048",
+        "WP-AUTO-121"
+      ]
+    },
+    {
+      "id": "WP-AUTO-125",
+      "name": "원평항 우회점 #125",
+      "lat": 34.89471,
+      "lng": 128.47334,
+      "description": "원평항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-075",
+        "WP-GYEON-N",
+        "WP-AUTO-077",
+        "WP-AUTO-126",
+        "WP-AUTO-127",
+        "WP-AUTO-128"
+      ]
+    },
+    {
+      "id": "WP-AUTO-126",
+      "name": "원평항 우회점 #126",
+      "lat": 34.89321,
+      "lng": 128.46563,
+      "description": "원평항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-127",
+        "WP-AUTO-125"
+      ]
+    },
+    {
+      "id": "WP-AUTO-127",
+      "name": "원평항 우회점 #127",
+      "lat": 34.89484,
+      "lng": 128.46598,
+      "description": "원평항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-126",
+        "WP-AUTO-128",
+        "WP-AUTO-125"
+      ]
+    },
+    {
+      "id": "WP-AUTO-128",
+      "name": "원평항 우회점 #128",
+      "lat": 34.89837,
+      "lng": 128.46614,
+      "description": "원평항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-127",
+        "WP-GYEON-N",
+        "WP-AUTO-077",
+        "WP-AUTO-125"
+      ]
+    },
+    {
+      "id": "WP-AUTO-129",
+      "name": "욕지 노대항 우회점 #129",
+      "lat": 34.66956,
+      "lng": 128.23238,
+      "description": "욕지 노대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-130",
+        "WP-AUTO-132"
+      ]
+    },
+    {
+      "id": "WP-AUTO-130",
+      "name": "욕지 노대항 우회점 #130",
+      "lat": 34.67152,
+      "lng": 128.22898,
+      "description": "욕지 노대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-129",
+        "WP-AUTO-131"
+      ]
+    },
+    {
+      "id": "WP-AUTO-131",
+      "name": "욕지 노대항 우회점 #131",
+      "lat": 34.67477,
+      "lng": 128.22571,
+      "description": "욕지 노대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-130",
+        "WP-YOKJI-W"
+      ]
+    },
+    {
+      "id": "WP-AUTO-132",
+      "name": "욕지 노대항 우회점 #132",
+      "lat": 34.66788,
+      "lng": 128.2437,
+      "description": "욕지 노대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-129"
+      ]
+    },
+    {
+      "id": "WP-AUTO-133",
+      "name": "욕지 노대항 우회점 #133",
+      "lat": 34.6708,
+      "lng": 128.25628,
+      "description": "욕지 노대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-134",
+        "WP-AUTO-213"
+      ]
+    },
+    {
+      "id": "WP-AUTO-134",
+      "name": "욕지 노대항 우회점 #134",
+      "lat": 34.67501,
+      "lng": 128.25749,
+      "description": "욕지 노대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-133",
+        "WP-AUTO-061",
+        "WP-AUTO-214"
+      ]
+    },
+    {
+      "id": "WP-AUTO-135",
+      "name": "연화항 우회점 #135",
+      "lat": 34.6492,
+      "lng": 128.35821,
+      "description": "연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-136"
+      ]
+    },
+    {
+      "id": "WP-AUTO-136",
+      "name": "연화항 우회점 #136",
+      "lat": 34.65219,
+      "lng": 128.35415,
+      "description": "연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-135",
+        "WP-AUTO-137"
+      ]
+    },
+    {
+      "id": "WP-AUTO-137",
+      "name": "연화항 우회점 #137",
+      "lat": 34.65219,
+      "lng": 128.35106,
+      "description": "연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-136",
+        "WP-AUTO-138"
+      ]
+    },
+    {
+      "id": "WP-AUTO-138",
+      "name": "연화항 우회점 #138",
+      "lat": 34.6507,
+      "lng": 128.34516,
+      "description": "연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-137",
+        "WP-AUTO-139"
+      ]
+    },
+    {
+      "id": "WP-AUTO-139",
+      "name": "연화항 우회점 #139",
+      "lat": 34.6479,
+      "lng": 128.34301,
+      "description": "연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-138",
+        "WP-AUTO-140"
+      ]
+    },
+    {
+      "id": "WP-AUTO-140",
+      "name": "연화항 우회점 #140",
+      "lat": 34.64554,
+      "lng": 128.34266,
+      "description": "연화항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-139",
+        "WP-YOKJI-E"
+      ]
+    },
+    {
+      "id": "WP-AUTO-141",
+      "name": "소매물도항 우회점 #141",
+      "lat": 34.62394,
+      "lng": 128.5464,
+      "description": "소매물도항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-201"
+      ]
+    },
+    {
+      "id": "WP-AUTO-142",
+      "name": "소매물도항 우회점 #142",
+      "lat": 34.62205,
+      "lng": 128.54892,
+      "description": "소매물도항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-143",
+        "WP-AUTO-201"
+      ]
+    },
+    {
+      "id": "WP-AUTO-143",
+      "name": "소매물도항 우회점 #143",
+      "lat": 34.62328,
+      "lng": 128.55279,
+      "description": "소매물도항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-142",
+        "WP-AUTO-071",
+        "WP-MAEMUL-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-144",
+      "name": "추도 대항 우회점 #144",
+      "lat": 34.75689,
+      "lng": 128.28686,
+      "description": "추도 대항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-SARYANG-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-145",
+      "name": "장승포항 우회점 #145",
+      "lat": 34.86291,
+      "lng": 128.72845,
+      "description": "장승포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-146",
+        "WP-AUTO-163"
+      ]
+    },
+    {
+      "id": "WP-AUTO-146",
+      "name": "장승포항 우회점 #146",
+      "lat": 34.86138,
+      "lng": 128.73369,
+      "description": "장승포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-145",
+        "WP-JANGSEUNGPO-E",
+        "WP-AUTO-147",
+        "WP-AUTO-163"
+      ]
+    },
+    {
+      "id": "WP-AUTO-147",
+      "name": "장승포항 우회점 #147",
+      "lat": 34.8642,
+      "lng": 128.7405,
+      "description": "장승포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-146",
+        "WP-OKPO-S",
+        "WP-AUTO-155",
+        "WP-JANGSEUNGPO-E",
+        "WP-AUTO-163"
+      ]
+    },
+    {
+      "id": "WP-AUTO-148",
+      "name": "옥포항 우회점 #148",
+      "lat": 34.8907,
+      "lng": 128.69842,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-202"
+      ]
+    },
+    {
+      "id": "WP-AUTO-149",
+      "name": "옥포항 우회점 #149",
+      "lat": 34.88961,
+      "lng": 128.69817,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-150",
+        "WP-AUTO-202"
+      ]
+    },
+    {
+      "id": "WP-AUTO-150",
+      "name": "옥포항 우회점 #150",
+      "lat": 34.88954,
+      "lng": 128.70095,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-149",
+        "WP-AUTO-151",
+        "WP-AUTO-234"
+      ]
+    },
+    {
+      "id": "WP-AUTO-151",
+      "name": "옥포항 우회점 #151",
+      "lat": 34.89667,
+      "lng": 128.71849,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-150",
+        "WP-AUTO-152",
+        "WP-OKPO-E",
+        "WP-AUTO-233",
+        "WP-AUTO-234"
+      ]
+    },
+    {
+      "id": "WP-AUTO-152",
+      "name": "옥포항 우회점 #152",
+      "lat": 34.91278,
+      "lng": 128.72404,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-151",
+        "WP-AUTO-153",
+        "WP-OKPO-E",
+        "WP-AUTO-192",
+        "WP-AUTO-193"
+      ]
+    },
+    {
+      "id": "WP-AUTO-153",
+      "name": "옥포항 우회점 #153",
+      "lat": 34.91848,
+      "lng": 128.72425,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-152",
+        "WP-AUTO-154",
+        "WP-OKPO-E",
+        "WP-AUTO-192",
+        "WP-AUTO-193"
+      ]
+    },
+    {
+      "id": "WP-AUTO-154",
+      "name": "옥포항 우회점 #154",
+      "lat": 34.92638,
+      "lng": 128.72015,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-153",
+        "WP-AUTO-105",
+        "WP-AUTO-193"
+      ]
+    },
+    {
+      "id": "WP-AUTO-155",
+      "name": "옥포항 우회점 #155",
+      "lat": 34.86822,
+      "lng": 128.74472,
+      "description": "옥포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-105",
+        "WP-AUTO-147",
+        "WP-JANGSEUNGPO-E",
+        "WP-OKPO-S",
+        "WP-AUTO-162",
+        "WP-AUTO-163"
+      ]
+    },
+    {
+      "id": "WP-AUTO-156",
+      "name": "고현항 우회점 #156",
+      "lat": 34.89939,
+      "lng": 128.62237,
+      "description": "고현항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GOHYEON-BAY"
+      ]
+    },
+    {
+      "id": "WP-AUTO-157",
+      "name": "지세포항 우회점 #157",
+      "lat": 34.83737,
+      "lng": 128.70324,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-158",
+        "WP-AUTO-160",
+        "WP-AUTO-161",
+        "WP-AUTO-162"
+      ]
+    },
+    {
+      "id": "WP-AUTO-158",
+      "name": "지세포항 우회점 #158",
+      "lat": 34.83777,
+      "lng": 128.71924,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-157",
+        "WP-AUTO-159",
+        "WP-AUTO-160",
+        "WP-AUTO-161",
+        "WP-AUTO-162"
+      ]
+    },
+    {
+      "id": "WP-AUTO-159",
+      "name": "지세포항 우회점 #159",
+      "lat": 34.83295,
+      "lng": 128.72451,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-158",
+        "WP-JISEPO-E",
+        "WP-AUTO-167",
+        "WP-AUTO-160",
+        "WP-AUTO-161",
+        "WP-AUTO-162"
+      ]
+    },
+    {
+      "id": "WP-AUTO-160",
+      "name": "지세포항 우회점 #160",
+      "lat": 34.84417,
+      "lng": 128.72208,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-161",
+        "WP-JISEPO-E",
+        "WP-AUTO-157",
+        "WP-AUTO-158",
+        "WP-AUTO-159",
+        "WP-AUTO-167"
+      ]
+    },
+    {
+      "id": "WP-AUTO-161",
+      "name": "지세포항 우회점 #161",
+      "lat": 34.84087,
+      "lng": 128.72453,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-160",
+        "WP-AUTO-162",
+        "WP-JISEPO-E",
+        "WP-AUTO-157",
+        "WP-AUTO-158",
+        "WP-AUTO-159",
+        "WP-AUTO-167"
+      ]
+    },
+    {
+      "id": "WP-AUTO-162",
+      "name": "지세포항 우회점 #162",
+      "lat": 34.84241,
+      "lng": 128.7355,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-161",
+        "WP-AUTO-163",
+        "WP-JANGSEUNGPO-E",
+        "WP-JISEPO-E",
+        "WP-AUTO-155",
+        "WP-AUTO-157",
+        "WP-AUTO-158",
+        "WP-AUTO-159",
+        "WP-AUTO-167"
+      ]
+    },
+    {
+      "id": "WP-AUTO-163",
+      "name": "지세포항 우회점 #163",
+      "lat": 34.84587,
+      "lng": 128.73717,
+      "description": "지세포항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-162",
+        "WP-AUTO-145",
+        "WP-JANGSEUNGPO-E",
+        "WP-JISEPO-E",
+        "WP-AUTO-146",
+        "WP-AUTO-147",
+        "WP-AUTO-155",
+        "WP-AUTO-167"
+      ]
+    },
+    {
+      "id": "WP-AUTO-164",
+      "name": "구조라항 우회점 #164",
+      "lat": 34.7999,
+      "lng": 128.68738,
+      "description": "구조라항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GUJORA-S",
+        "WP-AUTO-216",
+        "WP-AUTO-165"
+      ]
+    },
+    {
+      "id": "WP-AUTO-165",
+      "name": "구조라항 우회점 #165",
+      "lat": 34.80421,
+      "lng": 128.68198,
+      "description": "구조라항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-166",
+        "WP-AUTO-164",
+        "WP-AUTO-216"
+      ]
+    },
+    {
+      "id": "WP-AUTO-166",
+      "name": "구조라항 우회점 #166",
+      "lat": 34.77305,
+      "lng": 128.7109,
+      "description": "구조라항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-165",
+        "WP-AUTO-107",
+        "WP-AUTO-178",
+        "WP-GUJORA-S",
+        "WP-HAKDONG-E",
+        "WP-AUTO-179",
+        "WP-AUTO-215",
+        "WP-AUTO-217"
+      ]
+    },
+    {
+      "id": "WP-AUTO-167",
+      "name": "구조라항 우회점 #167",
+      "lat": 34.83085,
+      "lng": 128.72617,
+      "description": "구조라항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-106",
+        "WP-AUTO-159",
+        "WP-JISEPO-E",
+        "WP-AUTO-160",
+        "WP-AUTO-161",
+        "WP-AUTO-162",
+        "WP-AUTO-163"
+      ]
+    },
+    {
+      "id": "WP-AUTO-168",
+      "name": "구영항 우회점 #168",
+      "lat": 34.79255,
+      "lng": 128.56017,
+      "description": "구영항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-SANDAL-E",
+        "WP-AUTO-169",
+        "WP-AUTO-086"
+      ]
+    },
+    {
+      "id": "WP-AUTO-169",
+      "name": "구영항 우회점 #169",
+      "lat": 34.79463,
+      "lng": 128.55212,
+      "description": "구영항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-168",
+        "WP-AUTO-094",
+        "WP-SANDAL-E",
+        "WP-AUTO-086",
+        "WP-AUTO-088",
+        "WP-AUTO-089",
+        "WP-AUTO-225"
+      ]
+    },
+    {
+      "id": "WP-AUTO-170",
+      "name": "둔덕 시목항 우회점 #170",
+      "lat": 34.83159,
+      "lng": 128.52695,
+      "description": "둔덕 시목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-171",
+        "WP-AUTO-225",
+        "WP-AUTO-226",
+        "WP-AUTO-227",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-171",
+      "name": "둔덕 시목항 우회점 #171",
+      "lat": 34.82794,
+      "lng": 128.52902,
+      "description": "둔덕 시목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-170",
+        "WP-AUTO-172",
+        "WP-AUTO-174",
+        "WP-AUTO-226",
+        "WP-AUTO-227",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-172",
+      "name": "둔덕 시목항 우회점 #172",
+      "lat": 34.82294,
+      "lng": 128.53387,
+      "description": "둔덕 시목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-171",
+        "WP-AUTO-173",
+        "WP-AUTO-227",
+        "WP-AUTO-035",
+        "WP-AUTO-036",
+        "WP-AUTO-045",
+        "WP-AUTO-174",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-173",
+      "name": "둔덕 시목항 우회점 #173",
+      "lat": 34.82059,
+      "lng": 128.52753,
+      "description": "둔덕 시목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-172",
+        "WP-DUNDEOK-W",
+        "WP-AUTO-035",
+        "WP-AUTO-036",
+        "WP-AUTO-088",
+        "WP-AUTO-174",
+        "WP-AUTO-227",
+        "WP-AUTO-228"
+      ]
+    },
+    {
+      "id": "WP-AUTO-174",
+      "name": "둔덕 시목항 우회점 #174",
+      "lat": 34.81875,
+      "lng": 128.53182,
+      "description": "둔덕 시목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-171",
+        "WP-AUTO-036",
+        "WP-AUTO-228",
+        "WP-DUNDEOK-W",
+        "WP-AUTO-035",
+        "WP-AUTO-044",
+        "WP-AUTO-045",
+        "WP-AUTO-172",
+        "WP-AUTO-173"
+      ]
+    },
+    {
+      "id": "WP-AUTO-175",
+      "name": "장목항 우회점 #175",
+      "lat": 35.00589,
+      "lng": 128.66885,
+      "description": "장목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-103",
+        "WP-CHILCHEON-E",
+        "WP-AUTO-176",
+        "WP-AUTO-177",
+        "WP-AUTO-183",
+        "WP-AUTO-184"
+      ]
+    },
+    {
+      "id": "WP-AUTO-176",
+      "name": "장목항 우회점 #176",
+      "lat": 35.00077,
+      "lng": 128.66529,
+      "description": "장목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-177",
+        "WP-CHILCHEON-N",
+        "WP-AUTO-097",
+        "WP-AUTO-103",
+        "WP-AUTO-175",
+        "WP-AUTO-183",
+        "WP-AUTO-184"
+      ]
+    },
+    {
+      "id": "WP-AUTO-177",
+      "name": "장목항 우회점 #177",
+      "lat": 34.99991,
+      "lng": 128.66197,
+      "description": "장목항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-176",
+        "WP-AUTO-104",
+        "WP-CHILCHEON-E",
+        "WP-AUTO-175"
+      ]
+    },
+    {
+      "id": "WP-AUTO-178",
+      "name": "내도항 우회점 #178",
+      "lat": 34.78252,
+      "lng": 128.71767,
+      "description": "내도항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-166",
+        "WP-AUTO-218",
+        "WP-AUTO-245"
+      ]
+    },
+    {
+      "id": "WP-AUTO-179",
+      "name": "내도항 우회점 #179",
+      "lat": 34.78014,
+      "lng": 128.71585,
+      "description": "내도항 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-GUJORA-S",
+        "WP-AUTO-107",
+        "WP-AUTO-166",
+        "WP-AUTO-245"
+      ]
+    },
+    {
+      "id": "WP-AUTO-180",
+      "name": "칠천도 금곡 부잔교 우회점 #180",
+      "lat": 35.00716,
+      "lng": 128.63056,
+      "description": "칠천도 금곡 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-181",
+        "WP-AUTO-095",
+        "WP-AUTO-185"
+      ]
+    },
+    {
+      "id": "WP-AUTO-181",
+      "name": "칠천도 금곡 부잔교 우회점 #181",
+      "lat": 35.00881,
+      "lng": 128.63018,
+      "description": "칠천도 금곡 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-180",
+        "WP-AUTO-096",
+        "WP-AUTO-095",
+        "WP-AUTO-185"
+      ]
+    },
+    {
+      "id": "WP-AUTO-182",
+      "name": "칠천도 금곡 부잔교 우회점 #182",
+      "lat": 35.02168,
+      "lng": 128.64186,
+      "description": "칠천도 금곡 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-096",
+        "WP-AUTO-097",
+        "WP-AUTO-095"
+      ]
+    },
+    {
+      "id": "WP-AUTO-183",
+      "name": "칠천도 금곡 부잔교 우회점 #183",
+      "lat": 35.01868,
+      "lng": 128.65217,
+      "description": "칠천도 금곡 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-097",
+        "WP-AUTO-103",
+        "WP-CHILCHEON-N",
+        "WP-AUTO-098",
+        "WP-AUTO-175",
+        "WP-AUTO-176"
+      ]
+    },
+    {
+      "id": "WP-AUTO-184",
+      "name": "칠천도 금곡 부잔교 우회점 #184",
+      "lat": 35.01074,
+      "lng": 128.65508,
+      "description": "칠천도 금곡 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-103",
+        "WP-AUTO-104",
+        "WP-AUTO-175",
+        "WP-AUTO-176"
+      ]
+    },
+    {
+      "id": "WP-AUTO-185",
+      "name": "칠천도 금곡 부잔교 우회점 #185",
+      "lat": 35.00858,
+      "lng": 128.62806,
+      "description": "칠천도 금곡 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-095",
+        "WP-AUTO-096",
+        "WP-AUTO-180",
+        "WP-AUTO-181"
+      ]
+    },
+    {
+      "id": "WP-AUTO-186",
+      "name": "장목 저도(궁농) 선착장 우회점 #186",
+      "lat": 35.02169,
+      "lng": 128.72164,
+      "description": "장목 저도(궁농) 선착장 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-187"
+      ]
+    },
+    {
+      "id": "WP-AUTO-187",
+      "name": "장목 저도(궁농) 선착장 우회점 #187",
+      "lat": 35.01793,
+      "lng": 128.72267,
+      "description": "장목 저도(궁농) 선착장 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-186",
+        "WP-AUTO-102",
+        "WP-AUTO-231"
+      ]
+    },
+    {
+      "id": "WP-AUTO-188",
+      "name": "이수도 북측 도선 부잔교 우회점 #188",
+      "lat": 34.96921,
+      "lng": 128.72318,
+      "description": "이수도 북측 도선 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-189",
+        "WP-AUTO-190"
+      ]
+    },
+    {
+      "id": "WP-AUTO-189",
+      "name": "이수도 북측 도선 부잔교 우회점 #189",
+      "lat": 34.97212,
+      "lng": 128.72557,
+      "description": "이수도 북측 도선 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-188",
+        "WP-JANGMOK-E"
+      ]
+    },
+    {
+      "id": "WP-AUTO-190",
+      "name": "이수도 북측 도선 부잔교 우회점 #190",
+      "lat": 34.96554,
+      "lng": 128.72112,
+      "description": "이수도 북측 도선 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-188",
+        "WP-AUTO-191"
+      ]
+    },
+    {
+      "id": "WP-AUTO-191",
+      "name": "이수도 북측 도선 부잔교 우회점 #191",
+      "lat": 34.94574,
+      "lng": 128.72799,
+      "description": "이수도 북측 도선 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-190",
+        "WP-AUTO-192",
+        "WP-JANGMOK-E",
+        "WP-AUTO-232"
+      ]
+    },
+    {
+      "id": "WP-AUTO-192",
+      "name": "이수도 북측 도선 부잔교 우회점 #192",
+      "lat": 34.93977,
+      "lng": 128.7276,
+      "description": "이수도 북측 도선 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-191",
+        "WP-AUTO-193",
+        "WP-AUTO-152",
+        "WP-AUTO-153"
+      ]
+    },
+    {
+      "id": "WP-AUTO-193",
+      "name": "이수도 북측 도선 부잔교 우회점 #193",
+      "lat": 34.93781,
+      "lng": 128.72724,
+      "description": "이수도 북측 도선 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-192",
+        "WP-AUTO-154",
+        "WP-AUTO-152",
+        "WP-AUTO-153"
+      ]
+    },
+    {
+      "id": "WP-AUTO-194",
+      "name": "남부 다대 소형 부잔교 우회점 #194",
+      "lat": 34.73293,
+      "lng": 128.62685,
+      "description": "남부 다대 소형 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-108",
+        "WP-AUTO-195",
+        "WP-AUTO-219"
+      ]
+    },
+    {
+      "id": "WP-AUTO-195",
+      "name": "남부 다대 소형 부잔교 우회점 #195",
+      "lat": 34.71589,
+      "lng": 128.64168,
+      "description": "남부 다대 소형 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-194",
+        "WP-AUTO-196",
+        "WP-AUTO-108",
+        "WP-AUTO-219"
+      ]
+    },
+    {
+      "id": "WP-AUTO-196",
+      "name": "남부 다대 소형 부잔교 우회점 #196",
+      "lat": 34.71262,
+      "lng": 128.6427,
+      "description": "남부 다대 소형 부잔교 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-195",
+        "WP-AUTO-109",
+        "WP-AUTO-108",
+        "WP-AUTO-219"
+      ]
+    },
+    {
+      "id": "WP-AUTO-201",
+      "name": "소매물도항 우회점 #141 연결점 #201",
+      "lat": 34.62242,
+      "lng": 128.54773,
+      "description": "단일 연결 컴포넌트 해안 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-141",
+        "WP-AUTO-142"
+      ]
+    },
+    {
+      "id": "WP-AUTO-202",
+      "name": "옥포항 우회점 #148 연결점 #202",
+      "lat": 34.89062,
+      "lng": 128.6973,
+      "description": "단일 연결 컴포넌트 해안 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-148",
+        "WP-AUTO-149"
+      ]
+    },
+    {
+      "id": "WP-AUTO-203",
+      "name": "한산도 제승당 부잔교 진입수로 #203",
+      "lat": 34.77534,
+      "lng": 128.46024,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-JESEUNGDANG-W",
+        "WP-MIREUK-E",
+        "WP-MIREUK-SE",
+        "WP-AUTO-207",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-204",
+      "name": "통영 매물도 당금항 비상 대피 계류지 진입수로 #204",
+      "lat": 34.64742,
+      "lng": 128.57173,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-205",
         "WP-MAEMUL-N"
+      ]
+    },
+    {
+      "id": "WP-AUTO-205",
+      "name": "통영 매물도 당금항 비상 대피 계류지 진입수로 #205",
+      "lat": 34.65121,
+      "lng": 128.57492,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-204",
+        "WP-AUTO-206"
+      ]
+    },
+    {
+      "id": "WP-AUTO-206",
+      "name": "통영 매물도 당금항 비상 대피 계류지 진입수로 #206",
+      "lat": 34.65113,
+      "lng": 128.57826,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-205",
+        "WP-AUTO-072",
+        "WP-MAEMUL-N"
+      ]
+    },
+    {
+      "id": "WP-AUTO-207",
+      "name": "연명항 진입수로 #207",
+      "lat": 34.78262,
+      "lng": 128.43585,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-MIREUK-SE",
+        "WP-MIREUK-E",
+        "WP-JESEUNGDANG-W",
+        "WP-AUTO-037",
+        "WP-AUTO-203",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-208",
+      "name": "광도 예포항 진입수로 #208",
+      "lat": 34.93147,
+      "lng": 128.43694,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-209",
+        "WP-AUTO-078",
+        "WP-AUTO-243",
+        "WP-AUTO-077",
+        "WP-AUTO-244"
+      ]
+    },
+    {
+      "id": "WP-AUTO-209",
+      "name": "광도 예포항 진입수로 #209",
+      "lat": 34.92413,
+      "lng": 128.4354,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-208",
+        "WP-AUTO-079",
+        "WP-AUTO-244",
+        "WP-GAJO-W",
+        "WP-AUTO-077",
+        "WP-AUTO-078",
+        "WP-AUTO-080",
+        "WP-AUTO-243"
+      ]
+    },
+    {
+      "id": "WP-AUTO-210",
+      "name": "어의항 진입수로 #210",
+      "lat": 34.83037,
+      "lng": 128.47677,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-032",
+        "WP-AUTO-002",
+        "WP-AUTO-224",
+        "WP-AUTO-239"
+      ]
+    },
+    {
+      "id": "WP-AUTO-211",
+      "name": "어의항 진입수로 #211",
+      "lat": 34.82146,
+      "lng": 128.4791,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-032",
+        "WP-HANSAN-N",
+        "WP-AUTO-239",
+        "WP-HANSAN-NE",
+        "WP-AUTO-015",
+        "WP-AUTO-028",
+        "WP-AUTO-033"
+      ]
+    },
+    {
+      "id": "WP-AUTO-212",
+      "name": "욕지 도동항 진입수로 #212",
+      "lat": 34.66488,
+      "lng": 128.26616,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-213",
+        "WP-AUTO-116",
+        "WP-AUTO-235"
+      ]
+    },
+    {
+      "id": "WP-AUTO-213",
+      "name": "욕지 도동항 진입수로 #213",
+      "lat": 34.66647,
+      "lng": 128.26195,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-212",
+        "WP-AUTO-133",
+        "WP-AUTO-214",
+        "WP-AUTO-235"
+      ]
+    },
+    {
+      "id": "WP-AUTO-214",
+      "name": "욕지 도동항 진입수로 #214",
+      "lat": 34.67529,
+      "lng": 128.26102,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-134",
+        "WP-AUTO-061",
+        "WP-AUTO-213"
+      ]
+    },
+    {
+      "id": "WP-AUTO-215",
+      "name": "와현항 진입수로 #215",
+      "lat": 34.796,
+      "lng": 128.69058,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-216",
+        "WP-GUJORA-S",
+        "WP-AUTO-166",
+        "WP-AUTO-217",
+        "WP-AUTO-245"
+      ]
+    },
+    {
+      "id": "WP-AUTO-216",
+      "name": "와현항 진입수로 #216",
+      "lat": 34.80347,
+      "lng": 128.6803,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-215",
+        "WP-AUTO-164",
+        "WP-AUTO-165"
+      ]
+    },
+    {
+      "id": "WP-AUTO-217",
+      "name": "와현항 진입수로 #217",
+      "lat": 34.79425,
+      "lng": 128.70881,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-218",
+        "WP-GUJORA-S",
+        "WP-AUTO-166",
+        "WP-AUTO-215",
+        "WP-AUTO-245"
+      ]
+    },
+    {
+      "id": "WP-AUTO-218",
+      "name": "와현항 진입수로 #218",
+      "lat": 34.78826,
+      "lng": 128.71912,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-217",
+        "WP-AUTO-178",
+        "WP-AUTO-245"
+      ]
+    },
+    {
+      "id": "WP-AUTO-219",
+      "name": "해금강항 진입수로 #219",
+      "lat": 34.71068,
+      "lng": 128.64959,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HAEGEUMGANG-SE",
+        "WP-AUTO-220",
+        "WP-AUTO-108",
+        "WP-AUTO-194",
+        "WP-AUTO-195",
+        "WP-AUTO-196"
+      ]
+    },
+    {
+      "id": "WP-AUTO-220",
+      "name": "해금강항 진입수로 #220",
+      "lat": 34.72864,
+      "lng": 128.67745,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-219",
+        "WP-AUTO-221",
+        "WP-AUTO-108"
+      ]
+    },
+    {
+      "id": "WP-AUTO-221",
+      "name": "해금강항 진입수로 #221",
+      "lat": 34.73843,
+      "lng": 128.68417,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-220",
+        "WP-HAKDONG-E",
+        "WP-HAEGEUMGANG-SE"
+      ]
+    },
+    {
+      "id": "WP-AUTO-222",
+      "name": "저구항 진입수로 #222",
+      "lat": 34.72388,
+      "lng": 128.58343,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-092"
+      ]
+    },
+    {
+      "id": "WP-AUTO-223",
+      "name": "둔덕 학산항 진입수로 #223",
+      "lat": 34.85414,
+      "lng": 128.48012,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-224",
+        "WP-AUTO-002"
+      ]
+    },
+    {
+      "id": "WP-AUTO-224",
+      "name": "둔덕 학산항 진입수로 #224",
+      "lat": 34.85528,
+      "lng": 128.47504,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-223",
+        "WP-GYEON-S",
+        "WP-AUTO-003",
+        "WP-AUTO-032",
+        "WP-AUTO-210"
+      ]
+    },
+    {
+      "id": "WP-AUTO-225",
+      "name": "거제 법동항 진입수로 #225",
+      "lat": 34.82348,
+      "lng": 128.54758,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-226",
+        "WP-SANDAL-E",
+        "WP-AUTO-169",
+        "WP-AUTO-170"
+      ]
+    },
+    {
+      "id": "WP-AUTO-226",
+      "name": "거제 법동항 진입수로 #226",
+      "lat": 34.82597,
+      "lng": 128.54212,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-225",
+        "WP-AUTO-227",
+        "WP-AUTO-170",
+        "WP-AUTO-171"
+      ]
+    },
+    {
+      "id": "WP-AUTO-227",
+      "name": "거제 법동항 진입수로 #227",
+      "lat": 34.82552,
+      "lng": 128.53785,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-226",
+        "WP-AUTO-172",
+        "WP-AUTO-228",
+        "WP-AUTO-035",
+        "WP-AUTO-036",
+        "WP-AUTO-170",
+        "WP-AUTO-171",
+        "WP-AUTO-173"
+      ]
+    },
+    {
+      "id": "WP-AUTO-228",
+      "name": "거제 법동항 진입수로 #228",
+      "lat": 34.82111,
+      "lng": 128.53308,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-227",
+        "WP-AUTO-174",
+        "WP-AUTO-035",
+        "WP-AUTO-036",
+        "WP-AUTO-045",
+        "WP-AUTO-170",
+        "WP-AUTO-171",
+        "WP-AUTO-172",
+        "WP-AUTO-173"
+      ]
+    },
+    {
+      "id": "WP-AUTO-229",
+      "name": "장목 궁농항 진입수로 #229",
+      "lat": 35.00413,
+      "lng": 128.71119,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-230"
+      ]
+    },
+    {
+      "id": "WP-AUTO-230",
+      "name": "장목 궁농항 진입수로 #230",
+      "lat": 35.00788,
+      "lng": 128.71664,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-229",
+        "WP-AUTO-231"
+      ]
+    },
+    {
+      "id": "WP-AUTO-231",
+      "name": "장목 궁농항 진입수로 #231",
+      "lat": 35.01116,
+      "lng": 128.71898,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-230",
+        "WP-AUTO-187"
+      ]
+    },
+    {
+      "id": "WP-AUTO-232",
+      "name": "장목 이수도항 진입수로 #232",
+      "lat": 34.96505,
+      "lng": 128.72335,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-191"
+      ]
+    },
+    {
+      "id": "WP-AUTO-233",
+      "name": "아주항 진입수로 #233",
+      "lat": 34.88482,
+      "lng": 128.70786,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-234",
+        "WP-AUTO-151"
+      ]
+    },
+    {
+      "id": "WP-AUTO-234",
+      "name": "아주항 진입수로 #234",
+      "lat": 34.89027,
+      "lng": 128.70232,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-233",
+        "WP-AUTO-150",
+        "WP-AUTO-151"
+      ]
+    },
+    {
+      "id": "WP-AUTO-235",
+      "name": "욕지 좌부랑개 물양장 진입수로 #235",
+      "lat": 34.63976,
+      "lng": 128.27671,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-236",
+        "WP-YOKJI-NE",
+        "WP-AUTO-116",
+        "WP-AUTO-212",
+        "WP-AUTO-213"
+      ]
+    },
+    {
+      "id": "WP-AUTO-236",
+      "name": "욕지 좌부랑개 물양장 진입수로 #236",
+      "lat": 34.63679,
+      "lng": 128.27502,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-235",
+        "WP-AUTO-115",
+        "WP-AUTO-116"
+      ]
+    },
+    {
+      "id": "WP-AUTO-237",
+      "name": "한산 죽도 도선 선착장 진입수로 #237",
+      "lat": 34.75372,
+      "lng": 128.52524,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-HANSAN-E",
+        "WP-AUTO-038"
+      ]
+    },
+    {
+      "id": "WP-AUTO-238",
+      "name": "한산 비산도 마을 선착장 진입수로 #238",
+      "lat": 34.81648,
+      "lng": 128.48442,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-239",
+        "WP-HANSAN-NE"
+      ]
+    },
+    {
+      "id": "WP-AUTO-239",
+      "name": "한산 비산도 마을 선착장 진입수로 #239",
+      "lat": 34.81895,
+      "lng": 128.48441,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-238",
+        "WP-HANSAN-N",
+        "WP-AUTO-211",
+        "WP-DONAM-NE",
+        "WP-HANSAN-NE",
+        "WP-AUTO-004",
+        "WP-AUTO-028",
+        "WP-AUTO-032",
+        "WP-AUTO-033",
+        "WP-AUTO-210"
+      ]
+    },
+    {
+      "id": "WP-AUTO-240",
+      "name": "산양 송도 선착장 진입수로 #240",
+      "lat": 34.7435,
+      "lng": 128.41981,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-241",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-241",
+      "name": "산양 송도 선착장 진입수로 #241",
+      "lat": 34.74704,
+      "lng": 128.42361,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-240",
+        "WP-AUTO-242",
+        "WP-MIREUK-SE",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-242",
+      "name": "산양 송도 선착장 진입수로 #242",
+      "lat": 34.75322,
+      "lng": 128.42638,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-241",
+        "WP-AUTO-030",
+        "WP-MIREUK-SE",
+        "WP-HANSAN-BAY-S"
+      ]
+    },
+    {
+      "id": "WP-AUTO-243",
+      "name": "광도 안정 황리 포구 선착장 진입수로 #243",
+      "lat": 34.94263,
+      "lng": 128.43661,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-208",
+        "WP-AUTO-078",
+        "WP-AUTO-080",
+        "WP-AUTO-209",
+        "WP-AUTO-244"
+      ]
+    },
+    {
+      "id": "WP-AUTO-244",
+      "name": "광도 안정 황리 포구 선착장 진입수로 #244",
+      "lat": 34.94511,
+      "lng": 128.43627,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-209",
+        "WP-AUTO-078",
+        "WP-AUTO-208",
+        "WP-AUTO-243"
+      ]
+    },
+    {
+      "id": "WP-AUTO-245",
+      "name": "외도 보타니아 동측 접안장 진입수로 #245",
+      "lat": 34.77111,
+      "lng": 128.714,
+      "description": "실측 해안선 외곽 자동 가시성 우회 변침점",
+      "neighbors": [
+        "WP-AUTO-107",
+        "WP-AUTO-178",
+        "WP-AUTO-179",
+        "WP-AUTO-215",
+        "WP-AUTO-217",
+        "WP-AUTO-218"
+      ]
+    },
+    {
+      "id": "WP-HANSAN-BAY-S",
+      "name": "한산만 남측 문어포 수로",
+      "lat": 34.75969,
+      "lng": 128.46814,
+      "description": "한산도 남서단 문어포와 한산만(제승당)을 잇는 남측 진입 수로",
+      "neighbors": [
+        "WP-MIREUK-SE",
+        "WP-YONGCHO-N",
+        "WP-AUTO-026",
+        "WP-AUTO-030",
+        "WP-AUTO-203",
+        "WP-AUTO-207",
+        "WP-AUTO-240",
+        "WP-AUTO-241",
+        "WP-AUTO-242"
+      ]
+    },
+    {
+      "id": "WP-CHUBONG-CHANNEL",
+      "name": "한산·추봉 수로",
+      "lat": 34.7715,
+      "lng": 128.5122,
+      "description": "한산도 진두항과 추봉도 사이 한산대교 통과 수로",
+      "neighbors": [
+        "WP-AUTO-046",
+        "WP-AUTO-043",
+        "WP-AUTO-041",
+        "WP-AUTO-042",
+        "WP-AUTO-040"
       ]
     }
   ]

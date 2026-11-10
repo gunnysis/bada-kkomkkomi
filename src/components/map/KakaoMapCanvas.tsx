@@ -611,7 +611,7 @@ export function KakaoMapCanvas({
     map.setLevel(nextLevel, { animate: true });
   }, [zoomStepTrigger]);
 
-  const showSpatialLabels = currentLeafletZoom >= 11;
+  const showSpatialLabels = currentLeafletZoom >= 11 && activeMainTab !== 'navigation';
   const showPortLabels = currentLeafletZoom >= 13;
 
   // 공간 레이어 GeoJSON 파싱 결과를 메모이제이션하여 줌 변경 시 재파싱 비용 제거
@@ -655,18 +655,21 @@ export function KakaoMapCanvas({
       const primitives = parsedSpatialPrimitivesById[layer.id];
       if (!primitives) continue;
 
+      const isNavMode = activeMainTab === 'navigation';
       const strokeColor = layer.style?.strokeColor || layer.color || '#10b981';
       const strokeWeight =
         layer.style?.strokeWidth ?? (layer.id === 'national_park' ? 2.5 : 3);
-      const strokeOpacity = layer.style?.strokeOpacity ?? 0.92;
+      const baseStrokeOpacity = layer.style?.strokeOpacity ?? 0.92;
+      const strokeOpacity = isNavMode ? baseStrokeOpacity * 0.45 : baseStrokeOpacity;
       const strokeStyle =
         layer.style?.strokeDash ??
         (layer.id === 'protected_area' ? 'shortdash' : 'solid');
       const fillColor = layer.style?.fillColor || layer.color || '#10b981';
-      const fillOpacity =
+      const baseFillOpacity =
         layer.style?.fillOpacity ?? (layer.id === 'national_park' ? 0.08 : 0.16);
+      const fillOpacity = isNavMode ? baseFillOpacity * 0.45 : baseFillOpacity;
       const pointRadius = layer.style?.pointRadius ?? 7;
-      const showLabels = layer.style?.showLabels !== false;
+      const showLabels = layer.style?.showLabels !== false && !isNavMode;
       const zIndex = layer.style?.zIndex ?? 15;
 
       for (const polyItem of primitives.polygons) {
@@ -775,7 +778,14 @@ export function KakaoMapCanvas({
       createdLines.forEach((l) => l.setMap(null));
       createdOverlays.forEach((o) => o.setMap(null));
     };
-  }, [kakaoMaps, layers, parsedSpatialPrimitivesById, showSpatialLabels, handleCoordinateClick]);
+  }, [
+    kakaoMaps,
+    activeMainTab,
+    layers,
+    parsedSpatialPrimitivesById,
+    showSpatialLabels,
+    handleCoordinateClick,
+  ]);
 
   // 6. [3.1 꼬미의 바다수첩] 55개 갯바위 접안 및 소규모 선착장 5색 마커
   useEffect(() => {
@@ -930,17 +940,35 @@ export function KakaoMapCanvas({
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
   }, [routeLegs, routeWaypoints]);
 
-  // 8-B. [전체항로 보기 (Fit Bounds)] 트리거 반영 (하단 계산기 패널 여백 280px 확보)
+  // 8-B. [전체항로 보기 (Fit Bounds)] 초기 바닷길 시간계산 진입 시 1회 자동 프레이밍 + 수동 트리거 반영 (하단 계산기 패널 여백 320px 확보)
+  const lastFittedTriggerRef = useRef<number>(-1);
+  const wasInRouteNavRef = useRef<boolean>(false);
+
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !fitRouteBoundsTrigger || polylinePositions.length < 2) return;
+    const isRouteNav = activeMainTab === 'navigation' && navSubTab === 'route';
+    if (!isRouteNav) {
+      wasInRouteNavRef.current = false;
+      return;
+    }
+    if (!map || polylinePositions.length < 2) return;
+
+    const enteredRouteNav = !wasInRouteNavRef.current;
+    const manualTriggered =
+      fitRouteBoundsTrigger > 0 && fitRouteBoundsTrigger !== lastFittedTriggerRef.current;
+
+    if (!enteredRouteNav && !manualTriggered) return;
+
+    wasInRouteNavRef.current = true;
+    lastFittedTriggerRef.current = fitRouteBoundsTrigger;
+
     try {
       const bounds = new kakaoMaps.LatLngBounds();
       for (const [lat, lng] of polylinePositions) {
         bounds.extend(new kakaoMaps.LatLng(lat, lng));
       }
       if (!bounds.isEmpty()) {
-        map.setBounds(bounds, 72, 48, 280, 48);
+        map.setBounds(bounds, 96, 44, 320, 44);
         const c = map.getCenter();
         const z = kakaoLevelToLeafletZoom(map.getLevel());
         setCurrentLeafletZoom(z);
@@ -949,7 +977,7 @@ export function KakaoMapCanvas({
     } catch {
       // ignore if bounds invalid
     }
-  }, [kakaoMaps, fitRouteBoundsTrigger, polylinePositions]);
+  }, [kakaoMaps, activeMainTab, navSubTab, fitRouteBoundsTrigger, polylinePositions]);
 
   // 줌 단계별 방향 화살표 샘플링 티어 (0: zoom<=10, 1: zoom 11~12, 2: zoom>=13)
   const routeArrowZoomTier =

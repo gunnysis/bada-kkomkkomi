@@ -2,7 +2,7 @@
 
 - **문서 버전**: `v2.3` (기준일: `2026-11-10`, Asia/Seoul · 앱 버전 `v2.2` / `2.2.0` 정합)
 - **코드 단일 정본(SSOT)**: [`src/config/dataSources.ts`](../src/config/dataSources.ts) · [`src/config/appVersion.ts`](../src/config/appVersion.ts)
-- **관련 UX 설계서**: [`docs/SOURCE_CREDIBILITY_UX_DESIGN.md`](./SOURCE_CREDIBILITY_UX_DESIGN.md)
+- **통합 구현 설계서**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./ARCHITECTURE_AND_DESIGN.md)
 
 > [!IMPORTANT]
 > **📌 30초 핵심 요점 (TL;DR)**
@@ -19,7 +19,7 @@ flowchart LR
     subgraph OFFLINE["🟢 기기 내장 · 100% 오프라인 작동 (외부 전송 0건)"]
         direction TB
         D1["⚓ 136개 항포구 · 55개 접안지<br/>(KHOA 수심 · 지자체 어항고시 · 공단 현장실측)"]
-        D2["🧭 바닷길 A* 실항로 · 초성 검색<br/>(35개 변침점 · 20개 섬 우회 자체 엔진)"]
+        D2["🧭 바닷길 A* 실항로 · 초성 검색<br/>(300개 변침점 · 378개 실측 해안선 폴리곤 우회 엔진)"]
         D3["📂 무변환 QGIS 파서 · 좌표 변환<br/>(.gpkg/.shp 자체 파서 + proj4 국가좌표계)"]
         D4["🎨 브랜드 · 깃대종 컬러 · UI 표준<br/>(공단 CI · 팔색조 NPIP AS 920 · 행안부 KRDS)"]
     end
@@ -55,7 +55,7 @@ flowchart LR
 | **1. 항포구·접안지·공원경계** | 55개 접안지, 136개 항포구 사전, 공원·특별보호구역 | **국립해양조사원(KHOA)** 수심·해안선 + **지자체 어항고시** + **환경부·국립공원공단(KNPS)** 현장 데이터 | 공공데이터 / 자체 구축 | [`ports.json`](../public/data/ports.json)<br>[`docking_points.geojson`](../public/data/docking_points.geojson) |
 | **2. 실시간 해상 기상** | 48시간 해상 풍속(`kn`)·유의파고(`m`) 3단계 신호등 | **유럽중기예보센터(ECMWF)** `IFS HRES 9km` + `WAM 9km` (중계: **Open-Meteo**) | 무료 오픈 API (무인증) | [`ecmwfWeatherService.ts`](../src/services/ecmwfWeatherService.ts) |
 | **3. 배경 지도·위성·로드뷰** | 일반·위성·하이브리드·지형·지적도, 360° 3D 로드뷰 | **카카오맵 SDK v3** (**국토지리정보원 NGII** 기반) + **OpenStreetMap(OSM)** & **Leaflet** 자동 폴백 | 무료 약관 / `ODbL`·`BSD` | [`kakaoMapLoader.ts`](../src/services/kakaoMapLoader.ts)<br>[`LegacyLeafletCanvas.tsx`](../src/components/map/LegacyLeafletCanvas.tsx) |
-| **4. 바닷길 항로·초성 검색** | 육지·섬 우회 실항로, 도착시간(ETA), 초성(`ㅅㄷㅎ`) 검색 | 외부 API 없이 자체 개발한 **True End-to-End A* 해상 탐색 엔진** (35변침점·20섬 우회) | 자체 개발 (`100% 무료`) | [`routeGeoService.ts`](../src/services/routeGeoService.ts) |
+| **4. 바닷길 항로·초성 검색** | 육지·섬 우회 실항로, 도착시간(ETA), 초성(`ㅅㄷㅎ`) 검색 | 외부 API 없이 자체 개발한 **2계층 하이브리드 A*·가시성 그래프 해상 탐색 엔진** (300변침점·378실측해안선 우회) | 자체 개발 (`100% 무료`) | [`routeGeoService.ts`](../src/services/routeGeoService.ts)<br>[`coastlinePolygons.ts`](../src/data/coastlinePolygons.ts) |
 | **5. QGIS 파일·좌표 변환** | `.gpkg`·`.shp`·`.kml` 무변환 탑재, 한글·좌표 자동 복원 | **OGC/ESRI 공개 규격 자체 파서** + **`proj4`** (국가좌표계) + **`TextDecoder('euc-kr')`** | 오픈소스 (`MIT`) | [`spatialFileParser.ts`](../src/services/spatialFileParser.ts) |
 | **6. 브랜드·색채·오픈소스** | 앱 테마, 마스코트(반달이·꼬미), 주간 고대비 UI | **국립공원공단 CI** + **팔색조(`NPIP AS 920`)** + **행안부 디지털정부 KRDS** + `WCAG 2.2 AA` | 기관 자산 / `MIT`·`ISC` | [`index.css`](../src/index.css)<br>[`package.json`](../package.json) |
 
@@ -91,7 +91,7 @@ flowchart LR
 
 | 데이터셋 | 파일 경로 | 수량 / 범위 | 원천 출처 및 자주 묻는 질문(FAQ) 핵심 해명 |
 | :--- | :--- | :---: | :--- |
-| **항포구·선착장 사전 및 해상 변침점** | [`public/data/ports.json`](../public/data/ports.json) | **136개 항포구**<br>+ **35개 변침점** | · **국립해양조사원(KHOA)** 수로·조석·해안선(138섬) 및 **지자체 어항 지정 고시**(국가·지방·정주·소규모어항 81곳 + 소규모 선착장 50곳 + 조사선 거점 5곳) 통합<br>· 현장 옛 지명·별칭(`강구안`, `원항`, `제승당항` 등) 및 방파제 외측 진입점(`seaApproach`) 내장 |
+| **항포구·선착장 사전 및 해상 변침점** | [`public/data/ports.json`](../public/data/ports.json)<br>[`src/data/coastlinePolygons.ts`](../src/data/coastlinePolygons.ts) | **136개 항포구**<br>+ **300개 변침점**<br>+ **378개 해안선** | · **국립해양조사원(KHOA)** 수로·조석·해안선, **OpenStreetMap(`natural=coastline`) 실측 해안선 폴리곤 378개(12,794정점)** 및 **지자체 어항 지정 고시**(국가·지방·정주·소규모어항 81곳 + 소규모 선착장 50곳 + 조사선 거점 5곳) 통합<br>· 현장 옛 지명·별칭(`강구안`, `원항`, `제승당항` 등) 및 방파제 외측 진입점(`seaApproach`) 전수 실측 해수면 보정 내장 |
 | **현장 접안지 상세 및 수심 모식도** | [`public/data/docking_points.geojson`](../public/data/docking_points.geojson)<br>[`public/images/docking/*.svg`](../public/images/docking/) | **55개 접안지**<br>+ **10종 모식도** | · 국립공원공단 현장 점검 데이터(접안 목적, 만조·간조 수심, 암초·폐로프 위험요소) 수록<br>· 💡 **왜 실제 사진 대신 그림(`.svg`)인가요?**: 오프라인 즉시 열람과 수심·위험요소 도해를 위해 자체 제작한 **현장 이해용 모식도**이며, 실사 사진(`.jpg`/`.png`) 등록 시 앱이 확장자를 자동 판별해 **`📷 현장 실사 사진`** 배지로 즉시 전환 표시함 |
 | **국립공원 경계 · 특별보호구역** | [`national_park.geojson`](../public/data/layers/national_park.geojson)<br>[`protected_area.geojson`](../public/data/layers/protected_area.geojson) | **기본 2개 레이어**<br>(교체 가능) | · **환경부·국립공원공단** 고시 구역(한려해상 통영·거제 지구, 홍도 천연기념물 제335호 등) 기반 **오프라인 경량 도식화 내장본**<br>· 실무자가 `[레이어 > + 파일 등록]`에서 공단 QGIS 원본(`.gpkg`/`.shp`) 업로드 시 즉시 정밀 도면으로 교체 |
 
@@ -99,13 +99,14 @@ flowchart LR
 
 ## 5. 자체 구현 알고리즘 및 무서버 GIS 기술 (`외부 유료 API 0건`)
 
-### 5.1. 바닷길 콕콕 — 해상 실항로 탐색 엔진 ([`src/services/routeGeoService.ts`](../src/services/routeGeoService.ts))
-- **개발 배경**: 자동차 내비게이션 API는 바다 길을 찾지 못하고, 단순 직선 연결은 거제도·한산도 등 육지를 관통함.
+### 5.1. 바닷길 콕콕 — 2계층 하이브리드 해상 실항로 탐색 엔진 ([`src/services/routeGeoService.ts`](../src/services/routeGeoService.ts) · [`src/data/coastlinePolygons.ts`](../src/data/coastlinePolygons.ts))
+- **개발 배경**: 자동차 내비게이션 API는 바다 길을 찾지 못하고, 단순 직선 연결이나 저해상도 근사 박스는 거제도·한산도·좌도·송도·비산도 등 유·무인도와 리아스식 반도를 관통함.
 - **핵심 기술**:
-  1. **True End-to-End A* 탐색**: 미륵도·한산도·거제도·사량도 등 **20개 섬·반도 다각형 장벽(`LANDMASS_BARRIER_POLYGONS`)**과 **35개 해상 변침점 그래프**를 결합해 `0.01초` 만에 최단 우회 바닷길 산출 (**136개 항포구 전체 18,360쌍 육지 비관통 전수 검증 통과**).
-  2. **양단 오버슈트 프루닝(`pruneTerminalOvershoot`)**: 항포구 앞바다를 지나쳐 U턴하는 불필요 역주행 자동 제거.
-  3. **대권거리 · 침로 · 호장 진중점**: 지구 곡면 Haversine 공식(`1 NM = 1.852 km`), 구면 삼각법 출항 방위각(`0°~359°`), 폴리라인 `50% Arc-Length` 진중점 계산.
-  4. **무서버 한글 초성 검색(`extractChosung`)**: 유니코드 음절 분해 수식(`0xAC00`) 자체 구현 (`ㅅㄷㅎ` → `삼덕항` 즉시 매칭).
+  1. **실측 해안선 폴리곤 정본(378개 · 12,794정점) 및 이중 공간 인덱싱**: OpenStreetMap(`natural=coastline`)에서 추출한 통영·거제·고성·창원 본토 및 유·무인도 **378개 폐합 해안선 폴리곤(`12,794`정점)**을 `0.01°×0.01°` 공간 해시 그리드(`EDGE_SPATIAL_GRID`)와 `0.005°` 위도 슬랩 인덱스(`LAT_SLAB_INDEX`)로 이중 인덱싱하여 마이크로초 단위로 교차·포함 판정을 수행합니다.
+  2. **2계층 하이브리드 탐색 (Tier-1 300개 주항로 변침점 A* + Tier-2 C-Space 외향 법선 가시성 그래프)**: **300개 해상 변침점 단일 연결 그래프**와 국지 소도서·만(Cove) 외향 법선 이격 정점 가시성 탐색(`solveCoastalVisibilityDetour`)을 결합해 평균 `0.48ms` 만에 최단 우회 바닷길을 산출합니다 (**136개 항포구 전체 18,360쌍 전 구간 0..N-1 실측 해안선 비관통 100% 검증 통과**).
+  3. **안전 여유폭 보장 Theta\* String-Pulling(`pruneTerminalOvershoot` + `hasSafeChannelClearance`)**: 좌·우현 양측으로 최소 약 `95m` 수로 안전 여유폭이 확보되는 구간에서만 불필요한 지그재그와 양단 역주행(U턴)을 직선 가시선으로 최적화합니다.
+  4. **대권거리 · 침로 · 호장 진중점**: 지구 곡면 Haversine 공식(`1 NM = 1.852 km`), 구면 삼각법 출항 방위각(`0°~359°`), 폴리라인 `50% Arc-Length` 진중점 계산.
+  5. **무서버 한글 초성 검색(`extractChosung`)**: 유니코드 음절 분해 수식(`0xAC00`) 자체 구현 (`ㅅㄷㅎ` → `삼덕항` 즉시 매칭).
 
 ### 5.2. 무변환 QGIS 공간파일 파서 ([`src/services/spatialFileParser.ts`](../src/services/spatialFileParser.ts))
 - **지원 규격**: OGC GeoPackage(`.gpkg` SQLite3 바이너리), ESRI Shapefile(`.zip`/`.shp`/`.dbf`/`.prj`), KML/KMZ, GeoJSON.

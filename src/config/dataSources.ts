@@ -171,22 +171,22 @@ export const DATA_SOURCE_REGISTRY: readonly DataSourceItem[] = [
     governanceLabel: '자체 개발 수학·기하 알고리즘',
     governanceType: 'inhouse_algorithm',
     title: '육지·섬 우회 바닷길 계산 및 한글 초성 검색 엔진',
-    providerSummary: '외부 유료 API 없이 앱에 자체 구현한 True End-to-End A* 해상 탐색 엔진',
+    providerSummary: '외부 유료 API 없이 앱에 자체 구현한 2계층 하이브리드 A*·가시성 그래프(Visibility Graph·Theta*) 해상 탐색 엔진',
     operationMode: 'offline_embedded',
     operationModeLabel: '🟢 기기 자체 연산 (100% 오프라인)',
     keyPoints: [
-      '🧭 35개 변침점 · 20개 섬 우회 A*',
+      '🧭 300개 변침점 · 378개 실측해안선 우회 A*',
       '✅ 18,360개 전 항로 육지 비관통 검증',
       '🔤 무서버 한글 초성 즉시 검색',
     ],
     plainExplanation:
-      '바다 길을 못 찾는 자동차 내비 API나 섬을 관통하는 직선 계산 대신, 통영·거제 20개 섬·반도를 피해 35개 해상 변침점으로 우회하는 A* 엔진을 자체 개발했습니다.',
+      '바다 길을 못 찾는 자동차 내비 API나 섬을 관통하는 직선 계산 대신, OpenStreetMap 실측 해안선 폴리곤 378개(12,794정점)를 피해 300개 해상 변침점과 C-Space 가시성 그래프로 우회하는 2계층 하이브리드 A* 엔진을 자체 개발했습니다.',
     faqQuestion: '바닷길 시간계산기는 어떤 원리로 섬을 피해 거리·도착시간을 계산하나요?',
     faqAnswer:
-      '20개 섬·반도 다각형 장벽(Barrier)을 코드에 내장하고, 출항지 외측 진입점부터 35개 변침점 그래프를 따라 육지를 관통하지 않는 최단 항로를 0.01초 만에 계산합니다.',
+      '378개 본토·유무인도 실측 해안선 폴리곤(12,794정점)과 이중 공간 인덱스(Spatial Grid + Latitude Slab)를 코드에 내장하고, 출항지 외측 진입점부터 300개 변침점 그래프와 C-Space 가시성 그래프(Theta*)를 결합해 육지를 관통하지 않는 최단 항로를 1ms 미만에 계산합니다.',
     technicalSpecs: [
-      'True End-to-End A* 탐색: 136개 항포구 전체 쌍(18,360쌍) 전수 시뮬레이션 및 육지 비관통 검증 통과',
-      '양단 오버슈트 프루닝(pruneTerminalOvershoot): 항포구 앞바다 불필요 역주행(U턴) 자동 제거',
+      '2계층 하이브리드 A* 탐색: 378개 실측 해안선 폴리곤(12,794정점) 대비 136개 항포구 전체 쌍(18,360쌍) 전수 시뮬레이션 및 육지 비관통(0건) 검증 통과',
+      'Theta* String-Pulling & C-Space 가시성 우회: 외향 법선(Outward Normal) 오프셋 정점 가시성 탐색 및 양단 역주행(U턴) 자동 제거',
       '거리·침로·중점: 지구 곡면 Haversine 대권거리(1NM=1.852km), 구면 삼각법 침로(0~359°), 호장 50% 진중점',
       '한글 초성 검색: 유니코드 음절 분해 수식 자체 구현 (예: ㅅㄷㅎ → 삼덕항 즉시 검색)',
     ],
@@ -361,7 +361,7 @@ export function buildSourceCitationCopyText(appVersionDisplay: string): string {
     `1. 항포구·접안지(136개소/55개소): 해양수산부 국립해양조사원(KHOA) 수로·해안선 기준 + 지자체 어항고시 + 국립공원공단 현장 점검 데이터 (100% 오프라인 내장)`,
     `2. 실시간 해상기상(풍속·파고): 유럽중기예보센터(ECMWF IFS 9km / WAM 9km) 수치예보 모델 + Open-Meteo 무료 오픈 API (결측·오프라인 시 미확인 '?' 안전 처리)`,
     `3. 배경 지도·위성·3D 로드뷰: 카카오맵 Web SDK v3 (국토교통부 국토지리정보원 항공·수치지도 기반) + OpenStreetMap/Leaflet 비상 자동 폴백`,
-    `4. 바닷길 실항로 계산·초성 검색: 통영·거제 35개 해상 변침점 및 20개 섬·반도 육지 우회 자체 A* 알고리즘 (외부 유료 API 미사용 · 오프라인 기기 연산)`,
+    `4. 바닷길 실항로 계산·초성 검색: 통영·거제 300개 해상 변침점 및 378개 실측 해안선 폴리곤(12,794정점) 우회 2계층 하이브리드 A*·가시성 그래프 알고리즘 (외부 유료 API 미사용 · 오프라인 기기 연산)`,
     `5. QGIS 공간파일 변환: OGC GeoPackage(.gpkg)/Shapefile(.shp) 자체 파서 + 국토지리정보원 국가좌표계(proj4 EPSG:5179/5186) + CP949 한글 복원 (외부 서버 전송 0건)`,
     `6. 브랜드·UI 표준: 국립공원공단 공식 CI·캐릭터(반달이·꼬미) + 한려해상 깃대종 팔색조(NPIP AS 920) + 행정안전부 디지털정부 UI/UX 가이드라인(KRDS)`,
   ].join('\n');

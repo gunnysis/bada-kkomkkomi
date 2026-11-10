@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import {
   Circle,
@@ -326,16 +326,34 @@ function MapEventsAndCameraController({
     }
   }, [zoomStepTrigger, map]);
 
+  const lastFittedTriggerRef = useRef<number>(-1);
+  const wasInRouteNavRef = useRef<boolean>(false);
+
   useEffect(() => {
-    if (!fitRouteBoundsTrigger || !routeBoundsPositions || routeBoundsPositions.length < 2) {
+    const isRouteNav = activeMainTab === 'navigation' && navSubTab === 'route';
+    if (!isRouteNav) {
+      wasInRouteNavRef.current = false;
       return;
     }
+    if (!routeBoundsPositions || routeBoundsPositions.length < 2) {
+      return;
+    }
+    const triggerVal = fitRouteBoundsTrigger ?? 0;
+    const enteredRouteNav = !wasInRouteNavRef.current;
+    const manualTriggered =
+      triggerVal > 0 && triggerVal !== lastFittedTriggerRef.current;
+
+    if (!enteredRouteNav && !manualTriggered) return;
+
+    wasInRouteNavRef.current = true;
+    lastFittedTriggerRef.current = triggerVal;
+
     try {
       const bounds = L.latLngBounds(routeBoundsPositions);
       if (bounds.isValid()) {
         map.fitBounds(bounds, {
-          paddingTopLeft: [48, 72],
-          paddingBottomRight: [48, 280],
+          paddingTopLeft: [44, 96],
+          paddingBottomRight: [44, 320],
           maxZoom: 14,
           animate: true,
         });
@@ -343,7 +361,7 @@ function MapEventsAndCameraController({
     } catch {
       // ignore invalid bounds
     }
-  }, [fitRouteBoundsTrigger, routeBoundsPositions, map]);
+  }, [activeMainTab, navSubTab, fitRouteBoundsTrigger, routeBoundsPositions, map]);
 
   return null;
 }
@@ -546,10 +564,12 @@ export function LegacyLeafletCanvas({
         if (!layer.visible || layer.id === 'docking' || layer.isSystemLayer || !fc) {
           return null;
         }
+        const isNavMode = activeMainTab === 'navigation';
         const strokeColor = layer.style?.strokeColor || layer.color || '#10b981';
         const strokeWidth =
           layer.style?.strokeWidth ?? (layer.id === 'national_park' ? 2.5 : 3);
-        const strokeOpacity = layer.style?.strokeOpacity ?? 0.92;
+        const baseStrokeOpacity = layer.style?.strokeOpacity ?? 0.92;
+        const strokeOpacity = isNavMode ? baseStrokeOpacity * 0.45 : baseStrokeOpacity;
         const strokeDash =
           layer.style?.strokeDash ??
           (layer.id === 'protected_area' ? 'shortdash' : 'solid');
@@ -560,12 +580,13 @@ export function LegacyLeafletCanvas({
               ? '3 5'
               : undefined;
         const fillColor = layer.style?.fillColor || layer.color || '#10b981';
-        const fillOpacity =
+        const baseFillOpacity =
           layer.style?.fillOpacity ?? (layer.id === 'national_park' ? 0.08 : 0.16);
+        const fillOpacity = isNavMode ? baseFillOpacity * 0.45 : baseFillOpacity;
         const pointRadius = layer.style?.pointRadius ?? 7;
         const labelField = layer.style?.labelField || 'name';
-        const showLabels = layer.style?.showLabels !== false;
-        const versionKey = `${layer.id}:${layer.color}:${strokeColor}:${strokeWidth}:${strokeDash}:${fillColor}:${fillOpacity}:${pointRadius}:${labelField}:${showLabels}:${fc?.features?.length ?? 0}:${layer.sourceMeta?.dataSha256 ?? ''}`;
+        const showLabels = layer.style?.showLabels !== false && !isNavMode;
+        const versionKey = `${activeMainTab}:${layer.id}:${layer.color}:${strokeColor}:${strokeWidth}:${strokeDash}:${fillColor}:${fillOpacity}:${pointRadius}:${labelField}:${showLabels}:${fc?.features?.length ?? 0}:${layer.sourceMeta?.dataSha256 ?? ''}`;
 
         return (
           <GeoJSON
