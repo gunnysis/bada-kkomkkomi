@@ -25,6 +25,12 @@ import {
   SAFE_DEFAULT_THRESHOLDS,
 } from '../services/ecmwfWeatherService.ts';
 import { parseRouteFromUrl } from '../hooks/useAppRoute.ts';
+import {
+  classifyGpsError,
+  isValidRouteWaypointsDraft,
+  sanitizeWorkspaceDraft,
+  WORKSPACE_DRAFT_SCHEMA_VERSION,
+} from '../services/workspaceDraftRepository.ts';
 import type { MarinePort, MarineWaypointNode, PortsDataset } from '../types/port.ts';
 import type { RouteWaypoint } from '../types/route.ts';
 
@@ -300,3 +306,54 @@ describe('3. App Deep-Link & Route Query Parser (useAppRoute.ts)', () => {
     });
   });
 });
+
+describe('4. Workspace Draft Persistence & GPS Error Classification (workspaceDraftRepository.ts)', () => {
+  it('validates and sanitizes workspace drafts with schema versioning', () => {
+    const fallbackWps: RouteWaypoint[] = [
+      makeWaypointFromPort('TY-001', 'start'),
+      makeWaypointFromPort('TY-002', 'end'),
+    ];
+
+    assert.equal(isValidRouteWaypointsDraft(fallbackWps), true);
+    assert.equal(isValidRouteWaypointsDraft([fallbackWps[0]]), false);
+
+    // Valid schema v1 draft
+    const validRaw = {
+      schemaVersion: WORKSPACE_DRAFT_SCHEMA_VERSION,
+      routeWaypoints: fallbackWps,
+      speedKnots: 18,
+      selectedColors: ['red', 'amber'],
+      selectedRegion: 'tongyeong',
+      savedAt: '2026-11-10T12:00:00.000Z',
+    };
+    const restored = sanitizeWorkspaceDraft(validRaw, fallbackWps, 15);
+    assert.equal(restored.speedKnots, 18);
+    assert.deepEqual(restored.selectedColors, ['red', 'amber']);
+    assert.equal(restored.selectedRegion, 'tongyeong');
+
+    // Corrupted or mismatched schema version falls back safely
+    const corrupted = sanitizeWorkspaceDraft(
+      { schemaVersion: 999, speedKnots: -10, selectedColors: [] },
+      fallbackWps,
+      15,
+    );
+    assert.equal(corrupted.speedKnots, 15);
+    assert.deepEqual(corrupted.selectedColors, ['red']);
+    assert.equal(corrupted.selectedRegion, 'all');
+  });
+
+  it('classifies GPS GeolocationPositionError codes into explicit field messages without faking coordinates', () => {
+    const denied = classifyGpsError({ code: 1 });
+    assert.equal(denied.code, 'permission_denied');
+    assert.ok(denied.message.includes('위치 권한이 거부'));
+
+    const unavailable = classifyGpsError({ code: 2 });
+    assert.equal(unavailable.code, 'unavailable');
+    assert.ok(unavailable.message.includes('시뮬레이션 위치'));
+
+    const timeout = classifyGpsError({ code: 3 });
+    assert.equal(timeout.code, 'timeout');
+    assert.ok(timeout.message.includes('수신 시간이 초과'));
+  });
+});
+

@@ -29,6 +29,7 @@ import {
 import type { RouteCalculationResult, RouteWaypoint } from '../../types/route';
 
 export type RouteMapTapMode = 'pan_only' | 'add_waypoint' | 'set_start' | 'set_end';
+export type RouteSheetStage = 'summary' | 'compact' | 'full';
 
 interface RouteTimeCalculatorProps {
   waypoints: RouteWaypoint[];
@@ -92,7 +93,8 @@ export function RouteTimeCalculator({
   onToggleDirectionArrows,
   onFitRouteBounds,
 }: RouteTimeCalculatorProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [sheetStage, setSheetStage] = useState<RouteSheetStage>('full');
+  const isCollapsed = sheetStage === 'summary';
   const [activeSubView, setActiveSubView] = useState<'points' | 'legs'>('points');
   const [copiedBriefing, setCopiedBriefing] = useState(false);
   const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
@@ -175,6 +177,7 @@ export function RouteTimeCalculator({
       `• 총 실항로 거리: ${calculation.totalDistanceNm.toFixed(1)} NM (${calculation.totalDistanceKm.toFixed(1)} km)`,
       `• 예상 소요시간: 약 ${timeFormatted} (현 시각 출항 시 ${etaTimeKst} 도착 예정)`,
       ...legLines,
+      `※ 본 결과는 선속·수로 변침 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.`,
     ].join('\n');
 
     try {
@@ -274,19 +277,53 @@ export function RouteTimeCalculator({
             >
               <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
-            <button
-              type="button"
-              onClick={() => setIsCollapsed((v) => !v)}
-              aria-label={isCollapsed ? '계산기 패널 펼치기' : '계산기 패널 접기'}
-              className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-sky-400 bg-sky-100 px-2.5 text-xs font-black whitespace-nowrap text-[#003360] active:scale-95 sm:h-8.5"
+            <div
+              role="group"
+              aria-label="계산기 시트 높이 단계"
+              className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl border border-sky-300 bg-sky-50 p-0.5 sm:h-8.5"
             >
-              <span>{isCollapsed ? '펼치기' : '접기'}</span>
-              {isCollapsed ? (
-                <ChevronUp className="h-3.5 w-3.5 shrink-0" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-              )}
-            </button>
+              {(
+                [
+                  { stage: 'summary', label: '요약', title: '1단계 요약: 소요시간·거리만 표시 (지도 시야 최대 확보)' },
+                  { stage: 'compact', label: '중간', title: '2단계 중간: 탭 모드·선속 슬라이더만 표시' },
+                  { stage: 'full', label: '전체', title: '3단계 전체: 항구·구간 목록까지 모두 표시' },
+                ] as const
+              ).map((item) => {
+                const isActive = sheetStage === item.stage;
+                return (
+                  <button
+                    key={item.stage}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setSheetStage(item.stage)}
+                    title={item.title}
+                    className={`flex h-full items-center justify-center rounded-lg px-2 text-[11px] font-black whitespace-nowrap transition active:scale-95 ${
+                      isActive
+                        ? 'bg-[#003360] text-white shadow-xs'
+                        : 'text-[#003360] hover:bg-sky-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() =>
+                  setSheetStage((prev) => (prev === 'summary' ? 'full' : 'summary'))
+                }
+                aria-expanded={!isCollapsed}
+                aria-label={isCollapsed ? '계산기 패널 펼치기' : '계산기 패널 접기'}
+                title={isCollapsed ? '전체 시트 펼치기' : '요약 모드로 접기'}
+                className="flex h-full w-6 items-center justify-center rounded-lg text-[#003360] hover:bg-sky-100 active:scale-95"
+              >
+                {isCollapsed ? (
+                  <ChevronUp className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -321,6 +358,12 @@ export function RouteTimeCalculator({
                 <span>수심·암초주의</span>
               </span>
             )}
+            <span
+              className="inline-flex shrink-0 items-center rounded-md border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap text-slate-700"
+              title="선속·수로 변침 기반 단순 추정치이며 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다."
+            >
+              추정치·참고용
+            </span>
           </div>
         </div>
       </div>
@@ -409,8 +452,11 @@ export function RouteTimeCalculator({
             </div>
           </div>
 
-          {/* Zone 3: 탭 전환 ([항구·선착장] vs [구간별 시간]) + 경유지 비우기/추가 (h-8 균일 규격) */}
-          <div className="flex items-center justify-between gap-1.5">
+          {/* Zone 3 & Zone 4: 3단계 '전체(full)' 시트 모드일 때만 항구·선착장 및 구간별 시간 목록 노출 */}
+          {sheetStage === 'full' && (
+            <>
+              {/* Zone 3: 탭 전환 ([항구·선착장] vs [구간별 시간]) + 경유지 비우기/추가 (h-8 균일 규격) */}
+              <div className="flex items-center justify-between gap-1.5">
             <div className="grid h-8 min-w-0 flex-1 grid-cols-2 gap-1 rounded-xl border border-sky-200 bg-sky-100/80 p-0.5">
               <button
                 type="button"
@@ -738,6 +784,8 @@ export function RouteTimeCalculator({
               })}
             </div>
           )}
+            </>
+          )}
 
           {/* Zone 5: 선박 속력(knots) 프리셋 + 슬라이더 — NPIP 해안 사구 베이지(#F7F4EE) 카드 */}
           <div className="rounded-xl border border-[#d6c6b2] bg-[#f7f4ee] px-2.5 py-1.5">
@@ -780,6 +828,11 @@ export function RouteTimeCalculator({
               </span>
             </div>
           </div>
+
+          {/* 항해 안전 고지 문구 (RC-SAFETY-01: 단순 선속 기반 추정치 한계 명시) */}
+          <p className="px-1 text-[10px] leading-snug font-semibold text-slate-600">
+            ※ 선속·수로 변침 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.
+          </p>
         </div>
       )}
     </section>

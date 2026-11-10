@@ -198,16 +198,16 @@ export function HomeScreen({
                   type="button"
                   onClick={() => handleLaunchNotebook('hazard')}
                   title="위험·암초 주의 9개소 집중 표시로 바로 이동"
-                  className="flex h-8 items-center justify-center gap-0.5 rounded-xl bg-red-600 px-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-red-700 active:scale-95"
+                  className="flex min-h-10 items-center justify-center gap-0.5 rounded-xl bg-red-600 px-1 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-red-700 active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
-                  <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                  <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
                   <span>위험 {hazardCount}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleLaunchNotebook('all')}
                   title="전체 55개 접안지 모두 보기로 바로 이동"
-                  className="flex h-8 items-center justify-center rounded-xl border border-[#0066b3]/50 bg-white/95 px-1 text-[10px] font-black whitespace-nowrap text-[#0066b3] shadow-sm transition hover:bg-sky-50 active:scale-95"
+                  className="flex min-h-10 items-center justify-center rounded-xl border border-[#0066b3]/50 bg-white/95 px-1 py-1 text-[10px] font-black whitespace-nowrap text-[#0066b3] shadow-sm transition hover:bg-sky-50 active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
                   전체 {totalDockingCount}
                 </button>
@@ -215,9 +215,9 @@ export function HomeScreen({
                   type="button"
                   onClick={() => handleLaunchNotebook('layers')}
                   title="국립공원 공간정보 레이어 관리 창 바로 열기"
-                  className="flex h-8 items-center justify-center gap-0.5 rounded-xl bg-[#00854a] px-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#047857] active:scale-95"
+                  className="flex min-h-10 items-center justify-center gap-0.5 rounded-xl bg-[#00854a] px-1 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#047857] active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
-                  <Layers className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                  <Layers className="h-3 w-3 shrink-0" aria-hidden="true" />
                   <span>레이어</span>
                 </button>
               </div>
@@ -267,18 +267,18 @@ export function HomeScreen({
                   type="button"
                   onClick={() => handleLaunchNavigation('route')}
                   title="실항로 시간계산기로 바로 이동"
-                  className="flex h-8 items-center justify-center gap-1 rounded-xl bg-[#0066b3] px-1.5 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0369a1] active:scale-95"
+                  className="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-[#0066b3] px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0369a1] active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
-                  <Navigation className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                  <Navigation className="h-3 w-3 shrink-0" aria-hidden="true" />
                   <span>시간계산</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleLaunchNavigation('weather')}
                   title="ECMWF 해상기상 판정 화면으로 바로 이동"
-                  className="flex h-8 items-center justify-center gap-1 rounded-xl border border-[#00854a]/60 bg-white/95 px-1.5 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-emerald-50 active:scale-95"
+                  className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[#00854a]/60 bg-white/95 px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-emerald-50 active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
-                  <Waves className="h-2.5 w-2.5 shrink-0 text-[#00854a]" aria-hidden="true" />
+                  <Waves className="h-3 w-3 shrink-0 text-[#00854a]" aria-hidden="true" />
                   <span>기상판정</span>
                 </button>
               </div>
@@ -365,18 +365,18 @@ export function HomeScreen({
                   type="button"
                   onClick={() => onOpenSettings?.('thresholds')}
                   title="바닷길 콕콕 풍속·파고 판정 기준 설정 열기"
-                  className="flex h-8 items-center justify-center gap-1 rounded-xl bg-[#0f766e] px-1.5 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0d9488] active:scale-95"
+                  className="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-[#0f766e] px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0d9488] active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
-                  <SlidersHorizontal className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                  <SlidersHorizontal className="h-3 w-3 shrink-0" aria-hidden="true" />
                   <span>기상기준</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => onOpenSettings?.('guide')}
                   title="앱 이용 안내 및 버전 확인 열기"
-                  className="flex h-8 items-center justify-center gap-1 rounded-xl border border-[#0f766e]/60 bg-white/95 px-1.5 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-teal-50 active:scale-95"
+                  className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[#0f766e]/60 bg-white/95 px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-teal-50 active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
-                  <BookOpen className="h-2.5 w-2.5 shrink-0 text-[#0f766e]" aria-hidden="true" />
+                  <BookOpen className="h-3 w-3 shrink-0 text-[#0f766e]" aria-hidden="true" />
                   <span>이용안내</span>
                 </button>
               </div>
@@ -389,7 +389,7 @@ export function HomeScreen({
           <button
             type="button"
             onClick={onResumeWorkspace}
-            className="knps-hud-surface mt-2.5 flex w-full items-center justify-between gap-2.5 rounded-2xl border-2 px-3 py-2 text-left text-white shadow-xl transition active:scale-[0.99]"
+            className="knps-hud-surface mt-2.5 flex w-full items-center justify-between gap-2.5 rounded-2xl border-2 px-3 py-2 text-left text-[#003360] shadow-xl transition active:scale-[0.99]"
           >
             <div className="flex min-w-0 items-center gap-2.5">
               <img
@@ -399,10 +399,10 @@ export function HomeScreen({
                 className="h-10 w-10 shrink-0 rounded-xl bg-white/95 object-contain p-0.5 shadow"
               />
               <div className="min-w-0">
-                <span className="block text-[10px] font-black tracking-wider text-emerald-300 uppercase">
+                <span className="block text-[10px] font-black tracking-wider text-[#00846c] uppercase">
                   진행 중인 국립공원 해상 작업공간 보존됨
                 </span>
-                <span className="block truncate text-xs font-extrabold text-sky-100 sm:text-sm">
+                <span className="block truncate text-xs font-extrabold text-[#003360] sm:text-sm">
                   {activeWorkspaceSummary || '직전 지도 화면으로 이어서 돌아가기'}
                 </span>
               </div>

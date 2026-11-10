@@ -94,6 +94,11 @@ import {
   describeNearestPortArea,
   resolveSmartWaypoint,
 } from './services/routeGeoService';
+import {
+  classifyGpsError,
+  loadWorkspaceDraft,
+  saveWorkspaceDraft,
+} from './services/workspaceDraftRepository';
 
 interface UserGpsState {
   lat: number;
@@ -206,9 +211,24 @@ export function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
 
-  // '위험주의(red)' 우선 인지(Hazard-First) 기본값 + 권역(전체/통영/거제) 및 검색어 필터
-  const [selectedColors, setSelectedColors] = useState<MarkerColor[]>(['red']);
-  const [selectedRegion, setSelectedRegion] = useState<'all' | 'tongyeong' | 'geoje'>('all');
+  // '위험주의(red)' 우선 인지(Hazard-First) 기본값 + 권역(전체/통영/거제) 및 검색어 필터 (WorkspaceDraftRepository 영속 복원 지원)
+  const initialWorkspaceDraft = useMemo(
+    () =>
+      loadWorkspaceDraft(
+        INITIAL_WAYPOINTS,
+        config.route_defaults?.default_speed_knots || 15,
+      ),
+    // 초기 마운트 시 1회만 로컬스토리지 드래프트 복원
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const [selectedColors, setSelectedColors] = useState<MarkerColor[]>(
+    () => initialWorkspaceDraft.selectedColors,
+  );
+  const [selectedRegion, setSelectedRegion] = useState<'all' | 'tongyeong' | 'geoje'>(
+    () => initialWorkspaceDraft.selectedRegion,
+  );
   const [dockingSearchQuery, setDockingSearchQuery] = useState<string>('');
   const [isColorFilterOpen, setIsColorFilterOpen] = useState<boolean>(false);
   const colorFilterPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -325,7 +345,7 @@ export function App() {
     );
   });
 
-  // 5. 바닷길 콕콕 - 시간계산기 상태 & 최대 10단계 실행취소(Undo) 히스토리 스택 (선박 속력 기기 영속 저장 지원)
+  // 5. 바닷길 콕콕 - 시간계산기 상태 & 최대 10단계 실행취소(Undo) 히스토리 스택 (WorkspaceDraftRepository + 선박 속력 기기 영속 저장 지원)
   const [speedKnots, setSpeedKnotsState] = useState<number>(() => {
     try {
       const saved = window.localStorage.getItem('bada_vessel_speed_knots_v1');
@@ -338,7 +358,7 @@ export function App() {
     } catch {
       // ignore storage error
     }
-    return config.route_defaults?.default_speed_knots || 15;
+    return initialWorkspaceDraft.speedKnots;
   });
 
   const setSpeedKnots = useCallback((nextSpeed: number) => {
@@ -350,9 +370,21 @@ export function App() {
       // ignore storage error
     }
   }, []);
-  const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(INITIAL_WAYPOINTS);
+  const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(
+    () => initialWorkspaceDraft.routeWaypoints,
+  );
   const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
   const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('add_waypoint');
+
+  // 항로 웨이포인트·선속·등급 필터·권역 필터 변경 시 WorkspaceDraftRepository에 자동 영속화 (앱 재시작·SW 업데이트 시 보존)
+  useEffect(() => {
+    saveWorkspaceDraft({
+      routeWaypoints,
+      speedKnots,
+      selectedColors,
+      selectedRegion,
+    });
+  }, [routeWaypoints, speedKnots, selectedColors, selectedRegion]);
 
   const commitRouteWaypoints = useCallback(
     (updater: (prev: RouteWaypoint[]) => RouteWaypoint[]) => {
@@ -637,10 +669,10 @@ export function App() {
     return calculateRouteSummary(routeWaypoints, speedKnots, portsList, marineWaypoints);
   }, [routeWaypoints, speedKnots, portsList, marineWaypoints]);
 
-  // GPS 위치 요청
+  // GPS 위치 요청 (실패 시 원인별 명확한 안내 제공, 가상 위치를 실제 GPS로 오인하지 않도록 분리 — RC-SAFETY-02)
   const handleRequestGps = useCallback(() => {
     if (!('geolocation' in navigator)) {
-      showToast('GPS 위치 기능을 지원하지 않는 기기입니다.');
+      showToast('GPS 위치 기능을 지원하지 않는 기기입니다. [시뮬레이션 위치] 버튼을 이용해 주세요.');
       return;
     }
     showToast('위성 GPS 신호 수신 중...');
@@ -656,21 +688,9 @@ export function App() {
         showToast('실제 GPS 위치 수신 완료');
         setFlyTarget({ lat: nextLoc.lat, lng: nextLoc.lng, zoom: 13, nonce: Date.now() });
       },
-      () => {
-        const fallbackLoc: UserGpsState = {
-          lat: 34.8125,
-          lng: 128.5085,
-          accuracy: 95,
-          isSimulated: true,
-        };
-        setUserLocation(fallbackLoc);
-        showToast('실내/권한 제한 감지 → 통영·거제 해역 가상 선박 위치로 이동');
-        setFlyTarget({
-          lat: fallbackLoc.lat,
-          lng: fallbackLoc.lng,
-          zoom: 12,
-          nonce: Date.now(),
-        });
+      (err) => {
+        const diagnosis = classifyGpsError(err);
+        showToast(diagnosis.message, 4200);
       },
       { enableHighAccuracy: true, timeout: 6000, maximumAge: 10000 },
     );

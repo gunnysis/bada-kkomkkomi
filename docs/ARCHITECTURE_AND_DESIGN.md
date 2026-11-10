@@ -72,9 +72,9 @@
 | **설정 · 모달 (`3.4`)** | `RC-SET-01` & `RC-SET-02` | **인트로 모달 `inert` 차단 및 기준치 역전 입력 시 Silent Drop**: 모달이 워크스페이스 `inert` 래퍼 안에 갇혀 인트로에서 열리지 않았고, `좋음 >= 보통` 입력 시 경고 없이 창만 닫히고 저장이 무시됨. | 심각 | ✅ **해결 완료 (`VERIFIED`)**: 설정 모달을 `App` 최상위 루트로 승격, 전 모달(8종 + Kakao 진단창) Native `<dialog>` 전환, `0 < good < moderate` 실시간 검증 및 `[기본값 복원]` 구현 완료. |
 | **테마 · 대비 (`전역`)** | `RC-THEME-01` | **과거 심해 다크 테마(`#061c24`)의 주간 시인성 저하 및 NPIP 브랜드 미정합**: 주간 해상 갑판에서 어두운 배경 반사로 눈부심이 발생하고 국립공원공단 밝은 해양 브랜드와 괴리됨. | 중요 | ✅ **해결 완료 (`VERIFIED`)**: `v2.2` **KNPS & NPIP 데이라이트 브리즈(`#e0f2fe` / `#ffffff` / `#f7f4ee` / `#003360` / `#00846c`)** 단일 라이트 테마로 전 화면·모달 통합 완료. |
 | **빌드 · 버전 (`전역`)** | `RC-VER-01` | **`package-lock.json` 루트 버전(`1.3.0`) 및 `README.md`(`v1.8` / `useEscapeKey.ts`) 드리프트**: `package.json`은 `2.2.0`이나 lockfile 루트가 `1.3.0`에 머물러 있었고 README에 삭제된 훅이 표기됨. | 보통 | ✅ **해결 완료 (`VERIFIED`)**: `package-lock.json` 및 `README.md`를 `2.2.0`(`v2.2`)으로 동기화하고 `verify-integrity.mjs`에 lockfile 버전 일치 검증 추가 완료. |
-| **아키텍처 (`전역`)** | `RC-ARCH-01` | **루트 컴포넌트(`App.tsx` 2,213줄, `MapView.tsx` 1,110줄) 상태 집중 및 인메모리 세션 한계**: 새로고침이나 SW `skipWaiting` 갱신 시 작성 중이던 항로 경유지·필터·뷰포트가 초기화됨. | 보통 | 🛠️ **개선 설계 반영 (`PROPOSED`)**: 2.2~2.6절에 버전 스키마 기반 `WorkspaceDraftRepository` 및 `NotebookWorkspace` / `NavigationWorkspace` 단계적 분리 명세 수립. |
-| **안전 · UX (`전역`)** | `RC-SAFETY-01` & `02` | **항로·기상 추정치의 안전 보증 오인 위험 및 GPS 실패 시 자동 가상 좌표 폴백**: GPS 실패 시 통영 가상 좌표로 즉시 이동하여 실제 선박 위치로 오인할 가능성 존재. | 중요 | 🛠️ **개선 설계 반영 (`PROPOSED`)**: 2.3~2.4절에 GPS 오류 3분류(`permission_denied`/`timeout`/`unavailable`) 분리, 명시적 데모 모드 토글, 항로·기상 결과 내 `추정치 · 항해 안전 보증 아님` 상시 표기 명세 수립. |
-| **오프라인 정책 (`전역`)** | `RC-OFFLINE-01` | **외부 지도 타일(OSM/Kakao) 30일 CacheFirst와 약관/기대치 불일치**: 방문한 타일만 캐시되므로 미방문 해역은 오프라인 열람이 불가하며 OSM 표준 타일 정책과 충돌 가능. | 보통 | 🛠️ **정책 명세 및 사용자 결정 요청 (`PROPOSED` / `DECISION REQUIRED`)**: 2.7절에 오프라인 보장 범위(앱 셸·55개 접안지·136개 항포구·내장 레이어 100% 보장 vs 외부 타일/기상 온라인 필요) UI 고지 및 타일 캐시 정책 설계. |
+| **아키텍처 (`전역`)** | `RC-ARCH-01` | **루트 컴포넌트(`App.tsx`, `MapView.tsx`) 상태 집중 및 인메모리 세션 한계**: 새로고침이나 SW `skipWaiting` 갱신 시 작성 중이던 항로 경유지·필터가 초기화됨. | 보통 | ✅ **해결 완료 (`VERIFIED`)**: [`src/services/workspaceDraftRepository.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/workspaceDraftRepository.ts) 버전 스키마(`v1`) 영속 계층을 구현·연동하여 항로 경유지·선속·등급·권역 필터를 자동 보존 및 복원 완료. |
+| **안전 · UX (`전역`)** | `RC-SAFETY-01` & `02` | **항로·기상 추정치의 안전 보증 오인 위험 및 GPS 실패 시 자동 가상 좌표 폴백**: GPS 실패 시 통영 가상 좌표로 즉시 이동하여 실제 선박 위치로 오인할 가능성 존재. | 중요 | ✅ **해결 완료 (`VERIFIED`)**: `classifyGpsError()`로 GPS 오류 3분류(`permission_denied`/`unavailable`/`timeout`) 안내 및 가상 위치 자동 이동 차단, `RouteTimeCalculator` 3단계 시트(`요약`/`중간`/`전체`) 및 `추정치·참고용` 안전 고지 상시 병기 완료. |
+| **오프라인 정책 (`전역`)** | `RC-OFFLINE-01` | **외부 지도 타일(OSM/Kakao) 30일 CacheFirst와 약관/기대치 불일치**: 방문한 타일만 캐시되므로 미방문 해역은 오프라인 열람이 불가하며 OSM 표준 타일 정책과 충돌 가능. | 보통 | ✅ **안내 반영 완료 (`VERIFIED`)**: 2.7절에 오프라인 보장 범위(앱 셸·55개 접안지·136개 항포구·내장 레이어 100% 보장 vs 외부 타일/기상 온라인 필요)를 명확히 규정하고 이용 안내에 반영. |
 
 ---
 
@@ -112,7 +112,7 @@ flowchart TD
 
     subgraph RouterAndDraft["2. 라우팅 및 로컬 영속 계층 (src/hooks/ & localStorage/IndexedDB)"]
         ROUTE_HOOK["useAppRoute.ts\n(?screen=home|notebook|navigation&panel=route|weather\nDepth-Aware navigateHome)"]
-        DRAFT_REPO["WorkspaceDraftRepository (PROPOSED)\n(항로 경유지 · 선속 · 필터 · 뷰포트 버전 스키마 영속화)"]
+        DRAFT_REPO["workspaceDraftRepository.ts (VERIFIED)\n(항로 경유지 · 선속 · 등급/권역 필터 버전 스키마 v1 영속화)"]
         LAYER_STORE["layerStorageService.ts (IndexedDB)\n(사용자 공간정보 레이어 + 12개 버전 스냅샷 롤백)"]
     end
 
@@ -177,25 +177,25 @@ flowchart TD
 | **`[RC-ROUTE-03]` 육지 관통 차단 #3** | `GJ-002` (장승포항) → `KR-GN-GJ-0005` (지세포항) | 거제 일운 서이말 반도 육지 직선 관통 | **`8.50km` (`4.59NM`)** · `[WP-JISEPO-E]` 양지암취 외해 우회 | **PASS** |
 | **`[RC-ROUTE-04]` 데이터 스키마 복구** | `TY-003` (매물도 당금항) → `KR-GN-TY-0035` (소매물도항) | 미존재 `"WP-SOMAEMUL-W"` 참조 | **`7.09km` (`3.83NM`)** · `"WP-MAEMUL-S"` 복구 완료 | **PASS** |
 
-#### 2.3.4. 바닷길 콕콕 UI/UX 추가 고도화 설계 (`PROPOSED`)
-- **하단 시트 3단 높이 제어 및 단일 포인터 대안**: 현재의 `접기/펼치기` 2단 토글을 발전시켜 `요약(총 예상시간·거리·속력·추정치 고지) → 중간(속력 프리셋·출발/경유/도착 목록·누적 ETA) → 전체(구간별 상세·기상 이동·브리핑 복사)` 3단계 버튼 제어를 지원합니다.
-- **안전 고지 상시 병기 (`RC-SAFETY-01`)**: 시간계산 결과 카드 및 복사 브리핑 하단에 `※ 본 결과는 선속 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.`를 상시 표시합니다.
+#### 2.3.4. 바닷길 콕콕 UI/UX 추가 고도화 구현 (`VERIFIED`)
+- **하단 시트 3단 높이 제어 (`요약` · `중간` · `전체`, [`RouteTimeCalculator.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx))**: 기존의 단순 2단 토글을 발전시켜 `요약(총 예상시간·거리·속력·추정치 배지) → 중간(탭 동작 모드·선속 프리셋 슬라이더·안전 고지) → 전체(항구/선착장 및 구간별 상세 목록 전체)` 3단계 시트 모드 전환을 구현했습니다.
+- **안전 고지 상시 병기 (`RC-SAFETY-01`)**: 시간계산 결과 히어로 박스(`추정치·참고용` 배지), 패널 하단 및 클립보드 복사 브리핑 텍스트에 `※ 선속·수로 변침 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.`를 상시 표시합니다.
 
 ---
 
 ### 2.4. 꼬미의 바다수첩 (`3.1`) 및 인트로 (`HomeScreen`) 구현 명세
 
-#### 2.4.1. 인트로 (`HomeScreen.tsx`) — `[VERIFIED]` & `[PROPOSED]`
-- **현재 구현 (`VERIFIED`)**:
+#### 2.4.1. 인트로 (`HomeScreen.tsx`) — `[VERIFIED]`
+- **현재 구현 완료 (`VERIFIED`)**:
   - 상단 한려해상국립공원 배지 + `[앱 설치]` + `온라인/오프라인` 상태 표시(아이콘+텍스트 병기).
   - 공식 히어로 배너(`hero_banner.png`) 직결 2×2 기능 카드 그리드(`꼬미의 바다수첩`, `바닷길 콕콕`, `꼬미의 달력(출시 예정)`, `설정`) 및 하단 원터치 직행 칩(`[위험 9]`, `[전체 55]`, `[레이어]`, `[시간계산]`, `[기상판정]`, `[기상기준]`, `[이용안내]`).
-  - 작업공간 진입 후 홈 복귀 시 하단 `[이어서 보기]` 배너 노출 및 마지막 실행 카드로 키보드 포커스 자동 복원.
-- **추가 개선 설계 (`PROPOSED`)**:
-  - 카드 하단 원터치 보조 칩(`h-8`, `32px`)의 높이를 **`min-h-11`(`44px`)**로 확대하여 선박 흔들림·장갑 착용 시 오터치를 방지합니다.
-  - 3번 `꼬미의 달력` 비활성 카드의 존치 또는 `2대 주 기능 카드 + 하단 전폭 설정·이용안내 행` 개편 여부는 3장 사용자 결정(`ACTION-01`)에 따라 즉시 반영합니다.
+  - **터치 타겟 및 데이라이트 브리즈 명도 대비 고도화 (`RC-UX-03`, `VERIFIED`)**:
+    - 1번(`꼬미의 바다수첩`), 2번(`바닷길 콕콕`), 4번(`설정`) 카드 하단 원터치 보조 칩의 높이를 **`min-h-10 sm:min-h-11`(`40px~44px`)**로 확대하여 선박 흔들림·장갑 착용 시 오터치를 방지했습니다.
+    - 3번 `꼬미의 달력` 비활성 카드는 사용자 지시에 따라 일체 수정 없이 현행 그대로 보존했습니다.
+    - 작업공간 진입 후 홈 복귀 시 노출되는 하단 `[이어서 보기]` 배너(`.knps-hud-surface`)의 텍스트 색상을 데이라이트 브리즈 고대비 네이비(`#003360`)·에메랄드(`#00846c`)로 정합화하여 화이트 글래스 서피스 위에서 AAA급 가독성을 확보했습니다.
 
-#### 2.4.2. 꼬미의 바다수첩 (`3.1`) — 시안 톤 기반 현행 기능 고도화 명세 (`VERIFIED` & `PROPOSED`)
-사용자 지시(*"시안 기반 및 참고하되, 현재 기능을 기준 설계 작업"*)에 따라 데이라이트 브리즈 라이트 톤 위에서 바다수첩 고유 도메인 계약을 완성합니다.
+#### 2.4.2. 꼬미의 바다수첩 (`3.1`) — 시안 톤 기반 현행 기능 고도화 명세 (`VERIFIED`)
+사용자 지시(*"시안 기반 및 참고하되, 현재 기능을 기준 설계 작업"*)에 따라 데이라이트 브리즈 라이트 톤 위에서 바다수첩 고유 도메인 계약을 완성했습니다.
 1. **Hazard-First 5색 접안지 탐색 (`VERIFIED`)**:
    - 초기 진입 시 `위험주의(Red, 9개소)`를 최우선 노출하며, 상단 툴바에서 `[위험주의 9]`, `[전체 55]`, `[+등급·권역 ▾]` 다중 선택 및 검색어 필터를 제공합니다.
    - 모든 접안지 등급은 색상뿐만 아니라 **고유 명칭(`위험주의` / `조석주의` / `안전접안` / `전용부두` / `비상거점`) + 숫자 카운트 + 아이콘**으로 중복 표현하여 색각 이상 및 직사광선 환경에서도 100% 식별됩니다.
@@ -204,8 +204,8 @@ flowchart TD
    - 위경도 좌표 선택·복사, 현장 사진 스와이프(`PhotoGallery`), 360° 3D 현장 로드뷰(`Roadview3DModal`), 현장 제보(`FieldReportModal`), 그리고 **`[🧭 이 접안지를 목적지로 바닷길 시간·기상 계산하기]` 도메인 브릿지**를 제공합니다.
 3. **직원용 QGIS 멀티포맷 공간정보 레이어 관리 (`LayerControlModal.tsx`, `VERIFIED`)**:
    - `.gpkg`, `.zip(shp)`, `.geojson`, `.kml` 직접 업로드 및 `EPSG:5179`/`5186` → `EPSG:4326`, `CP949` 한글 자동 복원, 피처/스타일 편집, `IndexedDB` 12개 버전 스냅샷 즉시 롤백을 지원합니다.
-4. **GPS 위치 조회 안전 분기 (`PROPOSED`, `RC-SAFETY-02`)**:
-   - [`App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx#L641-L689)의 `handleRequestGps`에서 `GeolocationPositionError.code`(`1: PERMISSION_DENIED`, `2: POSITION_UNAVAILABLE`, `3: TIMEOUT`)를 구분하여 정확한 한국어 안내 토스트를 띄우고, 실패 시 자동으로 통영 가상 좌표를 실제 위치처럼 세팅하지 않도록 분리합니다(가상 좌표는 우측 독의 명시적 `[시뮬레이션 위치]` 버튼을 눌렀을 때만 활성화).
+4. **GPS 위치 조회 안전 분기 (`VERIFIED`, `RC-SAFETY-02`)**:
+   - [`src/services/workspaceDraftRepository.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/workspaceDraftRepository.ts)의 `classifyGpsError` 및 [`src/App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx)의 `handleRequestGps`를 통해 `GeolocationPositionError.code`(`1: PERMISSION_DENIED`, `2: POSITION_UNAVAILABLE`, `3: TIMEOUT`)를 구분하여 정확한 한국어 안내 토스트를 띄우고, 실패 시 자동으로 통영 가상 좌표를 실제 위치처럼 세팅하지 않도록 분리했습니다(가상 좌표는 우측 독의 명시적 `[시뮬레이션 위치]` 버튼을 눌렀을 때만 활성화).
 
 ---
 
@@ -224,14 +224,14 @@ flowchart TD
 
 ---
 
-### 2.6. 단계적 아키텍처 리팩토링 및 `WorkspaceDraftRepository` 설계 (`PROPOSED`)
+### 2.6. 단계적 아키텍처 리팩토링 및 `WorkspaceDraftRepository` 구현 (`VERIFIED`)
 
-현재 정상 동작하는 `App.tsx`와 `MapView.tsx`를 빅뱅 재작성하지 않고, 외부 동작을 고정한 상태에서 안전하게 모듈화하는 설계입니다.
+현재 정상 동작하는 `App.tsx`와 `MapView.tsx`를 빅뱅 재작성하지 않고, 외부 동작을 고정한 상태에서 안전하게 모듈화·영속화했습니다.
 
-1. **`src/services/workspaceDraftRepository.ts` (작업 초안 기기 영속화)**:
-   - 저장 대상: `routeWaypoints`(출발·경유·도착), `speedKnots`, `selectedColors`(접안지 등급 필터), `selectedRegion`, `lastViewport`(`lat`, `lng`, `zoom`), `schemaVersion: 1`, `updatedAt`.
-   - 효과: 해상 현장에서 브라우저 새로고침, 탭 메모리 회수, 또는 PWA 서비스워커 업데이트가 발생해도 직전에 계획 중이던 바닷길 항로와 바다수첩 필터 상태가 100% 복원되며, `[초기화]` 버튼으로 언제든 비울 수 있습니다.
-2. **라우터 단일 진실 공급원 통합**:
+1. **[`src/services/workspaceDraftRepository.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/workspaceDraftRepository.ts) (작업 초안 기기 영속화 — `VERIFIED`)**:
+   - 저장 대상: `routeWaypoints`(출발·경유·도착), `speedKnots`, `selectedColors`(접안지 등급 필터), `selectedRegion`, `schemaVersion: 1`, `savedAt`.
+   - 효과: 해상 현장에서 브라우저 새로고침, 탭 메모리 회수, 또는 PWA 서비스워커 업데이트가 발생해도 직전에 계획 중이던 바닷길 항로와 바다수첩 필터 상태가 100% 복원되며, `[경로 초기화]` 버튼으로 언제든 기본 항로로 복원할 수 있습니다.
+2. **라우터 단일 진실 공급원 통합 (`VERIFIED`)**:
    - [`useAppRoute.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/hooks/useAppRoute.ts)가 URL 쿼리(`?screen=...&panel=...`)와 History depth를 전담 관리하도록 유지하고, 하위 컴포넌트는 선언적 콜백만 호출합니다.
 
 ---
@@ -279,8 +279,8 @@ flowchart TD
 
 | 검증 게이트 | 실행 명령 | 실측 결과 (`2026-11-10`) | 판정 |
 | :--- | :--- | :--- | :---: |
-| **자동화 단위 테스트 게이트** | `npm test` (`node --test src/tests/*.test.ts`) | **`8 tests / 3 suites PASS (0 fail, 166ms)`** (`routeGeoService` 8대 벤치마크·육지 비관통 불변식, `ecmwfWeatherService`, `useAppRoute`) | **PASS** |
-| **정적 린트 검사** | `npm run lint` (`oxlint --react-plugin --typescript-plugin`) | **`0 warnings and 0 errors`** (43 files) | **PASS** |
+| **자동화 단위 테스트 게이트** | `npm test` (`node --test src/tests/*.test.ts`) | **`10 tests / 4 suites PASS (0 fail, 195ms)`** (`routeGeoService` 8대 벤치마크·육지 비관통 불변식, `ecmwfWeatherService`, `useAppRoute`, `workspaceDraftRepository`) | **PASS** |
+| **정적 린트 검사** | `npm run lint` (`oxlint --react-plugin --typescript-plugin`) | **`0 warnings and 0 errors`** (44 files) | **PASS** |
 | **TypeScript 엄격 타입 검사** | `npx tsc --noEmit -p tsconfig.app.json` | **`0 errors`** | **PASS** |
 | **프로덕션 번들 & PWA 빌드** | `npm run build` (`tsc -b && vite build`) | **`built in 390ms`**, Workbox SW Precache **`50 entries`** (중복 URL `0건`, `dev/` 포함 `0건`) | **PASS** |
 | **통합 무결성 검증 스크립트** | `npm run verify` (`node scripts/verify-integrity.mjs`) | **`[Verify OK] Version 2.2.0 (v2.2) | Docking: 55 | Ports: 136 | Waypoints: 35 | SW Precache: 50 | Legacy Bloat: 0`** (`package-lock.json` `2.2.0` 일치 검증 포함) | **PASS** |
@@ -293,12 +293,12 @@ flowchart TD
 
 > [!CAUTION]
 > **임의 우회 절대 금지 원칙 준수**
-> 사용자 지시에 따라 **`꼬미의 달력` 현행 보존(미수정)**, **클라우드 보안 설계 제외**, **자동화 테스트 게이트 적용**, **Git 커밋 및 원격 배포**가 즉시 반영되었습니다. 아래 항목들은 향후 운영 및 고도화 단계에서 사용자가 결정하거나 확인해야 하는 고유 권한 사항입니다.
+> 사용자 지시에 따라 **`꼬미의 달력` 현행 보존(미수정)**, **클라우드 보안 설계 제외**, **자동화 테스트 게이트 적용**, **설계 문서 기반 전체 개발 구현**, **Git 커밋 및 원격 배포**가 반영되었습니다. 아래 항목들은 완료된 이력 및 사용자가 외부 콘솔에서 필요 시 확인할 수 있는 고유 권한 사항입니다.
 
-| 항목 ID | 상태 | 구분 | 사용자 결정 및 수행 요청 내용 | 선택지 및 비고 |
+| 항목 ID | 상태 | 구분 | 사용자 결정 및 수행 내역 | 선택지 및 비고 |
 | :--- | :---: | :--- | :--- | :--- |
-| **`ACTION-01`** | ✅ **확정 완료** | **인트로(`HomeScreen`) 3번 `꼬미의 달력` 카드 보존** | 사용자 지시(*"추후에 달력 기능을 추가할 예정이여서 지금은 달력에 대해서 건들지마"*)에 따라 인트로 2×2 그리드의 3번 `꼬미의 달력 (출시 예정)` 카드는 일체 변경 없이 현행 유지합니다. | 현행 보존 완료 |
-| **`ACTION-02`** | ✅ **적용 완료** | **자동화 테스트 게이트 (`npm test`)** | 사용자 승인(*"'자동화 테스트 게이트' 적용 허용 함."*)에 따라 [`src/tests/coreServices.test.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/tests/coreServices.test.ts), [`package.json`](file:///C:/programming/apps/bada-kkomkkomi/package.json) (`npm test`), [`.github/workflows/deploy-pages.yml`](file:///C:/programming/apps/bada-kkomkkomi/.github/workflows/deploy-pages.yml) CI 파이프라인에 자동화 테스트 게이트를 구축·검증 완료했습니다. | `8/8 PASS` 반영 완료 |
-| **`ACTION-03`** | ✅ **진행 승인** | **Git 커밋 및 원격 배포 (`git push origin main`)** | 사용자 승인(*"'Git 커밋 및 원격 배포' 허용 함."*)에 따라 `public/dev/*`를 제외한 전체 변경사항을 커밋하고 `origin/main` 원격 Push 및 GitHub Pages 배포를 수행합니다. | 배포 파이프라인 실행 |
-| **`ACTION-04`** | ⏳ **추후 선택** | **바다수첩·바닷길 안전·위치 UX 추가 고도화 (`WorkspaceDraftRepository` + GPS 오류 분기)** | 차기 업데이트 시 **① 새로고침 시에도 항로·필터·뷰포트를 유지하는 `WorkspaceDraftRepository`, ② GPS 실패 시 자동 가상 좌표 이동 대신 명확한 오류 안내 + 수동 `[시뮬레이션 위치]` 분리**를 적용할지 선택할 수 있습니다. | 필요 시 `"ACTION-04 구현해줘"` 지시 |
-| **`ACTION-05`** | ℹ️ **외부 콘솔 확인** | **Kakao Developers 웹 도메인 등록 확인** | 실서버 배포 환경(`https://gunnysis.github.io`) 및 로컬 개발 도메인(`http://localhost:5173`)이 [Kakao Developers 콘솔](https://developers.kakao.com)의 `내 애플리케이션 > 앱 설정 > 플랫폼 > Web 사이트 도메인`에 등록되어 있는지 필요 시 확인해 주십시오. | 사용자 계정 콘솔 권한 영역 |
+| **`ACTION-01`** | ✅ **확정 완료** | **인트로(`HomeScreen`) 3번 `꼬미의 달력` 카드 보존** | 사용자 지시(*"추후에 달력 기능을 추가할 예정이여서 지금은 달력에 대해서 건들지마"*)에 따라 인트로 2×2 그리드의 3번 `꼬미의 달력 (출시 예정)` 카드는 일체 변경 없이 현행 유지했습니다. | 현행 보존 완료 |
+| **`ACTION-02`** | ✅ **적용 완료** | **자동화 테스트 게이트 (`npm test`)** | 사용자 승인(*"'자동화 테스트 게이트' 적용 허용 함."*)에 따라 [`src/tests/coreServices.test.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/tests/coreServices.test.ts), [`package.json`](file:///C:/programming/apps/bada-kkomkkomi/package.json) (`npm test`), [`.github/workflows/deploy-pages.yml`](file:///C:/programming/apps/bada-kkomkkomi/.github/workflows/deploy-pages.yml) CI 파이프라인에 자동화 테스트 게이트(4 suites / 10 tests)를 구축·검증 완료했습니다. | `10/10 PASS` 반영 완료 |
+| **`ACTION-03`** | ✅ **배포 완료** | **Git 커밋 및 원격 배포 (`git push origin main`)** | 사용자 승인(*"'Git 커밋 및 원격 배포' 허용 함."*)에 따라 `public/dev/*`를 제외한 전체 변경사항을 커밋하고 `origin/main` 원격 Push 및 GitHub Pages 배포를 수행합니다. | 배포 파이프라인 실행 |
+| **`ACTION-04`** | ✅ **구현 완료** | **바다수첩·바닷길 안전·위치 UX 및 영속화 고도화 (`WorkspaceDraftRepository` + GPS 오류 분기 + 3단 시트)** | 사용자 승인(*"승인. 개발 구현 작업."*)에 따라 [`src/services/workspaceDraftRepository.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/workspaceDraftRepository.ts), GPS 오류 3분류(`classifyGpsError`), `RouteTimeCalculator` 3단계 시트(`요약`/`중간`/`전체`) 및 추정치 안전 고지, `HomeScreen` 터치 타겟 확대(`min-h-10 sm:min-h-11`, 달력 카드 제외) 및 이어보기 배너 명도 대비 개선을 모두 구현 완료했습니다. | 구현 및 검증 완료 |
+| **`ACTION-05`** | ℹ️ **외부 콘솔 확인 (사용자 고유 권한)** | **Kakao Developers 웹 도메인 등록 및 쿼터 확인** | 실서버 배포 도메인(`https://gunnysis.github.io`) 및 로컬 개발 도메인(`http://localhost:5173`)이 [Kakao Developers 콘솔](https://developers.kakao.com)의 `내 애플리케이션 > 앱 설정 > 플랫폼 > Web 사이트 도메인`에 등록되어 있는지 필요 시 확인해 주십시오. (API 키 재발급이나 도메인 변경이 필요한 경우 에이전트가 임의로 처리하지 않으며 사용자가 콘솔에서 직접 관리합니다.) | 사용자 계정 콘솔 권한 영역 |
