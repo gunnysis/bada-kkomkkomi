@@ -138,9 +138,17 @@ if (fs.existsSync('public/backup')) {
   );
 }
 
-// 6. PWA Service Worker (dist/sw.js) 프리캐시 매니페스트 중복 URL 및 dev/ 미포함 무결성 검증 (빌드 산출물 존재 시)
+// 6. PWA Service Worker (dist/sw.js) 프리캐시 매니페스트 중복 URL 및 dist/dev 미포함 무결성 검증 (빌드 산출물 존재 시)
 let swPrecacheCount = 0;
 if (fs.existsSync('dist/sw.js')) {
+  assert(
+    !fs.existsSync('dist/dev'),
+    'dist/dev must not exist in production build artifacts (public/dev is preserved on disk only)',
+  );
+  assert(
+    fs.existsSync('dist/manifest.webmanifest'),
+    'dist/manifest.webmanifest must exist in production build output',
+  );
   const swContent = fs.readFileSync('dist/sw.js', 'utf8');
   const urlMatches = [...swContent.matchAll(/\{url:"([^"]+)",revision:/g)].map((m) => m[1]);
   const uniqueUrls = new Set(urlMatches);

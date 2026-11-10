@@ -238,12 +238,12 @@ flowchart TD
 
 ### 2.7. PWA 캐시 경계 · `public/dev` 보존 정책 · MCP 활용 명세
 
-#### 2.7.1. `public/dev/*` 파일 보존 및 배포 아티팩트 분리 규칙 (`VERIFIED` & `PROPOSED`)
+#### 2.7.1. `public/dev/*` 파일 보존 및 배포 아티팩트 분리 규칙 (`VERIFIED`)
 - **절대 원칙**: [`public/dev/`](file:///C:/programming/apps/bada-kkomkkomi/public/dev) 하위의 모든 파일(`깃대종 NPIP(알로).pdf`, `characters/base_character.jpg`, `design_pages/intro_page.png`, `design_pages/ocean_notebook.png`, `design_pages/ocean_route.png`)은 **디스크에서 절대 삭제하거나 이동하지 않습니다.**
 - **현재 적용 완료 (`VERIFIED`)**:
   1. [`.gitignore`](file:///C:/programming/apps/bada-kkomkkomi/.gitignore): `public/dev/*`를 등록하여 Git 커밋 및 원격 저장소 업로드 대상에서 제외했습니다. (따라서 GitHub Actions CI 러너에서 체크아웃 시 `public/dev/`는 존재하지 않으며 원격 GitHub Pages 배포 아티팩트에도 포함되지 않습니다.)
-  2. [`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts#L78): `workbox.globIgnores: ['**/dev/**']`를 설정하여 로컬 빌드 시에도 서비스워커(`dist/sw.js`) 프리캐시 목록에 `dev/` 파일이 단 1건도 포함되지 않음을 [`scripts/verify-integrity.mjs`](file:///C:/programming/apps/bada-kkomkkomi/scripts/verify-integrity.mjs#L146-L150)로 자동 검증합니다.
-- **추가 개선 옵션 (`PROPOSED`)**: 로컬에서 `npm run build` 실행 시에도 `dist/dev/` 폴더로 복사되지 않도록 `vite.config.ts`의 `closeBundle` 훅에서 `dist/dev`(빌드 출력물 사본만, 원본 `public/dev`는 절대 불변)를 정리할 수 있습니다.
+  2. [`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts): `workbox.globIgnores: ['**/dev/**']` 및 `bada-exclude-public-dev-from-dist` 빌드 플러그인(`closeBundle`)을 적용하여 로컬 빌드 시에도 `dist/dev/` 사본과 서비스워커(`dist/sw.js`) 프리캐시 목록에 `dev/` 파일이 단 1건도 포함되지 않음을 [`scripts/verify-integrity.mjs`](file:///C:/programming/apps/bada-kkomkkomi/scripts/verify-integrity.mjs)로 자동 검증합니다.
+  3. [`src/main.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/main.tsx): 무중단 배포(Zero-Downtime) 시 구버전 탭에서 동적 청크 해시 불일치(`vite:preloadError`)가 발생하면 15초 루프 방지 가드와 함께 최신 번들로 자동 복구하며, 모바일 화면 복귀(`visibilitychange`) 시 즉시 OTA 업데이트를 점검합니다.
 
 #### 2.7.2. PWA 자원별 캐시 전략 및 오프라인 표시 경계
 | 자원 구분 | Workbox 전략 (`vite.config.ts`) | 오프라인 동작 보장 수준 | UI 상태 표시 원칙 |
@@ -301,4 +301,4 @@ flowchart TD
 | **`ACTION-02`** | ✅ **적용 완료** | **자동화 테스트 게이트 (`npm test`)** | 사용자 승인(*"'자동화 테스트 게이트' 적용 허용 함."*)에 따라 [`src/tests/coreServices.test.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/tests/coreServices.test.ts), [`package.json`](file:///C:/programming/apps/bada-kkomkkomi/package.json) (`npm test`), [`.github/workflows/deploy-pages.yml`](file:///C:/programming/apps/bada-kkomkkomi/.github/workflows/deploy-pages.yml) CI 파이프라인에 자동화 테스트 게이트(4 suites / 10 tests)를 구축·검증 완료했습니다. | `10/10 PASS` 반영 완료 |
 | **`ACTION-03`** | ✅ **배포 완료** | **Git 커밋 및 원격 배포 (`git push origin main`)** | 사용자 승인(*"'Git 커밋 및 원격 배포' 허용 함."*)에 따라 `public/dev/*`를 제외한 전체 변경사항을 커밋하고 `origin/main` 원격 Push 및 GitHub Pages 배포를 수행합니다. | 배포 파이프라인 실행 |
 | **`ACTION-04`** | ✅ **구현 완료** | **바다수첩·바닷길 안전·위치 UX 및 영속화 고도화 (`WorkspaceDraftRepository` + GPS 오류 분기 + 3단 시트)** | 사용자 승인(*"승인. 개발 구현 작업."*)에 따라 [`src/services/workspaceDraftRepository.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/workspaceDraftRepository.ts), GPS 오류 3분류(`classifyGpsError`), `RouteTimeCalculator` 3단계 시트(`요약`/`중간`/`전체`) 및 추정치 안전 고지, `HomeScreen` 터치 타겟 확대(`min-h-10 sm:min-h-11`, 달력 카드 제외) 및 이어보기 배너 명도 대비 개선을 모두 구현 완료했습니다. | 구현 및 검증 완료 |
-| **`ACTION-05`** | ℹ️ **외부 콘솔 확인 (사용자 고유 권한)** | **Kakao Developers 웹 도메인 등록 및 쿼터 확인** | 실서버 배포 도메인(`https://gunnysis.github.io`) 및 로컬 개발 도메인(`http://localhost:5173`)이 [Kakao Developers 콘솔](https://developers.kakao.com)의 `내 애플리케이션 > 앱 설정 > 플랫폼 > Web 사이트 도메인`에 등록되어 있는지 필요 시 확인해 주십시오. (API 키 재발급이나 도메인 변경이 필요한 경우 에이전트가 임의로 처리하지 않으며 사용자가 콘솔에서 직접 관리합니다.) | 사용자 계정 콘솔 권한 영역 |
+| **`ACTION-05`** | ✅ **실측 검증 완료** | **Kakao Developers 웹 도메인 등록 및 원격 번들 키 주입 확인** | Kakao Maps SDK 엔드포인트(`https://dapi.kakao.com/v2/maps/sdk.js`) 실측 결과 `https://gunnysis.github.io`, `http://localhost:5173`, `http://127.0.0.1:5173` 모두 **`HTTP 200 OK`**(미등록 대조군 도메인은 `401 Unauthorized` 차단 확인), GitHub Pages 배포 번들(`MapView-*.js`) 내 `KAKAO_MAP_API_KEY`(`aeeff5…e44e`) 정상 주입 확인 완료. | 전 도메인 `200 OK` 검증 완료 |

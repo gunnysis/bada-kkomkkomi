@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -32,6 +34,17 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: 'bada-exclude-public-dev-from-dist',
+      apply: 'build',
+      closeBundle() {
+        // 원본 public/dev/* 파일은 절대 건드리지 않고, 빌드 산출물 폴더(dist/dev)에 복사된 사본만 제거하여 배포 아티팩트 순수성 보장
+        const distDevDir = path.resolve('dist', 'dev');
+        if (fs.existsSync(distDevDir)) {
+          fs.rmSync(distDevDir, { recursive: true, force: true });
+        }
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
