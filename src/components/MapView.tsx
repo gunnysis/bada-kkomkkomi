@@ -280,7 +280,20 @@ export function MapView({
   });
   const [isDiagDismissed, setIsDiagDismissed] = useState<boolean>(false);
   const [isDiagModalOpen, setIsDiagModalOpen] = useState<boolean>(false);
+  const diagDialogRef = useRef<HTMLDialogElement | null>(null);
   const [copiedOrigin, setCopiedOrigin] = useState<boolean>(false);
+
+  useEffect(() => {
+    const dialog = diagDialogRef.current;
+    if (!dialog) return;
+    if (isDiagModalOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [isDiagModalOpen]);
   const [zoomStepTrigger, setZoomStepTrigger] = useState<{
     delta: number;
     nonce: number;
@@ -973,14 +986,18 @@ export function MapView({
         </Suspense>
       )}
 
-      {/* 4. Kakao Map GIS 진단 & 도메인 등록 안내 모달 */}
+      {/* 4. Kakao Map GIS 진단 & 도메인 등록 안내 모달 (HTML5 Native <dialog> Top-Layer) */}
       {isDiagModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
+        <dialog
+          ref={diagDialogRef}
           aria-labelledby="kakao-diag-title"
-          className="fixed inset-0 z-[1400] flex items-center justify-center bg-[#003360]/45 p-4 backdrop-blur-sm"
-          onClick={() => setIsDiagModalOpen(false)}
+          onClose={() => setIsDiagModalOpen(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsDiagModalOpen(false);
+            }
+          }}
+          className="bada-modal-dialog fixed inset-0 z-[1400] m-auto flex max-h-dvh max-w-none items-center justify-center border-none bg-transparent p-4 text-[#003360]"
         >
           <div
             className="knps-modal-surface w-full max-w-md rounded-3xl border-2 border-amber-500 bg-white p-5 text-[#003360] shadow-2xl"
@@ -1044,7 +1061,7 @@ export function MapView({
                   <button
                     type="button"
                     onClick={handleCopyOrigin}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#003360] px-2.5 py-1 text-[11px] font-black text-white active:scale-95"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-[#003360] px-2.5 py-1 text-[11px] font-black text-white active:scale-95"
                   >
                     {copiedOrigin ? (
                       <>
@@ -1090,7 +1107,7 @@ export function MapView({
               </button>
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </main>
   );

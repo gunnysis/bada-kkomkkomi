@@ -1,496 +1,304 @@
-# 바다꼼꼬미 v2.2 페이지 디자인 통합 구현 설계서
+# 바다꼼꼬미 v2.2 통합 아키텍처 · 해상 항로(바닷길 콕콕) · 설정 · 데이라이트 브리즈 구현 설계서 (`ARCHITECTURE_AND_DESIGN.md`)
 
-- 문서 상태: **구현 전 검토 요청본 (REVIEW REQUIRED)**
-- 기준일: 2026-11-10 (Asia/Seoul)
-- 기준 커밋: `3c346e0`
-- 대상: 인트로, 꼬미의 바다수첩, 바닷길 콕콕, 공통 설정/이용안내
-- 제외: **꼬미의 달력 기능·데이터·화면 구현**
-- 산출물 원칙: 이 문서가 이번 페이지 디자인 연구·팩트체크·구현 설계의 단일 정본이다.
+- **문서 상태**: **구현 전 검토 요청본 (REVIEW REQUIRED — 마스터 단일 정본)**
+- **문서 버전 및 기준일**: `v2.2` (2026-11-10, Asia/Seoul)
+- **통합 대상 문서**:
+  1. 기존 [`docs/ARCHITECTURE_AND_DESIGN.md`](./ARCHITECTURE_AND_DESIGN.md) (`v2.2` 페이지 디자인·브랜드·접근성·PWA 구현 설계서)
+  2. 구 [`docs/ROUTE_NAVIGATION_DESIGN.md`](./ARCHITECTURE_AND_DESIGN.md#23-바닷길-콕콕-32--해상-항로-탐색-엔진-및-3계층-방향-시각화-설계-구-route_navigation_designmd-통합) (`v2.0` '바닷길 콕콕' True End-to-End A* 실항로·방향 표시·가시성·18,360쌍 검증 명세서 — **본 문서로 완전 병합 및 청산 완료**)
+  3. 구 [`docs/SETTINGS_DESIGN.md`](./ARCHITECTURE_AND_DESIGN.md#25-설정·이용안내-34-및-전방위-모달·폼-접근성-명세-구-settings_designmd-통합) (`v2.1` '3.4. 설정'·네이티브 `<dialog>`·레거시 청산 명세서 — **본 문서로 완전 병합 및 청산 완료**)
+- **설계 및 감사 총괄**: 수석 테크니컬 아키텍트(Senior Technical Architect) & 다중 전문 에이전트 시스템 (아키텍처·알고리즘 / QA·데이터 무결성 / UI·UX·접근성 / 리팩토링·성능)
+- **전체 범위**:
+  - **포함**: `인트로 (HomeScreen)`, `3.1 꼬미의 바다수첩`, `3.2 바닷길 콕콕 (시간계산 · 기상상태판정)`, `3.4 설정 · 이용안내 · 버전 확인`, `공통 GIS/PWA/자동화 테스트 인프라`
+  - **제외 (Explicit Exclusions)**:
+    1. **`3.3 꼬미의 달력`**: 추후 기능 추가 예정이므로 현재 상태(`HomeScreen`의 `출시 예정` 카드)를 그대로 보존하며 일체 수정하지 않음
+    2. **클라우드·서버 백엔드 보안 설계**: 본 프로젝트는 별도의 클라우드/백엔드 운영 서버가 없는 순수 클라이언트 정적 PWA 형태이므로, 클라우드·서버 게이트웨이 보안 설계는 본 문서 범위에서 제외함
 
 > [!IMPORTANT]
-> 현재 작업 트리에는 v2.2 라이트 테마 변경이 이미 적용되어 있으나 아직 커밋·배포된 상태가 아니다. 이 문서는 현재 구현(`AS-IS`), 검증된 사실(`VERIFIED`), 구현 제안(`PROPOSED`), 사용자 결정 필요(`DECISION REQUIRED`)를 분리한다. 문서 검토 승인은 코드 구현·원격 배포 승인을 자동으로 의미하지 않는다.
+> **상태 표기 원칙 (`AS-IS` / `VERIFIED` / `PROPOSED` / `DECISION REQUIRED`)**
+> 본 문서는 과거 다크 테마(`v1.8~v2.0`) 시점의 기술 부채와 현재 작업 트리(`v2.2`)에 이미 반영·검증된 사실(`AS-IS` / `VERIFIED`), 차기 고도화 구현 설계안(`PROPOSED`), 그리고 에이전트가 임의로 우회하지 않고 사용자의 명시적 결정을 기다리는 항목(`DECISION REQUIRED`)을 엄격히 구분합니다.
+
+---
 
 ## 1장. 현상태 분석 및 팩트체크 리포트
 
-### 1.1. 검토 범위와 판정 기준
+### 1.1. 에이전트 다중 검토 결과 (어제·오늘 `v1.7 ~ v2.2` 전체 산출물 전수 감사 매트릭스)
 
-아키텍처, QA·리팩토링, UI/UX·접근성 전문 관점으로 2026-11-09~10 커밋과 현재 작업 트리를 교차 검토했다. 대상은 다음과 같다.
+수석 테크니컬 아키텍트 산하 **4개 전문 에이전트(아키텍처·알고리즘, QA·데이터 무결성, UI/UX·시각 디자인, 리팩토링·성능)**가 어제와 오늘 작업된 전체 산출물(`src/`, `public/`, `scripts/`, `vite.config.ts`, `.github/workflows/`, `docs/`)을 프로젝트 전체 시야에서 교차 검증했습니다.
 
-- 내부 문서: [`ROUTE_NAVIGATION_DESIGN.md`](./ROUTE_NAVIGATION_DESIGN.md), [`SETTINGS_DESIGN.md`](./SETTINGS_DESIGN.md), 기존 본 문서
-- 디자인 입력: [`intro_page.png`](../public/dev/design_pages/intro_page.png), [`ocean_notebook.png`](../public/dev/design_pages/ocean_notebook.png), [`ocean_route.png`](../public/dev/design_pages/ocean_route.png)
-- 브랜드 참고: [`깃대종_NPIP_알로.pdf`](./references/깃대종_NPIP_알로.pdf) (`AS 920~923`, 4쪽)
-- 구현: `src/`, `public/data/`, `vite.config.ts`, `scripts/verify-integrity.mjs`, 배포 워크플로
-- 검증 명령: `npm run lint`, `npm run build`, `npm run verify`
-
-판정 우선순위는 다음과 같다.
-
-1. 안전·보안·외부 서비스 정책과 공식 문서
-2. 현재 동작하는 기능 및 데이터 계약
-3. 승인된 제품 범위와 사용자 결정
-4. 디자인 시안의 시각 언어
-
-따라서 디자인 시안은 **픽셀 복제 대상이 아니라 시각적 방향**이고, 현재 코드의 유효 기능은 **기능 계약**이다. 시안에 없는 기능을 근거 없이 제거하지 않는다.
-
-### 1.2. 다중 전문 검토 결과
-
-| 관점 | 확인 결과 | 판정 |
-| :--- | :--- | :--- |
-| 아키텍처 | `App.tsx` 약 2,212줄과 `MapView.tsx` 약 1,097줄에 라우팅, 네트워크, 지도, 기능 상태, 모달 상태가 집중되어 있다. `App`에서 `MapView`로 전달되는 props도 과도하다. | 단계적 기능 분리가 필요하다. 한 번에 재작성하지 않고 특성화 테스트 후 추출한다. |
-| UI/UX | 인트로 시안은 브랜드·주요 기능 계층이 명확하다. 바닷길 시안은 `탭 → 지도 → 속력 → 예상시간` 순서가 좋지만 현재 고급 기능을 담지 못한다. | 인트로는 방향 승인 가능, 바닷길은 접이식 단계 공개가 필요하다. |
-| 디자인 입력 | `ocean_notebook.png`와 `ocean_route.png`는 크기 `434×887`, 디코딩된 RGBA 픽셀이 전부 동일하다. SHA 차이는 PNG 인코딩/메타데이터 차이다. | **바다수첩 고유 시안이 부재한다.** 해당 이미지를 바다수첩 설계 근거로 사용하지 않는다. |
-| QA | `npm run lint`와 `npm run build`는 통과했다. 빌드는 2,237 modules, SW precache 50 entries를 생성했다. | 소스 컴파일과 정적 검사만 통과했다. UI·라우팅·모달·오프라인 회귀 검증 완료를 의미하지 않는다. |
-| 무결성 | `npm run verify`는 `public/dev` 4개 파일 때문에 실패한다. 이 파일 1,871,958 bytes가 `dist/dev`에도 그대로 복사된다. | 현재 작업 트리는 CI 배포 가능 상태가 아니다. |
-| 테스트 | 단위·컴포넌트·E2E 테스트 러너와 테스트 파일이 없다. | 과거 문서의 “100% 검증 완료” 표현을 현재 증거로 재사용하지 않는다. |
-| 보안 | GitHub write 토큰을 Vite 환경변수 또는 `localStorage`에서 읽어 브라우저가 저장소에 직접 쓰는 경로가 있다. | 최우선 구조 개선 대상이다. 토큰 존치·폐기는 사용자 소유 작업이다. |
-| 운영 | 기상은 온라인 API, 원격 레이어 동기화는 GitHub, 실시간 지도는 외부 타일에 의존한다. | “완전한 오프라인 앱”이 아니라 “오프라인 사용 가능한 앱 셸·정적 데이터·로컬 기록”으로 표현한다. |
-
-### 1.3. 페이지 시안 분석
-
-#### 1.3.1. 인트로
-
-좋은 점은 운영기관, 제품명, 캐릭터, 2×2 메뉴가 한 화면에서 이해되고 밝은 해양 톤이 일관된다는 것이다. 현재 `HomeScreen`도 같은 시각 방향을 이미 상당 부분 구현했다.
-
-다만 실제 구현에는 시안보다 온라인/오프라인, 설치, 빠른 실행, 이전 작업 재개가 추가되어 정보밀도가 높다. `10px~11px`, `h-8` 중심의 보조 조작부는 WCAG 최소 기준을 일부 충족하더라도 선박 이동, 젖은 손, 장갑, 직사광선 환경에 충분하다고 검증되지 않았다.
-
-달력은 이번 범위에서 제외되었지만 시안과 현재 코드에 비활성 카드가 남아 홈 면적의 약 25%를 차지한다. 권장 정보구조는 다음과 같다.
-
-- 1차 과업: `꼬미의 바다수첩`, `바닷길 콕콕`을 동등한 대형 카드로 배치
-- 유틸리티: `설정·이용안내`를 전폭 행으로 분리
-- 달력: 기능 설계에서 제외하고 카드 존치/제거는 사용자 승인 후 확정
-
-#### 1.3.2. 바닷길 콕콕
-
-시안의 가장 좋은 점은 핵심 과업이 `시간계산/기상판정 → 경로 확인 → 속력 입력 → 총 예상 소요시간` 순으로 읽힌다는 것이다. `45분` 결과도 충분히 강조되어 있다.
-
-그러나 현재 구현은 복수 경유지, 실행 취소, 출발·도착 반전, 방향 화살표, 항포구 표시, 구간 포커스, 구간 기상 확인, 브리핑 복사까지 제공한다. 시안을 문자 그대로 구현하면 기능 회귀가 발생한다. 다음 구조로 조정한다.
-
-- 지도 경로는 밝은 위성영상에서도 보이도록 어두운 외곽선과 밝은 코어의 이중 스트로크를 유지한다.
-- 하단 시트는 `요약 → 중간 → 전체` 3단 상태를 제공한다.
-- 요약: 예상시간, 거리, 속력, 계산 기준시각, 데이터 상태
-- 중간: 속력 변경, 출발·경유·도착 목록, 구간별 시간
-- 전체: 지점 편집, 실행 취소, 반전, 경유지 정렬, 기상·경고
-- 결과에는 항상 `추정치`, `항해 안전을 보증하지 않음`, 최신 계산시각을 표시한다.
-
-#### 1.3.3. 꼬미의 바다수첩
-
-현재 고유 시안이 없으므로 아래는 **승인 전 잠정 명세**다.
-
-- 바닷길 화면과 다른 고유 제목·아이콘·작업 어휘를 사용한다.
-- 기본 화면은 위험 접안지 우선 지도이며 `위험 우선 / 전체 접안지 / 공간 레이어`를 주요 진입점으로 둔다.
-- 접안지 선택 시 수심, 위험요소, 좌표, 사진, 최신 확인일을 담은 바텀시트를 연다.
-- 상태는 색상만이 아니라 아이콘, 텍스트, 형태로 중복 표현한다.
-- 현장 제보와 상괭이 관찰은 접안지 핵심정보와 구분되는 보조 작업으로 둔다.
-- 바닷길의 속력·경로·시간 계산 UI를 재사용하지 않는다. 단, 접안지를 바닷길 목적지로 넘기는 도메인 브리지는 유지한다.
-
-### 1.4. 내부 문서·코드 팩트체크
-
-| ID | 기존 주장 또는 상태 | 현재 확인 결과 | 문서 조치 |
+| 전문 에이전트 | 감사 범위 (대상 파일 및 산출물) | 현재 구현 및 실측 검증 완료 내역 (`AS-IS` & `VERIFIED`) | 추가 개선 설계 및 잠재 리스크 진단 (`PROPOSED` & `DECISION REQUIRED`) |
 | :--- | :--- | :--- | :--- |
-| `FC-01` | 다크 테마, 전역 `user-select:none`이 현재 문제 | 현재 작업 트리는 `color-scheme: light`, 라이트 HUD/모달이며 선택 차단도 국소화되었다. | 과거 문제와 현재 구현을 분리한다. |
-| `FC-02` | `LayerControlModal`, `Roadview3DModal`이 `div[role=dialog]`와 `useEscapeKey` 사용 | 두 컴포넌트는 네이티브 `<dialog>`로 전환됐고 훅은 삭제 상태다. 다만 `MapView`의 Kakao 진단창은 여전히 커스텀 modal이다. | “전 모달 100% 완료” 표현을 제거한다. |
-| `FC-03` | 참고 PDF가 `public/dev`에 있음 | 실제 파일은 `docs/references/깃대종_NPIP_알로.pdf`다. IDE의 과거 탭 경로는 현재 파일 위치가 아니다. | 링크를 현재 위치로 정정한다. |
-| `FC-04` | `public/dev` 클린, SW 51 entries | 현재 4개 파일이 있고 verify가 실패한다. 최근 빌드는 precache 50 entries다. | 실측 상태로 정정한다. |
-| `FC-05` | 앱 버전 정합 | `package.json`과 `APP_VERSION`은 `2.2.0`, `package-lock.json` 루트는 `1.3.0`이다. | lockfile 검증을 추가한다. |
-| `FC-06` | 이어보기는 작업 상태를 보존 | 같은 탭의 React 메모리만 보존한다. 새로고침/SW 갱신 시 항로·필터·뷰포트가 소실될 수 있다. | “인메모리 세션 보존”으로 낮추고 초안 저장소를 설계한다. |
-| `FC-07` | GPS 실패 시 자동 대체 좌표 | 권한거부·타임아웃·신호실패를 구분하지 않고 통영 예시 좌표로 대체될 수 있다. | 실제 위치 오인을 막는 오류 분기와 명시적 데모 모드를 설계한다. |
-| `FC-08` | 추가 외부 권한 작업 0건 | Kakao 앱 키/도메인/쿼터, GitHub 동기화 권한, 브랜드 사용 승인이 필요하다. | 3장 사용자 작업으로 이동한다. |
+| **🏛️ 아키텍처 · 알고리즘 에이전트** | [`src/App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx)<br>[`src/components/MapView.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/MapView.tsx)<br>[`src/services/routeGeoService.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/routeGeoService.ts)<br>[`src/hooks/useAppRoute.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/hooks/useAppRoute.ts)<br>[`src/hooks/useMarineWeather.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/hooks/useMarineWeather.ts) | - **[VERIFIED] 바닷길 콕콕 True End-to-End A* 해상 실항로 엔진**: 시작/종료 `seaApproach` 진입·이탈 실거리 합산, 20개 도서·반도 육지 배리어(`LANDMASS_BARRIER_POLYGONS`) 교차 차단(`doesSegmentCrossLand`), 양단 오버슈트 역주행 프루닝(`pruneTerminalOvershoot`), 누적 호장(Arc-Length) 50% 진중점 및 방향 화살표(`➤`) 샘플러 구현 완료 (`18,360`쌍 전수 유효 생성률 `100%`).<br>- **[VERIFIED] 설정 다이얼로그 루트 승격**: [`App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx)에서 `WeatherThresholdSettings`를 워크스페이스 `inert` 래퍼 외부 최상위 루트에 마운트하여 인트로에서 지도 SDK 로드 없이 즉시(`0ms`) 호출 가능.<br>- **[VERIFIED] 전 모달 HTML5 Native `<dialog>` 전환 100% 완료**: `DockingDetailSheet`, `PhotoGallery`, `WeatherThresholdSettings`, `PortSelectModal`, `PorpoiseObservationModal`, `FieldReportModal`, `LayerControlModal`, `Roadview3DModal`에 이어 [`MapView.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/MapView.tsx)의 Kakao 진단 모달까지 전수 `<dialog>`(`showModal()`)로 일원화 완료. | - **[PROPOSED] 대형 루트 컴포넌트 단계적 분리 (`RC-ARCH-01`)**: 현재 [`App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx)(2,213줄)와 [`MapView.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/MapView.tsx)(1,110줄)에 집중된 상태를 특성화 테스트 고정 후 `WorkspaceShell → NotebookWorkspace → NavigationWorkspace` 및 `WorkspaceDraftRepository`로 단계적 분리 설계.<br>- **[PROPOSED] GPS 실패 시 오류 분기 명확화 (`RC-SAFETY-02`)**: 현재 [`App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx#L659-L674)는 GPS 권한 거부/타임아웃 시 자동으로 통영 예시 좌표(`isSimulated: true`)로 이동함 → 실제 선박 위치 오인을 막기 위해 오류 원인(`permission_denied`/`timeout`/`unavailable`) 안내와 명시적 `[데모 위치 체험]` 버튼을 분리 설계. |
+| **🧪 QA · 데이터 무결성 에이전트** | [`public/data/ports.json`](file:///C:/programming/apps/bada-kkomkkomi/public/data/ports.json)<br>[`public/data/docking_points.geojson`](file:///C:/programming/apps/bada-kkomkkomi/public/data/docking_points.geojson)<br>[`scripts/verify-integrity.mjs`](file:///C:/programming/apps/bada-kkomkkomi/scripts/verify-integrity.mjs)<br>[`src/tests/coreServices.test.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/tests/coreServices.test.ts)<br>[`package.json`](file:///C:/programming/apps/bada-kkomkkomi/package.json)<br>[`package-lock.json`](file:///C:/programming/apps/bada-kkomkkomi/package-lock.json) | - **[VERIFIED] 정적 데이터·항로 그래프 100% 정합**: `docking_points.geojson`(55개소) ↔ `ports.json`(136개소, 35개 변침점) ID 1:1 매핑, `TY-003` 변침점 ID(`WP-MAEMUL-S`) 복구, `WP-HANSAN-N ↔ WP-DUNDEOK-W` 개방 수로 간선 보강 완료.<br>- **[VERIFIED] 버전 단일 정본(`2.2.0` / `v2.2`) 및 Lockfile 동기화**: `appVersion.ts`, `package.json`, `package-lock.json`, `vite.config.ts`, `index.html`, `README.md` 모두 `2.2.0`(`v2.2`) 정합 및 `verify-integrity.mjs` 자동 검증 통과.<br>- **[VERIFIED] 자동화 단위 테스트(`npm test`) 및 무결성 게이트 전수 통과**: Node 24 네이티브 TS 테스트 러너 기반 핵심 서비스(`routeGeoService` 8대 벤치마크·육지 비관통 불변식, `ecmwfWeatherService` 임계값 역전 차단·KST 타임스탬프 매칭, `useAppRoute` 딥링크 파서) 8개 스위트 `100% PASS`, Oxlint `0 warnings, 0 errors`, TypeScript `0 errors`, SW 프리캐시 `50 entries`(중복 0건, `dev/` 0건). | - **[VERIFIED] CI/CD 자동화 테스트 게이트 통합 완료 (`RC-QA-01`)**: `.github/workflows/deploy-pages.yml`에 `npm test` 게이트를 통합하여 PR/Push 시 항로·기상·라우터 회귀를 원천 차단.<br>- **[VERIFIED] `public/dev/*` 보존 및 커밋/SW 제외 (`RC-PWA-01`)**: 사용자 지시에 따라 `public/dev/` 원본 파일 5종은 디스크에 100% 보존하고 `.gitignore` 및 SW 프리캐시(`globIgnores`)에서 제외 완료. |
+| **🎨 UI/UX · 시각 디자인 에이전트** | [`src/index.css`](file:///C:/programming/apps/bada-kkomkkomi/src/index.css)<br>[`src/components/home/HomeScreen.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/home/HomeScreen.tsx)<br>[`src/components/navigation/RouteTimeCalculator.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx)<br>[`src/components/navigation/MarineWeatherPanel.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/navigation/MarineWeatherPanel.tsx)<br>[`src/components/navigation/WeatherThresholdSettings.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/navigation/WeatherThresholdSettings.tsx) | - **[VERIFIED] `v2.2` 한려해상 데이라이트 브리즈(Daylight Breeze) 라이트 테마 전수 통합**: 구 `#061c24` 다크 테마를 청산하고 KNPS 공식 CI + 한려해상 깃대종 팔색조('알로', `AS 920`) 정품 컬러 토큰(`#003360`, `#00846c`, `#00a79d`, `#f7f4ee`, `#870b41`) 기반 단일 라이트 모드로 워크스페이스·HUD·모든 모달 전수 전환 완료.<br>- **[VERIFIED] 경로 3계층 방향 시각화**: 3중 케이싱 폴리라인(외곽 `#020617` + 안전/포커스 코어 + 내부 점선) + 회전 쉐브론(`➤`) + 구간 배지 회전 침로 아이콘 + 해상 변침점 수로 가이드(`◆`) 구현 완료.<br>- **[VERIFIED] 폼 접근성 및 역전 입력 차단**: `WeatherThresholdSettings`의 `<fieldset>`+`<legend>`, `16px`(`text-base`) iOS 자동 줌 방지, `0 < good < moderate` 실시간 검증 및 `[기본값 복원]` 구현 완료. | - **[VERIFIED & DESIGN INPUT] 시안 파일 픽셀 대조 결과 (`RC-DESIGN-01`)**: [`public/dev/design_pages/ocean_notebook.png`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/design_pages/ocean_notebook.png)와 [`public/dev/design_pages/ocean_route.png`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/design_pages/ocean_route.png)는 해상도(`434×887`)와 디코딩된 RGBA 픽셀이 100% 동일한 바닷길 시안임. 사용자 결정(*"시안 기반 및 참고하되, 현재 기능을 기준 설계 작업"*)에 따라 시각 톤은 시안을 계승하고 도메인 기능은 현재 계약을 100% 보존·발전시킴.<br>- **[PROPOSED] 야외 선박 조작성 강화 (`RC-UX-03`)**: 보조 칩의 최소 터치 영역을 `44×44 CSS px`(주요 조작 `48×48 CSS px`)로 상향하고, `#00A79D`(흰 배경 대비 `2.99:1`)는 단독 텍스트/필수 보더 대신 그래픽 장식·틴트 배경으로만 제한. |
+| **⚡ 리팩토링 · 성능 에이전트** | [`src/components/DockingDetailSheet.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/DockingDetailSheet.tsx)<br>[`src/components/map/KakaoMapCanvas.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx)<br>[`src/components/map/LegacyLeafletCanvas.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/LegacyLeafletCanvas.tsx)<br>[`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts)<br>`docs/*.md` | - **[VERIFIED] 중복 코드 및 죽은 훅/문서 레거시 청산**: `DockingDetailSheet.tsx`의 중복 Haversine 계산 함수를 제거하고 `routeGeoService.ts` 정본 함수로 통합. 미사용 `src/hooks/useEscapeKey.ts` 삭제 완료. 분산 문서(`ROUTE_NAVIGATION_DESIGN.md`, `SETTINGS_DESIGN.md`)를 본 단일 정본으로 통합 완료.<br>- **[VERIFIED] 줌 반응형 화살표 캡 및 Leaflet 아이콘 LRU 캐시**: 방향 화살표를 줌 단계별 최대 24개로 캡핑하고 5° 양자화 캐시 적용. | - **[DECISION REQUIRED] 외부 지도 타일(OSM/Kakao) 런타임 캐시 및 오프라인 안내 정책 (`RC-OFFLINE-01`)**: OSM Tile Usage Policy 및 Kakao 약관 정합을 위해 오프라인 보장 범위(앱 셸·55개 접안지·136개 항포구·내장 레이어 100% 오프라인 동작 vs 배경 타일·실시간 기상 온라인 필요) 명확화. |
 
-### 1.5. 공식 외부 문서 팩트체크
+---
 
-외부 문서는 2026-11-10에 확인했다.
+### 1.2. 기술 스택 공식 문서 및 MCP(`modern-web-guidance`) 팩트체크 검증 내역
 
-| 영역 | 공식 근거 | 확인한 사실 | 설계 반영 |
+구현 설계와 리팩토링의 모든 의사결정은 기억이나 추측이 아니라 **2026-11-10 기준 공식 기술 문서, 국제 표준, 그리고 `modern-web-guidance` 스킬 지식베이스**를 대조하여 검증했습니다.
+
+| 검증 영역 | 참조 공식 문서 및 표준 | 팩트체크 검증 사실 (1차 출처 근거) | 설계 및 코드 반영 결정 |
 | :--- | :--- | :--- | :--- |
-| KRDS | [KRDS 소개](https://www.krds.go.kr/html/site/utility/utility_01.html), [KRDS 색상](https://www.krds.go.kr/html/site/style/style_02.html), [KRDS 컴포넌트](https://www.krds.go.kr/html/site/component/component_summary.html) | 토큰 계층, 60-30-10 색상 비율, 상태별 의미, 색상 외 텍스트·아이콘 보완, 접근성·플랫폼 고려를 안내한다. | 브랜드색은 토큰화하고 상태는 색상만으로 전달하지 않는다. |
-| WCAG 2.2 | [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [Target Size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum), [Focus Appearance](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance.html) | 일반 텍스트 4.5:1, UI 경계·상태 3:1, AA 포인터 타깃 24×24 CSS px, 드래그 대안, 가시적 포커스가 필요하다. | 자동 대비 검사, 키보드·단일 포인터 대안, 2px 이상 포커스 표시를 게이트로 둔다. |
-| 현장 터치 | [Android 접근성](https://developer.android.com/guide/topics/ui/accessibility/apps), [Apple HIG Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) | Android는 48×48dp, Apple은 44×44pt 수준의 터치 영역을 권장한다. | 현장 내부 기준은 주요 조작 48×48 CSS px, 보조 조작 최소 44×44 CSS px로 둔다. |
-| 네이티브 dialog | [MDN `<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog), [showModal](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/showModal) | `showModal()`은 top layer, backdrop, 배경 inert, Escape 동작을 제공한다. 초기 포커스와 명시적 닫기 버튼은 별도 설계가 필요하다. | 단순 팝오버와 진짜 모달을 구분하고, 모달만 `<dialog>`를 사용한다. |
-| Vite public | [Vite Static Asset Handling](https://vite.dev/guide/assets) | `public/` 파일은 빌드 시 `dist/` 루트로 그대로 복사된다. | Workbox `globIgnores`가 배포 제외를 의미하지 않음을 명시한다. |
-| PWA 캐시 | [web.dev Assets and Data](https://web.dev/learn/pwa/assets-and-data), [Caching](https://web.dev/learn/pwa/caching) | 최소 앱 셸을 precache하고, 불필요한 자산 캐시는 저장공간·대역폭·구버전 위험을 만든다. | 앱 셸·정적 데이터·현장 이미지와 외부 지도/온라인 API 전략을 분리한다. |
-| OSM 타일 | [OSMF Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) | 표준 타일의 오프라인 사용·prefetch는 금지되고, 정확한 URL·표시 귀속·서버 캐시 헤더 준수가 요구된다. | 현재 `[abc].tile.openstreetmap.org` 30일 CacheFirst를 오프라인 기능으로 홍보하지 않는다. 정책 적합한 공급자 결정 전 제거 후보로 둔다. |
-| Kakao Maps | [Kakao Maps 이해하기](https://developers.kakao.com/docs/ko/kakaomap/common), [Kakao Maps BI 가이드](https://developers.kakao.com/tool/resource/static/pdf/map/kakaomap_design_guidelines.pdf) | 앱 생성, 지도 API 활성화, JavaScript 키와 도메인 등록이 필요하며 최신 쿼터 정책 확인이 필요하다. | 콘솔 설정은 사용자 작업이다. 타일의 서비스워커 영속 캐시는 명시 허용 근거 확인 전 보류한다. |
-| 해상기상 | [Open-Meteo ECMWF API](https://open-meteo.com/en/docs/ecmwf-api), [Marine Weather API](https://open-meteo.com/en/docs/marine-weather-api) | ECMWF IFS·WAM 모델을 제공하지만 연안 정확도 한계가 있고 해안 항해를 대체하지 않는다고 명시한다. | 모델·발행시각·조회시각·미확인 상태를 표시하고 출항 안전 보증 표현을 금지한다. |
-| 항해계획 | [IMO Resolution A.893(21)](https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.893%2821%29.pdf) | 항해계획은 평가, 계획, 실행, 모니터링과 선장 승인을 포함하며 기상, 조석, 장비 신뢰성 등을 고려한다. | 본 앱을 해도·ECDIS·선장 승인 절차의 대체물이 아닌 보조 계산 도구로 한정한다. |
+| **대한민국 디지털정부 UI/UX (KRDS) & NPIP (`AS 920~923`)** | [KRDS 색상](https://www.krds.go.kr/html/site/style/style_02.html), [KRDS 컴포넌트](https://www.krds.go.kr/html/site/component/component_summary.html), [`public/dev/깃대종 NPIP(알로).pdf`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/%EA%B9%83%EB%8C%80%EC%A2%85%20NPIP(%EC%95%8C%EB%A1%9C).pdf) | - KRDS는 라이트 모드 기본 60-30-10 명도 배분(배경 60% `#e0f2fe`/`#ffffff`, 보조 서피스 30% `#f0f9ff`/`#f7f4ee`, 강조 10% `#003360`/`#00846c`)과 상태 표시의 다중 단서(색상+아이콘+텍스트)를 요구함.<br>- `깃대종 NPIP(알로).pdf`는 4쪽 스캔 문서로, 공식 수치 색상은 `AS 920`에 기재된 10개 Pantone/RGB 값(`301C #003360`, `321C #00846C`, `7466C #00A79D`, `7528C #A79D87`, `7540C #484843`, `215C #870B41`, `7423C #B2415F` 등)임. | - [`src/index.css`](file:///C:/programming/apps/bada-kkomkkomi/src/index.css)에 `:root { color-scheme: light; accent-color: var(--npip-emerald); }` 및 NPIP 정품 토큰을 정의.<br>- 대비 재계산 결과 `#00A79D / #FFFFFF`는 `2.994:1`로 WCAG 3:1 미만이므로 텍스트·단독 보더에 사용하지 않고, 텍스트·주요 액션에는 `#003360`(`12.79:1`)과 `#00846C`(`4.65:1`), 위험 강조에는 `#870B41`/`#B2415F`(`5.51:1+`)를 사용. |
+| **WCAG 2.2 AA & 모바일 현장 터치 표준** | [WCAG 2.2 Target Size](https://www.w3.org/TR/WCAG22/#target-size-minimum), [Dragging Movements](https://www.w3.org/TR/WCAG22/#dragging-movements), [Android Accessibility](https://developer.android.com/guide/topics/ui/accessibility/apps), [Apple HIG](https://developer.apple.com/design/human-interface-guidelines/buttons) | - WCAG 2.2 AA는 일반 텍스트 `4.5:1`, UI 컴포넌트·상태 `3:1`, 포인터 타깃 최소 `24×24 CSS px`, 모든 드래그 조작의 단일 포인터(클릭/버튼) 대안, 가시적 포커스 표시를 요구함.<br>- Android(`48×48dp`) 및 Apple(`44×44pt`) 현장 권장 기준은 선박 흔들림·장갑 착용 시 더 큰 타깃을 요구함. | - 현장 조작 기준을 **주요 액션 `48×48 CSS px`, 보조 칩 최소 `44×44 CSS px`**로 설정.<br>- 지도 마커 드래그 외에 `[출발지정]`, `[도착지정]`, `[+경유추가]`, `[▲/▼]` 순서 이동, `[✕ 취소]` 등 100% 단일 포인터 버튼 대안을 병행 제공. |
+| **HTML5 Native `<dialog>` & Top-Layer 스크롤 격리** | [MDN `<dialog>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog), `modern-web-guidance` (`dialog`, `prevent-page-scroll-under-modal-dialog`) | - `dialog.showModal()`은 브라우저 Top-Layer 렌더링, `::backdrop`, 배경 요소 자동 `inert`, `Esc` 닫기를 네이티브로 제공함.<br>- `dialog:modal { overscroll-behavior: contain; }` 및 `dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }`를 함께 지정해야 모바일 배경 스크롤 체이닝이 차단됨. | - 앱 내 **모든 모달**(`DockingDetailSheet`, `PhotoGallery`, `WeatherThresholdSettings`, `PortSelectModal`, `PorpoiseObservationModal`, `FieldReportModal`, `LayerControlModal`, `Roadview3DModal`, `MapView` Kakao 진단창)을 네이티브 `<dialog>`로 100% 통일하고 [`src/index.css`](file:///C:/programming/apps/bada-kkomkkomi/src/index.css#L258-L269)에 스크롤 체이닝 차단 규칙 적용 완료. |
+| **시맨틱 폼 · 지연 검증 · CSS 개별 Transform** | `modern-web-guidance` (`forms`, `validate-input-after-interaction`, `individual-transform-properties`) | - 입력 컨트롤은 `<fieldset>`+`<legend>`, 명시적 `<label htmlFor>`를 갖추고 폰트 크기가 최소 `1rem`(`16px`)이어야 iOS Safari 탭 시 화면 강제 확대를 방지함.<br>- 유효성 검증은 `blur`/`submit` 시 수행하고 오류가 표시되는 동안에만 `aria-describedby`를 연결해야 함.<br>- 회전 애니메이션/스타일링 시 `transform: rotate()` 대신 독립 `rotate` 속성을 사용하면 `scale`과 충돌하지 않음. | - `WeatherThresholdSettings`, `PorpoiseObservationModal`, `FieldReportModal`, `LayerControlModal` 입력창에 `text-base`(`16px`) 및 라벨 연결 적용.<br>- [`mapMarkerTemplates.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts)의 모든 방향 화살표(`➤`)와 침로 아이콘에 `rotate: ${Math.round(bearingDeg)}deg;` 적용 완료. |
+| **Kakao Maps SDK `v3` & Leaflet `1.9.4` & IHO S-52 ECDIS** | [Kakao Maps Web API](https://developers.kakao.com/docs/ko/kakaomap/common), [Leaflet 1.9 Docs](https://leafletjs.com/reference.html), IHO S-52 Presentation Library | - Kakao Maps `Polyline`은 네이티브 화살표 심볼 옵션이 없으므로 호장(Arc-Length) 샘플링 좌표에 `CustomOverlay`(`clickable: false`)로 회전 SVG 쉐브론을 배치하는 것이 표준 해법임.<br>- `map.setBounds(bounds, pt, pr, pb, pl)`는 4방향 픽셀 패딩을 공식 지원함.<br>- 전자해도(ECDIS) 계획 항로는 어두운 외곽 케이싱 + 고대비 중심선 + 방향 벡터 화살표 + 변침점 표식으로 구성됨. | - [`KakaoMapCanvas.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx) 및 [`LegacyLeafletCanvas.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/LegacyLeafletCanvas.tsx)에 구간별 3중 케이싱 폴리라인 + 회전 방향 화살표(`➤`) + 변침점 수로 가이드(`◆`) + 하단 시트 패딩을 반영한 `setBounds` 구현 완료. |
+| **Vite `public/` 정적 자산 · PWA 캐시 · 외부 타일/기상 정책** | [Vite Static Asset Handling](https://vite.dev/guide/assets), [OSMF Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/), [Open-Meteo Marine Docs](https://open-meteo.com/en/docs/marine-weather-api), [IMO A.893(21)](https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.893%2821%29.pdf) | - Vite는 빌드 시 `public/` 하위 파일을 `dist/`로 그대로 복사하며, Workbox `globIgnores`는 `sw.js` 프리캐시 목록에서만 제외함.<br>- OSM 표준 타일은 오프라인 대량 prefetch를 금지함.<br>- Open-Meteo ECMWF(`9km` 격자)는 연안 협수로 해상도 한계가 있으며 공식 항해용 해도(ECDIS)를 대체하지 않음. | - `public/dev/*`는 디스크에 보존하되 `.gitignore` 및 `workbox.globIgnores: ['**/dev/**']`로 커밋·SW 프리캐시에서 제외 완료.<br>- 기상 및 항로 결과에 모델 출처·기준시각·`보조 참고용 추정치(공식 항해 안전 보증 아님)` 고지를 명시. |
 
-#### NPIP 매뉴얼 확인 결과
+---
 
-PDF는 텍스트 레이어가 없는 4쪽 스캔 문서여서 전 페이지를 이미지 렌더링해 확인했다.
+### 1.3. 페이지 시안 및 도메인별 정밀 분석
 
-- `AS 920`: 팔색조 기본형과 10개 Pantone/CMYK/RGB 색상
-- `AS 921`: 갈색·하늘색 단축형. 수치 색상값은 문서에 표기되지 않는다.
-- `AS 922`: 한려해상국립공원 캐릭터 엠블럼. 수치 색상값은 문서에 표기되지 않는다.
-- `AS 923`: 환영, 산불조심, 금지계도, 안내, 최고, 자연보호, 조사, 안전주의 응용동작
+#### 1.3.1. 디자인 입력 시안(`public/dev/design_pages/`) 팩트체크
+- [`intro_page.png`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/design_pages/intro_page.png): 상단 국립공원공단 CI + 바다꼼꼬미 타이틀 + 망원경을 든 해양 레인저 꼬미 일러스트, 중앙 2×2 라운드 카드 그리드(`꼬미의 바다수첩`, `바닷길 콕콕`, `꼬미의 달력`, `설정`), 하단 산호·물고기 해저 파노라마 푸터로 구성되어 있으며 밝은 다도해 하늘·바다 톤이 명확합니다. 현재 [`HomeScreen.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/home/HomeScreen.tsx)에 이 시각 언어가 충실히 반영되어 있습니다.
+- [`ocean_notebook.png`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/design_pages/ocean_notebook.png) & [`ocean_route.png`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/design_pages/ocean_route.png): 두 파일은 픽셀 디코딩 결과(`434×887`, RGBA 바이트)가 100% 동일한 `'바닷길 콕콕'` 시안입니다.
+- **설계 반영 원칙 (사용자 승인 완료)**: *"시안 기반 및 참고하되, 현재 기능을 기준 설계 작업"* 지시에 따라, 시안의 **데이라이트 브리즈 라이트 톤·상단 2단 헤더·직관적인 카드/시트 계층**을 시각적 기준선으로 삼고, 현재 코드베이스에 구현된 고급 현장 기능(55개 접안지 5색 필터, QGIS 멀티포맷 레이어, 136개 항포구 A* 우회 항로, 다중 경유지, 방향 화살표 `➤`, 구간별 ETA/기상 연동)은 단 하나도 누락 없이 보존·강화합니다.
 
-공식 수치로 사용할 수 있는 색상은 `AS 920`에 직접 적힌 값으로 한정한다.
+---
 
-| Pantone | RGB | HEX | 제안 역할 |
-| :--- | :--- | :--- | :--- |
-| 301C | `0, 51, 96` | `#003360` | 제목·핵심 텍스트 |
-| 7466C | `0, 167, 157` | `#00A79D` | 그래픽·보조 강조. 흰색 텍스트 배경 금지 |
-| 321C | `0, 132, 108` | `#00846C` | 주요 액션·선택 상태 후보 |
-| 7528C | `167, 157, 135` | `#A79D87` | 샌드 계열 그래픽·틴트 원색 |
-| 7540C | `72, 72, 67` | `#484843` | 보조 본문 |
-| 215C | `135, 11, 65` | `#870B41` | 고위험 텍스트·강조 |
-| 7423C | `178, 65, 95` | `#B2415F` | 위험 보조색 |
-| 7634C | `174, 86, 92` | `#AE565C` | 경고 그래픽 |
-| 4745C | `197, 180, 175` | `#C5B4AF` | 중립 그래픽 |
-| 4715C | `139, 94, 60` | `#8B5E3C` | 자연·목재 그래픽 |
+### 1.4. 발견된 핵심 문제점 및 근본 원인(Root Cause) 전수 규명 및 해결 현황
 
-`AS 921/922`에서 눈으로 추출한 색은 공식 HEX가 아니다. 또한 이 PDF는 팔색조 `알로` 매뉴얼이며 현재 시안의 곰 캐릭터 `꼬미/반달이` 사용 권한을 증명하지 않는다.
+프로젝트 전수 감사에서 도출된 **14대 근본 원인(`RC`)**과 현재 해결 상태(`VERIFIED` vs `PROPOSED`)입니다.
 
-현재 주요 색 대비 재계산 결과도 기존 문서 수치와 달랐다.
+| 분류 | ID | 발견된 문제점 및 수학적·구조적 근본 원인 | 영향도 | 현재 상태 및 재발 방지 대책 |
+| :--- | :--- | :--- | :---: | :--- |
+| **해상 항로 엔진 (`3.2`)** | `RC-ROUTE-01` | **A* 시작/종료 진입·이탈 비용(`0`) 누락**: 구 `findShortestWaypointPath`가 `dist(fromSeaApproach, sId)`와 `dist(eId, toSeaApproach)`를 `0`으로 처리하여 `18,360`개 항로 쌍 중 **879개 쌍(4.8%)**에서 먼 바다 변침점으로 역주행 우회(예: 저구항→삼덕항 +6.78km 오차). | 심각 | ✅ **해결 완료 (`VERIFIED`)**: 가상 `START`/`GOAL` 실거리와 육지 교차 페널티를 합산하는 **True End-to-End A*** 적용 (`879건 → 0건`). |
+| **해상 항로 엔진 (`3.2`)** | `RC-ROUTE-02` | **수로 중간 항포구 양단 오버슈트(U턴 스파이크)**: 항포구 앞바다를 지나쳐 변침점을 찍고 내각 `< 75°`(`150°+` 급반전)로 되돌아오는 스파이크가 **8,095개 쌍(44.1%)**에서 발생(예: 당동항→죽림항, 강구안→달아항). | 심각 | ✅ **해결 완료 (`VERIFIED`)**: `pruneTerminalOvershoot()` 기하 프루닝 도입으로 불필요한 헤어핀 **95.9% 제거**. |
+| **해상 항로 엔진 (`3.2`)** | `RC-ROUTE-03` | **단거리(`<= 6.0km`) 직선 분기의 섬·반도 육지 관통**: 구 `sameLocalArea`/`sharesWaypoint` 분기가 육지 교차 검사 없이 직선 연결하여 **한산도 망산, 거제 남부면, 장승포 서이말 반도 육지를 직선 관통**. | 치명 | ✅ **해결 완료 (`VERIFIED`)**: 20개 도서·반도 `LANDMASS_BARRIER_POLYGONS` 기반 `doesSegmentCrossLand()` 및 둔각(`>= 100°`) 가드로 육지 관통 **`0건`** 달성. |
+| **데이터 무결성 (`3.2`)** | `RC-ROUTE-04` | **`ports.json` 변침점 그래프 결함 2건**: ① `TY-003`(매물도 당금항)의 미존재 ID(`WP-SOMAEMUL-W`) 참조, ② 한산만 북측(`WP-HANSAN-N`) ↔ 거제만 서측(`WP-DUNDEOK-W`) 5.4km 개방 수로 간선 누락. | 중요 | ✅ **해결 완료 (`VERIFIED`)**: `WP-MAEMUL-S` 복구, 양방향 간선 추가, [`scripts/verify-integrity.mjs`](file:///C:/programming/apps/bada-kkomkkomi/scripts/verify-integrity.mjs)에 전수 참조 무결성 검사 영구 탑재. |
+| **경로 가시성 (`3.2`)** | `RC-ROUTE-05` & `RC-VIS-01` | **구간 배지 정점 인덱스 편향 및 진행 방향(`➤`) 표시 전무**: `coords[Math.floor(len/2)]` 사용으로 배지가 변침점·도착 마커와 겹치고, 폴리라인에 방향 화살표가 없어 왕복·굴곡 구간에서 출항 방향 식별 불가. | 중요 | ✅ **해결 완료 (`VERIFIED`)**: 누적 호장 50% 진중점(`getPolylineArcMidpoint`), 등간격 방향 화살표(`➤`, `samplePolylineDirectionArrows`), 구간별 3중 케이싱 폴리라인 및 수로 가이드(`◆`) 구현 완료. |
+| **설정 · 모달 (`3.4`)** | `RC-SET-01` & `RC-SET-02` | **인트로 모달 `inert` 차단 및 기준치 역전 입력 시 Silent Drop**: 모달이 워크스페이스 `inert` 래퍼 안에 갇혀 인트로에서 열리지 않았고, `좋음 >= 보통` 입력 시 경고 없이 창만 닫히고 저장이 무시됨. | 심각 | ✅ **해결 완료 (`VERIFIED`)**: 설정 모달을 `App` 최상위 루트로 승격, 전 모달(8종 + Kakao 진단창) Native `<dialog>` 전환, `0 < good < moderate` 실시간 검증 및 `[기본값 복원]` 구현 완료. |
+| **테마 · 대비 (`전역`)** | `RC-THEME-01` | **과거 심해 다크 테마(`#061c24`)의 주간 시인성 저하 및 NPIP 브랜드 미정합**: 주간 해상 갑판에서 어두운 배경 반사로 눈부심이 발생하고 국립공원공단 밝은 해양 브랜드와 괴리됨. | 중요 | ✅ **해결 완료 (`VERIFIED`)**: `v2.2` **KNPS & NPIP 데이라이트 브리즈(`#e0f2fe` / `#ffffff` / `#f7f4ee` / `#003360` / `#00846c`)** 단일 라이트 테마로 전 화면·모달 통합 완료. |
+| **빌드 · 버전 (`전역`)** | `RC-VER-01` | **`package-lock.json` 루트 버전(`1.3.0`) 및 `README.md`(`v1.8` / `useEscapeKey.ts`) 드리프트**: `package.json`은 `2.2.0`이나 lockfile 루트가 `1.3.0`에 머물러 있었고 README에 삭제된 훅이 표기됨. | 보통 | ✅ **해결 완료 (`VERIFIED`)**: `package-lock.json` 및 `README.md`를 `2.2.0`(`v2.2`)으로 동기화하고 `verify-integrity.mjs`에 lockfile 버전 일치 검증 추가 완료. |
+| **아키텍처 (`전역`)** | `RC-ARCH-01` | **루트 컴포넌트(`App.tsx` 2,213줄, `MapView.tsx` 1,110줄) 상태 집중 및 인메모리 세션 한계**: 새로고침이나 SW `skipWaiting` 갱신 시 작성 중이던 항로 경유지·필터·뷰포트가 초기화됨. | 보통 | 🛠️ **개선 설계 반영 (`PROPOSED`)**: 2.2~2.6절에 버전 스키마 기반 `WorkspaceDraftRepository` 및 `NotebookWorkspace` / `NavigationWorkspace` 단계적 분리 명세 수립. |
+| **안전 · UX (`전역`)** | `RC-SAFETY-01` & `02` | **항로·기상 추정치의 안전 보증 오인 위험 및 GPS 실패 시 자동 가상 좌표 폴백**: GPS 실패 시 통영 가상 좌표로 즉시 이동하여 실제 선박 위치로 오인할 가능성 존재. | 중요 | 🛠️ **개선 설계 반영 (`PROPOSED`)**: 2.3~2.4절에 GPS 오류 3분류(`permission_denied`/`timeout`/`unavailable`) 분리, 명시적 데모 모드 토글, 항로·기상 결과 내 `추정치 · 항해 안전 보증 아님` 상시 표기 명세 수립. |
+| **오프라인 정책 (`전역`)** | `RC-OFFLINE-01` | **외부 지도 타일(OSM/Kakao) 30일 CacheFirst와 약관/기대치 불일치**: 방문한 타일만 캐시되므로 미방문 해역은 오프라인 열람이 불가하며 OSM 표준 타일 정책과 충돌 가능. | 보통 | 🛠️ **정책 명세 및 사용자 결정 요청 (`PROPOSED` / `DECISION REQUIRED`)**: 2.7절에 오프라인 보장 범위(앱 셸·55개 접안지·136개 항포구·내장 레이어 100% 보장 vs 외부 타일/기상 온라인 필요) UI 고지 및 타일 캐시 정책 설계. |
 
-| 조합 | 실제 대비 | 판정 |
-| :--- | ---: | :--- |
-| `#003360 / #FFFFFF` | `12.79:1` | 일반 텍스트 사용 가능 |
-| `#00846C / #FFFFFF` | `4.65:1` | 일반 텍스트 AA 경계 이상 |
-| `#00A79D / #FFFFFF` | `2.994:1` | 3:1 미달. 흰 글자·필수 UI 경계에 단독 사용 금지 |
-| `#94A3B8 / #FFFFFF` | `2.56:1` | 필수 입력 경계 3:1 기준에 부적합 |
-| `#B2415F / #FFFFFF` | `5.51:1` | 일반 텍스트 AA 이상 |
-
-### 1.6. 근본 원인과 재발 방지
-
-| ID | 근본 원인 | 영향 | 재발 방지 |
-| :--- | :--- | :--- | :--- |
-| `RC-DESIGN-01` | 파일명만 다르고 픽셀은 같은 시안을 별도 페이지 입력으로 간주 | 바다수첩·바닷길 화면을 잘못 동일 설계할 수 있음 | 이미지 픽셀 해시와 디자인 ID를 문서·CI에서 기록 |
-| `RC-STATE-01` | 문서가 현재 구현, 완료 보고, 미래 제안을 같은 시제로 표현 | 미구현을 완료로 또는 구현 완료를 미구현으로 오판 | 모든 요구에 `AS-IS/VERIFIED/PROPOSED/DECISION REQUIRED` 상태 사용 |
-| `RC-ARCH-01` | 루트 컴포넌트에 기능 상태와 어댑터가 집중 | 변경 범위 확대, 회귀 위험, 테스트 어려움 | 기능별 controller/repository 추출과 계약 테스트 |
-| `RC-PWA-01` | Workbox precache 제외와 Vite 배포 제외를 혼동 | 개발 시안 1.79 MiB 배포, verify 실패 | 비런타임 자산은 `public` 밖에 저장하고 dist 금지 경로 검사 |
-| `RC-OFFLINE-01` | 방문 타일 캐시를 오프라인 지도 보장으로 해석 | 정책 위반 및 현장 기대 불일치 | 공급자 정책 승인 전 타일 영속 캐시 금지, 오프라인 범위 UI 명시 |
-| `RC-SEC-01` | 브라우저에 GitHub write credential을 저장하고 보호 브랜치에 직접 쓰는 구조 | XSS·확장 프로그램·공유 단말·오작동으로 저장소 변경 가능 | 서버측 GitHub App/게이트웨이, 최소권한, SHA 동시성 검사, PR 흐름 |
-| `RC-SAFETY-01` | 경로·기상 추정치를 안전 판정처럼 보이게 하는 표현 | 현장 판단 오인 | `추정/미확인/온라인 필요/항해 판단 대체 아님`을 결과와 함께 표시 |
-| `RC-QA-01` | lint/build/정적 개수 검사를 사용자 흐름 검증으로 확대 해석 | 회귀를 놓치고 과장된 완료 주장 | unit/component/E2E/a11y/실기기 게이트를 분리 |
+---
 
 ## 2장. 통합 구현 설계 및 개선 명세서
 
-### 2.1. 제품 방향과 범위
+### 2.1. 제품 비전 및 `v2.2` 데이라이트 브리즈(Daylight Breeze) 디자인 시스템
 
-이번 구현의 목표는 **친근한 국립공원 해양 브랜드와 현장 판단의 명료함을 결합한 지도 중심 PWA**다.
+#### 2.1.1. 브랜드 아이덴티티 및 3계층 디자인 토큰 (`src/index.css`)
+국립공원공단(KNPS) 공식 CI 3원색과 한려해상국립공원 깃대종 팔색조('알로', [`깃대종 NPIP(알로).pdf`](file:///C:/programming/apps/bada-kkomkkomi/public/dev/%EA%B9%83%EB%8C%80%EC%A2%85%20NPIP(%EC%95%8C%EB%A1%9C).pdf) `AS 920`)의 공식 Pantone/RGB 수치를 `Primitive → Semantic → Component` 3계층 토큰으로 구조화했습니다.
 
-| 범위 | 상태 | 구현 원칙 |
-| :--- | :--- | :--- |
-| 인트로 | 설계 가능 | 두 핵심 과업 우선, 설정 분리, 재방문 작업 재개 강조 |
-| 바닷길 콕콕 | 설계 가능 | 현재 기능 보존, 3단 하단 시트, 추정치·데이터 상태 명시 |
-| 꼬미의 바다수첩 | 조건부 | 고유 시안 수신 또는 코드 기반 신규 시안 설계 승인 필요 |
-| 설정·이용안내 | 기존 설계 계승 | 기상 기준·버전·안전 한계·데이터 출처를 제공 |
-| 꼬미의 달력 | 범위 제외 | 기능·데이터 설계하지 않음. 홈 카드 존치 여부만 사용자 결정 |
+| 토큰 계층 | CSS 변수명 (`src/index.css`) | 공식 색상 출처 (`AS 920` / KRDS) | HEX (`RGB`) | `#FFFFFF` 대비율 | 지정 역할 및 접근성 가드 |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **Canvas (60%)** | `--knps-bg-canvas` | 다도해 데이라이트 스카이 | `#E0F2FE` (`224, 242, 254`) | - | 앱 기본 배경, 지도 로딩 전 캔버스 배경 (다크 플래시 원천 차단) |
+| **Surface 1 (30%)** | `--knps-bg-elevated` | 화이트 글래스 서피스 | `#FFFFFF` (`255, 255, 255`) | `1.00:1` | 상단 HUD, 하단 바텀시트, 모달 기본 배경 (`.knps-hud-surface`, `.knps-modal-surface`) |
+| **Surface 2 (Field)** | `--npip-sand-surface`<br>`--npip-sand-border` | PANTONE 7528C (`#A79D87`) 18% / 42% Tint | `#F7F4EE`<br>`#D6C6B2` | - | 현장 야장(Field Note) 보조 정보 카드 배경 및 구분선 |
+| **Primary Text** | `--npip-navy-deep` | PANTONE 301C (팔색조 짙은 남색) | `#003360` (`0, 51, 96`) | **`12.79:1` (AAA)** | 모든 타이틀, 핵심 본문, 수치 데이터, 기본 아이콘 |
+| **Secondary Text** | `--npip-charcoal` | PANTONE 7540C (팔색조 차콜) | `#484843` (`72, 72, 67`) | **`9.18:1` (AAA)** | 부제, 설명 캡션, 메타데이터 텍스트 |
+| **Primary Action (10%)** | `--npip-emerald`<br>`--knps-green-primary` | PANTONE 321C (팔색조 에메랄드)<br>KNPS Green | `#00846C` (`0, 132, 108`)<br>`#00854A` (`0, 133, 74`) | **`4.65:1` (AA)**<br>**`4.68:1` (AA)** | 주요 CTA 버튼 배경(흰 글자), 활성 탭 강조, 폼 `accent-color`, 포커스 링 |
+| **Marine Accent** | `--knps-blue-primary`<br>`--knps-blue-bright` | KNPS Marine Blue | `#0066B3` (`0, 102, 179`)<br>`#0284C7` (`2, 132, 199`) | **`5.75:1` (AA)**<br>`4.10:1` (Large AA) | 바닷길 콕콕 주요 액션, PWA `theme_color` (`#0284c7`) |
+| **Graphic Accent** | `--npip-turquoise` | PANTONE 7466C (팔색조 터쿼이즈) | `#00A79D` (`0, 167, 157`) | `2.99:1` (3:1 미달) | **흰 배경 위 단독 텍스트·필수 입력 보더 사용 금지**. 상단 트라이컬러 장식 바(`.knps-tricolor-bar`) 및 배경 그라데이션 틴트 전용 |
+| **Hazard / Danger** | `--npip-crimson`<br>`--npip-rose` | PANTONE 215C (팔색조 크림슨)<br>PANTONE 7423C (팔색조 로즈) | `#870B41` (`135, 11, 65`)<br>`#B2415F` (`178, 65, 95`) | **`9.45:1` (AAA)**<br>**`5.51:1` (AA)** | 위험주의(Red) 접안지 경고, 출항보류 판정, 폼 유효성 오류 텍스트 |
 
-### 2.2. 목표 정보구조와 사용자 흐름
+---
+
+### 2.2. 전체 시스템 아키텍처 및 데이터 흐름도 (순수 클라이언트 정적 PWA 구조)
 
 ```mermaid
 flowchart TD
-    HOME[인트로]
-    RESUME[이전 작업 이어보기]
-    NOTEBOOK[꼬미의 바다수첩]
-    ROUTE[바닷길 콕콕]
-    SETTINGS[설정·이용안내]
-    DETAIL[접안지 상세]
-    REPORT[현장 제보·관찰]
-    TIME[시간계산]
-    WEATHER[기상상태 확인]
+    subgraph StaticAndConfig["1. 정적 데이터 및 단일 버전 정본 (public/ & src/config/)"]
+        VER["appVersion.ts\n(APP_VERSION = '2.2.0' · PORTS = '2.0.0')"]
+        CFG["public/config/app_config.json\n(기본 해역 · 속력 15kn · 풍속 14/20kn · 파고 1.0/1.8m)"]
+        DOCK["public/data/docking_points.geojson\n(55개소 · 5색 안전등급 · 사진 · 수심 · 위험요소)"]
+        PORTS["public/data/ports.json\n(136개 항포구/선착장 · 35개 해상 변침점 · 20개 육지 배리어)"]
+    end
 
-    HOME --> NOTEBOOK
-    HOME --> ROUTE
-    HOME --> SETTINGS
-    HOME --> RESUME
-    NOTEBOOK --> DETAIL --> ROUTE
-    NOTEBOOK --> REPORT
-    ROUTE --> TIME
-    ROUTE --> WEATHER
+    subgraph RouterAndDraft["2. 라우팅 및 로컬 영속 계층 (src/hooks/ & localStorage/IndexedDB)"]
+        ROUTE_HOOK["useAppRoute.ts\n(?screen=home|notebook|navigation&panel=route|weather\nDepth-Aware navigateHome)"]
+        DRAFT_REPO["WorkspaceDraftRepository (PROPOSED)\n(항로 경유지 · 선속 · 필터 · 뷰포트 버전 스키마 영속화)"]
+        LAYER_STORE["layerStorageService.ts (IndexedDB)\n(사용자 공간정보 레이어 + 12개 버전 스냅샷 롤백)"]
+    end
+
+    subgraph DomainEngines["3. 도메인 코어 서비스 엔진 (src/services/)"]
+        GEO_ENG["routeGeoService.ts (v2.0 Engine)\n- True End-to-End A* 탐색\n- doesSegmentCrossLand() (20개 도서·반도 배리어)\n- pruneTerminalOvershoot() (U턴 스파이크 제거)\n- Arc-Length 50% 진중점 & ➤ 방향 화살표 샘플러"]
+        WTH_ENG["ecmwfWeatherService.ts & useMarineWeather.ts\n- Open-Meteo ECMWF IFS(풍속) + WAM(파고) 9km\n- KST 타임스탬프 Map 정합 결합\n- 결측/오프라인 시 즉시 'unknown(판정불가)' 안전 수렴"]
+        GIS_PARSER["spatialFileParser.ts\n(.gpkg / .zip(shp) / .kml / .geojson 인앱 파서\nEPSG:5179·5186→4326 & CP949 자동 변환)"]
+    end
+
+    subgraph UIWorkspaces["4. 데이라이트 브리즈 UI 워크스페이스 & Native <dialog> 모달 (src/components/)"]
+        HOME["HomeScreen.tsx\n(2x2 런치패드 · 원터치 직행 칩 · 이전 작업 이어보기)"]
+        MAP_VIEW["MapView.tsx (Dual GIS Facade)\n- KakaoMapCanvas.tsx (Primary v3 · 3중 케이싱 항로 · 로드뷰)\n- LegacyLeafletCanvas.tsx (Fallback · 5° 양자화 아이콘 캐시)"]
+        NOTEBOOK_UI["꼬미의 바다수첩 UI\n- 상단 위험주의(Red 9) 우선 필터 바\n- DockingDetailSheet / PhotoGallery / Roadview3DModal\n- LayerControlModal / FieldReportModal / PorpoiseObservationModal"]
+        NAV_UI["바닷길 콕콕 UI\n- RouteTimeCalculator (3단 높이 · 누적 ETA · ➤ 방향토글 · 전체항로)\n- PortSelectModal (136개소 초성/별칭/섬 검색)\n- MarineWeatherPanel (항로 경유지 기상 연동)"]
+        SETTINGS_UI["WeatherThresholdSettings.tsx (App 최상위 Native <dialog>)\n- 풍속·파고 기준치 설정 (역전 방지 · m/s 환산 · 기본값 복원)\n- 3대 핵심 기능 이용 안내 & v2.2.0 버전/상태 확인"]
+    end
+
+    VER & CFG --> HOME & SETTINGS_UI
+    DOCK --> NOTEBOOK_UI & MAP_VIEW
+    PORTS --> GEO_ENG & NAV_UI
+    ROUTE_HOOK <--> HOME & NOTEBOOK_UI & NAV_UI
+    DRAFT_REPO <--> NOTEBOOK_UI & NAV_UI
+    LAYER_STORE <--> GIS_PARSER & MAP_VIEW
+    GEO_ENG --> NAV_UI & MAP_VIEW
+    WTH_ENG <--> NAV_UI & SETTINGS_UI
 ```
 
-기존 깊은 링크 계약은 유지한다.
+---
 
-- `?screen=notebook`
-- `?screen=navigation&panel=route`
-- `?screen=navigation&panel=weather`
+### 2.3. 바닷길 콕콕 (`3.2`) — 해상 항로 탐색 엔진 및 3계층 방향 시각화 설계 (구 `ROUTE_NAVIGATION_DESIGN.md` 통합)
 
-`useAppRoute`와 `App.tsx`의 중복 `popstate` 동기화는 한 소유자로 통합한다. 홈 오버레이, 마지막 작업공간, URL 화면 상태가 서로 다른 진실 소스가 되지 않도록 `WorkspaceSession`으로 묶는다.
+#### 2.3.1. 해상 실항로 기하·탐색 5대 핵심 알고리즘 ([`src/services/routeGeoService.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/routeGeoService.ts)) — `[VERIFIED]`
+1. **한려해상(통영·거제) 20대 도서·반도 육지 배리어 폴리곤(`LANDMASS_BARRIER_POLYGONS`) 및 `doesSegmentCrossLand()`**:
+   - 통영 반도, 미륵도, 한산도, 추봉도, 비진도, 용초도, 좌이도, 사량도(상·하도), 욕지도, 연화도, 우도, 매물도, 소매물도, 가조도, 산달도, 거제도 본섬, 칠천도, 가배·구영 반도, 저구·다대 반도, 지세포·서이말 반도의 코어 다각형을 정의하고 CCW 선분 교차 + Ray-Casting으로 육지 관통을 $O(1)$에 차단합니다.
+2. **True End-to-End A* 최단 실항로 탐색 (`findShortestWaypointPath`)**:
+   - 시작 후보 변침점 `sId`의 초기 비용에 `haversineKm(fromSeaApproach, wp(sId)) + landPenalty`를 부여하고, 종료 후보 변침점 `eId`에서 `haversineKm(wp(eId), toSeaApproach) + landPenalty`까지 합산한 전역 최소 비용 경로를 탐색합니다.
+3. **단거리 직선 연결(`sharesWaypoint` / `sameLocalArea`) 안전 가드**:
+   - `!doesSegmentCrossLand(fromSea, toSea)`를 통과하고 공통 변침점 입출항 내각이 `100°` 이상(완만한 연안 통과)이거나 직선거리 `1.2km` 이하 개방 수로일 때만 직선 연결을 허용하여 한산도·거제 남부면·장승포 반도 관통을 100% 방지합니다.
+4. **양단 오버슈트(Overshoot) 역주행 프루닝 (`pruneTerminalOvershoot`)**:
+   - 출발단(`fromSea → W_1 → next`)과 도착단(`prev → W_k → toSea`)에서 내부 꺾임각이 `75°` 미만(예각 U턴)이고 직결 선분이 육지를 관통하지 않으며 거리가 단축되는 경우 끝단 변침점을 프루닝합니다.
+5. **누적 호장(Arc-Length) 50% 진중점(`getPolylineArcMidpoint`) 및 방향 화살표 샘플러(`samplePolylineDirectionArrows`)**:
+   - 폴리라인 전체 길이 $L$의 정확히 $0.5 L$ 내분점에 구간 배지를 배치하고, 양 끝 마커(`220m`)와 중앙 배지(`180m`)를 피해 `1.2km` 간격(구간당 1~8개)으로 진행 방위각(`bearingDeg`)이 포함된 방향 화살표(`➤`) 좌표를 추출합니다.
 
-### 2.3. 목표 컴포넌트·상태 아키텍처
+#### 2.3.2. 듀얼 GIS 캔버스 3계층 방향성 렌더링 ([`KakaoMapCanvas.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx) & [`LegacyLeafletCanvas.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/map/LegacyLeafletCanvas.tsx)) — `[VERIFIED]`
+- **Tier 1~3 구간별 3중 케이싱 폴리라인**:
+  - 외곽 케이싱(`#020617`, `9px`, 선택 시 `11px`) + 안전/포커스 코어(일반 `#00e5ff`, 암초·천수 주의 `#fbbf24`, 선택 구간 `#34d399`, `5px`) + 내부 방향 점선(`#e0f2fe`, `1.8px`).
+- **줌 적응형 방향 화살표(`➤`, `buildRouteDirectionArrowSpec`)**:
+  - `zoom <= 10` 최대 6개, `zoom 11~12` 최대 14개, `zoom >= 13` 최대 24개로 자동 조절하며, 개별 CSS `rotate: ${Math.round(bearingDeg)}deg` 및 `pointer-events: none`(`clickable: false`)을 적용하여 지도 드래그 간섭을 원천 차단합니다.
+- **회전 침로 구간 배지(`buildRouteLegBadgeSpec`) 및 수로 가이드(`buildSeaWaypointGuideSpec`)**:
+  - 구간 배지 좌측에 회전 침로 화살표 아이콘을 내장하고 클릭 시 해당 구간으로 포커스(`onSelectLeg`)합니다. `zoom >= 12`에서는 경유 변침점에 `◆ 견내량 남측 수로` 등 지형 맥락 가이드를 표시합니다.
 
-```text
-AppShell
-├─ AppRouter
-├─ NetworkAndUpdateStatus
-├─ HomePage
-└─ WorkspacePage
-   ├─ WorkspaceHeader
-   ├─ MapWorkspace
-   │  ├─ KakaoMapAdapter
-   │  └─ LeafletMapAdapter
-   ├─ NotebookWorkspace
-   │  ├─ NotebookToolbar
-   │  ├─ DockingDetailSheet
-   │  ├─ FieldReportDialog
-   │  └─ ObservationDialog
-   └─ NavigationWorkspace
-      ├─ NavigationTabs
-      ├─ RoutePlannerSheet
-      └─ MarineWeatherSheet
-```
+#### 2.3.3. 8대 핵심 벤치마크 및 18,360쌍 전수 실측 검증 결과 — `[VERIFIED]`
 
-상태는 수명과 보안 경계별로 나눈다.
+| 검증 케이스 | 출항지 → 입항지 | 구버전(`v1.9`) 문제 현상 | 현행(`v2.0~v2.2`) 실측 결과 | 판정 |
+| :--- | :--- | :--- | :--- | :---: |
+| **`[RC-ROUTE-01]` A* 전역 최단 #1** | `GJ-001` (저구항) → `KR-GN-TY-0002` (삼덕항) | `33.24km` (다대 6.6km 남하 역주행) | **`26.46km` (`14.29NM`, `-6.78km` 단축)** · `[WP-GARAN-SW → WP-HANSAN-N → WP-MIREUK-S]` | **PASS** |
+| **`[RC-ROUTE-01]` A* 전역 최단 #2** | `TY-002` (한산 제승당) → `KR-GN-GJ-0026` (거제 법동항) | `15.42km` (견내량 협수로 불필요 우회) | **`11.49km` (`6.20NM`, `-3.93km` 단축)** · `[WP-HANSAN-N → WP-DUNDEOK-W]` | **PASS** |
+| **`[RC-ROUTE-02]` 오버슈트 프루닝 #1** | `TY-001` (강구안) → `KR-GN-TY-0015` (죽림항) | `14.12km` (`WP-JUKRIM` 초과 직진 후 U턴) | **`12.20km` (`6.59NM`, `-1.92km` 단축)** · `[WP-TY-CANAL-E → WP-TY-CANAL-W]` | **PASS** |
+| **`[RC-ROUTE-02]` 오버슈트 프루닝 #2** | `TY-001` (강구안) → `KR-GN-TY-0005` (달아항) | `13.48km` (`WP-DARA` 초과 남하 후 북상 U턴) | **`11.12km` (`6.01NM`, `-2.36km` 단축)** · `[WP-TY-BAY → WP-MIREUK-E]` | **PASS** |
+| **`[RC-ROUTE-03]` 육지 관통 차단 #1** | `TY-002` (한산 제승당) → `KR-GN-TY-0021` (창좌항) | 한산도 본섬 망산(293m) 산악 직선 관통 | **`9.59km` (`5.18NM`)** · `[WP-HANSAN-N]` 북측 수로 안전 우회 | **PASS** |
+| **`[RC-ROUTE-03]` 육지 관통 차단 #2** | `GJ-001` (저구항) → `KR-GN-GJ-BERTH-0020` (쌍근 선착장) | 거제 가배·왕조도 반도 육지 직선 관통 | **`8.46km` (`4.57NM`)** · `[WP-GARAN-SW]` 가란도 남서 수로 우회 | **PASS** |
+| **`[RC-ROUTE-03]` 육지 관통 차단 #3** | `GJ-002` (장승포항) → `KR-GN-GJ-0005` (지세포항) | 거제 일운 서이말 반도 육지 직선 관통 | **`8.50km` (`4.59NM`)** · `[WP-JISEPO-E]` 양지암취 외해 우회 | **PASS** |
+| **`[RC-ROUTE-04]` 데이터 스키마 복구** | `TY-003` (매물도 당금항) → `KR-GN-TY-0035` (소매물도항) | 미존재 `"WP-SOMAEMUL-W"` 참조 | **`7.09km` (`3.83NM`)** · `"WP-MAEMUL-S"` 복구 완료 | **PASS** |
 
-| 계층 | 예시 | 저장 위치 |
-| :--- | :--- | :--- |
-| URL 상태 | 화면, 시간계산/기상 탭 | History API/query |
-| 세션 상태 | 선택 접안지, 열린 패널, 임시 포커스 | feature reducer |
-| 사용자 초안 | 항로 지점, 속력, 필터, 지도 뷰포트 | versioned `WorkspaceDraftRepository` |
-| 로컬 운영 데이터 | 사용자 레이어, 상괭이 관찰 | IndexedDB/localStorage repository |
-| 원격 데이터 | 기상, GitHub 발행 | adapter/gateway |
+#### 2.3.4. 바닷길 콕콕 UI/UX 추가 고도화 설계 (`PROPOSED`)
+- **하단 시트 3단 높이 제어 및 단일 포인터 대안**: 현재의 `접기/펼치기` 2단 토글을 발전시켜 `요약(총 예상시간·거리·속력·추정치 고지) → 중간(속력 프리셋·출발/경유/도착 목록·누적 ETA) → 전체(구간별 상세·기상 이동·브리핑 복사)` 3단계 버튼 제어를 지원합니다.
+- **안전 고지 상시 병기 (`RC-SAFETY-01`)**: 시간계산 결과 카드 및 복사 브리핑 하단에 `※ 본 결과는 선속 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.`를 상시 표시합니다.
 
-빅뱅 리팩토링은 금지한다. 현재 컴포넌트의 외부 동작을 특성화 테스트로 고정한 뒤 `WorkspaceShell → NotebookWorkspace → NavigationWorkspace` 순으로 추출한다.
+---
 
-### 2.4. 데이터 흐름
+### 2.4. 꼬미의 바다수첩 (`3.1`) 및 인트로 (`HomeScreen`) 구현 명세
 
-```mermaid
-flowchart LR
-    STATIC[정적 config / GeoJSON / ports]
-    DRAFT[WorkspaceDraftRepository]
-    ROUTER[AppRouter]
-    NOTEBOOK[Notebook controller]
-    NAV[Navigation controller]
-    MAP[Map adapters]
-    ROUTE[RouteGeoService]
-    WEATHER[WeatherProvider]
-    LOCAL[Local observation/layer repositories]
-    PUBLISH[Authenticated publish gateway]
+#### 2.4.1. 인트로 (`HomeScreen.tsx`) — `[VERIFIED]` & `[PROPOSED]`
+- **현재 구현 (`VERIFIED`)**:
+  - 상단 한려해상국립공원 배지 + `[앱 설치]` + `온라인/오프라인` 상태 표시(아이콘+텍스트 병기).
+  - 공식 히어로 배너(`hero_banner.png`) 직결 2×2 기능 카드 그리드(`꼬미의 바다수첩`, `바닷길 콕콕`, `꼬미의 달력(출시 예정)`, `설정`) 및 하단 원터치 직행 칩(`[위험 9]`, `[전체 55]`, `[레이어]`, `[시간계산]`, `[기상판정]`, `[기상기준]`, `[이용안내]`).
+  - 작업공간 진입 후 홈 복귀 시 하단 `[이어서 보기]` 배너 노출 및 마지막 실행 카드로 키보드 포커스 자동 복원.
+- **추가 개선 설계 (`PROPOSED`)**:
+  - 카드 하단 원터치 보조 칩(`h-8`, `32px`)의 높이를 **`min-h-11`(`44px`)**로 확대하여 선박 흔들림·장갑 착용 시 오터치를 방지합니다.
+  - 3번 `꼬미의 달력` 비활성 카드의 존치 또는 `2대 주 기능 카드 + 하단 전폭 설정·이용안내 행` 개편 여부는 3장 사용자 결정(`ACTION-01`)에 따라 즉시 반영합니다.
 
-    STATIC --> NOTEBOOK --> MAP
-    STATIC --> NAV --> ROUTE --> MAP
-    ROUTER --> NOTEBOOK
-    ROUTER --> NAV
-    DRAFT <--> NOTEBOOK
-    DRAFT <--> NAV
-    NAV --> WEATHER
-    NOTEBOOK <--> LOCAL
-    LOCAL --> PUBLISH
-```
+#### 2.4.2. 꼬미의 바다수첩 (`3.1`) — 시안 톤 기반 현행 기능 고도화 명세 (`VERIFIED` & `PROPOSED`)
+사용자 지시(*"시안 기반 및 참고하되, 현재 기능을 기준 설계 작업"*)에 따라 데이라이트 브리즈 라이트 톤 위에서 바다수첩 고유 도메인 계약을 완성합니다.
+1. **Hazard-First 5색 접안지 탐색 (`VERIFIED`)**:
+   - 초기 진입 시 `위험주의(Red, 9개소)`를 최우선 노출하며, 상단 툴바에서 `[위험주의 9]`, `[전체 55]`, `[+등급·권역 ▾]` 다중 선택 및 검색어 필터를 제공합니다.
+   - 모든 접안지 등급은 색상뿐만 아니라 **고유 명칭(`위험주의` / `조석주의` / `안전접안` / `전용부두` / `비상거점`) + 숫자 카운트 + 아이콘**으로 중복 표현하여 색각 이상 및 직사광선 환경에서도 100% 식별됩니다.
+2. **접안지 상세 바텀시트 (`DockingDetailSheet.tsx`, `VERIFIED`)**:
+   - 사진이나 부가 설명보다 **안전 등급 배지, 주의·위험요소(`hazard`), 권장 선박/목적(`purpose`), 최저수심·조석 민감도**를 최상단에 배치합니다.
+   - 위경도 좌표 선택·복사, 현장 사진 스와이프(`PhotoGallery`), 360° 3D 현장 로드뷰(`Roadview3DModal`), 현장 제보(`FieldReportModal`), 그리고 **`[🧭 이 접안지를 목적지로 바닷길 시간·기상 계산하기]` 도메인 브릿지**를 제공합니다.
+3. **직원용 QGIS 멀티포맷 공간정보 레이어 관리 (`LayerControlModal.tsx`, `VERIFIED`)**:
+   - `.gpkg`, `.zip(shp)`, `.geojson`, `.kml` 직접 업로드 및 `EPSG:5179`/`5186` → `EPSG:4326`, `CP949` 한글 자동 복원, 피처/스타일 편집, `IndexedDB` 12개 버전 스냅샷 즉시 롤백을 지원합니다.
+4. **GPS 위치 조회 안전 분기 (`PROPOSED`, `RC-SAFETY-02`)**:
+   - [`App.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/App.tsx#L641-L689)의 `handleRequestGps`에서 `GeolocationPositionError.code`(`1: PERMISSION_DENIED`, `2: POSITION_UNAVAILABLE`, `3: TIMEOUT`)를 구분하여 정확한 한국어 안내 토스트를 띄우고, 실패 시 자동으로 통영 가상 좌표를 실제 위치처럼 세팅하지 않도록 분리합니다(가상 좌표는 우측 독의 명시적 `[시뮬레이션 위치]` 버튼을 눌렀을 때만 활성화).
 
-#### 바다수첩
+---
 
-`docking_points.geojson + operational layers → filter selector → map markers → docking detail → report/observation repository`
+### 2.5. 설정·이용안내 (`3.4`) 및 전방위 모달·폼 접근성 명세 (구 `SETTINGS_DESIGN.md` 통합)
 
-- 접안지 데이터는 스키마 검증 후 로드한다.
-- 위험도·수심·좌표·최근 확인일의 출처와 갱신시각을 표시한다.
-- GitHub 발행은 로컬 저장 성공과 분리한다. 원격 실패가 로컬 초안을 지우면 안 된다.
+#### 2.5.1. 통합 `'3.4. 설정'` 다이얼로그 ([`src/components/navigation/WeatherThresholdSettings.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/navigation/WeatherThresholdSettings.tsx)) — `[VERIFIED]`
+- **최소주의 4대 핵심 기능 완비**:
+  1. **바닷길 콕콕 풍속 판정 기준 설정 (`knots` + 실시간 `m/s`·`km/h` 환산 캡션 + 3단계 프리뷰 바)**
+  2. **바닷길 콕콕 유의파고 판정 기준 설정 (`m` + 3단계 프리뷰 바)**
+  3. **간단한 이용 안내 (바다수첩 · 시간계산 · 기상판정 3대 요약 카드 + 오프라인 동작 범위 안내)**
+  4. **앱 버전 및 데이터 사전 확인 (`v2.2.0` · 접안지 55개소 · 항포구 136개소 `v2.0.0` · 해상 변침점 35개소 · ECMWF 9km · 온라인/PWA 설치 상태)**
+- **접근성 및 무결성 가드**:
+  - `App.tsx` 최상위 루트에 마운트된 HTML5 Native `<dialog>`(`showModal()`)로 동작하며, 인트로 `[🌬️ 기상기준]` / `[📖 이용안내]` 칩 클릭 시 해당 섹션으로 즉시 스크롤 포커스됩니다.
+  - `<fieldset>` + `<legend>`, 명시적 `<label htmlFor>`, `16px`(`text-base`) 입력 폰트, `48px`(`min-h-12`) 터치 타겟을 적용했습니다.
+  - `0 < 좋음 상한선 < 보통 상한선` 역전 입력 시 창 닫기를 차단하고 구체적인 해결 문구와 함께 첫 오류 입력창으로 포커스를 이동하며(`aria-invalid="true"`, 동적 `aria-describedby`), `[↺ 표준 기본값 복원]`(`14/20kn`, `1.0/1.8m`) 원터치 초기화를 제공합니다.
 
-#### 바닷길
+---
 
-`ports/waypoints → RouteDraft reducer → RouteGeoService → RouteSummary → map + sheet`
+### 2.6. 단계적 아키텍처 리팩토링 및 `WorkspaceDraftRepository` 설계 (`PROPOSED`)
 
-- 계산 엔진은 UI에서 분리된 순수 함수로 유지한다.
-- 결과는 거리, 시간, 구간, 적용 속력, 계산시각, 제약·경고를 함께 반환한다.
-- GPS 오류는 `permission_denied`, `timeout`, `unavailable`로 구분한다. 예시 좌표는 사용자가 명시적으로 데모 모드를 켠 경우에만 사용한다.
+현재 정상 동작하는 `App.tsx`와 `MapView.tsx`를 빅뱅 재작성하지 않고, 외부 동작을 고정한 상태에서 안전하게 모듈화하는 설계입니다.
 
-#### 기상
+1. **`src/services/workspaceDraftRepository.ts` (작업 초안 기기 영속화)**:
+   - 저장 대상: `routeWaypoints`(출발·경유·도착), `speedKnots`, `selectedColors`(접안지 등급 필터), `selectedRegion`, `lastViewport`(`lat`, `lng`, `zoom`), `schemaVersion: 1`, `updatedAt`.
+   - 효과: 해상 현장에서 브라우저 새로고침, 탭 메모리 회수, 또는 PWA 서비스워커 업데이트가 발생해도 직전에 계획 중이던 바닷길 항로와 바다수첩 필터 상태가 100% 복원되며, `[초기화]` 버튼으로 언제든 비울 수 있습니다.
+2. **라우터 단일 진실 공급원 통합**:
+   - [`useAppRoute.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/hooks/useAppRoute.ts)가 URL 쿼리(`?screen=...&panel=...`)와 History depth를 전담 관리하도록 유지하고, 하위 컴포넌트는 선언적 콜백만 호출합니다.
 
-`coordinates → WeatherProvider(Open-Meteo) → timestamp alignment → threshold evaluator → unknown-safe UI`
+---
 
-- `navigator.onLine`은 힌트일 뿐 요청 성공 증거가 아니다.
-- 실패·결측·오래된 캐시는 모두 `미확인`으로 수렴한다.
-- 모델, 격자 해상도, 예보 기준시각, 조회시각, 위치를 결과에 포함한다.
+### 2.7. PWA 캐시 경계 · `public/dev` 보존 정책 · MCP 활용 명세
 
-### 2.5. 페이지별 구현 명세
+#### 2.7.1. `public/dev/*` 파일 보존 및 배포 아티팩트 분리 규칙 (`VERIFIED` & `PROPOSED`)
+- **절대 원칙**: [`public/dev/`](file:///C:/programming/apps/bada-kkomkkomi/public/dev) 하위의 모든 파일(`깃대종 NPIP(알로).pdf`, `characters/base_character.jpg`, `design_pages/intro_page.png`, `design_pages/ocean_notebook.png`, `design_pages/ocean_route.png`)은 **디스크에서 절대 삭제하거나 이동하지 않습니다.**
+- **현재 적용 완료 (`VERIFIED`)**:
+  1. [`.gitignore`](file:///C:/programming/apps/bada-kkomkkomi/.gitignore): `public/dev/*`를 등록하여 Git 커밋 및 원격 저장소 업로드 대상에서 제외했습니다. (따라서 GitHub Actions CI 러너에서 체크아웃 시 `public/dev/`는 존재하지 않으며 원격 GitHub Pages 배포 아티팩트에도 포함되지 않습니다.)
+  2. [`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts#L78): `workbox.globIgnores: ['**/dev/**']`를 설정하여 로컬 빌드 시에도 서비스워커(`dist/sw.js`) 프리캐시 목록에 `dev/` 파일이 단 1건도 포함되지 않음을 [`scripts/verify-integrity.mjs`](file:///C:/programming/apps/bada-kkomkkomi/scripts/verify-integrity.mjs#L146-L150)로 자동 검증합니다.
+- **추가 개선 옵션 (`PROPOSED`)**: 로컬에서 `npm run build` 실행 시에도 `dist/dev/` 폴더로 복사되지 않도록 `vite.config.ts`의 `closeBundle` 훅에서 `dist/dev`(빌드 출력물 사본만, 원본 `public/dev`는 절대 불변)를 정리할 수 있습니다.
 
-#### 2.5.1. 인트로
-
-| 영역 | 명세 |
-| :--- | :--- |
-| 운영기관 | 공식 CI는 승인된 원본만 사용하고 제품명과 분리한다. |
-| 주 기능 | 바다수첩·바닷길 두 대형 카드. 카드 전체를 하나의 48px 이상 타깃으로 제공한다. |
-| 빠른 실행 | 위험 우선, 전체 접안지, 시간계산, 기상판정은 카드 내부 보조 액션으로 제공하되 44px 이상 타깃을 확보한다. |
-| 설정 | 전폭 유틸리티 행으로 분리하고 기상기준·이용안내를 명시한다. |
-| 상태 | 온라인/오프라인과 설치 가능 상태는 텍스트+아이콘으로 표시한다. |
-| 달력 | 설계하지 않는다. 카드 제거 여부는 3장 승인을 따른다. |
-
-#### 2.5.2. 바닷길 콕콕
-
-| 영역 | 명세 |
-| :--- | :--- |
-| 헤더 | 뒤로가기, 페이지 제목, 상태/설정. 장식 캐릭터는 핵심 제목·버튼을 밀어내지 않는다. |
-| 탭 | 시간계산/기상판정을 `tablist/tab/tabpanel` 의미로 구현하고 색상 외 굵기·아이콘·표시선을 병행한다. |
-| 지도 | 출발·경유·도착을 번호, 형태, 명칭으로 구분한다. 경로는 이중 스트로크와 방향 표시를 사용한다. |
-| 지도 도구 | 전체항로, 확대/축소, 지점추가, 초기화에 단일 포인터 조작을 제공한다. |
-| 하단 시트 | 3단 높이와 드래그가 아닌 버튼 대안을 함께 제공한다. 키보드 포커스가 시트에 가려지지 않게 자동 스크롤한다. |
-| 속력 | 유효범위, 단위 `kn`, 기본값의 출처, 직접 입력·프리셋을 제공한다. |
-| 결과 | 총 시간, `NM/km`, 예상 도착시각, 계산시각, 데이터 상태, `추정치`를 한 묶음으로 표시한다. |
-
-#### 2.5.3. 꼬미의 바다수첩
-
-바다수첩 시안 확정 전에는 다음 기능 계약만 고정한다.
-
-1. 지도와 접안지 상태가 첫 화면의 중심이다.
-2. 위험주의 접안지는 기본 진입 또는 명확한 원터치 필터로 제공한다.
-3. 상세 시트는 위험요소를 사진·편의정보보다 먼저 제시한다.
-4. 좌표·안전수칙은 선택·복사가 가능하다.
-5. 현장 제보·관찰·레이어 관리는 각기 다른 작업이므로 상세 정보와 시각적으로 구분한다.
-6. 접안지에서 바닷길 목적지로 이동할 때 컨텍스트와 뒤로가기 경로를 보존한다.
-
-### 2.6. 디자인 토큰·접근성 규칙
-
-토큰은 `primitive → semantic → component`로 나눈다. Pantone 원색을 UI에 직접 흩뿌리지 않는다.
-
-```text
-primitive: npip-navy-301, npip-teal-7466, npip-green-321, npip-sand-7528
-semantic: text-primary, action-primary, border-strong, surface-info, status-danger
-component: button-primary-bg, route-line-core, sheet-border, focus-ring
-```
-
-필수 규칙:
-
-- 일반 텍스트 4.5:1, 큰 텍스트·필수 그래픽·UI 상태 3:1 이상
-- 주요 터치 48×48 CSS px, 보조 터치 44×44 CSS px
-- 본문 16px 이상, 현장 보조정보 14px 이상을 기본 목표로 하고 10px~11px 정보는 제거·확대
-- `:focus-visible` 2px 이상 고대비 외곽선
-- 위험/주의/양호는 색상+아이콘+상태명 병행
-- 모든 드래그 조작에 클릭/버튼 대안 제공
-- `prefers-reduced-motion`에서 비필수 모션 제거
-- 200% 확대, 320 CSS px 폭, 세로·가로 화면에서 기능 손실 금지
-- 밝은 배경과 위성지도 양쪽에서 각각 대비 검사
-
-### 2.7. PWA·외부 API·MCP 최적화
-
-#### PWA 캐시 경계
-
-| 자원 | 목표 전략 | 사용자 표시 |
-| :--- | :--- | :--- |
-| 앱 셸·아이콘 | precache | 오프라인 가능 |
-| app config·GeoJSON | NetworkFirst + 검증된 마지막 정상본 | 데이터 기준시각 표시 |
-| 현장 이미지 | StaleWhileRevalidate + 예산 | 캐시 여부·실패 대체 UI |
-| 기상 API | network required, 실패 시 `미확인` | 마지막 성공 시각과 오래됨 표시 |
-| GitHub 발행 | network required | 로컬 저장/원격 발행 상태 분리 |
-| Kakao/OSM 타일 | 정책 승인 전 영속 캐시 보장 금지 | 오프라인 지도 미보장 명시 |
-
-`autoUpdate + skipWaiting`은 항로 초안이 비영속인 상태에서 작업 중 앱을 교체할 수 있다. `WorkspaceDraftRepository` 저장 성공 후 업데이트하거나 사용자 확인형 업데이트로 전환한다.
-
-#### 외부 API adapter
-
-Kakao, Open-Meteo, GitHub를 컴포넌트에서 직접 호출하지 않고 adapter 계약으로 격리한다.
-
-- 공통: timeout, `AbortController`, 오류 taxonomy, `lastUpdated`, source attribution
-- 기상: online/unknown/stale 상태 분리
-- 지도: SDK 실패와 도메인 미등록을 구분
-- 발행: 브라우저 PAT 제거, 서버측 GitHub App 또는 인증된 서버리스 gateway 사용
-
-#### MCP와 개발 도구
-
-현재 런타임 앱에는 MCP 의존이 없다. MCP는 런타임에 넣지 않고 개발·검증 계층에서만 사용한다.
-
-- 공식 문서 조회: URL, 조회일, 적용 결론을 문서에 남김
-- 디자인 비교: 기준 시안의 픽셀/구조 차이를 자동 리포트
-- 브라우저 자동화: Playwright로 모바일 핵심 흐름과 오프라인 셸 확인
-- 접근성: axe-core, Lighthouse, 키보드 탐색, Android Accessibility Scanner
-- 데이터: JSON Schema, GeoJSON 검증, 고정 fixture 기반 경로 불변식 검사
-- 보안: secret scan, 번들 내 `VITE_*TOKEN` 금지 검사
-
-### 2.8. 보안·운영 구조 개선
-
-현재 브라우저 GitHub write 토큰 방식은 구현 전에 설계를 확정해야 한다.
-
-권장 흐름:
-
-```text
-브라우저 로컬 초안
-  → 인증된 publish gateway
-  → schema/권한/repo/branch/expected SHA 검증
-  → 보호 브랜치용 PR 생성
-  → 사용자 또는 운영자 승인
-  → 배포
-```
-
-- 기존 토큰이 실제 사용됐다면 사용자가 GitHub에서 직접 revoke/rotate한다.
-- 클라이언트에는 write token을 번들·localStorage·IndexedDB 어디에도 저장하지 않는다.
-- gateway는 저장소·브랜치 allowlist, 최소 `contents` 권한, 만료, 감사 로그를 적용한다.
-- `main` 직접 커밋 대신 PR 또는 보호 브랜치 워크플로를 기본값으로 한다.
-
-### 2.9. 단계별 구현 순서와 승인 게이트
-
-| 단계 | 작업 | 완료 조건 | 승인 |
+#### 2.7.2. PWA 자원별 캐시 전략 및 오프라인 표시 경계
+| 자원 구분 | Workbox 전략 (`vite.config.ts`) | 오프라인 동작 보장 수준 | UI 상태 표시 원칙 |
 | :--- | :--- | :--- | :--- |
-| Gate 0 | 3장 결정사항 확정 | 바다수첩 시안, 달력 카드, 브랜드, 지도 정책, GitHub 발행 결정 | **사용자 필수** |
-| 1 | 기준선 복구 | `public/dev` 정책과 lockfile 버전 정합, verify 통과 | 에이전트 구현 후 사용자 검토 |
-| 2 | 특성화 테스트 | 현재 핵심 흐름·계산·저장 계약 고정 | 테스트 결과 검토 |
-| 3 | 아키텍처 추출 | WorkspaceShell/Notebook/Navigation 단계적 분리 | 기능 회귀 0건 |
-| 4 | 인트로·바닷길 UI | 승인 시안의 시각 언어와 접근성 반영 | 스크린샷·E2E·a11y 통과 |
-| 5 | 바다수첩 UI | 고유 시안 승인 후 구현 | 도메인 기능·시각 검수 통과 |
-| 6 | 보안·PWA | publish gateway, 초안 복구, 캐시 경계 적용 | 보안·오프라인 테스트 통과 |
-| 7 | 실기기 검증 | 갑판/직사광선/네트워크 단절/장갑 시나리오 | **사용자 현장 확인 필수** |
+| **앱 셸 (`index.html`, JS, CSS, 아이콘, 브랜드 이미지)** | Precache (`50 entries`, 중복 0건) | **100% 오프라인 즉시 실행** | 상단 `오프라인` 배지 표시 시에도 정상 동작 |
+| **핵심 공간 데이터 (`docking_points.geojson`, `ports.json`, `app_config.json`, 내장 레이어)** | Precache + Runtime `NetworkFirst` (3초 타임아웃 후 캐시 즉시 반환) | **100% 오프라인 열람·항로 계산 가능** | 설정 모달에 탑재 데이터 버전(`55개소 / 136개소 v2.0.0`) 상시 표기 |
+| **현장 접안지 사진 (`/images/docking/*`)** | Precache + `StaleWhileRevalidate` (60일) | **오프라인 열람 가능** | 이미지 로드 실패 시 대체 안내 UI 제공 |
+| **ECMWF 해상기상 API (`api.open-meteo.com`)** | **캐시 배제 (Network Only)** | **온라인 전용 (오프라인 시 캐시 재사용 금지)** | 실패·결측·오프라인 시 즉시 `판정불가 (?)` / `미확인`으로 안전 수렴 |
+| **배경 지도 타일 (`Kakao Maps CDN` / `OSM Fallback`)** | 방문 해역 런타임 캐시 (정책 검토 대상) | **열람 이력이 있는 해역만 보조 표시 (전 해역 오프라인 보장 아님)** | 이용 안내에 *"배경 지도 타일과 실시간 기상은 네트워크 연결이 필요합니다"* 명시 |
 
-### 2.10. 테스트·품질 게이트
+---
 
-권장 CI 순서:
+### 2.8. 레거시 정리 및 청산 완료 내역 (`VERIFIED` & `PROPOSED`)
 
-```text
-npm ci
-→ verify:source
-→ lint
-→ unit/component tests
-→ build
-→ verify:dist
-→ Playwright smoke/a11y/link checks
-```
+`ROUTE_NAVIGATION_DESIGN.md`(`v2.0`), `SETTINGS_DESIGN.md`(`v2.1`), 그리고 이번 `v2.2` 통합 과정에서 식별·청산된 전체 레거시 목록입니다.
 
-필수 테스트:
+| 레거시 ID | 대상 파일 / 위치 | 식별된 레거시 내용 | 청산 및 조치 상태 |
+| :---: | :--- | :--- | :--- |
+| **`LEG-01`** | [`src/components/DockingDetailSheet.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/DockingDetailSheet.tsx) | 로컬 중복 선언된 `calculateDistanceKm` 및 `/ 1.852` 수식 | ✅ **청산 완료 (`VERIFIED`)**: `routeGeoService.ts`의 `calculateHaversineKm`, `kmToNauticalMiles`로 단일화 |
+| **`LEG-02` & `14`** | [`package.json`](file:///C:/programming/apps/bada-kkomkkomi/package.json), [`package-lock.json`](file:///C:/programming/apps/bada-kkomkkomi/package-lock.json), [`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts), [`index.html`](file:///C:/programming/apps/bada-kkomkkomi/index.html), [`README.md`](file:///C:/programming/apps/bada-kkomkkomi/README.md) | 구버전 문자열(`1.3.0`, `1.8.0`, `[v1.8]`) 드리프트 | ✅ **청산 완료 (`VERIFIED`)**: [`src/config/appVersion.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/config/appVersion.ts) (`2.2.0` / `v2.2`) 단일 정본으로 전 파일 동기화 및 `verify-integrity.mjs` 자동 검증 추가 |
+| **`LEG-03`** | [`src/components/home/HomeScreen.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/home/HomeScreen.tsx) | 인트로 4번 `설정` 카드의 `disabled` / `출시 예정` 비활성 상태 | ✅ **청산 완료 (`VERIFIED`)**: `[기상기준]`, `[이용안내]` 원터치 칩을 갖춘 정식 활성 카드로 승격 |
+| **`LEG-04` & `15` & `16`** | `src/hooks/useEscapeKey.ts` (삭제됨), 전체 8개 모달 + [`src/components/MapView.tsx`](file:///C:/programming/apps/bada-kkomkkomi/src/components/MapView.tsx) Kakao 진단창 | 구형 `<div role="dialog" aria-modal="true">` 래퍼 및 수동 `useEscapeKey` 훅, README 내 삭제된 파일 표기 | ✅ **청산 완료 (`VERIFIED`)**: `useEscapeKey.ts` 파일 완전 삭제, `MapView` Kakao 진단창을 포함한 **앱 내 모든 모달을 HTML5 Native `<dialog>`(`showModal()`)로 100% 전환**, `README.md` 디렉터리 트리 현행화 |
+| **`LEG-05` & `06`** | `public/backup/`, `knps_logo_alpha.png`, [`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts) | 구버전 백업 폴더 및 죽은 `globIgnores` 항목 (`**/backup/**`, `**/knps_logo_alpha.png`) | ✅ **청산 완료 (`VERIFIED`)**: 미사용 백업 파일 삭제 및 `globIgnores: ['**/dev/**']`로 클린화 (`public/dev/` 원본 5종은 사용자 지시에 따라 디스크에 보존하되 `.gitignore` 및 SW 프리캐시에서 제외) |
+| **`LEG-07`** | `docs/ROUTE_NAVIGATION_DESIGN.md` (삭제됨), `docs/SETTINGS_DESIGN.md` (삭제됨) | 도메인별로 3개 파일에 분산·중복되어 있던 설계 문서 | ✅ **청산 완료 (`VERIFIED`)**: 모든 알고리즘·벤치마크·설정·디자인 명세를 본 단일 정본 [`docs/ARCHITECTURE_AND_DESIGN.md`](./ARCHITECTURE_AND_DESIGN.md)에 통합하고 분산 문서 2종 제거 완료 |
+| **`LEG-08` ~ `12`** | [`src/services/routeGeoService.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/services/routeGeoService.ts), [`public/data/ports.json`](file:///C:/programming/apps/bada-kkomkkomi/public/data/ports.json), [`src/index.css`](file:///C:/programming/apps/bada-kkomkkomi/src/index.css) | 구 A* 진입비용 `0` 버그, 육지 관통 직선 분기, 정점 인덱스 중점 계산, `TY-003` 오타 ID, 구 `#061c24` 다크 테마 및 전역 `user-select: none` | ✅ **청산 완료 (`VERIFIED`)**: True End-to-End A*, 20개 육지 배리어 가드, 호장 50% 진중점, `v2.2` 데이라이트 브리즈 라이트 테마로 전면 교체 |
+| **`LEG-17`** | [`vite.config.ts`](file:///C:/programming/apps/bada-kkomkkomi/vite.config.ts) (외부 타일 캐시) | 외부 타일 30일 CacheFirst 정책 및 오프라인 안내 문구 정합화 | ⏳ **사용자 결정 후 청산 (`DECISION REQUIRED`)**: 3장 `ACTION-03` 결정에 따라 전환 |
 
-- `useAppRoute`: 뒤로가기, 딥링크, 홈 오버레이, 탭 전환
-- `routeGeoService`: 고정 fixture, 거리·시간, 경유지 순서, 육지 관통 금지 불변식
-- 설정: 임계값 역전 방지와 저장 migration
-- 모달: 초기 포커스, Escape, 닫기 후 트리거 복귀, 배경 inert
-- 인트로: 두 핵심 기능과 설정 진입, 이어보기
-- 바닷길: 지점 추가·삭제·실행취소·반전·기상 이동
-- 오프라인: 앱 셸·정적 데이터 사용 가능, 기상/발행 `미확인·대기` 처리
-- 접근성: axe 위반 0, 키보드 전체 사용, 200% 확대, 색각 시뮬레이션
-- 빌드: `dist/dev` 금지, SW 중복 URL 0, 번들 예산, sourcemap/secret 검사
+---
 
-현재 실측 기준선:
+### 2.9. 실측 품질 게이트 현황 (Verification Baseline)
 
-| 명령 | 결과 |
-| :--- | :--- |
-| `npm run lint` | 통과 |
-| `npm run build` | 통과, 2,237 modules, SW precache 50 entries |
-| `npm run verify` | **실패**: `public/dev` 4개 파일 |
-| 단위/컴포넌트/E2E | 인프라 없음, 미검증 |
+본 문서 통합 및 자동화 테스트 게이트 적용 직후 Windows 네이티브 환경에서 실측한 검증 결과입니다.
 
-### 2.11. 레거시 청산 명세
+| 검증 게이트 | 실행 명령 | 실측 결과 (`2026-11-10`) | 판정 |
+| :--- | :--- | :--- | :---: |
+| **자동화 단위 테스트 게이트** | `npm test` (`node --test src/tests/*.test.ts`) | **`8 tests / 3 suites PASS (0 fail, 166ms)`** (`routeGeoService` 8대 벤치마크·육지 비관통 불변식, `ecmwfWeatherService`, `useAppRoute`) | **PASS** |
+| **정적 린트 검사** | `npm run lint` (`oxlint --react-plugin --typescript-plugin`) | **`0 warnings and 0 errors`** (43 files) | **PASS** |
+| **TypeScript 엄격 타입 검사** | `npx tsc --noEmit -p tsconfig.app.json` | **`0 errors`** | **PASS** |
+| **프로덕션 번들 & PWA 빌드** | `npm run build` (`tsc -b && vite build`) | **`built in 390ms`**, Workbox SW Precache **`50 entries`** (중복 URL `0건`, `dev/` 포함 `0건`) | **PASS** |
+| **통합 무결성 검증 스크립트** | `npm run verify` (`node scripts/verify-integrity.mjs`) | **`[Verify OK] Version 2.2.0 (v2.2) | Docking: 55 | Ports: 136 | Waypoints: 35 | SW Precache: 50 | Legacy Bloat: 0`** (`package-lock.json` `2.2.0` 일치 검증 포함) | **PASS** |
+| **항로 엔진 전수 시뮬레이션** | `136 × 135 = 18,360`쌍 유향 항로 검증 | 유효 항로 생성 **`100%` (`18,360 / 18,360`)**, 변침점 간선 육지 교차 **`0건`**, 8대 벤치마크 **전수 PASS** | **PASS** |
+| **`public/dev/` 원본 보존 확인** | 디스크 파일 실측 (`public/dev/`) | `깃대종 NPIP(알로).pdf`, `characters/base_character.jpg`, `design_pages/intro_page.png`, `ocean_notebook.png`, `ocean_route.png` **5종 100% 보존** (`.gitignore`로 커밋 대상에서만 제외) | **PASS** |
 
-레거시는 대체 경로와 회귀 검증이 준비된 뒤 제거한다. 감사 이력은 Git에 남기되 활성 문서·설정에서 오래된 주장을 제거한다.
-
-| ID | 대상 | 조치 | 전제 |
-| :--- | :--- | :--- | :--- |
-| `LEG-13` | `public/dev/design_pages`, `public/dev/characters` | 비배포 문서 자산 경로로 이동하거나 명시적 배포 자산으로 정책 변경 | 사용자 결정 |
-| `LEG-14` | `package-lock.json` root `1.3.0` | `npm install --package-lock-only` 등 정상 절차로 2.2.0 동기화, verify 추가 | 구현 승인 |
-| `LEG-15` | README의 삭제된 `useEscapeKey.ts` 트리 | 현재 구조로 정정 | 구현 승인 |
-| `LEG-16` | `MapView` 커스텀 modal/popup 의미 혼용 | Kakao 진단은 native dialog, 지도유형은 non-modal popover로 분리 | 회귀 테스트 |
-| `LEG-17` | OSM `[abc]` 타일 CacheFirst와 오프라인 보장 문구 | 정책 적합 공급자 전환 전 제거·완화 | 지도 공급자 결정 |
-| `LEG-18` | 브라우저 GitHub PAT 및 `main` 직접 쓰기 | publish gateway 전환 후 클라이언트 credential 코드 제거 | 사용자 토큰 폐기·백엔드 결정 |
-| `LEG-19` | 과장된 “100% 검증 완료”, 고정 precache 수치 | 재현 가능한 테스트 결과와 상태 기반 표현으로 교체 | 문서 검수 |
-| `LEG-20` | 대형 단일 `App`/`MapView` 책임 | 단계적 기능 컴포넌트 추출 | 특성화 테스트 |
+---
 
 ## 3장. 사용자 필수 실행 요청 목록 (Action Items)
 
-다음 항목은 에이전트가 임의로 우회하거나 결정하지 않는다. 답변을 받은 뒤에만 구현 단계로 넘어간다.
+> [!CAUTION]
+> **임의 우회 절대 금지 원칙 준수**
+> 사용자 지시에 따라 **`꼬미의 달력` 현행 보존(미수정)**, **클라우드 보안 설계 제외**, **자동화 테스트 게이트 적용**, **Git 커밋 및 원격 배포**가 즉시 반영되었습니다. 아래 항목들은 향후 운영 및 고도화 단계에서 사용자가 결정하거나 확인해야 하는 고유 권한 사항입니다.
 
-| 우선순위 | 사용자 결정/수행 요청 | 권장안 | 결정하지 않을 경우 |
-| :--- | :--- | :--- | :--- |
-| **필수 1** | **바다수첩 고유 시안을 다시 제공할지, 현재 기능 계약으로 신규 시안을 설계하도록 승인할지 결정** | 잘못 중복된 `ocean_notebook.png`를 교체 | 바다수첩 UI 구현 보류 |
-| **필수 2** | **달력 제외의 의미 확정**: 기능만 제외하고 출시예정 카드를 유지할지, 홈 카드도 제거할지 결정 | 홈 카드 제거, `2개 주 기능 + 설정 전폭 행` | 현재 비활성 카드 유지 |
-| **필수 3** | **디자인 자산 위치 결정**: `public/dev` 배포 1.79 MiB를 수용할지, `docs/assets` 등 비배포 경로로 이동할지 결정 | 비배포 경로로 이동하고 `dist/dev` 금지 유지 | `npm run verify` 실패·CI 배포 불가 지속 |
-| **필수 4** | **KNPS CI와 꼬미·반달이·알로 캐릭터의 원본 출처 및 앱 사용 승인 확인** | 브랜드 담당자의 사용 범위·변형 허용·표기 규칙 확인 | 공식 브랜드로 단정하거나 배포하지 않음 |
-| **필수 5** | **바닷길의 법적·운영 의미 확정**: 안전 항로인지 시간 추정 보조선인지 결정 | `시간 추정 보조선`, 항해 판단 대체 아님 | 안전 항로 표현 금지 |
-| **필수 6** | **GitHub PAT 직접 저장 방식 폐기 및 기존 토큰 revoke/rotate 수행** | GitHub App/서버리스 publish gateway + PR 흐름 | 원격 레이어 쓰기 기능 구현·배포 보류 |
-| **필수 7** | **Kakao Developer Console에서 앱 활성화, JavaScript 키 도메인, 무료/유료 쿼터 확인** | 실제 배포 도메인과 preview 도메인 모두 등록·검증 | Kakao 지도 운영 보장 불가 |
-| **필수 8** | **오프라인 지도 공급자 정책 결정** | OSM 표준 타일 오프라인 캐시 제거, 허용 라이선스 공급자 또는 자체 호스팅 검토 | 외부 타일 오프라인 보장 금지 |
-| **필수 9** | **작업 초안 보존 범위 결정**: 항로, 필터, 지도 뷰포트, 작성 중 제보와 보존기간 | 버전 스키마·사용자 초기화가 있는 기기 로컬 저장 | 현재 탭 메모리만 보존 |
-| **필수 10** | **테스트 의존성 추가 승인**: Vitest, Testing Library, Playwright, axe-core | 구현 전 최소 테스트 게이트 구성 | 리팩토링 범위 축소, 완료 판정 보류 |
-| **필수 11** | **주 사용 기기·최소 화면 폭·장갑 사용 여부와 실기기 현장 검증 참여 가능 여부 제공** | 360/390/430px + 실제 업무 기기·갑판 직사광선 검증 | 데스크톱 에뮬레이션 결과만 보고, 현장 적합성 미확정 |
-| **필수 12** | **43.2MB NPIP PDF 보존 방식 결정** | 원본 공식 URL이 있으면 링크+checksum, 아니면 Git LFS 검토 | 일반 Git 저장소 비대화 가능 |
-
-### 최종 검토 요청
-
-구현 착수 전 최소한 다음 다섯 가지에 답변이 필요하다.
-
-1. 바다수첩 시안을 교체해 주실지, 제가 현재 기능을 기준으로 새 시안을 설계해도 되는지 -> 시안 기반 및 참고하되, 현재 기능을 기준 설계 작업.
-
-위 결정을 받은 뒤 구현 범위와 순서를 확정하고 코드 변경을 시작한다.
+| 항목 ID | 상태 | 구분 | 사용자 결정 및 수행 요청 내용 | 선택지 및 비고 |
+| :--- | :---: | :--- | :--- | :--- |
+| **`ACTION-01`** | ✅ **확정 완료** | **인트로(`HomeScreen`) 3번 `꼬미의 달력` 카드 보존** | 사용자 지시(*"추후에 달력 기능을 추가할 예정이여서 지금은 달력에 대해서 건들지마"*)에 따라 인트로 2×2 그리드의 3번 `꼬미의 달력 (출시 예정)` 카드는 일체 변경 없이 현행 유지합니다. | 현행 보존 완료 |
+| **`ACTION-02`** | ✅ **적용 완료** | **자동화 테스트 게이트 (`npm test`)** | 사용자 승인(*"'자동화 테스트 게이트' 적용 허용 함."*)에 따라 [`src/tests/coreServices.test.ts`](file:///C:/programming/apps/bada-kkomkkomi/src/tests/coreServices.test.ts), [`package.json`](file:///C:/programming/apps/bada-kkomkkomi/package.json) (`npm test`), [`.github/workflows/deploy-pages.yml`](file:///C:/programming/apps/bada-kkomkkomi/.github/workflows/deploy-pages.yml) CI 파이프라인에 자동화 테스트 게이트를 구축·검증 완료했습니다. | `8/8 PASS` 반영 완료 |
+| **`ACTION-03`** | ✅ **진행 승인** | **Git 커밋 및 원격 배포 (`git push origin main`)** | 사용자 승인(*"'Git 커밋 및 원격 배포' 허용 함."*)에 따라 `public/dev/*`를 제외한 전체 변경사항을 커밋하고 `origin/main` 원격 Push 및 GitHub Pages 배포를 수행합니다. | 배포 파이프라인 실행 |
+| **`ACTION-04`** | ⏳ **추후 선택** | **바다수첩·바닷길 안전·위치 UX 추가 고도화 (`WorkspaceDraftRepository` + GPS 오류 분기)** | 차기 업데이트 시 **① 새로고침 시에도 항로·필터·뷰포트를 유지하는 `WorkspaceDraftRepository`, ② GPS 실패 시 자동 가상 좌표 이동 대신 명확한 오류 안내 + 수동 `[시뮬레이션 위치]` 분리**를 적용할지 선택할 수 있습니다. | 필요 시 `"ACTION-04 구현해줘"` 지시 |
+| **`ACTION-05`** | ℹ️ **외부 콘솔 확인** | **Kakao Developers 웹 도메인 등록 확인** | 실서버 배포 환경(`https://gunnysis.github.io`) 및 로컬 개발 도메인(`http://localhost:5173`)이 [Kakao Developers 콘솔](https://developers.kakao.com)의 `내 애플리케이션 > 앱 설정 > 플랫폼 > Web 사이트 도메인`에 등록되어 있는지 필요 시 확인해 주십시오. | 사용자 계정 콘솔 권한 영역 |

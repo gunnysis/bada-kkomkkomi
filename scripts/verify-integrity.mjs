@@ -12,8 +12,9 @@ function assert(condition, message) {
   }
 }
 
-// 1. 버전 단일 정본(Single Source of Truth) 및 라이트 테마 동기화 검증 (LEG-02 / LEG-08 재발 방지)
+// 1. 버전 단일 정본(Single Source of Truth) 및 라이트 테마 동기화 검증 (LEG-02 / LEG-08 / LEG-14 재발 방지)
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const pkgLock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
 const appVersionTs = fs.readFileSync('src/config/appVersion.ts', 'utf8');
 const viteConfigTs = fs.readFileSync('vite.config.ts', 'utf8');
 const indexHtml = fs.readFileSync('index.html', 'utf8');
@@ -26,6 +27,10 @@ assert(displayMatch, 'src/config/appVersion.ts must export APP_VERSION_DISPLAY')
 assert(
   pkg.version === versionMatch[1],
   `package.json version (${pkg.version}) does not match APP_VERSION (${versionMatch[1]})`,
+);
+assert(
+  pkgLock.version === versionMatch[1] && pkgLock.packages?.['']?.version === versionMatch[1],
+  `package-lock.json version (${pkgLock.version}) does not match APP_VERSION (${versionMatch[1]})`,
 );
 assert(
   viteConfigTs.includes(`[${displayMatch[1]}]`),
