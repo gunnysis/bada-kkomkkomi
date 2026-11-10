@@ -307,22 +307,22 @@ export function WeatherThresholdSettings({
       className="bada-modal-dialog knps-modal-surface fixed inset-0 z-[1400] m-auto max-h-[90dvh] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-2 border-[#00a79d]/65 bg-white p-0 text-[#003360] shadow-2xl"
     >
       {/* 상단 고정 헤더 + 3단 섹션 빠른 이동 칩 */}
-      <div className="sticky top-0 z-20 border-b border-sky-200/90 bg-gradient-to-r from-sky-50 via-teal-50/70 to-white px-5 pt-3.5 pb-2.5 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#00a79d]/40 bg-teal-50 text-[#00846c] shadow-xs">
-              <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+      <div className="sticky top-0 z-20 border-b border-sky-200/90 bg-gradient-to-r from-sky-50 via-teal-50/70 to-white px-3.5 pt-3 pb-2.5 backdrop-blur-md sm:px-5 sm:pt-3.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#00a79d]/40 bg-teal-50 text-[#00846c] shadow-xs sm:h-10 sm:w-10">
+              <SlidersHorizontal className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <h2
                   id="threshold-settings-title"
-                  className="text-base font-black tracking-tight text-[#003360] sm:text-lg"
+                  className="text-sm font-black tracking-tight text-[#003360] [word-break:keep-all] min-[380px]:text-base sm:text-lg"
                 >
                   설정 · 안내 · 데이터 출처
                 </h2>
                 <span
-                  className={`rounded-md border px-1.5 py-0.5 text-[10px] font-black ${
+                  className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-black whitespace-nowrap ${
                     isCustomThresholds || !isMatchesDefault
                       ? 'border-[#00a79d] bg-teal-50 text-[#00846c]'
                       : 'border-sky-300 bg-sky-50 text-[#0066b3]'
@@ -331,7 +331,7 @@ export function WeatherThresholdSettings({
                   {isCustomThresholds || !isMatchesDefault ? '사용자 설정' : '표준 기본값'}
                 </span>
               </div>
-              <p className="text-xs font-bold text-slate-600">
+              <p className="mt-0.5 text-[11px] font-bold text-slate-600 [word-break:keep-all] sm:text-xs">
                 기상 판정 기준 · 이용 안내 · 공공데이터 및 기술 원천 명세
               </p>
             </div>
@@ -340,7 +340,7 @@ export function WeatherThresholdSettings({
             type="button"
             onClick={onClose}
             aria-label="설정 창 닫기"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] shadow-xs transition hover:border-[#00a79d] active:scale-95"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#003360] shadow-xs transition hover:border-[#00a79d] active:scale-95 sm:h-10 sm:w-10"
           >
             <X className="h-5 w-5" />
           </button>
@@ -350,13 +350,13 @@ export function WeatherThresholdSettings({
         <div
           role="group"
           aria-label="설정 모달 내 섹션 바로가기"
-          className="mt-2.5 grid grid-cols-3 gap-1.5"
+          className="mt-2.5 grid grid-cols-3 gap-1 sm:gap-1.5"
         >
           {(
             [
-              { id: 'thresholds', label: '기상기준 설정', icon: Compass },
-              { id: 'guide', label: '이용 안내', icon: BookOpen },
-              { id: 'sources', label: '데이터·기술 출처', icon: Database },
+              { id: 'thresholds', label: '기상기준 설정', shortLabel: '기상기준', icon: Compass },
+              { id: 'guide', label: '이용 안내', shortLabel: '이용안내', icon: BookOpen },
+              { id: 'sources', label: '데이터·기술 출처', shortLabel: '출처안내', icon: Database },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -367,32 +367,33 @@ export function WeatherThresholdSettings({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => handleJumpToSection(tab.id)}
-                className={`flex items-center justify-center gap-1 rounded-xl border px-2 py-1.5 text-[11px] font-black transition active:scale-95 ${
+                className={`flex min-h-9 items-center justify-center gap-1 rounded-xl border px-1.5 py-1.5 text-[11px] font-black whitespace-nowrap transition active:scale-95 sm:px-2 ${
                   isActive
                     ? 'border-[#003360] bg-[#003360] text-white shadow-2xs'
                     : 'border-sky-200 bg-white/90 text-[#003360] hover:border-[#00a79d] hover:bg-sky-50'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{tab.label}</span>
+                <span className="min-[420px]:hidden">{tab.shortLabel}</span>
+                <span className="hidden min-[420px]:inline">{tab.label}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="space-y-5 px-5 pt-4 pb-6">
+      <div className="space-y-5 px-3.5 pt-4 pb-6 sm:px-5">
         {/* 섹션 1: 바닷길 콕콕 풍속·파고 판정 기준 설정 */}
         <section
           ref={thresholdSectionRef}
           aria-labelledby="weather-threshold-section-title"
         >
           <div className="mb-2.5 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <Compass className="h-4 w-4 text-[#0066b3]" aria-hidden="true" />
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Compass className="h-4 w-4 shrink-0 text-[#0066b3]" aria-hidden="true" />
               <h3
                 id="weather-threshold-section-title"
-                className="text-sm font-black tracking-tight text-[#003360]"
+                className="text-xs font-black tracking-tight text-[#003360] [word-break:keep-all] min-[380px]:text-sm"
               >
                 바닷길 콕콕 기상 판정 기준 설정
               </h3>
@@ -402,9 +403,9 @@ export function WeatherThresholdSettings({
               onClick={handleResetToDefault}
               disabled={isMatchesDefault && !isCustomThresholds}
               title="풍속(14/20kn) 및 파고(1.0/1.8m) 표준 기본값으로 복원"
-              className="inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-extrabold text-[#0066b3] transition hover:border-[#0066b3] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-extrabold whitespace-nowrap text-[#0066b3] transition hover:border-[#0066b3] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 sm:px-2.5 sm:text-xs"
             >
-              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              <RotateCcw className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>기본값 복원</span>
             </button>
           </div>
@@ -413,7 +414,7 @@ export function WeatherThresholdSettings({
           <div
             role="group"
             aria-label="선박 규모별 기상 기준 프리셋"
-            className="mb-3 grid grid-cols-3 gap-1.5"
+            className="mb-3 grid grid-cols-3 gap-1 sm:gap-1.5"
           >
             {VESSEL_THRESHOLD_PRESETS.map((preset) => {
               const isSelectedPreset =
@@ -428,16 +429,16 @@ export function WeatherThresholdSettings({
                   type="button"
                   aria-pressed={isSelectedPreset}
                   onClick={() => handleApplyPreset(preset.thresholds)}
-                  className={`flex flex-col items-center justify-center rounded-xl border px-2 py-1.5 text-center transition active:scale-95 ${
+                  className={`flex flex-col items-center justify-center rounded-xl border px-1.5 py-1.5 text-center transition active:scale-95 sm:px-2 ${
                     isSelectedPreset
                       ? 'border-[#00846c] bg-emerald-50 text-[#003360] shadow-xs ring-1 ring-[#00846c]/40'
                       : 'border-slate-300 bg-slate-50/90 text-slate-700 hover:border-[#00a79d] hover:bg-sky-50/60'
                   }`}
                 >
-                  <span className="text-[11px] font-black leading-tight">
+                  <span className="text-[10.5px] leading-snug font-black [text-wrap:balance] [word-break:keep-all] sm:text-[11px]">
                     {preset.label}
                   </span>
-                  <span className="mt-0.5 font-mono text-[10px] font-bold tabular-nums text-slate-600">
+                  <span className="mt-0.5 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-slate-600 sm:text-[10px]">
                     {preset.desc}
                   </span>
                 </button>
@@ -780,12 +781,12 @@ export function WeatherThresholdSettings({
 
           {/* 해상 음영지역(Offline) vs 온라인 기능 2단 시각화 요약 보드 */}
           <div className="mb-3 rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-2.5">
-            <div className="mb-2 flex items-center justify-between gap-1.5 text-xs font-black text-[#003360]">
-              <span className="flex items-center gap-1.5">
-                <WifiOff className="h-3.5 w-3.5 text-[#8b5e3c]" aria-hidden="true" />
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5 text-xs font-black text-[#003360]">
+              <span className="flex items-center gap-1.5 [word-break:keep-all]">
+                <WifiOff className="h-3.5 w-3.5 shrink-0 text-[#8b5e3c]" aria-hidden="true" />
                 <span>해상 통신 음영지역(오프라인) 동작 한눈에 보기</span>
               </span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-[#00846c]">
+              <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 font-mono text-[10px] font-extrabold whitespace-nowrap text-[#00846c]">
                 오프라인 3종 · 온라인 2종
               </span>
             </div>
@@ -794,18 +795,18 @@ export function WeatherThresholdSettings({
               {OFFLINE_CAPABILITY_MATRIX.map((row) => (
                 <div
                   key={row.featureName}
-                  className={`flex flex-col justify-between rounded-xl border bg-white/95 px-2.5 py-1.5 text-[11px] ${
+                  className={`flex flex-col justify-between rounded-xl border bg-white/95 px-2.5 py-2 text-[11px] ${
                     row.isOfflineGuaranteed
                       ? 'border-emerald-200/90'
                       : 'border-sky-200/90'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="truncate font-extrabold text-[#003360]">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <span className="font-extrabold text-[#003360] [word-break:keep-all]">
                       {row.featureName}
                     </span>
                     <span
-                      className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-black ${
+                      className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-black whitespace-nowrap ${
                         row.isOfflineGuaranteed
                           ? 'bg-emerald-50 text-[#00846c]'
                           : 'bg-sky-50 text-[#0066b3]'
@@ -814,7 +815,7 @@ export function WeatherThresholdSettings({
                       {row.statusBadge}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[10px] font-semibold leading-snug text-slate-600">
+                  <p className="mt-1 text-[10.5px] leading-snug font-semibold text-slate-600 [word-break:keep-all]">
                     {row.detail}
                   </p>
                 </div>
@@ -822,7 +823,7 @@ export function WeatherThresholdSettings({
             </div>
           </div>
 
-          {/* 6대 영역별 상세 출처 아코디언 (modern-web-guidance: accordion & search-hidden-content 준수 — <summary> 내부 헤딩 태그 금지, 회전 셰브론 선행 배치) */}
+          {/* 6대 영역별 상세 출처 아코디언 (modern-web-guidance: accordion & form-factor-adaptation 준수 — <summary> 내부 헤딩 태그 금지, 제목 말줄임 없이 전체 노출) */}
           <div className="space-y-2">
             {DATA_SOURCE_REGISTRY.map((item) => {
               const isItemOpen = Boolean(openMap[item.id]);
@@ -841,17 +842,17 @@ export function WeatherThresholdSettings({
                   }}
                   className="group rounded-2xl border border-sky-200 bg-white shadow-2xs transition open:border-[#00846c]/60 open:bg-sky-50/35"
                 >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-left select-none [&::-webkit-details-marker]:hidden">
-                    <div className="flex min-w-0 items-center gap-2">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-2 px-3 py-2.5 text-left select-none sm:items-center sm:px-3.5 [&::-webkit-details-marker]:hidden">
+                    <div className="flex min-w-0 items-start gap-1.5 sm:items-center sm:gap-2">
                       <ChevronRight
-                        className="h-4 w-4 shrink-0 text-[#0066b3] transition-transform duration-200 group-open:rotate-90"
+                        className="mt-0.5 h-4 w-4 shrink-0 text-[#0066b3] transition-transform duration-200 group-open:rotate-90 sm:mt-0"
                         aria-hidden="true"
                       />
-                      <span className="truncate text-xs font-black text-[#003360] sm:text-sm">
+                      <span className="text-xs leading-snug font-black text-[#003360] [word-break:keep-all] sm:text-sm">
                         {item.title}
                       </span>
                     </div>
-                    <span className="shrink-0 rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-extrabold text-[#0066b3]">
+                    <span className="shrink-0 rounded-md border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-extrabold whitespace-nowrap text-[#0066b3]">
                       {item.badgeLabel}
                     </span>
                   </summary>
@@ -916,20 +917,20 @@ export function WeatherThresholdSettings({
           aria-labelledby="app-version-section-title"
           className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-white p-3.5 shadow-xs"
         >
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 [word-break:keep-all]">
             <div className="flex flex-wrap items-center gap-1.5">
-              <Info className="h-4 w-4 text-[#00854a]" aria-hidden="true" />
+              <Info className="h-4 w-4 shrink-0 text-[#00854a]" aria-hidden="true" />
               <h3
                 id="app-version-section-title"
                 className="text-xs font-black tracking-tight text-[#003360]"
               >
                 앱 버전 및 데이터 기준
               </h3>
-              <span className="rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-black text-[#00846c]">
+              <span className="rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-black whitespace-nowrap text-[#00846c]">
                 {APP_VERSION_DISPLAY} ({APP_VERSION} · {APP_RELEASE_DATE})
               </span>
             </div>
-            <p className="mt-1.5 text-[11px] font-bold text-slate-700">
+            <p className="mt-1.5 text-[11px] leading-snug font-bold text-slate-700">
               {DATA_BASELINE_LABEL}
             </p>
             <p className="mt-0.5 text-[11px] font-semibold text-slate-500">

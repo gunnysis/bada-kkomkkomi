@@ -139,7 +139,31 @@ for (const file of fs.readdirSync(layersDir)) {
   }
 }
 
-// 5. public/backup 레거시 백업 폴더 클린 확인 (public/dev는 개발·디자인 레퍼런스 보관용으로 보존하되 SW 프리캐시에서 제외)
+// 5. 인트로 홈 화면(HomeScreen.tsx) 및 설정·출처 모달(WeatherThresholdSettings.tsx) 모바일(320px~412px) 레이아웃·텍스트 짤림 재발 방지 가드
+const homeScreenTsx = fs.readFileSync('src/components/home/HomeScreen.tsx', 'utf8');
+const settingsModalTsx = fs.readFileSync(
+  'src/components/navigation/WeatherThresholdSettings.tsx',
+  'utf8',
+);
+
+// 4대 카드 아이콘 슬롯 높이가 전 카드 동일하게 h-16 sm:h-20으로 통일되었는지 확인 (h-14 혼용으로 인한 상·하행 수직 기준선 어긋남 방지)
+assert(
+  !homeScreenTsx.includes('flex h-14 w-full items-center justify-center sm:h-16'),
+  'HomeScreen.tsx: all 4 feature cards must share identical icon slot height (h-16 sm:h-20) without h-14 misalignment',
+);
+// 꼬미의 달력 하단 슬롯도 다른 3개 카드와 동일하게 min-h-10 sm:min-h-11 높이를 사용하는지 확인 (h-8 불일치 방지)
+assert(
+  !homeScreenTsx.includes('flex h-8 w-full items-center justify-center rounded-xl'),
+  'HomeScreen.tsx: card 3 footer slot must match min-h-10 sm:min-h-11 baseline of sibling cards',
+);
+// 설정 모달 내 오프라인 동작 매트릭스 및 6대 출처 아코디언 제목에 말줄임(truncate)이 재도입되지 않았는지 확인
+assert(
+  !settingsModalTsx.includes('className="truncate font-extrabold text-[#003360]"') &&
+    !settingsModalTsx.includes('className="truncate text-xs font-black text-[#003360] sm:text-sm"'),
+  'WeatherThresholdSettings.tsx: source accordion titles and offline matrix labels must wrap cleanly ([word-break:keep-all]) instead of truncating with ellipsis',
+);
+
+// 6. public/backup 레거시 백업 폴더 클린 확인 (public/dev는 개발·디자인 레퍼런스 보관용으로 보존하되 SW 프리캐시에서 제외)
 if (fs.existsSync('public/backup')) {
   const backupFiles = fs.readdirSync('public/backup').filter((f) => !f.startsWith('.'));
   assert(
