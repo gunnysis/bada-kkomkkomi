@@ -126,6 +126,19 @@ for (const legacyDir of ['public/dev', 'public/backup']) {
   }
 }
 
+// 6. PWA Service Worker (dist/sw.js) 프리캐시 매니페스트 중복 URL 무결성 검증 (빌드 산출물 존재 시)
+let swPrecacheCount = 0;
+if (fs.existsSync('dist/sw.js')) {
+  const swContent = fs.readFileSync('dist/sw.js', 'utf8');
+  const urlMatches = [...swContent.matchAll(/\{url:"([^"]+)",revision:/g)].map((m) => m[1]);
+  const uniqueUrls = new Set(urlMatches);
+  assert(
+    urlMatches.length > 0 && urlMatches.length === uniqueUrls.size,
+    `Duplicate precache URLs detected in dist/sw.js: total=${urlMatches.length}, unique=${uniqueUrls.size}`,
+  );
+  swPrecacheCount = uniqueUrls.size;
+}
+
 console.log(
-  `[Verify OK] Version ${pkg.version} (${displayMatch[1]}) | Docking: ${dockingFc.features.length} | Ports: ${portsData.ports.length} | Waypoints: ${portsData.waypoints.length} | Legacy Bloat: 0`,
+  `[Verify OK] Version ${pkg.version} (${displayMatch[1]}) | Docking: ${dockingFc.features.length} | Ports: ${portsData.ports.length} | Waypoints: ${portsData.waypoints.length} | SW Precache: ${swPrecacheCount || 'pre-build'} | Legacy Bloat: 0`,
 );

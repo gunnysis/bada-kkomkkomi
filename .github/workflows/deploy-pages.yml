@@ -36,13 +36,14 @@ jobs:
       - name: Validate static config, version parity, docking GeoJSON & ports dataset integrity
         run: npm run verify
 
-      - name: Lint & Build PWA (with GitHub Pages base path)
+      - name: Lint, Build PWA & Post-Build SW Integrity Check
         env:
           GITHUB_ACTIONS: 'true'
           KAKAO_MAP_API_KEY: ${{ secrets.KAKAO_MAP_API_KEY }}
         run: |
           npm run lint
           npm run build
+          npm run verify
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

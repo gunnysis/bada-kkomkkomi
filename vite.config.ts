@@ -35,18 +35,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: [
-        'favicon.ico',
-        'icons/favicon-32x32.png',
-        'icons/pwa-192x192.png',
-        'icons/pwa-512x512.png',
-        'icons/apple-touch-icon.png',
-        'config/app_config.json',
-        'data/docking_points.geojson',
-        'data/ports.json',
-        'data/layers/national_park.geojson',
-        'data/layers/protected_area.geojson',
-      ],
+      // workbox.globPatterns에서 public/ 정적 자산(ico, png, svg, webp, json, geojson)을 일괄 스캔하므로
+      // includeAssets / includeManifestIcons 중복 선언 및 globPatterns 내 webmanifest 중복 스캔을 비활성화하여 SW 프리캐시 매니페스트 중복(0건) 보장
+      includeAssets: [],
+      includeManifestIcons: false,
       manifest: {
         name: '바다꼼꼬미 — 국립공원공단 해양 현장업무 접안·항해 지원 PWA',
         short_name: '바다꼼꼬미',
@@ -82,7 +74,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,geojson,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,geojson}'],
         globIgnores: ['**/dev/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
