@@ -936,6 +936,9 @@ export function MapView({
               <Eye className="h-4 w-4 stroke-[2.5]" />
               <span>현재 화면 중심 360° 3D 로드뷰 열기</span>
             </button>
+            <p className="mt-2 text-[10px] leading-snug font-semibold text-slate-600">
+              지도·위성·3D 로드뷰 원천: <strong className="font-extrabold text-[#003360]">카카오맵</strong> (국토교통부 국토지리정보원 항공·수치지도 기반) / 비상 폴백: OpenStreetMap(ODbL)
+            </p>
           </div>
         </div>
       )}

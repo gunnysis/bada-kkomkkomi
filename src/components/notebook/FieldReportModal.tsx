@@ -343,9 +343,9 @@ export function FieldReportModal({
           <div className="rounded-xl border border-[#d6c6b2] bg-[#f7f4ee] p-3 text-[11px] font-semibold leading-relaxed text-slate-700">
             <div className="mb-0.5 flex items-center gap-1.5 font-extrabold text-[#8b5e3c]">
               <AlertCircle className="h-3.5 w-3.5" />
-              <span>안내: 공식 지도에 자동 반영되지 않습니다</span>
+              <span>안내: 외부 서버 수집 없이 기기 메일·공유 앱으로 직접 전달됩니다</span>
             </div>
-            제보 내용은 관리자가 이메일로 검토한 후 QGIS 원본 데이터를 수정하여 반영합니다.
+            제보 내용은 별도 중계 서버에 저장되지 않고 사용자의 메일 앱(또는 모바일 공유시트)으로 직접 발송되며, 위치 확인 편의를 위해 네이버·구글 지도 좌표 링크가 자동 첨부됩니다. 관리자가 검토 후 QGIS 원본 데이터를 수정하여 반영합니다.
           </div>
 
           {sendResult && (

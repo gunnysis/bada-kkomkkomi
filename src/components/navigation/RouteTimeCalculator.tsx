@@ -14,6 +14,7 @@ import {
   EyeOff,
   Gauge,
   Hand,
+  Info,
   MapPin,
   Maximize2,
   MousePointerClick,
@@ -27,6 +28,7 @@ import {
   X,
 } from 'lucide-react';
 import type { RouteCalculationResult, RouteWaypoint } from '../../types/route';
+import type { SourceCategoryKey } from '../../config/dataSources';
 
 export type RouteMapTapMode = 'pan_only' | 'add_waypoint' | 'set_start' | 'set_end';
 export type RouteSheetStage = 'summary' | 'compact' | 'full';
@@ -57,6 +59,7 @@ interface RouteTimeCalculatorProps {
   showDirectionArrows?: boolean;
   onToggleDirectionArrows?: () => void;
   onFitRouteBounds?: () => void;
+  onOpenSourcesInfo?: (sourceId: SourceCategoryKey) => void;
 }
 
 const SPEED_PRESETS = [
@@ -92,6 +95,7 @@ export function RouteTimeCalculator({
   showDirectionArrows = true,
   onToggleDirectionArrows,
   onFitRouteBounds,
+  onOpenSourcesInfo,
 }: RouteTimeCalculatorProps) {
   const [sheetStage, setSheetStage] = useState<RouteSheetStage>('full');
   const isCollapsed = sheetStage === 'summary';
@@ -829,10 +833,27 @@ export function RouteTimeCalculator({
             </div>
           </div>
 
-          {/* 항해 안전 고지 문구 (RC-SAFETY-01: 단순 선속 기반 추정치 한계 명시) */}
-          <p className="px-1 text-[10px] leading-snug font-semibold text-slate-600">
-            ※ 선속·수로 변침 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.
-          </p>
+          {/* 항로 알고리즘 원천 표기 + 항해 안전 고지 문구 (RC-SRC-04, RC-SAFETY-01) */}
+          <div className="space-y-1 px-1">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-bold text-slate-600">
+              <span>
+                🧭 <strong className="font-extrabold text-[#003360]">자체 A* 실항로</strong> (35변침점·20섬 우회 · 오프라인 연산)
+              </span>
+              {onOpenSourcesInfo && (
+                <button
+                  type="button"
+                  onClick={() => onOpenSourcesInfo('route_algorithm')}
+                  className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[10px] font-extrabold text-[#0066b3] transition hover:border-[#0066b3] active:scale-95"
+                >
+                  <Info className="h-2.5 w-2.5" aria-hidden="true" />
+                  <span>원리·출처</span>
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] leading-snug font-semibold text-slate-600">
+              ※ 선속·수로 변침 기반 단순 추정치이며 조류·기상·선박 특성에 따라 달라질 수 있으므로 공식 항해 계획(해도·ECDIS·선장 판단)을 대체하지 않습니다.
+            </p>
+          </div>
         </div>
       )}
     </section>

@@ -31,6 +31,14 @@ import {
   sanitizeWorkspaceDraft,
   WORKSPACE_DRAFT_SCHEMA_VERSION,
 } from '../services/workspaceDraftRepository.ts';
+import {
+  DATA_SOURCE_REGISTRY,
+  OFFLINE_CAPABILITY_MATRIX,
+  buildSourceCitationCopyText,
+  classifyDockingPhotoAsset,
+  resolveLayerProvenance,
+  summarizePhotoCollection,
+} from '../config/dataSources.ts';
 import type { MarinePort, MarineWaypointNode, PortsDataset } from '../types/port.ts';
 import type { RouteWaypoint } from '../types/route.ts';
 
@@ -356,4 +364,59 @@ describe('4. Workspace Draft Persistence & GPS Error Classification (workspaceDr
     assert.ok(timeout.message.includes('수신 시간이 초과'));
   });
 });
+
+describe('5. Source Credibility & Provenance SSOT Registry (dataSources.ts)', () => {
+  it('maintains all 6 core provenance categories and 5 offline capability rows', () => {
+    assert.equal(DATA_SOURCE_REGISTRY.length, 6);
+    assert.equal(OFFLINE_CAPABILITY_MATRIX.length, 5);
+    const ids = DATA_SOURCE_REGISTRY.map((item) => item.id);
+    assert.deepEqual(ids, [
+      'ports_docking',
+      'marine_weather',
+      'map_gis',
+      'route_algorithm',
+      'qgis_parser',
+      'brand_ui',
+    ]);
+  });
+
+  it('distinguishes SVG schematic diagrams from real field photos and resolves layer provenance', () => {
+    const svgMeta = classifyDockingPhotoAsset('/images/docking/ty-001.svg');
+    assert.equal(svgMeta.isVectorDiagram, true);
+    assert.ok(svgMeta.badgeText.includes('현장 이해용 모식도'));
+
+    const jpgMeta = classifyDockingPhotoAsset('/images/docking/ty-001-real.jpg');
+    assert.equal(jpgMeta.isVectorDiagram, false);
+    assert.ok(jpgMeta.badgeText.includes('현장 실사 사진'));
+
+    const allDiagrams = summarizePhotoCollection([
+      '/images/docking/ty-001.svg',
+      '/images/docking/ty-002.svg',
+    ]);
+    assert.equal(allDiagrams.sectionTitle, '현장 접안 모식도 (수심·위험 도해)');
+    assert.equal(allDiagrams.hasVectorDiagram, true);
+
+    const mixedPhotos = summarizePhotoCollection([
+      '/images/docking/ty-001.svg',
+      '/images/docking/ty-001-real.jpg',
+    ]);
+    assert.equal(mixedPhotos.sectionTitle, '현장 접안 사진 · 모식도');
+
+    const builtInLayer = resolveLayerProvenance({ id: 'national_park' });
+    assert.equal(builtInLayer.isBuiltInSchematic, true);
+    assert.ok(builtInLayer.badgeLabel.includes('경량 도식화'));
+
+    const uploadedLayer = resolveLayerProvenance({
+      id: 'layer_custom_1',
+    });
+    assert.equal(uploadedLayer.isBuiltInSchematic, false);
+    assert.ok(uploadedLayer.badgeLabel.includes('사용자 직접 등록'));
+
+    const citation = buildSourceCitationCopyText('v2.2');
+    assert.ok(citation.includes('[바다꼼꼬미 v2.2 데이터 · API · 지도 · 기술 출처 요약]'));
+    assert.ok(citation.includes('국립해양조사원(KHOA)'));
+    assert.ok(citation.includes('유럽중기예보센터(ECMWF'));
+  });
+});
+
 

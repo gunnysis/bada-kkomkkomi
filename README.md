@@ -6,6 +6,7 @@
 - **라이브 배포 URL (GitHub Pages)**: https://gunnysis.github.io/bada-kkomkkomi/
 - **GitHub 저장소**: https://github.com/gunnysis/bada-kkomkkomi
 - **비개발자 운영자 매뉴얼**: [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)
+- **외부 데이터·API·지도·기술 출처 안내서 (일반인·운영자용)**: [`docs/DATA_AND_TECH_SOURCES.md`](./docs/DATA_AND_TECH_SOURCES.md)
 - **아키텍처·구현 설계·트러블슈팅 단일 정본**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
 
 ---
@@ -71,7 +72,8 @@ bada-kkomkkomi/
 ├── .github/workflows/
 │   └── deploy-pages.yml               # GitHub Pages 자동 빌드·배포 워크플로 (정적 설정·GeoJSON 무결성 검증 포함)
 ├── docs/
-│   └── ARCHITECTURE_AND_DESIGN.md     # 최종 구현 설계서 · 데이터 사전 · 트러블슈팅 단일 정본
+│   ├── ARCHITECTURE_AND_DESIGN.md     # 최종 구현 설계서 · 데이터 사전 · 트러블슈팅 단일 정본
+│   └── DATA_AND_TECH_SOURCES.md       # 외부 데이터 · API · 지도 · 기술 및 에셋 출처 안내서
 ├── public/
 │   ├── _headers                       # Cloudflare Pages / 정적 서버 캐시 무효화 헤더 규칙
 │   ├── config/

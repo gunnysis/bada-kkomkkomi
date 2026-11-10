@@ -4,6 +4,7 @@ import {
   Anchor,
   ArrowRight,
   BookOpen,
+  Database,
   Download,
   Layers,
   Navigation,
@@ -13,7 +14,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import type { NavPanelType } from '../../hooks/useAppRoute';
-import { APP_VERSION_DISPLAY } from '../../config/appVersion';
+import { APP_VERSION_DISPLAY, DATA_SOURCE_SHORT_BADGE } from '../../config/appVersion';
 
 export type NotebookLaunchPreset = 'hazard' | 'all' | 'layers';
 
@@ -22,7 +23,7 @@ export interface HomeScreenProps {
   onSelectFeatureCard: (target: 'notebook' | 'navigation') => void;
   onSelectNotebookPreset?: (preset: NotebookLaunchPreset) => void;
   onSelectNavigationPanel?: (panel: NavPanelType) => void;
-  onOpenSettings?: (section?: 'thresholds' | 'guide') => void;
+  onOpenSettings?: (section?: 'thresholds' | 'guide' | 'sources') => void;
   isCustomThresholds?: boolean;
   hasActiveWorkspace?: boolean;
   activeWorkspaceSummary?: string;
@@ -322,7 +323,7 @@ export function HomeScreen({
               </div>
             </button>
 
-            {/* 카드 4 (활성): 설정 (3.4 기상 판정 기준 설정 · 이용 안내 · 앱 버전 확인) */}
+            {/* 카드 4 (활성): 설정 (3.4 기상 판정 기준 설정 · 이용 안내 · 데이터·기술 출처 확인) */}
             <article
               aria-label="설정"
               className="flex h-full flex-col justify-between overflow-hidden rounded-3xl border-2 border-[#5eead4] bg-gradient-to-b from-[#e6fcf8] via-[#d5f7f0] to-[#99ebdc] p-2.5 shadow-md transition hover:border-[#0d9488] hover:shadow-lg sm:p-3.5"
@@ -334,7 +335,7 @@ export function HomeScreen({
               >
                 <span className="inline-flex h-5 items-center gap-1 rounded-full bg-[#0f766e] px-2 text-[10px] leading-none font-black whitespace-nowrap text-white shadow-sm">
                   <SlidersHorizontal className="h-2.5 w-2.5 shrink-0 stroke-[2.6]" aria-hidden="true" />
-                  <span>{isCustomThresholds ? '사용자 기준 적용중' : '기상기준 · 이용안내'}</span>
+                  <span>{isCustomThresholds ? '사용자 기준 적용중' : '기상기준 · 출처안내'}</span>
                 </span>
 
                 <div className="my-1.5 flex h-14 w-full items-center justify-center sm:h-16">
@@ -351,7 +352,7 @@ export function HomeScreen({
                     설정
                   </span>
                   <span className="mt-1 flex min-h-[1.5rem] items-center justify-center text-[11px] leading-tight font-bold text-[#134e4a] sm:text-xs">
-                    풍속·파고 기준 · 이용안내
+                    기상기준 · 이용안내 · 데이터출처
                   </span>
                 </div>
               </button>
@@ -359,13 +360,13 @@ export function HomeScreen({
               <div
                 role="group"
                 aria-label="설정 세부 기능 바로가기"
-                className="grid grid-cols-2 gap-1 border-t border-teal-600/25 pt-2"
+                className="grid grid-cols-3 gap-1 border-t border-teal-600/25 pt-2"
               >
                 <button
                   type="button"
                   onClick={() => onOpenSettings?.('thresholds')}
                   title="바닷길 콕콕 풍속·파고 판정 기준 설정 열기"
-                  className="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-[#0f766e] px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0d9488] active:scale-95 sm:min-h-11 sm:text-[11px]"
+                  className="flex min-h-10 items-center justify-center gap-0.5 rounded-xl bg-[#0f766e] px-1 py-1 text-[10px] font-black whitespace-nowrap text-white shadow-sm transition hover:bg-[#0d9488] active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
                   <SlidersHorizontal className="h-3 w-3 shrink-0" aria-hidden="true" />
                   <span>기상기준</span>
@@ -373,11 +374,20 @@ export function HomeScreen({
                 <button
                   type="button"
                   onClick={() => onOpenSettings?.('guide')}
-                  title="앱 이용 안내 및 버전 확인 열기"
-                  className="flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[#0f766e]/60 bg-white/95 px-1.5 py-1 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-teal-50 active:scale-95 sm:min-h-11 sm:text-[11px]"
+                  title="앱 이용 안내 열기"
+                  className="flex min-h-10 items-center justify-center gap-0.5 rounded-xl border border-[#0f766e]/60 bg-white/95 px-1 py-1 text-[10px] font-black whitespace-nowrap text-[#042f2e] shadow-sm transition hover:bg-teal-50 active:scale-95 sm:min-h-11 sm:text-[11px]"
                 >
                   <BookOpen className="h-3 w-3 shrink-0 text-[#0f766e]" aria-hidden="true" />
                   <span>이용안내</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenSettings?.('sources')}
+                  title="공공데이터·해양기상·지도·알고리즘 출처 확인 열기"
+                  className="flex min-h-10 items-center justify-center gap-0.5 rounded-xl border border-[#0066b3]/55 bg-sky-50/95 px-1 py-1 text-[10px] font-black whitespace-nowrap text-[#003360] shadow-sm transition hover:bg-sky-100 active:scale-95 sm:min-h-11 sm:text-[11px]"
+                >
+                  <Database className="h-3 w-3 shrink-0 text-[#0066b3]" aria-hidden="true" />
+                  <span>데이터출처</span>
                 </button>
               </div>
             </article>
@@ -423,8 +433,19 @@ export function HomeScreen({
           aria-hidden="true"
           className="block h-18 w-full object-cover object-bottom sm:h-22"
         />
-        <div className="absolute inset-x-0 bottom-1.5 px-2 text-center text-[11px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)] sm:text-xs">
-          국립공원공단 한려해상 · 통영·거제 {totalDockingCount}개 접안지 · {totalPortsCount}개 항포구/선착장 지원 [{APP_VERSION_DISPLAY}]
+        <div className="absolute inset-x-0 bottom-1.5 flex flex-wrap items-center justify-center gap-1.5 px-2 text-center text-[11px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)] sm:text-xs">
+          <span>
+            국립공원공단 한려해상 · 통영·거제 {totalDockingCount}개 접안지 · {totalPortsCount}개 항포구/선착장 지원 [{APP_VERSION_DISPLAY}]
+          </span>
+          <button
+            type="button"
+            onClick={() => onOpenSettings?.('sources')}
+            title={DATA_SOURCE_SHORT_BADGE}
+            className="inline-flex items-center gap-1 rounded-full border border-white/75 bg-[#003360]/85 px-2 py-0.5 text-[10px] font-black text-sky-100 shadow-xs backdrop-blur-xs transition hover:bg-[#003360] active:scale-95"
+          >
+            <Database className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+            <span>데이터·기술 출처 ⓘ</span>
+          </button>
         </div>
       </footer>
     </div>

@@ -18,6 +18,7 @@ const pkgLock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
 const appVersionTs = fs.readFileSync('src/config/appVersion.ts', 'utf8');
 const viteConfigTs = fs.readFileSync('vite.config.ts', 'utf8');
 const indexHtml = fs.readFileSync('index.html', 'utf8');
+const deployGuideMd = fs.readFileSync('DEPLOY_GUIDE.md', 'utf8');
 
 const versionMatch = appVersionTs.match(/APP_VERSION\s*=\s*'([^']+)'/);
 const displayMatch = appVersionTs.match(/APP_VERSION_DISPLAY\s*=\s*'([^']+)'/);
@@ -39,6 +40,15 @@ assert(
 assert(
   indexHtml.includes(`[${displayMatch[1]}]`),
   `index.html title/description must include [${displayMatch[1]}]`,
+);
+assert(
+  deployGuideMd.includes(`[${displayMatch[1]}]`),
+  `DEPLOY_GUIDE.md header must include [${displayMatch[1]}]`,
+);
+assert(
+  fs.existsSync('docs/DATA_AND_TECH_SOURCES.md') &&
+    fs.existsSync('src/config/dataSources.ts'),
+  'Source provenance documentation (docs/DATA_AND_TECH_SOURCES.md) and SSOT module (src/config/dataSources.ts) must exist',
 );
 assert(
   !indexHtml.includes('class="dark"') && !indexHtml.includes('#061c24'),

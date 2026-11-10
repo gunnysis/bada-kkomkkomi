@@ -6,6 +6,7 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronUp,
+  Info,
   MapPin,
   Plus,
   WifiOff,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { MarineWeatherStatusResult, WeatherThresholds } from '../../types/weather';
 import type { RouteWaypoint } from '../../types/route';
+import type { SourceCategoryKey } from '../../config/dataSources';
 
 interface MarineWeatherPanelProps {
   weather: MarineWeatherStatusResult;
@@ -23,6 +25,7 @@ interface MarineWeatherPanelProps {
   onSelectWaypointWeather?: (lat: number, lng: number, name: string) => void;
   onAddCurrentWeatherAsWaypoint?: () => void;
   onOpenSettings: () => void;
+  onOpenSourcesInfo?: (sourceId: SourceCategoryKey) => void;
   onRefresh: () => void;
 }
 
@@ -34,6 +37,7 @@ export function MarineWeatherPanel({
   onSelectWaypointWeather,
   onAddCurrentWeatherAsWaypoint,
   onOpenSettings,
+  onOpenSourcesInfo,
   onRefresh,
 }: MarineWeatherPanelProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -344,12 +348,24 @@ export function MarineWeatherPanel({
 
           <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-600">
             <span>
-              예보 모델: <strong className="font-extrabold text-[#003360]">ECMWF IFS HRES 9 km · ECMWF WAM 9 km</strong> / API 제공: Open-Meteo
+              🌊 <strong className="font-extrabold text-[#003360]">유럽중기예보센터(ECMWF 9km)</strong> · Open-Meteo API
             </span>
-            <span className="flex items-center gap-1 font-bold text-[#0066b3]">
-              <HelpCircle className="h-3 w-3" />
-              지도 탭 또는 핀 드래그로 해역 이동
-            </span>
+            <div className="flex items-center gap-1.5">
+              {onOpenSourcesInfo && (
+                <button
+                  type="button"
+                  onClick={() => onOpenSourcesInfo('marine_weather')}
+                  className="inline-flex shrink-0 items-center gap-0.5 rounded-md border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[10px] font-extrabold text-[#0066b3] transition hover:border-[#0066b3] active:scale-95"
+                >
+                  <Info className="h-2.5 w-2.5" aria-hidden="true" />
+                  <span>출처·한계 상세</span>
+                </button>
+              )}
+              <span className="flex items-center gap-0.5 font-bold text-[#0066b3]">
+                <HelpCircle className="h-3 w-3" />
+                지도 탭·핀 드래그 이동
+              </span>
+            </div>
           </div>
         </div>
       )}

@@ -7,6 +7,7 @@ import {
   Compass,
   Copy,
   Eye,
+  Info,
   Navigation,
   Waves,
   X,
@@ -16,6 +17,7 @@ import type { DockingFeature } from '../types/docking';
 import { MARKER_COLOR_MAP } from '../types/docking';
 import { PhotoGallery } from './PhotoGallery';
 import { calculateHaversineKm, kmToNauticalMiles } from '../services/routeGeoService';
+import type { SourceCategoryKey } from '../config/dataSources';
 
 interface DockingDetailSheetProps {
   feature: DockingFeature | null;
@@ -25,6 +27,7 @@ interface DockingDetailSheetProps {
   onRequestReport: (feature: DockingFeature) => void;
   onRequestRoadview?: (feature: DockingFeature) => void;
   onRequestNavigateRoute?: (feature: DockingFeature) => void;
+  onOpenSourcesInfo?: (sourceId: SourceCategoryKey) => void;
 }
 
 export function DockingDetailSheet({
@@ -35,6 +38,7 @@ export function DockingDetailSheet({
   onRequestReport,
   onRequestRoadview,
   onRequestNavigateRoute,
+  onOpenSourcesInfo,
 }: DockingDetailSheetProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [copied, setCopied] = useState(false);
@@ -230,6 +234,25 @@ export function DockingDetailSheet({
                 {properties.verified_date}
               </p>
             </div>
+          </div>
+
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-sky-200/80 pt-2 text-[11px] font-bold text-slate-600">
+            <span>
+              🏛️ 공단 현장조사 · 국립해양조사원(KHOA) 기본수준면(DL) 기준
+            </span>
+            {onOpenSourcesInfo && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenSourcesInfo('ports_docking');
+                }}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-sky-300 bg-white px-2 py-0.5 text-[11px] font-extrabold text-[#0066b3] transition hover:border-[#0066b3] active:scale-95"
+              >
+                <Info className="h-3 w-3" aria-hidden="true" />
+                <span>데이터 출처</span>
+              </button>
+            )}
           </div>
 
           {/* 원터치 브릿지: 이 접안지로 바닷길 시간·기상 계산하기 */}

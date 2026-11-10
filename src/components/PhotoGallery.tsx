@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from 'lucide-react';
+import {
+  classifyDockingPhotoAsset,
+  summarizePhotoCollection,
+} from '../config/dataSources';
 
 interface PhotoGalleryProps {
   photos: string[];
@@ -89,13 +93,16 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
     );
   }
 
+  const collectionSummary = summarizePhotoCollection(photos);
+  const activePhotoAsset = classifyDockingPhotoAsset(photos[activeIndex] ?? photos[0] ?? '');
+
   return (
     <section aria-label={`${pointName} 현장 사진 갤러리`} className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Camera className="h-5 w-5 text-[#0066b3]" aria-hidden="true" />
           <h3 className="text-base font-extrabold tracking-tight text-[#003360]">
-            현장 접안 사진 ({activeIndex + 1} / {photos.length})
+            {collectionSummary.sectionTitle} ({activeIndex + 1} / {photos.length})
           </h3>
         </div>
         <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold text-[#003360]">
@@ -114,6 +121,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
           {photos.map((photoUrl, idx) => {
             const resolvedUrl = resolveAssetUrl(photoUrl);
             const isBroken = Boolean(failedUrls[photoUrl]);
+            const assetMeta = classifyDockingPhotoAsset(photoUrl);
             return (
               <div
                 key={`${pointId}-${photoUrl}-${idx}`}
@@ -128,7 +136,7 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
                     <>
                       <img
                         src={resolvedUrl}
-                        alt={`${pointName} 현장 사진 ${idx + 1}`}
+                        alt={`${pointName} ${assetMeta.isVectorDiagram ? '현장 이해용 모식도' : '현장 사진'} ${idx + 1}`}
                         loading={idx === 0 ? 'eager' : 'lazy'}
                         className="h-full w-full object-cover"
                         onError={() =>
@@ -138,6 +146,15 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
                           }))
                         }
                       />
+                      <span
+                        className={`pointer-events-none absolute top-2.5 left-2.5 rounded-xl border px-2.5 py-1 text-[11px] font-black shadow-md backdrop-blur-sm ${
+                          assetMeta.isVectorDiagram
+                            ? 'border-sky-200 bg-white/95 text-[#003360]'
+                            : 'border-emerald-300 bg-emerald-950/90 text-emerald-100'
+                        }`}
+                      >
+                        {assetMeta.badgeText}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setExpandedPhoto(resolvedUrl)}
@@ -188,6 +205,12 @@ export function PhotoGallery({ photos, pointName, pointId }: PhotoGalleryProps) 
           </>
         )}
       </div>
+
+      {activePhotoAsset.isVectorDiagram && (
+        <p className="rounded-xl border border-sky-200 bg-sky-50/80 px-3 py-1.5 text-[11px] font-semibold leading-snug text-slate-700">
+          ※ 오프라인 즉시 열람 및 수심·암초 위치 이해를 위해 자체 제작한 현장 모식도입니다. (실제 촬영 사진 등록 시 자동 표시)
+        </p>
+      )}
 
       {/* 하단 페이지 인디케이터 버튼 (터치 영역 확보) */}
       {photos.length > 1 && (

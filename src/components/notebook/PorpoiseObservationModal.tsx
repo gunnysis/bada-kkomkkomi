@@ -176,7 +176,7 @@ export function PorpoiseObservationModal({
           </div>
 
           <div className="rounded-xl border border-[#d6c6b2] bg-[#f7f4ee] p-2.5 text-[11px] font-semibold leading-snug text-slate-700">
-            * 개인 기록은 다른 직원에게 공유되지 않으며 이 기기 브라우저에만 저장됩니다. (브라우저 데이터 초기화 또는 기기 변경 시 유실될 수 있습니다.)
+            🔒 개인 관찰 기록은 외부 서버로 전송되지 않으며 현재 기기 브라우저(<code className="font-bold text-[#003360]">localStorage</code>)에만 안전하게 보관됩니다. (브라우저 데이터 초기화 또는 기기 변경 시 유실될 수 있습니다.)
           </div>
 
           {/* 액션 버튼 */}

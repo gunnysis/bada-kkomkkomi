@@ -24,6 +24,7 @@ import { HomeScreen, type NotebookLaunchPreset } from './components/home/HomeScr
 import type { RouteMapTapMode } from './components/navigation/RouteTimeCalculator';
 import type { SettingsInitialSection } from './components/navigation/WeatherThresholdSettings';
 import { APP_VERSION_DISPLAY } from './config/appVersion';
+import type { SourceCategoryKey } from './config/dataSources';
 
 const MapView = lazy(() =>
   import('./components/MapView').then((m) => ({ default: m.MapView })),
@@ -249,8 +250,16 @@ export function App() {
   const [isWeatherSettingsOpen, setIsWeatherSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] =
     useState<SettingsInitialSection>('thresholds');
+  const [settingsFocusSourceId, setSettingsFocusSourceId] =
+    useState<SourceCategoryKey | null>(null);
   const [externalRoadviewTarget, setExternalRoadviewTarget] =
     useState<RoadviewTargetLocation | null>(null);
+
+  const handleOpenSourcesInfo = useCallback((sourceId?: SourceCategoryKey) => {
+    setSettingsInitialSection('sources');
+    setSettingsFocusSourceId(sourceId ?? null);
+    setIsWeatherSettingsOpen(true);
+  }, []);
   const [portSelectorTarget, setPortSelectorTarget] = useState<{
     waypointId: string;
     label: string;
@@ -1221,6 +1230,7 @@ export function App() {
           onSelectNavigationPanel={handleOpenNavigationPanelFromHome}
           onOpenSettings={(section = 'thresholds') => {
             setSettingsInitialSection(section);
+            setSettingsFocusSourceId(null);
             setIsWeatherSettingsOpen(true);
           }}
           isCustomThresholds={marineWeather.isCustomThresholds}
@@ -1382,6 +1392,7 @@ export function App() {
                   type="button"
                   onClick={() => {
                     setSettingsInitialSection('thresholds');
+                    setSettingsFocusSourceId(null);
                     setIsWeatherSettingsOpen(true);
                   }}
                   aria-label="설정 및 이용 안내 열기"
@@ -2045,6 +2056,7 @@ export function App() {
                 showDirectionArrows={showDirectionArrows}
                 onToggleDirectionArrows={() => setShowDirectionArrows((v) => !v)}
                 onFitRouteBounds={() => setFitRouteBoundsTrigger((n) => n + 1)}
+                onOpenSourcesInfo={handleOpenSourcesInfo}
               />
             ) : (
               <MarineWeatherPanel
@@ -2060,8 +2072,10 @@ export function App() {
                 onAddCurrentWeatherAsWaypoint={handleAddWeatherCoordAsWaypoint}
                 onOpenSettings={() => {
                   setSettingsInitialSection('thresholds');
+                  setSettingsFocusSourceId(null);
                   setIsWeatherSettingsOpen(true);
                 }}
+                onOpenSourcesInfo={handleOpenSourcesInfo}
                 onRefresh={marineWeather.refresh}
               />
             )}
@@ -2079,6 +2093,7 @@ export function App() {
             onClose={() => setSelectedFeature(null)}
             onFlyToPoint={(lat, lng) => handleFlyToPoint(lat, lng, 15)}
             onRequestNavigateRoute={handleNavigateToDockingPoint}
+            onOpenSourcesInfo={handleOpenSourcesInfo}
             onRequestRoadview={(feat) => {
               setExternalRoadviewTarget({
                 lat: feat.geometry.coordinates[1],
@@ -2204,13 +2219,17 @@ export function App() {
       {isWeatherSettingsOpen && (
         <Suspense fallback={null}>
           <WeatherThresholdSettings
-            key={`weather-settings-${settingsInitialSection}-${marineWeather.thresholds.windKnot.good}-${marineWeather.thresholds.windKnot.moderate}-${marineWeather.thresholds.waveMeter.good}-${marineWeather.thresholds.waveMeter.moderate}`}
+            key={`weather-settings-${settingsInitialSection}-${settingsFocusSourceId ?? 'none'}-${marineWeather.thresholds.windKnot.good}-${marineWeather.thresholds.windKnot.moderate}-${marineWeather.thresholds.waveMeter.good}-${marineWeather.thresholds.waveMeter.moderate}`}
             isOpen={isWeatherSettingsOpen}
-            onClose={() => setIsWeatherSettingsOpen(false)}
+            onClose={() => {
+              setIsWeatherSettingsOpen(false);
+              setSettingsFocusSourceId(null);
+            }}
             thresholds={marineWeather.thresholds}
             defaultThresholds={marineWeather.defaultThresholds}
             isCustomThresholds={marineWeather.isCustomThresholds}
             initialSection={settingsInitialSection}
+            focusSourceId={settingsFocusSourceId}
             onSave={(newThresholds) => {
               const ok = marineWeather.updateThresholds(newThresholds);
               if (ok) {

@@ -310,6 +310,10 @@ export function PortSelectModal({
             </div>
           )}
         </div>
+
+        <p className="mt-2 shrink-0 border-t border-sky-200/80 pt-2 text-[10.5px] font-semibold leading-snug text-slate-600">
+          데이터 출처: 해양수산부·지자체 어항고시(81곳) + 국립공원 소규모 접안시설(50곳)·조사선 거점(5곳) 및 국립해양조사원(KHOA) 수심·해안선 기준
+        </p>
       </div>
     </dialog>
   );

@@ -52,6 +52,7 @@ import {
   loadGitHubSyncConfig,
   saveGitHubSyncConfig,
 } from '../../services/githubLayerSyncService';
+import { resolveLayerProvenance } from '../../config/dataSources';
 
 interface LayerControlModalProps {
   isOpen: boolean;
@@ -990,6 +991,7 @@ export function LayerControlModal({
                 const isStyleOpen = expandedStyleLayerId === layer.id;
                 const layerStyle =
                   layer.style ?? buildDefaultLayerStyle(layer.color, layer.id);
+                const layerProvenance = resolveLayerProvenance(layer);
 
                 return (
                   <div
@@ -1016,6 +1018,12 @@ export function LayerControlModal({
                             </span>
                             <span className="rounded bg-sky-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-sky-900">
                               {geomTypesLabel} · {featureCount}건
+                            </span>
+                            <span
+                              title={layerProvenance.sourceDetail}
+                              className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-[#00846c]"
+                            >
+                              {layerProvenance.badgeLabel}
                             </span>
                             {layer.sourceMeta?.detectedCrs && (
                               <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-[#00846c]">
@@ -1314,6 +1322,11 @@ export function LayerControlModal({
              ================================================================ */}
           {activeTab === 'import' && (
             <div className="space-y-3.5">
+              {/* 브라우저 내부 100% 로컬 처리 및 좌표계 원천 안내 배너 (RC-SRC-04, RC-SRC-05) */}
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/75 px-3.5 py-2.5 text-[11px] font-bold leading-snug text-[#003360]">
+                🔒 <strong className="font-black text-[#00846c]">외부 서버 전송 0건 · 브라우저 내부 직접 변환:</strong> OGC GeoPackage/Shapefile 국제 규격 자체 파서 + 국토지리정보원 국가좌표계(proj4 EPSG:5179/5186) + CP949 한글 복원
+              </div>
+
               {/* 드래그앤드롭 및 파일 선택 영역 */}
               <div
                 onDragOver={(e) => e.preventDefault()}
