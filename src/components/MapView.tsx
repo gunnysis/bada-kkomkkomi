@@ -113,6 +113,10 @@ export interface MapViewProps {
   routeLegs: RouteLeg[];
   portsList?: MarinePort[];
   showPortMarkersOnMap?: boolean;
+  selectedLegIndex?: number | null;
+  onSelectLeg?: (legIndex: number | null) => void;
+  showDirectionArrows?: boolean;
+  fitRouteBoundsTrigger?: number;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
@@ -153,6 +157,10 @@ export function MapView({
   routeLegs,
   portsList = [],
   showPortMarkersOnMap = true,
+  selectedLegIndex = null,
+  onSelectLeg,
+  showDirectionArrows = true,
+  fitRouteBoundsTrigger = 0,
   onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
@@ -457,6 +465,10 @@ export function MapView({
           routeLegs={routeLegs}
           portsList={portsList}
           showPortMarkersOnMap={showPortMarkersOnMap}
+          selectedLegIndex={selectedLegIndex}
+          onSelectLeg={onSelectLeg}
+          showDirectionArrows={showDirectionArrows}
+          fitRouteBoundsTrigger={fitRouteBoundsTrigger}
           onUpdateWaypointPos={onUpdateWaypointPos}
           onRemoveWaypoint={onRemoveWaypoint}
           onMapClickForRoute={onMapClickForRoute}
@@ -498,6 +510,10 @@ export function MapView({
             routeLegs={routeLegs}
             portsList={portsList}
             showPortMarkersOnMap={showPortMarkersOnMap}
+            selectedLegIndex={selectedLegIndex}
+            onSelectLeg={onSelectLeg}
+            showDirectionArrows={showDirectionArrows}
+            fitRouteBoundsTrigger={fitRouteBoundsTrigger}
             onUpdateWaypointPos={onUpdateWaypointPos}
             onRemoveWaypoint={onRemoveWaypoint}
             onMapClickForRoute={onMapClickForRoute}

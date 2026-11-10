@@ -49,9 +49,24 @@ jobs:
               throw new Error('Invalid ports.json: expected >=136 ports and waypoints array');
             }
             const portIdSet = new Set(portsData.ports.map((p) => p.id));
+            const wpIdSet = new Set(portsData.waypoints.map((w) => w.id));
             for (const f of dockingFc.features) {
               if (!portIdSet.has(f.properties.id)) {
                 throw new Error('Missing docking feature ID in ports.json: ' + f.properties.id);
+              }
+            }
+            for (const p of portsData.ports) {
+              for (const wpId of p.connectedWaypointIds || []) {
+                if (!wpIdSet.has(wpId)) {
+                  throw new Error('Port ' + p.id + ' references unknown waypoint ID: ' + wpId);
+                }
+              }
+            }
+            for (const w of portsData.waypoints) {
+              for (const nbId of w.neighbors || []) {
+                if (!wpIdSet.has(nbId)) {
+                  throw new Error('Waypoint ' + w.id + ' references unknown neighbor ID: ' + nbId);
+                }
               }
             }
             const layersDir = 'public/data/layers';

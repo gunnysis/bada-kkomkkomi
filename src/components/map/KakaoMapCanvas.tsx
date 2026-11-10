@@ -25,8 +25,10 @@ import {
   buildGpsPulseSpec,
   buildNavPortPinSpec,
   buildPorpoiseSpec,
+  buildRouteDirectionArrowSpec,
   buildRouteLegBadgeSpec,
   buildRouteWaypointSpec,
+  buildSeaWaypointGuideSpec,
   buildSpatialLayerLabelSpec,
   buildSpatialLayerPointSpec,
   buildWeatherPinSpec,
@@ -61,6 +63,10 @@ export interface KakaoMapCanvasProps {
   routeLegs: RouteLeg[];
   portsList: MarinePort[];
   showPortMarkersOnMap: boolean;
+  selectedLegIndex?: number | null;
+  onSelectLeg?: (legIndex: number | null) => void;
+  showDirectionArrows?: boolean;
+  fitRouteBoundsTrigger?: number;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
@@ -371,6 +377,10 @@ export function KakaoMapCanvas({
   routeLegs,
   portsList,
   showPortMarkersOnMap,
+  selectedLegIndex = null,
+  onSelectLeg,
+  showDirectionArrows = true,
+  fitRouteBoundsTrigger = 0,
   onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
@@ -920,7 +930,33 @@ export function KakaoMapCanvas({
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
   }, [routeLegs, routeWaypoints]);
 
-  // 9. [3.2 바닷길 콕콕 - 시간계산] 실항로 & 직선 참고선 폴리라인 + 구간 소요시간 배지 + 드래그 마커
+  // 8-B. [전체항로 보기 (Fit Bounds)] 트리거 반영 (하단 계산기 패널 여백 280px 확보)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !fitRouteBoundsTrigger || polylinePositions.length < 2) return;
+    try {
+      const bounds = new kakaoMaps.LatLngBounds();
+      for (const [lat, lng] of polylinePositions) {
+        bounds.extend(new kakaoMaps.LatLng(lat, lng));
+      }
+      if (!bounds.isEmpty()) {
+        map.setBounds(bounds, 72, 48, 280, 48);
+        const c = map.getCenter();
+        const z = kakaoLevelToLeafletZoom(map.getLevel());
+        setCurrentLeafletZoom(z);
+        onViewportChangeRef.current(c.getLat(), c.getLng(), z);
+      }
+    } catch {
+      // ignore if bounds invalid
+    }
+  }, [kakaoMaps, fitRouteBoundsTrigger, polylinePositions]);
+
+  // 줌 단계별 방향 화살표 샘플링 티어 (0: zoom<=10, 1: zoom 11~12, 2: zoom>=13)
+  const routeArrowZoomTier =
+    currentLeafletZoom <= 10 ? 0 : currentLeafletZoom <= 12 ? 1 : 2;
+  const showSeaChannelGuides = currentLeafletZoom >= 12;
+
+  // 9. [3.2 바닷길 콕콕 - 시간계산] 구간별 3중 케이싱 폴리라인 + 진행 방향 화살표(➤) + 수로 가이드(◆) + 구간 배지 + 드래그 마커
   useEffect(() => {
     const map = mapRef.current;
     const container = containerRef.current;
@@ -939,73 +975,179 @@ export function KakaoMapCanvas({
     const createdLegBadges: KakaoCustomOverlay[] = [];
     const createdWaypoints: KakaoCustomOverlay[] = [];
 
-    // 9-A. 직선 대권 참고선 (얇은 점선)
-    if (routeWaypoints.length >= 2) {
-      const directPath = routeWaypoints.map((wp) => new kakaoMaps.LatLng(wp.lat, wp.lng));
+    // 9-A. 구간 선택(포커스) 시에만 해당 구간의 직선 대권 참고선을 보조 점선으로 표시 (육지 관통 오인 방지)
+    if (selectedLegIndex !== null && routeLegs[selectedLegIndex]) {
+      const selLeg = routeLegs[selectedLegIndex];
+      const directPath = [
+        new kakaoMaps.LatLng(selLeg.from.lat, selLeg.from.lng),
+        new kakaoMaps.LatLng(selLeg.to.lat, selLeg.to.lng),
+      ];
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
           path: directPath,
           strokeWeight: 1.5,
-          strokeColor: '#64748b',
-          strokeOpacity: 0.45,
+          strokeColor: '#94a3b8',
+          strokeOpacity: 0.55,
           strokeStyle: 'shortdot',
-          zIndex: 250,
+          zIndex: 255,
         }),
       );
     }
 
-    // 9-B. A* 해상 실항로 2중 폴리라인 (외곽 다크 대비선 + 메인 시안 점선)
-    if (polylinePositions.length >= 2) {
-      const seaPath = polylinePositions.map(
-        ([lat, lng]) => new kakaoMaps.LatLng(lat, lng),
-      );
+    // 9-B. 구간(Leg)별 3중 케이싱(3-Tier Casing) 해상 실항로 폴리라인
+    routeLegs.forEach((leg, legIdx) => {
+      const pts =
+        leg.pathPositions && leg.pathPositions.length >= 2
+          ? leg.pathPositions
+          : ([
+              [leg.from.lat, leg.from.lng],
+              [leg.to.lat, leg.to.lng],
+            ] as [number, number][]);
+      if (pts.length < 2) return;
+
+      const isSelected = selectedLegIndex === legIdx;
+      const seaPath = pts.map(([lat, lng]) => new kakaoMaps.LatLng(lat, lng));
+      const mainColor = isSelected
+        ? '#34d399'
+        : leg.safetyLevel === 'danger'
+          ? '#f59e0b'
+          : '#00e5ff';
+
+      // Tier 1: 심해 다크 외곽 케이싱 (위성/지형 배경과 완벽 분리)
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
           path: seaPath,
-          strokeWeight: 8,
+          strokeWeight: isSelected ? 11 : 8.5,
           strokeColor: '#020617',
-          strokeOpacity: 0.82,
+          strokeOpacity: 0.88,
           strokeStyle: 'solid',
-          zIndex: 280,
+          zIndex: isSelected ? 310 : 280,
         }),
       );
+
+      // Tier 2: 안전등급 / 선택 상태 메인 코어 라인
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
           path: seaPath,
-          strokeWeight: 4,
-          strokeColor: '#38bdf8',
+          strokeWeight: isSelected ? 6.5 : 4.8,
+          strokeColor: mainColor,
           strokeOpacity: 0.96,
-          strokeStyle: 'shortdash',
-          zIndex: 290,
+          strokeStyle: 'solid',
+          zIndex: isSelected ? 315 : 285,
         }),
       );
+
+      // Tier 3: 내부 방향성 점선 하이라이트 코어
+      createdLines.push(
+        new kakaoMaps.Polyline({
+          map,
+          path: seaPath,
+          strokeWeight: isSelected ? 2.2 : 1.6,
+          strokeColor: isSelected ? '#ecfdf5' : '#e0f2fe',
+          strokeOpacity: 0.9,
+          strokeStyle: 'shortdash',
+          zIndex: isSelected ? 320 : 290,
+        }),
+      );
+    });
+
+    // 9-C. 폴리라인 위 진행 방향 화살표(➤) 및 해상 변침점 수로 가이드(◆) 렌더링
+    if (showDirectionArrows) {
+      let totalArrowsRendered = 0;
+      const maxTotalArrows = routeArrowZoomTier === 0 ? 6 : routeArrowZoomTier === 1 ? 14 : 24;
+      const renderedGuideIds = new Set<string>();
+
+      routeLegs.forEach((leg, legIdx) => {
+        const isSelected = selectedLegIndex === legIdx;
+        const arrows = leg.directionArrows ?? [];
+        const filteredArrows =
+          routeArrowZoomTier === 0
+            ? arrows.slice(0, 1)
+            : routeArrowZoomTier === 1
+              ? arrows.filter((_, i) => i % 2 === 0).slice(0, 3)
+              : arrows;
+
+        for (const arrow of filteredArrows) {
+          if (totalArrowsRendered >= maxTotalArrows) break;
+          const arrowSpec = buildRouteDirectionArrowSpec(
+            arrow.bearingDeg,
+            leg.safetyLevel ?? 'safe',
+            isSelected,
+          );
+          const arrowEl = createOverlayElement(kakaoMaps, arrowSpec);
+          createdLegBadges.push(
+            new kakaoMaps.CustomOverlay({
+              map,
+              position: new kakaoMaps.LatLng(arrow.lat, arrow.lng),
+              content: arrowEl,
+              xAnchor: arrowSpec.xAnchorRatio,
+              yAnchor: arrowSpec.yAnchorRatio,
+              zIndex: isSelected ? 390 : 340,
+              clickable: false,
+            }),
+          );
+          totalArrowsRendered++;
+        }
+
+        if (showSeaChannelGuides && leg.activeWaypoints) {
+          for (const wpGuide of leg.activeWaypoints) {
+            if (renderedGuideIds.has(wpGuide.id)) continue;
+            renderedGuideIds.add(wpGuide.id);
+            const guideSpec = buildSeaWaypointGuideSpec(wpGuide.name, isSelected);
+            const guideEl = createOverlayElement(kakaoMaps, guideSpec);
+            createdLegBadges.push(
+              new kakaoMaps.CustomOverlay({
+                map,
+                position: new kakaoMaps.LatLng(wpGuide.lat, wpGuide.lng),
+                content: guideEl,
+                xAnchor: guideSpec.xAnchorRatio,
+                yAnchor: guideSpec.yAnchorRatio,
+                zIndex: isSelected ? 385 : 330,
+                clickable: false,
+              }),
+            );
+          }
+        }
+      });
     }
 
-    // 9-C. 구간 중점 소요시간·해리·방위각 배지
-    for (const leg of routeLegs) {
+    // 9-D. 구간 진중점(50% Arc-Length) 소요시간·해리·회전 침로 화살표 배지 (클릭 시 구간 포커스)
+    routeLegs.forEach((leg, legIdx) => {
+      const isSelected = selectedLegIndex === legIdx;
       const spec = buildRouteLegBadgeSpec(
         leg.durationMinutes,
         leg.distanceNm,
         leg.bearingDeg,
         leg.cardinal,
+        {
+          legIndex: legIdx,
+          safetyLevel: leg.safetyLevel,
+          isSelected,
+        },
       );
-      const el = createOverlayElement(kakaoMaps, spec);
+      const el = createOverlayElement(
+        kakaoMaps,
+        spec,
+        onSelectLeg
+          ? () => onSelectLeg(isSelected ? null : legIdx)
+          : undefined,
+      );
       const badgeOverlay = new kakaoMaps.CustomOverlay({
         map,
         position: new kakaoMaps.LatLng(leg.midLat, leg.midLng),
         content: el,
         xAnchor: spec.xAnchorRatio,
         yAnchor: spec.yAnchorRatio,
-        zIndex: 420,
-        clickable: false,
+        zIndex: isSelected ? 460 : 420,
+        clickable: Boolean(onSelectLeg),
       });
       createdLegBadges.push(badgeOverlay);
-    }
+    });
 
-    // 9-D. 출발·경유·도착지 드래그 가능 마커 (Pointer-Capture 60fps 드래그 엔진 + 경유지 [×] 즉시 취소)
+    // 9-E. 출발·경유·도착지 드래그 가능 마커 (Pointer-Capture 60fps 드래그 엔진 + 경유지 [×] 즉시 취소)
     routeWaypoints.forEach((wp, idx) => {
       const spec = buildRouteWaypointSpec(wp.type, wp.name, idx, wp.id);
       const el = createOverlayElement(kakaoMaps, spec);
@@ -1049,7 +1191,11 @@ export function KakaoMapCanvas({
     navSubTab,
     routeWaypoints,
     routeLegs,
-    polylinePositions,
+    selectedLegIndex,
+    onSelectLeg,
+    showDirectionArrows,
+    routeArrowZoomTier,
+    showSeaChannelGuides,
     onUpdateWaypointPos,
     onRemoveWaypoint,
   ]);

@@ -9,6 +9,13 @@ export interface KakaoLatLng {
   getLng(): number;
 }
 
+export interface KakaoLatLngBounds {
+  extend(latlng: KakaoLatLng): void;
+  isEmpty(): boolean;
+  getSouthWest(): KakaoLatLng;
+  getNorthEast(): KakaoLatLng;
+}
+
 export interface KakaoPoint {
   x: number;
   y: number;
@@ -57,6 +64,13 @@ export interface KakaoMap {
   setCenter(latlng: KakaoLatLng): void;
   getCenter(): KakaoLatLng;
   panTo(latlng: KakaoLatLng): void;
+  setBounds(
+    bounds: KakaoLatLngBounds,
+    paddingTop?: number,
+    paddingRight?: number,
+    paddingBottom?: number,
+    paddingLeft?: number,
+  ): void;
   setLevel(level: number, options?: KakaoAnimateOptions): void;
   getLevel(): number;
   setMapTypeId(mapTypeId: number): void;
@@ -196,6 +210,7 @@ export interface KakaoMapsNamespace {
   load(callback: () => void): void;
   Map: new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap;
   LatLng: new (lat: number, lng: number) => KakaoLatLng;
+  LatLngBounds: new (sw?: KakaoLatLng, ne?: KakaoLatLng) => KakaoLatLngBounds;
   Point: new (x: number, y: number) => KakaoPoint;
   CustomOverlay: new (options: KakaoCustomOverlayOptions) => KakaoCustomOverlay;
   Polygon: new (options: KakaoPolygonOptions) => KakaoPolygon;

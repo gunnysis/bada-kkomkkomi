@@ -338,53 +338,236 @@ export function buildRouteWaypointSpec(
 }
 
 /**
- * 4. 구간 선 위 예상 소요시간(분) & 방위각 배지
+ * 4. 구간 선 위 예상 소요시간(분) · 거리(NM) · 회전 침로 화살표 배지
+ * - Modern Web Guidance (individual-transform-properties): 개별 `rotate` CSS 속성으로 침로 화살표를 회전합니다.
+ * - 배지 클릭 시 `data-select-leg-index` 속성을 통해 해당 구간을 양방향 하이라이트합니다.
  */
 export function buildRouteLegBadgeSpec(
   durationMinutes: number,
   distanceNm: number,
   bearingDeg: number,
   cardinal: string,
+  options?: {
+    legIndex?: number;
+    safetyLevel?: 'safe' | 'caution' | 'danger';
+    isSelected?: boolean;
+  },
 ): MarkerTemplateSpec {
   const mins = Math.round(durationMinutes);
   const nmStr = distanceNm.toFixed(1);
   const safeCardinal = escapeHtml(cardinal);
+  const roundedDeg = ((Math.round(bearingDeg) % 360) + 360) % 360;
+  const isSelected = Boolean(options?.isSelected);
+  const safetyLevel = options?.safetyLevel ?? 'safe';
+  const legIndexAttr =
+    typeof options?.legIndex === 'number'
+      ? `data-select-leg-index="${options.legIndex}"`
+      : '';
+
+  const borderColor = isSelected
+    ? '#34d399'
+    : safetyLevel === 'danger'
+      ? '#f59e0b'
+      : safetyLevel === 'caution'
+        ? '#38bdf8'
+        : '#22d3ee';
+  const arrowBg = isSelected
+    ? '#10b981'
+    : safetyLevel === 'danger'
+      ? '#f59e0b'
+      : '#0ea5e9';
+  const boxShadow = isSelected
+    ? '0 0 0 2px rgba(52, 211, 153, 0.35), 0 4px 12px rgba(0,0,0,0.85)'
+    : '0 3px 10px rgba(0,0,0,0.78)';
+
   const html = `
     <div style="
       display: flex;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
+      pointer-events: auto;
     ">
-      <div style="
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 3px 8px;
-        border-radius: 9999px;
-        background: rgba(2, 6, 23, 0.92);
-        border: 2px solid #38bdf8;
-        color: #f8fafc;
-        font-size: 11px;
-        font-weight: 900;
-        white-space: nowrap;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.75);
-      ">
-        <span style="color: #fbbf24; font-size: 12px;">${mins}분</span>
-        <span style="color: #94a3b8;">·</span>
-        <span style="color: #bae6fd;">${nmStr}NM</span>
-        <span style="color: #64748b; font-size: 10px;">(${bearingDeg}°${safeCardinal})</span>
-      </div>
+      <button
+        type="button"
+        ${legIndexAttr}
+        title="구간 상세 포커스 (${nmStr}NM · 약 ${mins}분 · 침로 ${roundedDeg}° ${safeCardinal})"
+        style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 8px 3px 5px;
+          border-radius: 9999px;
+          background: rgba(2, 6, 23, 0.94);
+          border: ${isSelected ? '2.5px' : '2px'} solid ${borderColor};
+          color: #f8fafc;
+          font-size: 11px;
+          font-weight: 900;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+          box-shadow: ${boxShadow};
+          cursor: pointer;
+        "
+      >
+        <span
+          aria-hidden="true"
+          style="
+            width: 17px;
+            height: 17px;
+            border-radius: 9999px;
+            background: ${arrowBg};
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            rotate: ${roundedDeg}deg;
+          "
+        >
+          <svg width="11" height="11" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 2.5L16.2 16.2L10 12.8L3.8 16.2L10 2.5Z" fill="#020617" />
+          </svg>
+        </span>
+        <span style="color: ${isSelected ? '#6ee7b7' : '#fbbf24'}; font-size: 12px;">${mins}분</span>
+        <span style="color: #64748b;">·</span>
+        <span style="color: #e0f2fe;">${nmStr}NM</span>
+        <span style="color: #94a3b8; font-size: 10px;">${roundedDeg}°${safeCardinal}</span>
+      </button>
     </div>
   `;
   return {
     html,
-    width: 140,
-    height: 28,
-    anchorX: 70,
-    anchorY: 14,
+    width: 158,
+    height: 30,
+    anchorX: 79,
+    anchorY: 15,
     xAnchorRatio: 0.5,
     yAnchorRatio: 0.5,
+  };
+}
+
+/**
+ * 4-B. 폴리라인 위 등간격 진행 방향 쉐브론 화살표(➤) 마커
+ * - Modern Web Guidance (individual-transform-properties): 개별 `rotate` CSS 속성을 사용하여
+ *   진행 방위각(`bearingDeg`)으로 회전된 고대비 해상 침로 화살표를 렌더링합니다.
+ */
+export function buildRouteDirectionArrowSpec(
+  bearingDeg: number,
+  safetyLevel: 'safe' | 'caution' | 'danger' = 'safe',
+  isSelected = false,
+): MarkerTemplateSpec {
+  const roundedDeg = ((Math.round(bearingDeg) % 360) + 360) % 360;
+  const size = isSelected ? 24 : 20;
+  const half = size / 2;
+
+  const borderColor = isSelected
+    ? '#34d399'
+    : safetyLevel === 'danger'
+      ? '#fbbf24'
+      : '#22d3ee';
+  const fillColor = isSelected
+    ? '#6ee7b7'
+    : safetyLevel === 'danger'
+      ? '#fde68a'
+      : '#67e8f9';
+
+  const html = `
+    <div
+      aria-hidden="true"
+      style="
+        width: ${size}px;
+        height: ${size}px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        user-select: none;
+      "
+    >
+      <div
+        style="
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 9999px;
+          background: rgba(6, 28, 36, 0.92);
+          border: 1.8px solid ${borderColor};
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.78);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          rotate: ${roundedDeg}deg;
+        "
+      >
+        <svg width="${isSelected ? 14 : 12}" height="${isSelected ? 14 : 12}" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2.4L16.4 16.2L10 12.6L3.6 16.2L10 2.4Z" fill="${fillColor}" />
+        </svg>
+      </div>
+    </div>
+  `;
+
+  return {
+    html,
+    width: size,
+    height: size,
+    anchorX: half,
+    anchorY: half,
+    xAnchorRatio: 0.5,
+    yAnchorRatio: 0.5,
+  };
+}
+
+/**
+ * 4-C. 해상 변침점(수로) 가이드 소형 캡슐 (zoom >= 12 노출)
+ */
+export function buildSeaWaypointGuideSpec(
+  name: string,
+  isSelected = false,
+): MarkerTemplateSpec {
+  const shortName = name.length > 14 ? `${name.slice(0, 14)}…` : name;
+  const safeName = escapeHtml(shortName);
+  const borderColor = isSelected ? '#34d399' : 'rgba(56, 189, 248, 0.65)';
+  const dotColor = isSelected ? '#34d399' : '#38bdf8';
+
+  const html = `
+    <div
+      aria-hidden="true"
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+        user-select: none;
+      "
+    >
+      <div style="
+        padding: 1.5px 6px;
+        border-radius: 9999px;
+        background: rgba(6, 28, 36, 0.88);
+        border: 1px solid ${borderColor};
+        color: #bae6fd;
+        font-size: 9.5px;
+        font-weight: 800;
+        white-space: nowrap;
+        margin-bottom: 2px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.68);
+      ">◆ ${safeName}</div>
+      <div style="
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: ${dotColor};
+        border: 1.5px solid #020617;
+        box-shadow: 0 0 6px ${dotColor};
+      "></div>
+    </div>
+  `;
+
+  return {
+    html,
+    width: 120,
+    height: 28,
+    anchorX: 60,
+    anchorY: 23,
+    xAnchorRatio: 0.5,
+    yAnchorRatio: 23 / 28,
   };
 }
 /**

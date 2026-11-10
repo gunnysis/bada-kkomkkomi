@@ -14,6 +14,22 @@ export interface RouteWaypoint {
   hazards?: string[];
 }
 
+export interface RouteDirectionArrowPoint {
+  lat: number;
+  lng: number;
+  bearingDeg: number;
+  legIndex: number;
+  distanceFromLegStartKm: number;
+}
+
+export interface RouteWaypointGuidePoint {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  legIndex: number;
+}
+
 export interface RouteLeg {
   id: string;
   index: number;
@@ -26,12 +42,18 @@ export interface RouteLeg {
   directDistanceNm?: number;
   detourFactor?: number;
   durationMinutes: number;
+  startCumulativeMinutes?: number;
+  endCumulativeMinutes?: number;
   bearingDeg: number;
   cardinal: string;
+  arrivalBearingDeg?: number;
+  arrivalCardinal?: string;
   directBearingDeg?: number;
   directCardinal?: string;
   pathPositions?: [number, number][];
   waypointNames?: string[];
+  activeWaypoints?: RouteWaypointGuidePoint[];
+  directionArrows?: RouteDirectionArrowPoint[];
   safetyLevel?: 'safe' | 'caution' | 'danger';
   safetyNote?: string;
 }

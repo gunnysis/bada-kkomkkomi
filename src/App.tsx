@@ -197,6 +197,9 @@ export function App() {
   const [marineWaypoints, setMarineWaypoints] = useState<MarineWaypointNode[]>([]);
   const [snapRadiusMeters, setSnapRadiusMeters] = useState<number>(500);
   const [showPortMarkersOnMap, setShowPortMarkersOnMap] = useState<boolean>(true);
+  const [showDirectionArrows, setShowDirectionArrows] = useState<boolean>(true);
+  const [selectedLegIndex, setSelectedLegIndex] = useState<number | null>(null);
+  const [fitRouteBoundsTrigger, setFitRouteBoundsTrigger] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
@@ -1814,6 +1817,14 @@ export function App() {
           routeLegs={routeCalculation.legs}
           portsList={portsList}
           showPortMarkersOnMap={showPortMarkersOnMap}
+          selectedLegIndex={
+            selectedLegIndex !== null && selectedLegIndex < routeCalculation.legs.length
+              ? selectedLegIndex
+              : null
+          }
+          onSelectLeg={setSelectedLegIndex}
+          showDirectionArrows={showDirectionArrows}
+          fitRouteBoundsTrigger={fitRouteBoundsTrigger}
           onUpdateWaypointPos={handleUpdateWaypointPos}
           onRemoveWaypoint={handleRemoveWaypoint}
           onMapClickForRoute={handleMapClickForRoute}
@@ -1943,6 +1954,15 @@ export function App() {
                 showPortMarkersOnMap={showPortMarkersOnMap}
                 onTogglePortMarkersOnMap={() => setShowPortMarkersOnMap((v) => !v)}
                 totalPortsCount={portsList.length || 136}
+                selectedLegIndex={
+                  selectedLegIndex !== null && selectedLegIndex < routeCalculation.legs.length
+                    ? selectedLegIndex
+                    : null
+                }
+                onSelectLeg={setSelectedLegIndex}
+                showDirectionArrows={showDirectionArrows}
+                onToggleDirectionArrows={() => setShowDirectionArrows((v) => !v)}
+                onFitRouteBounds={() => setFitRouteBoundsTrigger((n) => n + 1)}
               />
             ) : (
               <MarineWeatherPanel
