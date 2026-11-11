@@ -105,7 +105,7 @@ export function RouteTimeCalculator({
   onFitRouteBounds,
   onOpenSourcesInfo,
 }: RouteTimeCalculatorProps) {
-  const [sheetStage, setSheetStage] = useState<RouteSheetStage>('full');
+  const [sheetStage, setSheetStage] = useState<RouteSheetStage>('summary');
   const isCollapsed = sheetStage === 'summary';
   const [activeSubView, setActiveSubView] = useState<'points' | 'legs'>('points');
   const [copiedBriefing, setCopiedBriefing] = useState(false);
@@ -244,11 +244,10 @@ export function RouteTimeCalculator({
                 disabled={!canUndoRoute}
                 aria-label="직전 경로 변경 실행취소"
                 title="방금 추가·삭제·이동한 경로 되돌리기"
-                className={`flex h-8 w-8 shrink-0 items-center justify-center gap-1 rounded-xl border text-[11px] font-black whitespace-nowrap transition active:scale-95 sm:h-8.5 sm:w-auto sm:px-2.5 ${
-                  canUndoRoute
+                className={`flex h-8 w-8 shrink-0 items-center justify-center gap-1 rounded-xl border text-[11px] font-black whitespace-nowrap transition active:scale-95 sm:h-8.5 sm:w-auto sm:px-2.5 ${canUndoRoute
                     ? 'border-amber-500 bg-amber-100 text-amber-900 shadow-xs hover:bg-amber-200'
                     : 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400'
-                }`}
+                  }`}
               >
                 <Undo2 className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden sm:inline">실행취소</span>
@@ -259,11 +258,10 @@ export function RouteTimeCalculator({
               onClick={handleCopyRouteBriefing}
               aria-label="운항 항로 브리핑 복사"
               title="출발·경유·도착 및 소요시간·방위각 브리핑 복사"
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 sm:h-8.5 sm:w-8.5 ${
-                copiedBriefing
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 sm:h-8.5 sm:w-8.5 ${copiedBriefing
                   ? 'border-[#00846c] bg-emerald-100 text-[#00846c]'
                   : 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
-              }`}
+                }`}
             >
               {copiedBriefing ? (
                 <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -309,11 +307,10 @@ export function RouteTimeCalculator({
                     aria-pressed={isActive}
                     onClick={() => setSheetStage(item.stage)}
                     title={item.title}
-                    className={`flex h-full items-center justify-center rounded-lg px-2 text-[11px] font-black whitespace-nowrap transition active:scale-95 ${
-                      isActive
+                    className={`flex h-full items-center justify-center rounded-lg px-2 text-[11px] font-black whitespace-nowrap transition active:scale-95 ${isActive
                         ? 'bg-[#003360] text-white shadow-xs'
                         : 'text-[#003360] hover:bg-sky-100'
-                    }`}
+                      }`}
                   >
                     {item.label}
                   </button>
@@ -410,13 +407,12 @@ export function RouteTimeCalculator({
                           isActive && item.mode !== 'pan_only' ? 'pan_only' : item.mode,
                         )
                       }
-                      className={`inline-flex h-7 shrink-0 items-center justify-center rounded-lg px-2 text-[11px] font-black whitespace-nowrap transition active:scale-95 ${
-                        isActive
+                      className={`inline-flex h-7 shrink-0 items-center justify-center rounded-lg px-2 text-[11px] font-black whitespace-nowrap transition active:scale-95 ${isActive
                           ? item.mode === 'pan_only'
                             ? 'bg-[#00846c] text-white shadow-xs'
                             : 'bg-[#0284c7] text-white shadow-xs'
                           : 'border border-slate-300 bg-white text-[#003360] hover:bg-sky-100'
-                      }`}
+                        }`}
                     >
                       {item.label}
                     </button>
@@ -431,11 +427,10 @@ export function RouteTimeCalculator({
                   type="button"
                   onClick={onToggleLegDurationOnMap}
                   aria-pressed={showLegDurationOnMap}
-                  className={`inline-flex h-7 shrink-0 items-center gap-0.5 rounded-lg border px-1.5 text-[10px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
-                    showLegDurationOnMap
+                  className={`inline-flex h-7 shrink-0 items-center gap-0.5 rounded-lg border px-1.5 text-[10px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${showLegDurationOnMap
                       ? 'border-amber-500 bg-amber-50 text-amber-900'
                       : 'border-slate-300 bg-white text-slate-500'
-                  }`}
+                    }`}
                   title="지도 구간 배지에 예상 소요시간(분) 표시/숨김"
                 >
                   <Clock className="h-2.5 w-2.5 shrink-0" />
@@ -447,11 +442,10 @@ export function RouteTimeCalculator({
                   type="button"
                   onClick={onToggleLegDistanceOnMap}
                   aria-pressed={showLegDistanceOnMap}
-                  className={`inline-flex h-7 shrink-0 items-center gap-0.5 rounded-lg border px-1.5 text-[10px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
-                    showLegDistanceOnMap
+                  className={`inline-flex h-7 shrink-0 items-center gap-0.5 rounded-lg border px-1.5 text-[10px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${showLegDistanceOnMap
                       ? 'border-sky-400 bg-sky-50 text-sky-900'
                       : 'border-slate-300 bg-white text-slate-500'
-                  }`}
+                    }`}
                   title="지도 구간 배지에 해리(NM) 거리 표시/숨김"
                 >
                   <span>NM</span>
@@ -462,11 +456,10 @@ export function RouteTimeCalculator({
                   type="button"
                   onClick={onToggleDirectionArrows}
                   aria-pressed={showDirectionArrows}
-                  className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
-                    showDirectionArrows
+                  className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${showDirectionArrows
                       ? 'border-[#00a79d] bg-teal-50 text-[#00846c]'
                       : 'border-slate-300 bg-white text-slate-600'
-                  }`}
+                    }`}
                   title="지도 폴리라인 위 진행 방향 화살표(➤) 및 변침점 수로명 표시/숨김"
                 >
                   <Navigation className="h-3 w-3 shrink-0 rotate-45" />
@@ -477,11 +470,10 @@ export function RouteTimeCalculator({
                 <button
                   type="button"
                   onClick={onTogglePortMarkersOnMap}
-                  className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
-                    showPortMarkersOnMap
+                  className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border px-2 text-[11px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${showPortMarkersOnMap
                       ? 'border-amber-500 bg-amber-100 text-amber-900'
                       : 'border-slate-300 bg-white text-slate-600'
-                  }`}
+                    }`}
                   title="지도에 소규모 선착장 및 항구 마커 표시/숨김"
                 >
                   {showPortMarkersOnMap ? (
@@ -500,333 +492,324 @@ export function RouteTimeCalculator({
             <>
               {/* Zone 3: 탭 전환 ([항구·선착장] vs [구간별 시간]) + 경유지 비우기/추가 (h-8 균일 규격) */}
               <div className="flex items-center justify-between gap-1.5">
-            <div className="grid h-8 min-w-0 flex-1 grid-cols-2 gap-1 rounded-xl border border-sky-200 bg-sky-100/80 p-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  onSelectLeg?.(null);
-                  setActiveSubView('points');
-                }}
-                className={`flex items-center justify-center rounded-lg px-1.5 text-[11px] font-black whitespace-nowrap tabular-nums transition ${
-                  effectiveSubView === 'points'
-                    ? 'bg-[#003360] text-white shadow-xs'
-                    : 'text-[#003360] hover:bg-white/70'
-                }`}
-              >
-                항구·선착장 ({waypoints.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubView('legs')}
-                className={`flex items-center justify-center rounded-lg px-1.5 text-[11px] font-black whitespace-nowrap tabular-nums transition ${
-                  effectiveSubView === 'legs'
-                    ? 'bg-[#003360] text-white shadow-xs'
-                    : 'text-[#003360] hover:bg-white/70'
-                }`}
-              >
-                구간별 시간 ({calculation.legs.length})
-              </button>
-            </div>
+                <div className="grid h-8 min-w-0 flex-1 grid-cols-2 gap-1 rounded-xl border border-sky-200 bg-sky-100/80 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelectLeg?.(null);
+                      setActiveSubView('points');
+                    }}
+                    className={`flex items-center justify-center rounded-lg px-1.5 text-[11px] font-black whitespace-nowrap tabular-nums transition ${effectiveSubView === 'points'
+                        ? 'bg-[#003360] text-white shadow-xs'
+                        : 'text-[#003360] hover:bg-white/70'
+                      }`}
+                  >
+                    항구·선착장 ({waypoints.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubView('legs')}
+                    className={`flex items-center justify-center rounded-lg px-1.5 text-[11px] font-black whitespace-nowrap tabular-nums transition ${effectiveSubView === 'legs'
+                        ? 'bg-[#003360] text-white shadow-xs'
+                        : 'text-[#003360] hover:bg-white/70'
+                      }`}
+                  >
+                    구간별 시간 ({calculation.legs.length})
+                  </button>
+                </div>
 
-            <div className="flex shrink-0 items-center gap-1">
-              {intermediateCount > 0 && onClearWaypoints && (
-                <button
-                  type="button"
-                  onClick={onClearWaypoints}
-                  aria-label={`중간 경유지 ${intermediateCount}곳 모두 취소`}
-                  title="출발지와 목적지만 남기고 중간 경유지 모두 비우기"
-                  className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-[#b2415f] bg-rose-50 px-2 text-[11px] font-black whitespace-nowrap text-[#870b41] shadow-xs active:scale-95"
+                <div className="flex shrink-0 items-center gap-1">
+                  {intermediateCount > 0 && onClearWaypoints && (
+                    <button
+                      type="button"
+                      onClick={onClearWaypoints}
+                      aria-label={`중간 경유지 ${intermediateCount}곳 모두 취소`}
+                      title="출발지와 목적지만 남기고 중간 경유지 모두 비우기"
+                      className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-[#b2415f] bg-rose-50 px-2 text-[11px] font-black whitespace-nowrap text-[#870b41] shadow-xs active:scale-95"
+                    >
+                      <Trash2 className="h-3 w-3 shrink-0 text-[#b2415f]" />
+                      <span>비우기({intermediateCount})</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={onAddWaypoint}
+                    className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-amber-500 bg-amber-100 px-2.5 text-[11px] font-black whitespace-nowrap text-amber-900 hover:bg-amber-200 active:scale-95"
+                  >
+                    <Plus className="h-3 w-3 shrink-0" />
+                    <span>경유지</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Zone 4-A: 출발지 / 경유지 / 목적지 2행 구조 카드 리스트 (1행 항구명 전체 노출 · 2행 시설·수심·위험요소) */}
+              {effectiveSubView === 'points' ? (
+                <div
+                  ref={pointsListRef}
+                  className="max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46"
                 >
-                  <Trash2 className="h-3 w-3 shrink-0 text-[#b2415f]" />
-                  <span>비우기({intermediateCount})</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={onAddWaypoint}
-                className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-amber-500 bg-amber-100 px-2.5 text-[11px] font-black whitespace-nowrap text-amber-900 hover:bg-amber-200 active:scale-95"
-              >
-                <Plus className="h-3 w-3 shrink-0" />
-                <span>경유지</span>
-              </button>
-            </div>
-          </div>
+                  {waypoints.map((wp, idx) => {
+                    const badgeColor =
+                      wp.type === 'start'
+                        ? 'bg-[#00846c] text-white'
+                        : wp.type === 'end'
+                          ? 'bg-[#b2415f] text-white'
+                          : 'bg-amber-500 text-slate-950';
+                    const roleLabel =
+                      wp.type === 'start'
+                        ? '출발'
+                        : wp.type === 'end'
+                          ? '도착'
+                          : `경유 ${idx}`;
+                    const isSmallBerth =
+                      wp.subCategory === 'small_berth' || wp.subCategory === 'official_docking';
+                    const canMoveUp = wp.type === 'waypoint' && idx > 1;
+                    const canMoveDown = wp.type === 'waypoint' && idx < waypoints.length - 2;
+                    const incomingLeg = idx > 0 ? calculation.legs[idx - 1] : undefined;
+                    const cumMinsToPoint = incomingLeg
+                      ? Math.round(incomingLeg.endCumulativeMinutes ?? incomingLeg.durationMinutes)
+                      : 0;
+                    const pointEtaKst =
+                      idx > 0 ? formatKstEtaFromOffsetMins(cumMinsToPoint) : null;
 
-          {/* Zone 4-A: 출발지 / 경유지 / 목적지 2행 구조 카드 리스트 (1행 항구명 전체 노출 · 2행 시설·수심·위험요소) */}
-          {effectiveSubView === 'points' ? (
-            <div
-              ref={pointsListRef}
-              className="max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46"
-            >
-              {waypoints.map((wp, idx) => {
-                const badgeColor =
-                  wp.type === 'start'
-                    ? 'bg-[#00846c] text-white'
-                    : wp.type === 'end'
-                      ? 'bg-[#b2415f] text-white'
-                      : 'bg-amber-500 text-slate-950';
-                const roleLabel =
-                  wp.type === 'start'
-                    ? '출발'
-                    : wp.type === 'end'
-                      ? '도착'
-                      : `경유 ${idx}`;
-                const isSmallBerth =
-                  wp.subCategory === 'small_berth' || wp.subCategory === 'official_docking';
-                const canMoveUp = wp.type === 'waypoint' && idx > 1;
-                const canMoveDown = wp.type === 'waypoint' && idx < waypoints.length - 2;
-                const incomingLeg = idx > 0 ? calculation.legs[idx - 1] : undefined;
-                const cumMinsToPoint = incomingLeg
-                  ? Math.round(incomingLeg.endCumulativeMinutes ?? incomingLeg.durationMinutes)
-                  : 0;
-                const pointEtaKst =
-                  idx > 0 ? formatKstEtaFromOffsetMins(cumMinsToPoint) : null;
-
-                return (
-                  <div
-                    key={wp.id}
-                    data-waypoint-row={wp.type}
-                    className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 ${
-                      wp.type === 'waypoint'
-                        ? 'border-amber-400 bg-amber-50/70'
-                        : 'border-sky-200 bg-white'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => onFlyToWaypoint(wp.lat, wp.lng)}
-                      className="min-w-0 flex-1 text-left"
-                      title="탭하여 지도에서 위치 보기"
-                    >
-                      {/* 카드 1행: 역할 배지 + 항구·선착장 전체 이름 + 누적 도착예정(ETA) 배지 */}
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none font-black whitespace-nowrap ${badgeColor}`}
-                        >
-                          {roleLabel}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-xs font-extrabold text-[#003360]">
-                          {wp.name}
-                        </span>
-                        {pointEtaKst && (
-                          <span
-                            className="shrink-0 rounded border border-sky-300 bg-sky-50 px-1.5 py-0.2 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-900"
-                            title={`출발 후 약 ${cumMinsToPoint}분 경과 (${pointEtaKst} 도착예정)`}
-                          >
-                            +{cumMinsToPoint}분·{pointEtaKst}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* 카드 2행: 시설유형 배지 + 최저수심 배지 + 위험요소(또는 해상좌표) */}
-                      <div className="mt-1 flex items-center gap-1 text-[10px]">
-                        <span
-                          className={`shrink-0 rounded px-1.5 py-0.2 text-[9px] font-bold whitespace-nowrap ${
-                            wp.isCustomCoord
-                              ? 'bg-slate-200 text-slate-800'
-                              : isSmallBerth
-                                ? 'bg-amber-100 text-amber-900'
-                                : 'bg-sky-100 text-sky-900'
+                    return (
+                      <div
+                        key={wp.id}
+                        data-waypoint-row={wp.type}
+                        className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 ${wp.type === 'waypoint'
+                            ? 'border-amber-400 bg-amber-50/70'
+                            : 'border-sky-200 bg-white'
                           }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onFlyToWaypoint(wp.lat, wp.lng)}
+                          className="min-w-0 flex-1 text-left"
+                          title="탭하여 지도에서 위치 보기"
                         >
-                          {wp.isCustomCoord
-                            ? '해상좌표'
-                            : wp.facilityLabel || (isSmallBerth ? '선착장' : '항구')}
-                        </span>
-                        {wp.minDepthMeters !== undefined && (
-                          <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-sky-100 px-1.5 py-0.2 font-mono text-[9px] font-bold whitespace-nowrap tabular-nums text-sky-900">
-                            <Waves className="h-2.5 w-2.5 shrink-0 text-sky-700" />
-                            {wp.minDepthMeters.toFixed(1)}m
-                          </span>
-                        )}
-                        <span className="min-w-0 flex-1 truncate tabular-nums">
-                          {wp.hazards && wp.hazards.length > 0 ? (
-                            <span className="font-bold text-amber-800">
-                              ⚠️ {wp.hazards[0]}
+                          {/* 카드 1행: 역할 배지 + 항구·선착장 전체 이름 + 누적 도착예정(ETA) 배지 */}
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none font-black whitespace-nowrap ${badgeColor}`}
+                            >
+                              {roleLabel}
                             </span>
-                          ) : (
-                            <span className="font-mono text-slate-600">
-                              {wp.lat.toFixed(4)}°N, {wp.lng.toFixed(4)}°E
+                            <span className="min-w-0 flex-1 truncate text-xs font-extrabold text-[#003360]">
+                              {wp.name}
                             </span>
+                            {pointEtaKst && (
+                              <span
+                                className="shrink-0 rounded border border-sky-300 bg-sky-50 px-1.5 py-0.2 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-900"
+                                title={`출발 후 약 ${cumMinsToPoint}분 경과 (${pointEtaKst} 도착예정)`}
+                              >
+                                +{cumMinsToPoint}분·{pointEtaKst}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 카드 2행: 시설유형 배지 + 최저수심 배지 + 위험요소(또는 해상좌표) */}
+                          <div className="mt-1 flex items-center gap-1 text-[10px]">
+                            <span
+                              className={`shrink-0 rounded px-1.5 py-0.2 text-[9px] font-bold whitespace-nowrap ${wp.isCustomCoord
+                                  ? 'bg-slate-200 text-slate-800'
+                                  : isSmallBerth
+                                    ? 'bg-amber-100 text-amber-900'
+                                    : 'bg-sky-100 text-sky-900'
+                                }`}
+                            >
+                              {wp.isCustomCoord
+                                ? '해상좌표'
+                                : wp.facilityLabel || (isSmallBerth ? '선착장' : '항구')}
+                            </span>
+                            {wp.minDepthMeters !== undefined && (
+                              <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-sky-100 px-1.5 py-0.2 font-mono text-[9px] font-bold whitespace-nowrap tabular-nums text-sky-900">
+                                <Waves className="h-2.5 w-2.5 shrink-0 text-sky-700" />
+                                {wp.minDepthMeters.toFixed(1)}m
+                              </span>
+                            )}
+                            <span className="min-w-0 flex-1 truncate tabular-nums">
+                              {wp.hazards && wp.hazards.length > 0 ? (
+                                <span className="font-bold text-amber-800">
+                                  ⚠️ {wp.hazards[0]}
+                                </span>
+                              ) : (
+                                <span className="font-mono text-slate-600">
+                                  {wp.lat.toFixed(4)}°N, {wp.lng.toFixed(4)}°E
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </button>
+
+                        <div className="flex shrink-0 items-center gap-1">
+                          {wp.type === 'waypoint' && intermediateCount >= 2 && onMoveWaypoint && (
+                            <div className="flex items-center gap-0.5">
+                              <button
+                                type="button"
+                                disabled={!canMoveUp}
+                                onClick={() => onMoveWaypoint(wp.id, 'up')}
+                                aria-label={`${roleLabel} 순서 위로 이동`}
+                                title="경유 순서 앞으로 이동"
+                                className={`flex h-7 w-6 items-center justify-center rounded-md border transition active:scale-90 ${canMoveUp
+                                    ? 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
+                                    : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
+                                  }`}
+                              >
+                                <ArrowUp className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={!canMoveDown}
+                                onClick={() => onMoveWaypoint(wp.id, 'down')}
+                                aria-label={`${roleLabel} 순서 아래로 이동`}
+                                title="경유 순서 뒤로 이동"
+                                className={`flex h-7 w-6 items-center justify-center rounded-md border transition active:scale-90 ${canMoveDown
+                                    ? 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
+                                    : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
+                                  }`}
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </button>
+                            </div>
                           )}
-                        </span>
-                      </div>
-                    </button>
 
-                    <div className="flex shrink-0 items-center gap-1">
-                      {wp.type === 'waypoint' && intermediateCount >= 2 && onMoveWaypoint && (
-                        <div className="flex items-center gap-0.5">
                           <button
                             type="button"
-                            disabled={!canMoveUp}
-                            onClick={() => onMoveWaypoint(wp.id, 'up')}
-                            aria-label={`${roleLabel} 순서 위로 이동`}
-                            title="경유 순서 앞으로 이동"
-                            className={`flex h-7 w-6 items-center justify-center rounded-md border transition active:scale-90 ${
-                              canMoveUp
-                                ? 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
-                                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
-                            }`}
+                            onClick={() => onOpenPortSelector(wp.id, roleLabel)}
+                            className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-sky-400 bg-sky-100 px-2 text-[11px] font-black whitespace-nowrap text-[#003360] hover:bg-sky-200 active:scale-95"
                           >
-                            <ArrowUp className="h-3 w-3" />
+                            <MapPin className="h-3 w-3 shrink-0 text-sky-700" />
+                            <span>항구선택</span>
                           </button>
-                          <button
-                            type="button"
-                            disabled={!canMoveDown}
-                            onClick={() => onMoveWaypoint(wp.id, 'down')}
-                            aria-label={`${roleLabel} 순서 아래로 이동`}
-                            title="경유 순서 뒤로 이동"
-                            className={`flex h-7 w-6 items-center justify-center rounded-md border transition active:scale-90 ${
-                              canMoveDown
-                                ? 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
-                                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
-                            }`}
-                          >
-                            <ArrowDown className="h-3 w-3" />
-                          </button>
+
+                          {wp.type === 'waypoint' && (
+                            <button
+                              type="button"
+                              onClick={() => onRemoveWaypoint(wp.id)}
+                              aria-label={`${roleLabel} 취소`}
+                              title="이 경유지 취소(삭제)"
+                              className="flex h-7 w-7 shrink-0 items-center justify-center gap-0.5 rounded-lg border border-[#b2415f] bg-rose-50 text-[11px] font-black whitespace-nowrap text-[#870b41] shadow-xs transition hover:bg-rose-100 active:scale-95 sm:w-auto sm:px-2"
+                            >
+                              <X className="h-3.5 w-3.5 shrink-0 stroke-[2.8] text-[#b2415f]" />
+                              <span className="hidden sm:inline">취소</span>
+                            </button>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Zone 4-B: 구간별 예상 소요시간 · 해리(NM) · 출항/입항 방위각(Bearing) · 누적 ETA · 구간 양방향 포커스 */
+                <div className="max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46">
+                  {calculation.legs.map((leg, legIdx) => {
+                    const isSelected = selectedLegIndex === legIdx;
+                    const cumMins = Math.round(
+                      leg.endCumulativeMinutes ?? leg.durationMinutes,
+                    );
+                    const legEtaKst = formatKstEtaFromOffsetMins(cumMins);
+                    const hasBearingTurn =
+                      typeof leg.arrivalBearingDeg === 'number' &&
+                      Math.abs(
+                        ((leg.arrivalBearingDeg - leg.bearingDeg + 540) % 360) - 180,
+                      ) >= 8;
 
-                      <button
-                        type="button"
-                        onClick={() => onOpenPortSelector(wp.id, roleLabel)}
-                        className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-sky-400 bg-sky-100 px-2 text-[11px] font-black whitespace-nowrap text-[#003360] hover:bg-sky-200 active:scale-95"
-                      >
-                        <MapPin className="h-3 w-3 shrink-0 text-sky-700" />
-                        <span>항구선택</span>
-                      </button>
-
-                      {wp.type === 'waypoint' && (
-                        <button
-                          type="button"
-                          onClick={() => onRemoveWaypoint(wp.id)}
-                          aria-label={`${roleLabel} 취소`}
-                          title="이 경유지 취소(삭제)"
-                          className="flex h-7 w-7 shrink-0 items-center justify-center gap-0.5 rounded-lg border border-[#b2415f] bg-rose-50 text-[11px] font-black whitespace-nowrap text-[#870b41] shadow-xs transition hover:bg-rose-100 active:scale-95 sm:w-auto sm:px-2"
-                        >
-                          <X className="h-3.5 w-3.5 shrink-0 stroke-[2.8] text-[#b2415f]" />
-                          <span className="hidden sm:inline">취소</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            /* Zone 4-B: 구간별 예상 소요시간 · 해리(NM) · 출항/입항 방위각(Bearing) · 누적 ETA · 구간 양방향 포커스 */
-            <div className="max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46">
-              {calculation.legs.map((leg, legIdx) => {
-                const isSelected = selectedLegIndex === legIdx;
-                const cumMins = Math.round(
-                  leg.endCumulativeMinutes ?? leg.durationMinutes,
-                );
-                const legEtaKst = formatKstEtaFromOffsetMins(cumMins);
-                const hasBearingTurn =
-                  typeof leg.arrivalBearingDeg === 'number' &&
-                  Math.abs(
-                    ((leg.arrivalBearingDeg - leg.bearingDeg + 540) % 360) - 180,
-                  ) >= 8;
-
-                return (
-                  <div
-                    key={leg.id}
-                    className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 text-xs transition ${
-                      isSelected
-                        ? 'border-2 border-[#00846c] bg-emerald-50 shadow-sm'
-                        : 'border-sky-200 bg-white hover:border-sky-400'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectLeg?.(isSelected ? null : legIdx);
-                        onFlyToWaypoint(leg.midLat, leg.midLng);
-                      }}
-                      className="min-w-0 flex-1 text-left"
-                      title="탭하여 지도에서 이 구간 항로 강조 및 중심 이동"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-black ${
-                            isSelected
-                              ? 'bg-[#00846c] text-white'
-                              : 'bg-sky-100 text-sky-900'
+                    return (
+                      <div
+                        key={leg.id}
+                        className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 text-xs transition ${isSelected
+                            ? 'border-2 border-[#00846c] bg-emerald-50 shadow-sm'
+                            : 'border-sky-200 bg-white hover:border-sky-400'
                           }`}
-                        >
-                          {leg.index}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate font-extrabold text-[#003360]">
-                          {leg.from.name} → {leg.to.name}
-                        </span>
-                        <span className="shrink-0 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-800">
-                          {legEtaKst} 도착
-                        </span>
-                      </div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-slate-600">
-                        <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-sky-800">
-                          <Compass className="h-3 w-3 shrink-0 text-sky-700" />
-                          출항 {leg.bearingDeg}°({leg.cardinal})
-                          {hasBearingTurn
-                            ? ` → 입항 ${leg.arrivalBearingDeg}°(${leg.arrivalCardinal})`
-                            : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="whitespace-nowrap font-bold text-[#003360]">
-                          {leg.distanceNm.toFixed(2)}NM ({leg.distanceKm.toFixed(1)}km)
-                        </span>
-                        {leg.detourFactor && leg.detourFactor > 1.05 && (
-                          <span className="whitespace-nowrap font-bold text-amber-800">
-                            (우회 {leg.detourFactor.toFixed(2)}x)
-                          </span>
-                        )}
-                      </div>
-                      {leg.waypointNames && leg.waypointNames.length > 0 && (
-                        <p className="mt-0.5 truncate text-[10px] font-bold text-[#00846c]">
-                          ◆ 수로 경유: {leg.waypointNames.join(' → ')}
-                        </p>
-                      )}
-                      {leg.safetyNote && (
-                        <p className="mt-0.5 truncate text-[10px] font-bold text-amber-800">
-                          ⚠️ {leg.safetyNote}
-                        </p>
-                      )}
-                    </button>
-
-                    <div className="flex shrink-0 items-center gap-1 text-right">
-                      {onCheckWeatherAtPoint && (
+                      >
                         <button
                           type="button"
-                          onClick={() =>
-                            onCheckWeatherAtPoint(
-                              leg.midLat,
-                              leg.midLng,
-                              `${leg.from.name}→${leg.to.name} 구간`,
-                            )
-                          }
-                          aria-label={`${leg.index}구간 해상기상 확인`}
-                          title="이 구간 중점 해역의 ECMWF 풍속·파고 판정 보기"
-                          className="flex h-7 shrink-0 items-center gap-0.5 rounded-lg border border-sky-400 bg-sky-100 px-1.5 text-[10px] font-black whitespace-nowrap text-[#003360] hover:bg-sky-200 active:scale-95"
+                          onClick={() => {
+                            onSelectLeg?.(isSelected ? null : legIdx);
+                            onFlyToWaypoint(leg.midLat, leg.midLng);
+                          }}
+                          className="min-w-0 flex-1 text-left"
+                          title="탭하여 지도에서 이 구간 항로 강조 및 중심 이동"
                         >
-                          <Wind className="h-3 w-3 shrink-0 text-sky-700" />
-                          <span>기상</span>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-black ${isSelected
+                                  ? 'bg-[#00846c] text-white'
+                                  : 'bg-sky-100 text-sky-900'
+                                }`}
+                            >
+                              {leg.index}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate font-extrabold text-[#003360]">
+                              {leg.from.name} → {leg.to.name}
+                            </span>
+                            <span className="shrink-0 font-mono text-[9.5px] font-bold whitespace-nowrap tabular-nums text-sky-800">
+                              {legEtaKst} 도착
+                            </span>
+                          </div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[10px] tabular-nums text-slate-600">
+                            <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-sky-800">
+                              <Compass className="h-3 w-3 shrink-0 text-sky-700" />
+                              출항 {leg.bearingDeg}°({leg.cardinal})
+                              {hasBearingTurn
+                                ? ` → 입항 ${leg.arrivalBearingDeg}°(${leg.arrivalCardinal})`
+                                : ''}
+                            </span>
+                            <span>·</span>
+                            <span className="whitespace-nowrap font-bold text-[#003360]">
+                              {leg.distanceNm.toFixed(2)}NM ({leg.distanceKm.toFixed(1)}km)
+                            </span>
+                            {leg.detourFactor && leg.detourFactor > 1.05 && (
+                              <span className="whitespace-nowrap font-bold text-amber-800">
+                                (우회 {leg.detourFactor.toFixed(2)}x)
+                              </span>
+                            )}
+                          </div>
+                          {leg.waypointNames && leg.waypointNames.length > 0 && (
+                            <p className="mt-0.5 truncate text-[10px] font-bold text-[#00846c]">
+                              ◆ 수로 경유: {leg.waypointNames.join(' → ')}
+                            </p>
+                          )}
+                          {leg.safetyNote && (
+                            <p className="mt-0.5 truncate text-[10px] font-bold text-amber-800">
+                              ⚠️ {leg.safetyNote}
+                            </p>
+                          )}
                         </button>
-                      )}
-                      <span
-                        className={`shrink-0 rounded-lg px-2 py-1 font-mono text-xs font-black whitespace-nowrap tabular-nums ${
-                          isSelected
-                            ? 'bg-[#00846c] text-white'
-                            : 'bg-amber-400 text-slate-950'
-                        }`}
-                      >
-                        {Math.round(leg.durationMinutes)}분
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+
+                        <div className="flex shrink-0 items-center gap-1 text-right">
+                          {onCheckWeatherAtPoint && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onCheckWeatherAtPoint(
+                                  leg.midLat,
+                                  leg.midLng,
+                                  `${leg.from.name}→${leg.to.name} 구간`,
+                                )
+                              }
+                              aria-label={`${leg.index}구간 해상기상 확인`}
+                              title="이 구간 중점 해역의 ECMWF 풍속·파고 판정 보기"
+                              className="flex h-7 shrink-0 items-center gap-0.5 rounded-lg border border-sky-400 bg-sky-100 px-1.5 text-[10px] font-black whitespace-nowrap text-[#003360] hover:bg-sky-200 active:scale-95"
+                            >
+                              <Wind className="h-3 w-3 shrink-0 text-sky-700" />
+                              <span>기상</span>
+                            </button>
+                          )}
+                          <span
+                            className={`shrink-0 rounded-lg px-2 py-1 font-mono text-xs font-black whitespace-nowrap tabular-nums ${isSelected
+                                ? 'bg-[#00846c] text-white'
+                                : 'bg-amber-400 text-slate-950'
+                              }`}
+                          >
+                            {Math.round(leg.durationMinutes)}분
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
 
@@ -843,11 +826,10 @@ export function RouteTimeCalculator({
                     key={p.knots}
                     type="button"
                     onClick={() => onChangeSpeed(p.knots)}
-                    className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-black whitespace-nowrap tabular-nums transition active:scale-95 ${
-                      speedKnots === p.knots
+                    className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-black whitespace-nowrap tabular-nums transition active:scale-95 ${speedKnots === p.knots
                         ? 'bg-[#003360] text-white shadow-xs'
                         : 'border border-[#d6c6b2] bg-white text-[#484843] hover:bg-amber-50'
-                    }`}
+                      }`}
                   >
                     {p.label}
                   </button>
