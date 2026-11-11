@@ -150,7 +150,7 @@ export function HomeScreen({
                     꼬미의 바다수첩
                   </span>
                   <span className="mt-1 flex min-h-[1.25rem] items-center justify-center text-[10.5px] leading-tight font-extrabold tracking-tight whitespace-nowrap text-[#0c3c56] min-[380px]:text-[11.5px] sm:text-xs">
-                    해양지도 · 접안 · 현장정보
+                    해양정보 · 현장기록
                   </span>
                 </div>
               </button>
@@ -181,7 +181,7 @@ export function HomeScreen({
                     바닷길 콕콕
                   </span>
                   <span className="mt-1 flex min-h-[1.25rem] items-center justify-center text-[10.5px] leading-tight font-extrabold tracking-tight whitespace-nowrap text-[#0f403c] min-[380px]:text-[11.5px] sm:text-xs">
-                    시간계산 · 기상상태판정
+                    시간계산 · 날씨콕콕
                   </span>
                 </div>
               </button>
@@ -208,7 +208,7 @@ export function HomeScreen({
                   꼬미의 달력
                 </span>
                 <span className="mt-1 flex min-h-[1.25rem] items-center justify-center text-[10.5px] leading-tight font-extrabold tracking-tight whitespace-nowrap text-[#173354] min-[380px]:text-[11.5px] sm:text-xs">
-                  운항불가 일정 · 직원 메모
+                  운항일정 · 직원메모
                 </span>
               </div>
             </button>
@@ -237,7 +237,7 @@ export function HomeScreen({
                     설정
                   </span>
                   <span className="mt-1 flex min-h-[1.25rem] items-center justify-center text-[10.5px] leading-tight font-extrabold tracking-tight whitespace-nowrap text-[#0f403c] min-[380px]:text-[11.5px] sm:text-xs">
-                    기상기준 · 이용안내 · 출처
+                    환경설정 · 이용안내
                   </span>
                 </div>
               </button>
