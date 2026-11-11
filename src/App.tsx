@@ -107,38 +107,15 @@ interface UserGpsState {
   isSimulated?: boolean;
 }
 
-const INITIAL_WAYPOINTS: RouteWaypoint[] = [
-  {
-    id: 'wp_start',
-    name: '통영 당동항 보조물양장',
-    lat: 34.8378,
-    lng: 128.4278,
-    type: 'start',
-    matchedPortId: 'TY-001',
-    isCustomCoord: false,
-    subCategory: 'official_docking',
-    facilityLabel: '물양장 안벽',
-    minDepthMeters: 1.4,
-    tidalSensitivity: 'HIGH',
-    maxVesselTons: 20,
-    hazards: ['수중 폐로프 주의', '대조기 간조 수심 1.4m 주의'],
-  },
-  {
-    id: 'wp_end',
-    name: '한산도 제승당 부잔교',
-    lat: 34.7735,
-    lng: 128.4621,
-    type: 'end',
-    matchedPortId: 'TY-002',
-    isCustomCoord: false,
-    subCategory: 'official_docking',
-    facilityLabel: '부잔교(폰툰)',
-    minDepthMeters: 3.8,
-    tidalSensitivity: 'LOW',
-    maxVesselTons: 30,
-    hazards: ['여객선 항주파 주의', '창조류 유속 1.8kt'],
-  },
-];
+function isLegacySampleRoute(waypoints: RouteWaypoint[]): boolean {
+  return (
+    waypoints.length === 2 &&
+    waypoints[0]?.id === 'wp_start' &&
+    waypoints[1]?.id === 'wp_end' &&
+    waypoints[0]?.matchedPortId === 'TY-001' &&
+    waypoints[1]?.matchedPortId === 'TY-002'
+  );
+}
 
 export function App() {
   const {
@@ -212,16 +189,18 @@ export function App() {
   const [reloadNonce, setReloadNonce] = useState<number>(0);
 
   // '위험주의(red)' 우선 인지(Hazard-First) 기본값 + 권역(전체/통영/거제) 및 검색어 필터 (WorkspaceDraftRepository 영속 복원 지원)
-  const initialWorkspaceDraft = useMemo(
-    () =>
-      loadWorkspaceDraft(
-        INITIAL_WAYPOINTS,
-        config.route_defaults?.default_speed_knots || 15,
-      ),
+  const initialWorkspaceDraft = useMemo(() => {
+    const draft = loadWorkspaceDraft([], config.route_defaults?.default_speed_knots || 15);
+
+    // 이전 버전이 자동으로 넣었던 당동항→제승당 예시는 사용자가 설정한 항로가 아니므로
+    // 새 빈 항로로 한 번만 정리한다. 그 밖의 저장 항로는 계속 복원한다.
+    return isLegacySampleRoute(draft.routeWaypoints)
+      ? { ...draft, routeWaypoints: [] }
+      : draft;
+  },
     // 초기 마운트 시 1회만 로컬스토리지 드래프트 복원
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+    []);
 
   const [selectedColors, setSelectedColors] = useState<MarkerColor[]>(
     () => initialWorkspaceDraft.selectedColors,
@@ -812,17 +791,60 @@ export function App() {
         const startWp = routeWaypoints[0];
         if (startWp) {
           handleUpdateWaypointPos(startWp.id, lat, lng);
-          setRouteMapTapMode('pan_only');
-          showToast('출발지 지정 완료 · 실수 방지를 위해 [이동만] 모드로 전환됨');
+        } else {
+          const resolved = resolveSmartWaypoint(lat, lng, portsList, '해상 출발지', snapRadiusMeters);
+          commitRouteWaypoints(() => [
+            {
+              id: `wp_start_${Date.now()}`,
+              name: resolved.name,
+              lat: resolved.lat,
+              lng: resolved.lng,
+              type: 'start',
+              matchedPortId: resolved.matchedPortId,
+              isCustomCoord: resolved.isCustomCoord,
+              subCategory: resolved.subCategory,
+              facilityLabel: resolved.facilityLabel,
+              minDepthMeters: resolved.minDepthMeters,
+              tidalSensitivity: resolved.tidalSensitivity,
+              maxVesselTons: resolved.maxVesselTons,
+              hazards: resolved.hazards,
+            },
+          ]);
         }
+        setRouteMapTapMode('pan_only');
+        showToast('출발지 지정 완료 · 다음으로 목적지를 지정해 주세요');
         return;
       }
       if (routeMapTapMode === 'set_end') {
         const endWp = routeWaypoints[routeWaypoints.length - 1];
-        if (endWp) {
+        if (routeWaypoints.length >= 2 && endWp) {
           handleUpdateWaypointPos(endWp.id, lat, lng);
           setRouteMapTapMode('pan_only');
           showToast('목적지 지정 완료 · 실수 방지를 위해 [이동만] 모드로 전환됨');
+        } else if (routeWaypoints.length === 1) {
+          const resolved = resolveSmartWaypoint(lat, lng, portsList, '해상 목적지', snapRadiusMeters);
+          commitRouteWaypoints((prev) => [
+            ...prev,
+            {
+              id: `wp_end_${Date.now()}`,
+              name: resolved.name,
+              lat: resolved.lat,
+              lng: resolved.lng,
+              type: 'end',
+              matchedPortId: resolved.matchedPortId,
+              isCustomCoord: resolved.isCustomCoord,
+              subCategory: resolved.subCategory,
+              facilityLabel: resolved.facilityLabel,
+              minDepthMeters: resolved.minDepthMeters,
+              tidalSensitivity: resolved.tidalSensitivity,
+              maxVesselTons: resolved.maxVesselTons,
+              hazards: resolved.hazards,
+            },
+          ]);
+          setRouteMapTapMode('pan_only');
+          showToast('목적지 지정 완료 · 항로를 계산했습니다');
+        } else {
+          showToast('먼저 [출발지]를 선택한 뒤 목적지를 지정해 주세요');
         }
         return;
       }
@@ -994,9 +1016,9 @@ export function App() {
   }, [commitRouteWaypoints, showToast]);
 
   const handleResetRoute = useCallback(() => {
-    commitRouteWaypoints(() => INITIAL_WAYPOINTS);
+    commitRouteWaypoints(() => []);
     handleFlyToPoint(34.805, 128.445, 12);
-    showToast('기본 항로(당동항 → 제승당)로 복원되었습니다.');
+    showToast('항로를 비웠습니다. 출발지와 목적지를 새로 지정해 주세요.');
   }, [commitRouteWaypoints, handleFlyToPoint, showToast]);
 
   // 항구 선택 모달에서 항구·소규모 선착장 선택 시 반영

@@ -46,9 +46,13 @@ function isFiniteCoord(lat: unknown, lng: unknown): boolean {
 }
 
 export function isValidRouteWaypointsDraft(value: unknown): value is RouteWaypoint[] {
-  if (!Array.isArray(value) || value.length < 2 || value.length > 20) {
+  // 아직 출발지·목적지를 지정하지 않은 새 항로도 정상적인 작업 상태다.
+  // 단, 한 지점만 있는 상태는 중단된 저장값이므로 복원하지 않는다.
+  if (!Array.isArray(value) || value.length === 1 || value.length > 20) {
     return false;
   }
+
+  if (value.length === 0) return true;
 
   for (let i = 0; i < value.length; i++) {
     const item = value[i] as Partial<RouteWaypoint> | null | undefined;

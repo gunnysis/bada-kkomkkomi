@@ -170,6 +170,7 @@ export function RouteTimeCalculator({
   );
   const effectiveSubView: 'points' | 'legs' =
     selectedLegIndex !== null ? 'legs' : activeSubView;
+  const hasCalculatedRoute = waypoints.length >= 2;
 
   const handleCopyRouteBriefing = useCallback(async () => {
     const wpChain = waypoints.map((w) => w.name).join(' → ');
@@ -229,9 +230,10 @@ export function RouteTimeCalculator({
               <button
                 type="button"
                 onClick={onFitRouteBounds}
+                disabled={!hasCalculatedRoute}
                 aria-label="전체 항로 한눈에 보기"
                 title="출발지부터 도착지까지 전체 항로가 화면에 들어오도록 지도 맞춤"
-                className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-xl border border-[#00846c] bg-emerald-50 px-2 text-[11px] font-black whitespace-nowrap text-[#00846c] transition hover:bg-emerald-100 active:scale-95 sm:h-8.5"
+                className={`flex h-8 shrink-0 items-center justify-center gap-1 rounded-xl border px-2 text-[11px] font-black whitespace-nowrap transition sm:h-8.5 ${hasCalculatedRoute ? 'border-[#00846c] bg-emerald-50 text-[#00846c] hover:bg-emerald-100 active:scale-95' : 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400'}`}
               >
                 <Maximize2 className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden sm:inline">전체항로</span>
@@ -256,11 +258,14 @@ export function RouteTimeCalculator({
             <button
               type="button"
               onClick={handleCopyRouteBriefing}
+              disabled={!hasCalculatedRoute}
               aria-label="운항 항로 브리핑 복사"
               title="출발·경유·도착 및 소요시간·방위각 브리핑 복사"
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 sm:h-8.5 sm:w-8.5 ${copiedBriefing
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition sm:h-8.5 sm:w-8.5 ${!hasCalculatedRoute
+                  ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400'
+                  : copiedBriefing
                   ? 'border-[#00846c] bg-emerald-100 text-[#00846c]'
-                  : 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50'
+                  : 'border-slate-300 bg-white text-[#003360] hover:border-sky-400 hover:bg-sky-50 active:scale-95'
                 }`}
             >
               {copiedBriefing ? (
@@ -272,17 +277,18 @@ export function RouteTimeCalculator({
             <button
               type="button"
               onClick={onReverseRoute}
+              disabled={!hasCalculatedRoute}
               aria-label="출발지와 목적지 반전"
               title="출발 ↔ 도착 역방향 전환"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-sky-700 hover:border-sky-400 hover:bg-sky-50 active:scale-95 sm:h-8.5 sm:w-8.5"
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border sm:h-8.5 sm:w-8.5 ${hasCalculatedRoute ? 'border-slate-300 bg-white text-sky-700 hover:border-sky-400 hover:bg-sky-50 active:scale-95' : 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400'}`}
             >
               <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
             <button
               type="button"
               onClick={onResetRoute}
-              aria-label="경로 초기화"
-              title="경로 기본값 복원"
+              aria-label="항로 비우기"
+              title="출발지와 목적지를 모두 비우기"
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:border-sky-400 hover:bg-sky-50 active:scale-95 sm:h-8.5 sm:w-8.5"
             >
               <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -337,6 +343,13 @@ export function RouteTimeCalculator({
         </div>
 
         {/* Row 2: 전폭(100%) 히어로 브리핑 박스 — 소요시간·실항로 거리·도착예정·안전주의 배지 무절단 노출 */}
+        {!hasCalculatedRoute ? (
+          <div className="mt-1.5 rounded-2xl border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-bold text-[#003360]">
+            {waypoints.length === 0
+              ? '출발지와 목적지를 지도에서 차례로 지정해 항로를 시작하세요.'
+              : '출발지를 지정했습니다. 지도에서 목적지를 지정하면 항로를 계산합니다.'}
+          </div>
+        ) : (
         <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 rounded-2xl border border-[#00a79d]/45 bg-[#f0f9ff] px-2.5 py-2">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
             <span className="shrink-0 text-xl leading-none font-black tracking-tight whitespace-nowrap tabular-nums text-[#003360] sm:text-2xl">
@@ -375,6 +388,7 @@ export function RouteTimeCalculator({
             </span>
           </div>
         </div>
+        )}
       </div>
 
       {!isCollapsed && (
@@ -534,7 +548,8 @@ export function RouteTimeCalculator({
                   <button
                     type="button"
                     onClick={onAddWaypoint}
-                    className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-amber-500 bg-amber-100 px-2.5 text-[11px] font-black whitespace-nowrap text-amber-900 hover:bg-amber-200 active:scale-95"
+                    disabled={!hasCalculatedRoute}
+                    className={`flex h-8 shrink-0 items-center gap-1 rounded-xl border px-2.5 text-[11px] font-black whitespace-nowrap ${hasCalculatedRoute ? 'border-amber-500 bg-amber-100 text-amber-900 hover:bg-amber-200 active:scale-95' : 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-400'}`}
                   >
                     <Plus className="h-3 w-3 shrink-0" />
                     <span>경유지</span>
