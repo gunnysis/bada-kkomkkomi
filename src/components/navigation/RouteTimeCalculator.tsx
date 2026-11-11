@@ -446,9 +446,12 @@ export function RouteTimeCalculator({
                   onClick={() =>
                     startWaypoint && onOpenPortSelector(startWaypoint.id, '출발지')
                   }
-                  className="inline-flex max-w-[135px] items-center gap-1 truncate rounded-lg border border-[#00846c]/50 bg-white px-2 py-0.5 text-[11px] font-black text-[#00846c] hover:bg-emerald-50 active:scale-95"
+                  className="inline-flex max-w-[155px] items-center gap-1 truncate rounded-lg border border-[#00846c]/60 bg-white px-2 py-0.5 text-[11px] font-black text-[#003360] shadow-2xs hover:bg-emerald-50 active:scale-95"
                   title="출발지 항구 선택"
                 >
+                  <span className="shrink-0 rounded bg-[#00846c] px-1 py-0.2 text-[9px] leading-none font-black text-white">
+                    출발
+                  </span>
                   <span className="truncate">{startWaypoint?.name}</span>
                 </button>
                 {intermediateCount > 0 && (
@@ -462,9 +465,12 @@ export function RouteTimeCalculator({
                   onClick={() =>
                     endWaypoint && onOpenPortSelector(endWaypoint.id, '도착지')
                   }
-                  className="inline-flex max-w-[135px] items-center gap-1 truncate rounded-lg border border-[#b2415f]/50 bg-white px-2 py-0.5 text-[11px] font-black text-[#b2415f] hover:bg-rose-50 active:scale-95"
+                  className="inline-flex max-w-[155px] items-center gap-1 truncate rounded-lg border border-[#b2415f]/60 bg-white px-2 py-0.5 text-[11px] font-black text-[#003360] shadow-2xs hover:bg-rose-50 active:scale-95"
                   title="도착지 항구 선택"
                 >
+                  <span className="shrink-0 rounded bg-[#b2415f] px-1 py-0.2 text-[9px] leading-none font-black text-white">
+                    도착
+                  </span>
                   <span className="truncate">{endWaypoint?.name}</span>
                 </button>
               </div>
@@ -612,7 +618,7 @@ export function RouteTimeCalculator({
               {effectiveSubView === 'points' ? (
                 <div
                   ref={pointsListRef}
-                  className="max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46"
+                  className="bada-contained-scroll-region max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46"
                 >
                   {waypoints.map((wp, idx) => {
                     const badgeColor =
@@ -767,7 +773,7 @@ export function RouteTimeCalculator({
                 </div>
               ) : (
                 /* Zone 4-B: 구간별 어디서 어디로 가는지 + 예상 소요시간 · 거리 · 안전주의 리스트 */
-                <div className="max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46">
+                <div className="bada-contained-scroll-region max-h-38 space-y-1 overflow-y-auto pr-0.5 sm:max-h-46">
                   {calculation.legs.map((leg, legIdx) => {
                     const isSelected = selectedLegIndex === legIdx;
                     const cumMins = Math.round(

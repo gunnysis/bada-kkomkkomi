@@ -315,3 +315,25 @@ dialog.bada-modal-dialog::backdrop {
     scale: 1 !important;
   }
 }
+
+/* Modern Web Guidance: defer-rendering-heavy-content
+ * Applied strictly to below-the-fold port cards (idx >= 8) in PortSelectModal
+ * to skip initial offscreen layout/paint while preventing scrollbar jump. */
+.bada-deferred-port-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 96px;
+}
+
+/* Modern Web Guidance: interactions-in-complex-layouts
+ * Isolates layout, style, and paint recalculations in scrollable HUD/modal
+ * regions so full-screen map canvases never reflow during route/filter edits. */
+.bada-contained-scroll-region {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px auto 180px;
+}
+
+@supports not (content-visibility: auto) {
+  .bada-contained-scroll-region {
+    contain: layout style paint;
+  }
+}

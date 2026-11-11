@@ -1,7 +1,7 @@
 # 바다꼼꼬미 (Bada-Kkomkkomi) v2.5 마스터 아키텍처 및 Google EGM 통합 구현 설계서
 
-> **문서 등급**: 최종 구현 직전 단계 통합 마스터 설계 정본 (Pre-Implementation Master Architecture & Google EGM Specification)
-> **문서 버전**: `v2.5.0-draft` (2026-11-11 — Google Elephant-Goldfish Model(EGM) 아키텍처 도입 · 바닷길 콕콕 등록 항구(136개) 후보 확인형 선택 UX 통합 · 초기 빈 경로 요약 시트 UX 데드락 근본 해결 · 7대 문서↔코드 드리프트 청산 설계본)
+> **문서 등급**: 최종 구현 완료 및 운영 아키텍처 마스터 정본 (Production Architecture & Google EGM Specification)
+> **문서 버전**: `v2.5.0` (2026-11-11 — Google Elephant-Goldfish Model(EGM) 아키텍처 도입 · 바닷길 콕콕 White-Box Simplicity & Black-Box Precision 즉시 선택 UX 구현 완료 · 초기 빈 경로 요약 시트 UX 데드락 근본 해결 · 7대 문서↔코드 드리프트 청산 완료)
 > **적용 대상**: 한려해상국립공원동부사무소 내부 직원용 해양공간 통합 지원 PWA 앱 (`C:\Users\Administrator\apps_ln\bada-kkomkkomi`) 및 호스트 AI 에이전트 런타임 (`Antigravity CLI v1.5.5` · `Claude Code`)
 > **주요 사용자 페르소나**: 국립공원공단 일반 내부 직원 (현장 해상순찰대원, 해양자원·상괭이 조사원, 공원시설 관리담당자, 사무소 행정실무자 — **비개발자·비GIS 전공자 기준**)
 > **총괄 및 참여 에이전트**: 수석 테크니컬 아키텍트 (Senior Technical Architect) & 6대 전문 에이전트 컨트롤러 (**PWA 앱 · 디자인 · 아키텍처 · QA · UI/UX · 리팩토링 전문 에이전트**)
@@ -175,16 +175,16 @@ flowchart TD
 | **2. Elephant 스킬** | [`_agents/skills/bada-kkomkkomi-elephant/SKILL.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/_agents/skills/bada-kkomkkomi-elephant/SKILL.md) | **[NEW]** | 프로젝트 전용 Elephant 컨텍스트 로더 스킬 및 Phase 1~4 Write Boundary 규칙 정의 |
 | **3. EGM 설계 인덱스** | [`docs/designs/SITEMAP.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/designs/SITEMAP.md) | **[NEW]** | 전체 설계 문서 인덱스 및 6대 서브시스템의 `Interface` / `Invariants` / `Side Effects` / `Verification` 계약 매트릭스 |
 | **4. Git 무시 규칙** | [`.gitignore`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/.gitignore) | **[MODIFY]** | EGM 임시 산출물 폴더 `.dev/` 추가 |
-| **5. 경로 타입 정의** | [`src/types/route.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/types/route.ts) | **[MODIFY]** | `RoutePortSelectionSource`, `RoutePortSelectionRequest`, `RouteSelectionMode`, `RouteCandidateState` 타입 추가 |
-| **6. 항구 선택 서비스** | [`src/services/routePortSelectionService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routePortSelectionService.ts) | **[NEW]** | `findSiblingPorts`(150m 인접 시설), `resolveEffectiveSelectionMode`, `validateCandidatePort`, `applyConfirmedCandidate`, `sanitizeCommittedRouteWaypoints` 순수 함수 구현 |
+| **5. 경로 타입 정의** | [`src/types/route.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/types/route.ts) | **[MODIFY]** | `RoutePortSelectionSource`, `RoutePortSelectionRequest`, `RouteSelectionMode`, `RouteCandidateState` 타입 정의 |
+| **6. 항구 선택 서비스** | [`src/services/routePortSelectionService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routePortSelectionService.ts) | **[NEW]** | `applyDirectPortSelection`(1-step 즉시 선택), `findSiblingPorts`, `validateCandidatePort`, `sanitizeCommittedRouteWaypoints`, `findNearestRegisteredPort` 순수 함수 구현 |
 | **7. 해상 항로 서비스** | [`src/services/routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts) | **[MODIFY]** | `computeSeaRouteSegment`에서 우회 실패로 육지 교차가 남을 경우 직선 폴백을 성공처럼 반환하지 않도록 안전 가드 보강(`GAP-09`) |
-| **8. 마커 템플릿** | [`src/components/map/mapMarkerTemplates.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts) | **[MODIFY]** | `buildNavPortPinSpec()`에 `.bada-marker-hit-target`(`52×52px`) 적용 및 후보 선택(`isCandidate`) 강조 링 스타일 추가 |
-| **9. 지도 뷰 & 캔버스** | [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx)<br>[`src/components/map/KakaoMapCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx)<br>[`src/components/map/LegacyLeafletCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/LegacyLeafletCanvas.tsx) | **[MODIFY]** | 4px 포인터 이동 임계값 판정, 항구/확정 마커 클릭 시 `onSelectRoutePort({ portId, source: 'map' })` 1회 호출, 빈 지도 탭 시 `onEmptyMapTapForRoute()` 호출, 경로 마커 자유 드래그 제거 |
-| **10. 시간계산기 패널** | [`src/components/navigation/RouteTimeCalculator.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx) | **[MODIFY]** | `sheetStage === 'summary'` 상시 노출 단계 안내 배너 & 역할 액션 바, 후보 확인 카드(150m 인접 시설 전환 칩 포함), 개별 경유지 `[변경]` 버튼, `Escape` 후보 취소 및 `role="status"` 알림 구현 |
-| **11. 항구 검색 모달** | [`src/components/navigation/PortSelectModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/PortSelectModal.tsx) | **[MODIFY]** | 임의 GPS 위치 직접 확정 버튼 제거 → `[📍 현재 GPS에서 가까운 항구 순]` 정렬 토글로 대체 및 `portId` 후보 선택 연동 |
-| **12. 메인 오케스트레이터** | [`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx) | **[MODIFY]** | `routeSelectionMode` 및 `routeCandidate` 상태 관리, 바다수첩·기상 브릿지 `portId` 후보 연동, `ports.json` 로드 에러 배너 및 재시도 버튼(`GAP-08`), 선택 대기 시 `showPortMarkersOnMap` 자동 활성화 |
+| **8. 마커 템플릿** | [`src/components/map/mapMarkerTemplates.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts) | **[MODIFY]** | `buildNavPortPinSpec()`에 `.bada-marker-hit-target`(`52×52px`) 적용 및 `buildRouteLegBadgeSpec()`에 깔끔한 소요시간·거리 캡슐 배지(`약 N분 · X.X NM`) 적용 |
+| **9. 지도 뷰 & 캔버스** | [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx)<br>[`src/components/map/KakaoMapCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx)<br>[`src/components/map/LegacyLeafletCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/LegacyLeafletCanvas.tsx) | **[MODIFY]** | 항구/경로 마커 클릭 시 `onSelectRoutePort(portId)`로 즉시 출발·도착 반영, 다중 변침 수로선·`◆ 수로 가이드`·다중 화살표 제거 및 `출발지 ─── 도착지` 직관적 연결선 + 중앙 소요시간 배지 렌더링 |
+| **10. 시간계산기 패널** | [`src/components/navigation/RouteTimeCalculator.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx) | **[MODIFY]** | `sheetStage === 'summary'` 상시 노출 출발지 `[항구선택]` / 도착지 `[항구선택]` / `[+ 경유지]` 슬롯 바, 구간별 시간 요약(`출발 → 도착`, `약 N분`, `{legEtaKst} 도착`) 및 `content-visibility: auto` 스크롤 격리 적용 |
+| **11. 항구 검색 모달** | [`src/components/navigation/PortSelectModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/PortSelectModal.tsx) | **[MODIFY]** | `[내 선박 현재 GPS에서 가까운 등록 항구 순 정렬]` 토글, 원터치 즉시 항구 선택 및 오프스크린 항구 카드(`idx >= 8`) `content-visibility: auto` 렌더링 최적화 적용 |
+| **12. 메인 오케스트레이터** | [`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx) | **[MODIFY]** | `applyDirectPortSelection` 연동, 바다수첩·기상 브릿지 즉시 연동, `ports.json` 로드 에러 배너 및 재시도 버튼(`GAP-08`) 구현 |
 | **13. 출처 SSOT & 문서** | [`src/config/dataSources.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/config/dataSources.ts)<br>[`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md)<br>[`DEPLOY_GUIDE.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/DEPLOY_GUIDE.md)<br>[`docs/DATA_AND_TECH_SOURCES.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/DATA_AND_TECH_SOURCES.md) | **[MODIFY]** | 7대 문서↔코드 드리프트(`DRIFT-01` ~ `DRIFT-07`) 전수 교정 (`v2.4`/`v2.5` 버전 정합, 300개 변침점, QGIS 20개소 정밀 폴리곤, 신규 서비스 모듈 등재) |
-| **14. 검증 & 테스트** | [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)<br>[`src/tests/coreServices.test.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/tests/coreServices.test.ts) | **[MODIFY]** | `verify-integrity.mjs`에 Section 7 (EGM 계약·전 문서 버전·모듈 목록·마크다운 상대 링크 무결성 검증) 추가 및 `coreServices.test.ts`에 항구 선택 상태 머신·150m 인접 시설·왕복 불변식 테스트 추가 |
+| **14. 검증 & 테스트** | [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)<br>[`src/tests/coreServices.test.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/tests/coreServices.test.ts) | **[MODIFY]** | `verify-integrity.mjs`에 Section 7 (EGM 계약·전 문서 버전·모듈 목록·마크다운 상대 링크 무결성 검증) 추가 및 `coreServices.test.ts`에 `applyDirectPortSelection`·왕복 불변식·정밀 실항로 시간 계산 테스트 추가 |
 | **15. 중복 기획서 청산** | `docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md` | **[DELETE]** | 본 마스터 설계서(2.3절) 및 `docs/designs/SITEMAP.md`로 100% 통합 완료 후 중복 문서 제거 (`LEG-22` 단일 정본 원칙 준수) |
 
 ---
@@ -214,20 +214,12 @@ flowchart TD
 ## 3장. 사용자 필수 실행 요청 목록 (Action Items)
 
 > [!IMPORTANT]
-> **우회 금지 및 사용자 승인 게이트 (Explicit Approval Gates)**
-> 에이전트는 아래 항목들을 임의로 우회하거나 승인 없이 먼저 코드를 변경하지 않습니다. 본 설계서의 내용을 검토하신 후 승인(`승인` 또는 `Proceed`)해 주시면 즉시 구현부터 검증까지 책임지고 완수하겠습니다.
+> **사용자 권한 분리 및 우회 금지 원칙**
+> 에이전트가 완료한 전체 개발·리팩토링·성능 최적화·검증·배포 작업과 별개로, 아래 항목들은 사용자의 외부 자산 또는 계정 권한에 속하므로 에이전트가 임의로 처리하지 않고 안내드립니다.
 
-### 1. `[ACTION-GATE-01]` 통합 구현 설계 승인 요청 (현재 단계 — 사용자 의사결정 필요)
+### 1. `[ACTION-01]` 추후 공원구역(`national_park`) 등 신규 QGIS 원본 파일 순차 제공 *(상시 열림 — 선택 사항)*
+- 외부 바탕화면 폴더(`C:\Users\Administrator\Desktop\국립공원공단\...`)는 절대 건드리지 않고 원형 그대로 보존했습니다.
+- 현재 한려해상국립공원 특별보호구역 20개소 정밀 폴리곤(`protected_area.geojson`)은 반영이 완료되어 있으며, 추후 공원구역(`national_park.geojson`)이나 추가 해양공간 QGIS 원본 파일(`.gpkg` / `.shp`)이 준비될 때 제공해 주시면 구축된 `EPSG:5181`/`5186` 자동 변환 파이프라인으로 즉시 반영하거나 앱 내 `[꼬미의 바다수첩 > 레이어 > + 파일 등록]`에서 무변환으로 바로 탑재하실 수 있습니다.
 
-아래 3가지 핵심 설계 항목에 대해 **승인 여부**를 결정해 주십시오:
-
-1. **Google EGM (`google/elephant-goldfish-model`) 도입 및 드리프트 가드 구축**:
-   - 호스트 PC(`Antigravity CLI` 및 `Claude Code`)에 공식 EGM 플러그인 설치
-   - 프로젝트 내 [`AGENTS.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/AGENTS.md)(`EGM artifact directory: .dev/docs` 포함), [`_agents/skills/bada-kkomkkomi-elephant/SKILL.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/_agents/skills/bada-kkomkkomi-elephant/SKILL.md), [`docs/designs/SITEMAP.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/designs/SITEMAP.md) 생성 및 [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)에 문서↔코드 드리프트·마크다운 링크 무결성 자동 검증 게이트 추가
-   - 실측으로 발견된 7대 문서↔코드 드리프트(`README.md`, `DEPLOY_GUIDE.md`, `DATA_AND_TECH_SOURCES.md`, `dataSources.ts`) 일괄 해소
-2. **바닷길 콕콕 등록 항구(136개) 후보 확인형 선택 UX 및 초기 진입 데드락 해결**:
-   - 초기 빈 경로(`[]`) + 요약 시트(`summary`) 진입 시에도 항상 보이는 **단계별 안내 배너(`1단계: 출발 항구 선택` → `2단계: 도착 항구 선택`)** 및 **`후보 확인 카드`** 적용
-   - 등록 항구 136개(`ports.json`)만 선택 허용(빈 지도 클릭·경로 마커 자유 드래그·임의 좌표 경유지 생성 제외), 항구 마커 히트 영역 `52×52px` 확대, **반경 150m 동일·초근접 인접 시설 전환 칩** 제공, 왕복(`A → B → A`) 허용 및 편집 사후 불변식 가드 적용
-   - 통합 완료된 임시 제안 문서(`docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md`) 정리
-3. **추후 공원구역(`national_park`) 등 신규 QGIS 원본 파일 순차 제공 (`[ACTION-02]` 상시 열림)**:
-   - 외부 바탕화면 폴더(`C:\Users\Administrator\Desktop\국립공원공단\...`)는 절대 건드리지 않고 원형 그대로 보존합니다. 추후 공원구역(`national_park.geojson`)이나 추가 해양공간 QGIS 원본 파일이 준비될 때 제공해 주시면 구축된 `EPSG:5181`/`5186` 자동 변환 파이프라인으로 즉시 반영합니다.
+### 2. `[ACTION-02]` 카카오 개발자 콘솔 웹 도메인 및 GitHub Actions Secret 확인 *(기설정 시 생략 가능)*
+- 라이브 배포 도메인(`https://gunnysis.github.io`)에서 카카오맵 타일이 정상 로드되려면 카카오 개발자 콘솔(`[내 애플리케이션 > 앱 설정 > 플랫폼 > Web]`)에 `https://gunnysis.github.io`가 등록되어 있어야 하며, GitHub 저장소 `Settings > Secrets and variables > Actions`에 `KAKAO_MAP_API_KEY`가 설정되어 있어야 합니다 (미설정 또는 오프라인 시에도 앱은 자동으로 OpenStreetMap 폴백 지도로 무중단 동작합니다).

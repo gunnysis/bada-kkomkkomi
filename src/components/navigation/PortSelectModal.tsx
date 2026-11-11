@@ -236,8 +236,8 @@ export function PortSelectModal({
         </div>
 
         {/* 항포구 및 소규모 선착장 목록 */}
-        <div className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-          {filteredPorts.map((port) => {
+        <div className="bada-contained-scroll-region mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+          {filteredPorts.map((port, idx) => {
             const isSmallBerth =
               port.subCategory === 'small_berth' || port.category === 'docking';
             const tidalBadge =
@@ -255,7 +255,7 @@ export function PortSelectModal({
                   onSelectPort(port);
                   onClose();
                 }}
-                className="flex w-full items-start justify-between gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-2xs transition hover:border-[#00a79d] hover:bg-sky-50/50 active:scale-[0.99]"
+                className={`${idx >= 8 ? 'bada-deferred-port-item ' : ''}flex w-full items-start justify-between gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-2xs transition hover:border-[#00a79d] hover:bg-sky-50/50 active:scale-[0.99]`}
               >
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-1.5">
