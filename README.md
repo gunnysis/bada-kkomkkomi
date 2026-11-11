@@ -109,7 +109,7 @@ bada-kkomkkomi/
 │   │   │   ├── KakaoMapCanvas.tsx     # Kakao Maps SDK v3 렌더링 엔진 (MapTypeId 10종, CustomOverlay, 폴리곤/항로)
 │   │   │   ├── LegacyLeafletCanvas.tsx# 레거시 Leaflet + OpenStreetMap 폴백 엔진 (무중단 가용성 보장)
 │   │   │   ├── Roadview3DModal.tsx    # 360° 3D 구면 현장 로드뷰 모달 (80m→200m 확장 탐색 및 위성+지형도 폴백)
-│   │   │   └── mapMarkerTemplates.ts  # 5색 접안 마커(Hazard Halo)·선착장핀(52x52 히트영역·후보 링)·상괭이·항로배지·기상핀 HTML 팩토리
+│   │   │   └── mapMarkerTemplates.ts  # 5색 접안 마커(Hazard Halo)·선착장핀(52x52 히트영역)·상괭이·구간 시간배지·기상핀 HTML 팩토리
 │   │   ├── DockingDetailSheet.tsx     # 접안 포인트 하단 슬라이딩 상세 시트 (3D 현장뷰 & 바닷길 계산 브릿지)
 │   │   ├── PhotoGallery.tsx           # 현장 사진 전체화면 라이트박스 모달
 │   │   ├── notebook/
@@ -117,7 +117,7 @@ bada-kkomkkomi/
 │   │   │   ├── FieldReportModal.tsx         # 현장정보 이메일 제보 & 지도 위치 선택 모달
 │   │   │   └── PorpoiseObservationModal.tsx # 개인 상괭이 관찰 기록 추가/수정/삭제 모달
 │   │   └── navigation/
-│   │       ├── RouteTimeCalculator.tsx      # 바닷길 시간계산기 패널 (후보 확인 카드·A* 실항로·KST 도착예정·브리핑복사)
+│   │       ├── RouteTimeCalculator.tsx      # 바닷길 시간계산기 패널 (출발·도착 직관 슬롯·A* 실항로·KST 도착예정·브리핑복사)
 │   │       ├── PortSelectModal.tsx          # 136개 항구·선착장 초성/별칭/섬/GPS 거리순 검색 모달
 │   │       ├── MarineWeatherPanel.tsx       # ECMWF 전용 해상 기상상태 3단계 판정 패널 (항로 해역 칩 연동)
 │   │       └── WeatherThresholdSettings.tsx # 기상 판정 기준값(풍속·파고) 설정 및 데이터·기술 출처 센터 모달
@@ -141,11 +141,11 @@ bada-kkomkkomi/
 │   │   ├── ecmwfWeatherService.ts     # ECMWF IFS(풍속) + WAM(파고) 전용 URL 생성 및 KST 타임스탬프 결합기
 │   │   ├── emailReportService.ts      # 이메일 제보 전문 포맷팅, mailto URI 생성, 클립보드 복사
 │   │   ├── routeGeoService.ts         # 378개 실측 해안선 이중 공간 인덱싱, 300개 변침점 2계층 A*·가시성 그래프 우회, Theta* String-Pulling
-│   │   ├── routeLegLabelService.ts    # 줌 레벨·구간 길이 적응형 지도 구간 배지(시간·NM·화살표) 포맷팅 서비스
-│   │   ├── routePortSelectionService.ts # 136개 등록 항구 후보 선택·인접 시설 전환·유효성 검증·편집 후 정규화 서비스
+│   │   ├── routeLegLabelService.ts    # 줌 레벨·구간 길이 적응형 지도 구간 배지(시간·NM) 포맷팅 서비스
+│   │   ├── routePortSelectionService.ts # 136개 등록 항구 즉시 선택(applyDirectPortSelection)·유효성 검증·편집 후 정규화 서비스
 │   │   └── workspaceDraftRepository.ts# 항로·선속·필터·제보자명 localStorage 드래프트 영속화 및 GPS 오류 분류기
 │   ├── tests/
-│   │   └── coreServices.test.ts       # 핵심 도메인(해상 항로·후보 선택·기상·딥링크·워크스페이스·출처·EGM 계약) 단위 테스트
+│   │   └── coreServices.test.ts       # 핵심 도메인(해상 항로·즉시 항구 선택·기상·딥링크·워크스페이스·출처·EGM 계약) 단위 테스트
 │   └── types/                         # 도메인별 TypeScript 엄격 타입 정의 (kakao, config, spatialLayer, docking, port, route, weather, porpoise, report)
 ├── DEPLOY_GUIDE.md                    # 비개발자 운영자용 데이터 교체 및 무상 배포 가이드
 ├── README.md                          # 프로젝트 개요 문서
