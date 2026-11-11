@@ -116,6 +116,8 @@ export interface MapViewProps {
   selectedLegIndex?: number | null;
   onSelectLeg?: (legIndex: number | null) => void;
   showDirectionArrows?: boolean;
+  showLegDurationOnMap?: boolean;
+  showLegDistanceOnMap?: boolean;
   fitRouteBoundsTrigger?: number;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
@@ -160,6 +162,8 @@ export function MapView({
   selectedLegIndex = null,
   onSelectLeg,
   showDirectionArrows = true,
+  showLegDurationOnMap = true,
+  showLegDistanceOnMap = true,
   fitRouteBoundsTrigger = 0,
   onUpdateWaypointPos,
   onRemoveWaypoint,
@@ -299,56 +303,15 @@ export function MapView({
     nonce: number;
   } | null>(null);
 
-  // 2. QGIS 공간정보 레이어 GeoJSON 로드 및 상태/재시도 관리 (IndexedDB 운영본 + 정적 URL 통합)
-  const [localGeoJsonLayersData, setLocalGeoJsonLayersData] = useState<Record<string, any>>({});
-  const [localLayerLoadErrorIds, setLocalLayerLoadErrorIds] = useState<string[]>([]);
-  const fetchedLayerIdsRef = useRef<Set<string>>(new Set());
-
-  const fetchMissingGeoJsonLayers = useCallback(() => {
-    if (externalGeoJsonLayersData !== undefined) return;
-    layers.forEach((layer) => {
-      if (layer.url && !fetchedLayerIdsRef.current.has(layer.id)) {
-        fetchedLayerIdsRef.current.add(layer.id);
-        const fullUrl = `${import.meta.env.BASE_URL}${layer.url.replace(/^\/+/, '')}`;
-        fetch(fullUrl)
-          .then((r) => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-          })
-          .then((data) => {
-            setLocalGeoJsonLayersData((prev) => ({ ...prev, [layer.id]: data }));
-            setLocalLayerLoadErrorIds((prev) => prev.filter((id) => id !== layer.id));
-          })
-          .catch(() => {
-            fetchedLayerIdsRef.current.delete(layer.id);
-            setLocalLayerLoadErrorIds((prev) =>
-              prev.includes(layer.id) ? prev : [...prev, layer.id],
-            );
-          });
-      }
-    });
-  }, [layers, externalGeoJsonLayersData]);
-
-  const geoJsonLayersData = {
-    ...localGeoJsonLayersData,
-    ...(externalGeoJsonLayersData ?? {}),
-  };
-
-  const layerLoadErrorIds =
-    externalLayerLoadErrorIds ?? localLayerLoadErrorIds;
+  // 2. QGIS 공간정보 레이어 GeoJSON 단일 정본(SSOT) 연동 (두 지도 탭 100% 동일한 검증 데이터 보장)
+  const geoJsonLayersData = externalGeoJsonLayersData ?? {};
+  const layerLoadErrorIds = externalLayerLoadErrorIds ?? [];
 
   const handleRetryGeoJsonLayers = useCallback(() => {
     if (onRetryGeoJsonLayers) {
       onRetryGeoJsonLayers();
     }
-    localLayerLoadErrorIds.forEach((id) => fetchedLayerIdsRef.current.delete(id));
-    setLocalLayerLoadErrorIds([]);
-    fetchMissingGeoJsonLayers();
-  }, [onRetryGeoJsonLayers, localLayerLoadErrorIds, fetchMissingGeoJsonLayers]);
-
-  useEffect(() => {
-    fetchMissingGeoJsonLayers();
-  }, [fetchMissingGeoJsonLayers]);
+  }, [onRetryGeoJsonLayers]);
 
   const handleViewportChange = useCallback((lat: number, lng: number, zoom: number) => {
     setViewport({ lat, lng, zoom });
@@ -481,6 +444,8 @@ export function MapView({
           selectedLegIndex={selectedLegIndex}
           onSelectLeg={onSelectLeg}
           showDirectionArrows={showDirectionArrows}
+          showLegDurationOnMap={showLegDurationOnMap}
+          showLegDistanceOnMap={showLegDistanceOnMap}
           fitRouteBoundsTrigger={fitRouteBoundsTrigger}
           onUpdateWaypointPos={onUpdateWaypointPos}
           onRemoveWaypoint={onRemoveWaypoint}
@@ -526,6 +491,8 @@ export function MapView({
             selectedLegIndex={selectedLegIndex}
             onSelectLeg={onSelectLeg}
             showDirectionArrows={showDirectionArrows}
+            showLegDurationOnMap={showLegDurationOnMap}
+            showLegDistanceOnMap={showLegDistanceOnMap}
             fitRouteBoundsTrigger={fitRouteBoundsTrigger}
             onUpdateWaypointPos={onUpdateWaypointPos}
             onRemoveWaypoint={onRemoveWaypoint}

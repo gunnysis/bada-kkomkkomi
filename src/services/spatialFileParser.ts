@@ -43,9 +43,19 @@ export const KOREAN_CRS_DEFINITIONS: Record<
       '+proj=tmerc +lat_0=38 +lon_0=125 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
   },
   'EPSG:5181': {
-    label: 'EPSG:5181 (Korea 2000 / 구 중부원점 Y=500,000)',
+    label: 'EPSG:5181 (Korea 2000 / 중부원점 Y=500,000 · 국립공원 특별보호구역 표준)',
     proj4Def:
       '+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
+  },
+  'EPSG:5180': {
+    label: 'EPSG:5180 (Korea 2000 / 서부원점 Y=500,000)',
+    proj4Def:
+      '+proj=tmerc +lat_0=38 +lon_0=125 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
+  },
+  'EPSG:5183': {
+    label: 'EPSG:5183 (Korea 2000 / 동부원점 Y=500,000)',
+    proj4Def:
+      '+proj=tmerc +lat_0=38 +lon_0=129 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs',
   },
   'EPSG:5174': {
     label: 'EPSG:5174 (Korean 1985 / 보정 베셀 중부원점 · 구 지적도)',
@@ -83,7 +93,18 @@ function sanitizeProperties(raw: any, fallbackIndex: number): Record<string, any
     }
   }
   if (clean.id === undefined || clean.id === null || String(clean.id).trim() === '') {
-    clean.id = `FEAT-${String(fallbackIndex + 1).padStart(3, '0')}`;
+    const candidateId =
+      clean.코드명 ??
+      clean.CODE ??
+      clean.Code ??
+      clean.관리번호 ??
+      clean.구역코드 ??
+      clean.MNG_NO ??
+      clean.NO;
+    clean.id =
+      candidateId !== undefined && candidateId !== null && String(candidateId).trim() !== ''
+        ? String(candidateId).trim()
+        : `FEAT-${String(fallbackIndex + 1).padStart(3, '0')}`;
   } else {
     clean.id = String(clean.id);
   }
@@ -102,7 +123,36 @@ function sanitizeProperties(raw: any, fallbackIndex: number): Record<string, any
       clean.label ??
       clean.title;
     if (candidateName) {
-      clean.name = String(candidateName);
+      clean.name = String(candidateName).trim();
+    }
+  }
+  // 국립공원공단 QGIS 한글 표준 속성(관리·입지·유형·상태·주소·고시면적 등) 정규화 매핑
+  if (!clean.office && clean.관리) {
+    clean.office =
+      clean.관리 === '한동'
+        ? '한려해상동부사무소'
+        : clean.관리 === '한려'
+          ? '한려해상국립공원사무소'
+          : String(clean.관리);
+  }
+  if (!clean.locationType && clean.입지) {
+    clean.locationType = String(clean.입지);
+  }
+  if (!clean.zoneType && clean.유형) {
+    clean.zoneType = String(clean.유형);
+  }
+  if (!clean.address && clean.주소) {
+    clean.address = String(clean.주소);
+  }
+  if (!clean.description) {
+    const summaryParts = [
+      clean.office || clean.관리,
+      clean.locationType || clean.입지,
+      clean.zoneType || clean.유형,
+      clean.address || clean.주소,
+    ].filter(Boolean);
+    if (summaryParts.length > 0) {
+      clean.description = summaryParts.join(' · ');
     }
   }
   return clean;
@@ -162,6 +212,8 @@ export function detectCrsFromMetadata(
     if (srsId === 5187) return 'EPSG:5187';
     if (srsId === 5185) return 'EPSG:5185';
     if (srsId === 5181) return 'EPSG:5181';
+    if (srsId === 5180) return 'EPSG:5180';
+    if (srsId === 5183) return 'EPSG:5183';
     if (srsId === 5174 || srsId === 2097) return 'EPSG:5174';
     if (srsId === 3857 || srsId === 900913) return 'EPSG:3857';
   }
@@ -184,6 +236,12 @@ export function detectCrsFromMetadata(
   if (upper.includes('5181')) {
     return 'EPSG:5181';
   }
+  if (upper.includes('5180')) {
+    return 'EPSG:5180';
+  }
+  if (upper.includes('5183')) {
+    return 'EPSG:5183';
+  }
   if (upper.includes('5174') || upper.includes('BESSEL') || upper.includes('KOREAN_1985') || upper.includes('KOREAN 1985')) {
     return 'EPSG:5174';
   }
@@ -194,18 +252,46 @@ export function detectCrsFromMetadata(
     return 'EPSG:4326';
   }
 
-  // WKT 파라미터 기반 휴리스틱 판별
-  if (upper.includes('CENTRAL_MERIDIAN",127.5') || upper.includes('1000000')) {
+  // WKT 파라미터 기반 정밀 판별 (공백·소수점 표기 편차에 무관하게 동작)
+  const hasMeridian1275 = /CENTRAL_MERIDIAN["\s,]+127\.5\b/i.test(upper);
+  const hasMeridian127 = /CENTRAL_MERIDIAN["\s,]+127(?:\.0+)?\b/i.test(upper);
+  const hasMeridian129 = /CENTRAL_MERIDIAN["\s,]+129(?:\.0+)?\b/i.test(upper);
+  const hasMeridian125 = /CENTRAL_MERIDIAN["\s,]+125(?:\.0+)?\b/i.test(upper);
+  const hasNorthing2000k = /FALSE_NORTHING["\s,]+2000000(?:\.0+)?\b/i.test(upper);
+  const hasNorthing600k = /FALSE_NORTHING["\s,]+600000(?:\.0+)?\b/i.test(upper);
+  const hasNorthing500k = /FALSE_NORTHING["\s,]+500000(?:\.0+)?\b/i.test(upper);
+
+  if (hasMeridian1275 || hasNorthing2000k) {
     return 'EPSG:5179';
   }
-  if (upper.includes('CENTRAL_MERIDIAN",127') && upper.includes('600000')) {
+  if (hasMeridian127 && hasNorthing600k) {
     return 'EPSG:5186';
   }
-  if (upper.includes('CENTRAL_MERIDIAN",129') && upper.includes('600000')) {
+  if (hasMeridian129 && hasNorthing600k) {
     return 'EPSG:5187';
   }
-  if (upper.includes('CENTRAL_MERIDIAN",127') && upper.includes('500000')) {
+  if (hasMeridian125 && hasNorthing600k) {
+    return 'EPSG:5185';
+  }
+  if (hasMeridian127 && hasNorthing500k) {
     return 'EPSG:5181';
+  }
+  if (hasMeridian125 && hasNorthing500k) {
+    return 'EPSG:5180';
+  }
+  if (hasMeridian129 && hasNorthing500k) {
+    return 'EPSG:5183';
+  }
+
+  // Korea_2000_Korea_Central_Belt 등 구 원점 WKT 명칭 판별
+  if (upper.includes('KOREA_CENTRAL_BELT') || upper.includes('KOREA CENTRAL BELT')) {
+    return hasNorthing600k ? 'EPSG:5186' : 'EPSG:5181';
+  }
+  if (upper.includes('KOREA_WEST_BELT') || upper.includes('KOREA WEST BELT')) {
+    return hasNorthing600k ? 'EPSG:5185' : 'EPSG:5180';
+  }
+  if (upper.includes('KOREA_EAST_BELT') || upper.includes('KOREA EAST BELT')) {
+    return hasNorthing600k ? 'EPSG:5187' : 'EPSG:5183';
   }
 
   return null;

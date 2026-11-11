@@ -7,6 +7,7 @@ import {
   type SpatialFeatureCollection,
 } from '../types/spatialLayer';
 import {
+  hasLegacyDummyFeatures,
   listReleaseSnapshots,
   loadOperationalLayerState,
   loadSyncOperationalMetaFromLocalStorage,
@@ -33,11 +34,12 @@ const DEFAULT_LAYERS: MapLayerConfig[] = [
   {
     id: 'national_park',
     name: '한려해상국립공원 경계',
-    visible: true,
+    visible: false,
     color: '#10b981',
     url: '/data/layers/national_park.geojson',
-    description: '국립공원 관할 공원구역 경계선',
+    description: '국립공원 관할 공원구역 경계선 (QGIS 원본 연동 슬롯)',
     geometryTypes: ['Polygon'],
+    featureCount: 0,
     style: buildDefaultLayerStyle('#10b981', 'national_park', 'name'),
   },
   {
@@ -46,8 +48,9 @@ const DEFAULT_LAYERS: MapLayerConfig[] = [
     visible: true,
     color: '#a855f7',
     url: '/data/layers/protected_area.geojson',
-    description: '출입통제 및 해양생물 특별보호구역',
-    geometryTypes: ['Polygon'],
+    description: '한려해상국립공원 특별보호구역 20개소 (한동 9·한려 11 · QGIS 원본 정합)',
+    geometryTypes: ['Polygon', 'MultiPolygon'],
+    featureCount: 20,
     style: buildDefaultLayerStyle('#a855f7', 'protected_area', 'name'),
   },
 ];
@@ -119,31 +122,51 @@ export function useAppConfig() {
       targetLayers: MapLayerConfig[],
       existingGeoJsonMap: Record<string, SpatialFeatureCollection>,
     ) => {
-      const mergedMap: Record<string, SpatialFeatureCollection> = {
-        ...existingGeoJsonMap,
-      };
+      const mergedMap: Record<string, SpatialFeatureCollection> = {};
+      for (const [lid, fc] of Object.entries(existingGeoJsonMap)) {
+        if (!hasLegacyDummyFeatures(fc)) {
+          mergedMap[lid] = fc;
+        }
+      }
       const metaById: Record<string, Wgs84NormalizedMeta> = {};
       const failedIds: string[] = [];
 
       await Promise.all(
         targetLayers.map(async (layer) => {
           if (layer.id === 'docking' || layer.isSystemLayer) return;
-          if (mergedMap[layer.id]) {
+
+          const hasCustomUserUpload =
+            Boolean(layer.sourceMeta?.originalFileName) && Boolean(mergedMap[layer.id]);
+
+          // 사용자가 직접 업로드한 커스텀 파일이 있는 경우 즉시 정규화 적용
+          if (hasCustomUserUpload && mergedMap[layer.id]) {
             metaById[layer.id] = normalizeWgs84FeatureCollection(mergedMap[layer.id]);
             return;
           }
-          if (!layer.url) return;
 
-          const fullUrl = `${import.meta.env.BASE_URL}${layer.url.replace(/^\/+/, '')}`;
-          try {
-            const res = await fetch(fullUrl);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const rawData = await res.json();
-            const normalized = normalizeWgs84FeatureCollection(rawData);
-            mergedMap[layer.id] = normalized.featureCollection;
-            metaById[layer.id] = normalized;
-          } catch {
-            failedIds.push(layer.id);
+          // 공식 정적 URL 레이어는 항상 최신 정본 GeoJSON(Always-Fresh) 우선 로드
+          if (layer.url) {
+            const fullUrl = `${import.meta.env.BASE_URL}${layer.url.replace(/^\/+/, '')}`;
+            try {
+              const res = await fetch(fullUrl, { cache: 'no-cache' });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const rawData = await res.json();
+              const normalized = normalizeWgs84FeatureCollection(rawData);
+              mergedMap[layer.id] = normalized.featureCollection;
+              metaById[layer.id] = normalized;
+              return;
+            } catch {
+              if (mergedMap[layer.id]) {
+                metaById[layer.id] = normalizeWgs84FeatureCollection(mergedMap[layer.id]);
+                return;
+              }
+              failedIds.push(layer.id);
+              return;
+            }
+          }
+
+          if (mergedMap[layer.id]) {
+            metaById[layer.id] = normalizeWgs84FeatureCollection(mergedMap[layer.id]);
           }
         }),
       );
@@ -151,18 +174,20 @@ export function useAppConfig() {
       setGeoJsonLayersData(mergedMap);
       setLayerLoadErrorIds(failedIds);
 
-      // 피처 개수 및 BBox 자동 보강 (중복 정규화 제거)
+      // 피처 개수 및 BBox 자동 보강 (빈 슬롯 레이어는 기본 숨김 처리)
       setLayers((prev) =>
         prev.map((l) => {
           const fc = mergedMap[l.id];
           if (!fc) return l;
           const norm = metaById[l.id] ?? normalizeWgs84FeatureCollection(fc);
+          const count = fc.features.length;
           return {
             ...l,
-            featureCount: fc.features.length,
+            visible: l.id === 'national_park' && count === 0 ? false : l.visible,
+            featureCount: count,
             geometryTypes:
               norm.geometryTypes.length > 0 ? norm.geometryTypes : l.geometryTypes,
-            bbox: norm.bbox,
+            bbox: count > 0 ? norm.bbox : undefined,
           };
         }),
       );

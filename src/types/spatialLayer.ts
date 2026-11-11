@@ -12,6 +12,8 @@ export type SupportedCrsCode =
   | 'EPSG:5187'
   | 'EPSG:5185'
   | 'EPSG:5181'
+  | 'EPSG:5180'
+  | 'EPSG:5183'
   | 'EPSG:5174'
   | 'EPSG:3857';
 

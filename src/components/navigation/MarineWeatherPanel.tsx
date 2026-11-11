@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   SlidersHorizontal,
   RefreshCw,
-  AlertTriangle,
   HelpCircle,
   ChevronDown,
   ChevronUp,
@@ -334,16 +333,6 @@ export function MarineWeatherPanel({
                   : '예보 자료가 없습니다 (?) — 해역 위치를 다시 선택하거나 새로고침하세요.'}
               </div>
             )}
-          </div>
-
-          {/* 사용상 제한 및 연안 9km 격자 한계 안내 (설계서 5.7항) */}
-          <div className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-2.5">
-            <div className="flex items-start gap-2 text-[11px] leading-snug text-slate-700">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#8b5e3c]" />
-              <p>
-                <strong className="font-black text-[#003360]">참고 상태 및 연안 격자 한계 안내:</strong> 9 km 모델 격자 예보이며 현장 관측값이 아닙니다. 작은 섬·방파제·국지 돌풍 등 연안 지형 효과를 다 표현하지 못할 수 있으며, 실제 출항 안전을 보증하지 않으므로 기상특보와 현장 관측을 반드시 함께 확인하세요.
-              </p>
-            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-600">

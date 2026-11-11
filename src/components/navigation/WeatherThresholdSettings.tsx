@@ -934,7 +934,7 @@ export function WeatherThresholdSettings({
               {DATA_BASELINE_LABEL}
             </p>
             <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-              국립공원공단 한려해상국립공원 해양 현장업무 지원 PWA
+              국립공원공단 한려해상 · 통영·거제 55개 접안지 · 136개 항포구/선착장 · 특별보호구역 20개소 지원 [{APP_VERSION_DISPLAY}]
             </p>
           </div>
           <img

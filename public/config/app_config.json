@@ -36,11 +36,12 @@
     {
       "id": "national_park",
       "name": "한려해상국립공원 경계",
-      "visible": true,
+      "visible": false,
       "color": "#10b981",
       "url": "/data/layers/national_park.geojson",
-      "description": "국립공원 관할 공원구역 경계선",
-      "geometryTypes": ["Polygon"]
+      "description": "국립공원 관할 공원구역 경계선 (QGIS 원본 연동 슬롯)",
+      "geometryTypes": ["Polygon"],
+      "featureCount": 0
     },
     {
       "id": "protected_area",
@@ -48,8 +49,9 @@
       "visible": true,
       "color": "#a855f7",
       "url": "/data/layers/protected_area.geojson",
-      "description": "출입통제 및 해양생물 특별보호구역",
-      "geometryTypes": ["Polygon"]
+      "description": "한려해상국립공원 특별보호구역 20개소 (한동 9·한려 11 · QGIS 원본 정합)",
+      "geometryTypes": ["Polygon", "MultiPolygon"],
+      "featureCount": 20
     }
   ]
 }

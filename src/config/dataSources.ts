@@ -336,11 +336,19 @@ export function resolveLayerProvenance(layer: {
       isBuiltInSchematic: false,
     };
   }
-  if (layer.id === 'national_park' || layer.id === 'protected_area') {
+  if (layer.id === 'protected_area') {
     return {
-      badgeLabel: '환경부·공단 경량 도식화 내장본',
+      badgeLabel: '국립공원공단 QGIS 정본 내장본 (20개소)',
       sourceDetail:
-        '오프라인 즉시 열람용 경량 도식화 폴리곤입니다. [+ 파일 등록]에서 공단 QGIS 원본(.gpkg/.shp) 업로드 시 즉시 정밀 교체됩니다.',
+        '한려해상국립공원 특별보호구역 20개소(한동-01~09, 한려-01~11) QGIS 원본 Shapefile(EPSG:5181 → WGS84) 정밀 컴파일 내장본입니다.',
+      isBuiltInSchematic: false,
+    };
+  }
+  if (layer.id === 'national_park') {
+    return {
+      badgeLabel: '환경부·공단 경량 도식화 내장본 (QGIS 업데이트 슬롯)',
+      sourceDetail:
+        '공원구역 QGIS 원본(.gpkg/.shp)을 [+ 파일 등록]에서 업로드하거나 배포 시 즉시 정밀 반영되는 슬롯입니다.',
       isBuiltInSchematic: true,
     };
   }

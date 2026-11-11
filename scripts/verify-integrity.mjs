@@ -150,7 +150,8 @@ for (const w of portsData.waypoints) {
   }
 }
 
-// 4. 공간정보 레이어 GeoJSON 무결성 검증
+// 4. 공간정보 레이어 GeoJSON 무결성 검증 (레거시 가짜 직사각형 폴리곤 영구 차단 + QGIS 특별보호구역 20개소 정합성 검증)
+const LEGACY_DUMMY_IDS = new Set(['NP-TY-01', 'NP-GJ-02', 'SPA-01', 'SPA-02']);
 const layersDir = 'public/data/layers';
 for (const file of fs.readdirSync(layersDir)) {
   if (file.endsWith('.geojson') || file.endsWith('.json')) {
@@ -159,8 +160,23 @@ for (const file of fs.readdirSync(layersDir)) {
       fc.type === 'FeatureCollection' && Array.isArray(fc.features),
       `Invalid GeoJSON FeatureCollection: ${file}`,
     );
+    for (const feat of fc.features) {
+      const fid = String(feat.id ?? feat.properties?.id ?? '').trim();
+      assert(
+        !LEGACY_DUMMY_IDS.has(fid),
+        `Legacy dummy polygon ID (${fid}) detected in ${file} — fake rectangular boundaries are strictly forbidden`,
+      );
+    }
   }
 }
+
+const protectedAreaFc = JSON.parse(
+  fs.readFileSync('public/data/layers/protected_area.geojson', 'utf8'),
+);
+assert(
+  protectedAreaFc.features.length === 20,
+  `protected_area.geojson must contain all 20 Hallyeohaesang Special Protected Area features from QGIS source, got ${protectedAreaFc.features.length}`,
+);
 
 // 5. 인트로 홈 화면(HomeScreen.tsx) 및 설정·출처 모달(WeatherThresholdSettings.tsx) 모바일(320px~412px) 레이아웃·텍스트 짤림 재발 방지 가드
 const homeScreenTsx = fs.readFileSync('src/components/home/HomeScreen.tsx', 'utf8');
@@ -169,15 +185,17 @@ const settingsModalTsx = fs.readFileSync(
   'utf8',
 );
 
-// 4대 카드 아이콘 슬롯 높이가 전 카드 동일하게 h-16 sm:h-20으로 통일되었는지 확인 (h-14 혼용으로 인한 상·하행 수직 기준선 어긋남 방지)
+// 4대 카드 아이콘 슬롯 높이가 전 카드 동일하게 통일되었는지 확인 (h-14 혼용으로 인한 상·하행 수직 기준선 어긋남 방지)
 assert(
   !homeScreenTsx.includes('flex h-14 w-full items-center justify-center sm:h-16'),
-  'HomeScreen.tsx: all 4 feature cards must share identical icon slot height (h-16 sm:h-20) without h-14 misalignment',
+  'HomeScreen.tsx: all 4 feature cards must share identical icon slot height without h-14 misalignment',
 );
-// 꼬미의 달력 하단 슬롯도 다른 3개 카드와 동일하게 min-h-10 sm:min-h-11 높이를 사용하는지 확인 (h-8 불일치 방지)
+// 미니멀 포스터 리팩토링(Memo 2) 이후 구버전 다중 액션 바가 재도입되지 않았는지 확인
 assert(
-  !homeScreenTsx.includes('flex h-8 w-full items-center justify-center rounded-xl'),
-  'HomeScreen.tsx: card 3 footer slot must match min-h-10 sm:min-h-11 baseline of sibling cards',
+  !homeScreenTsx.includes('꼬미의 바다수첩 세부 기능 바로가기') &&
+    !homeScreenTsx.includes('바닷길 콕콕 세부 기능 바로가기') &&
+    !homeScreenTsx.includes('설정 세부 기능 바로가기'),
+  'HomeScreen.tsx: multi-button action bars inside poster cards must remain removed (Memo 2)',
 );
 // 설정 모달 내 오프라인 동작 매트릭스 및 6대 출처 아코디언 제목에 말줄임(truncate)이 재도입되지 않았는지 확인
 assert(

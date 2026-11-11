@@ -57,6 +57,8 @@ export interface LegacyLeafletCanvasProps {
   selectedLegIndex?: number | null;
   onSelectLeg?: (legIndex: number | null) => void;
   showDirectionArrows?: boolean;
+  showLegDurationOnMap?: boolean;
+  showLegDistanceOnMap?: boolean;
   fitRouteBoundsTrigger?: number;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
@@ -167,15 +169,19 @@ function getRouteLegBadgeIcon(
   legIndex: number,
   safetyLevel: 'safe' | 'caution' | 'danger' = 'safe',
   isSelected = false,
+  showDuration = true,
+  showDistance = true,
 ): L.DivIcon {
   const mins = Math.round(durationMinutes);
   const nmStr = distanceNm.toFixed(1);
-  const cacheKey = `legbadge:${mins}:${nmStr}:${bearingDeg}:${legIndex}:${safetyLevel}:${isSelected ? 1 : 0}`;
+  const cacheKey = `legbadge:${mins}:${nmStr}:${bearingDeg}:${legIndex}:${safetyLevel}:${isSelected ? 1 : 0}:${showDuration ? 1 : 0}:${showDistance ? 1 : 0}`;
   return getCachedDivIcon(cacheKey, () => {
     const spec = buildRouteLegBadgeSpec(durationMinutes, distanceNm, bearingDeg, cardinal, {
       legIndex,
       safetyLevel,
       isSelected,
+      showDuration,
+      showDistance,
     });
     return L.divIcon({
       className: 'bada-custom-marker',
@@ -390,6 +396,8 @@ export function LegacyLeafletCanvas({
   selectedLegIndex = null,
   onSelectLeg,
   showDirectionArrows = true,
+  showLegDurationOnMap = true,
+  showLegDistanceOnMap = true,
   fitRouteBoundsTrigger = 0,
   onUpdateWaypointPos,
   onRemoveWaypoint,
@@ -794,6 +802,8 @@ export function LegacyLeafletCanvas({
                   legIdx,
                   leg.safetyLevel ?? 'safe',
                   isSelected,
+                  showLegDurationOnMap,
+                  showLegDistanceOnMap,
                 )}
                 interactive={Boolean(onSelectLeg)}
                 zIndexOffset={isSelected ? 460 : 420}

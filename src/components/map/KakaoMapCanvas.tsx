@@ -66,6 +66,8 @@ export interface KakaoMapCanvasProps {
   selectedLegIndex?: number | null;
   onSelectLeg?: (legIndex: number | null) => void;
   showDirectionArrows?: boolean;
+  showLegDurationOnMap?: boolean;
+  showLegDistanceOnMap?: boolean;
   fitRouteBoundsTrigger?: number;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
@@ -380,6 +382,8 @@ export function KakaoMapCanvas({
   selectedLegIndex = null,
   onSelectLeg,
   showDirectionArrows = true,
+  showLegDurationOnMap = true,
+  showLegDistanceOnMap = true,
   fitRouteBoundsTrigger = 0,
   onUpdateWaypointPos,
   onRemoveWaypoint,
@@ -1154,6 +1158,8 @@ export function KakaoMapCanvas({
           legIndex: legIdx,
           safetyLevel: leg.safetyLevel,
           isSelected,
+          showDuration: showLegDurationOnMap,
+          showDistance: showLegDistanceOnMap,
         },
       );
       const el = createOverlayElement(
@@ -1222,6 +1228,8 @@ export function KakaoMapCanvas({
     selectedLegIndex,
     onSelectLeg,
     showDirectionArrows,
+    showLegDurationOnMap,
+    showLegDistanceOnMap,
     routeArrowZoomTier,
     showSeaChannelGuides,
     onUpdateWaypointPos,

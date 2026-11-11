@@ -9,12 +9,16 @@ import {
   calculateRouteSummary,
   doesSegmentCrossLand,
   getPolylineArcMidpoint,
+  getNearbyMarinePlaceLabel,
   isPointInAnyLandBarrier,
   kmToNauticalMiles,
   LANDMASS_BARRIER_POLYGONS,
   resolveSmartWaypoint,
   samplePolylineDirectionArrows,
 } from '../services/routeGeoService.ts';
+import { getRouteLegLabelParts } from '../services/routeLegLabelService.ts';
+import { detectCrsFromMetadata } from '../services/spatialFileParser.ts';
+import { hasLegacyDummyFeatures } from '../services/layerStorageService.ts';
 import {
   alignEcmwfWindAndWaveSeries,
   buildEcmwfWeatherUrls,
@@ -502,11 +506,115 @@ describe('5. Source Credibility & Provenance SSOT Registry (dataSources.ts)', ()
     assert.equal(uploadedLayer.isBuiltInSchematic, false);
     assert.ok(uploadedLayer.badgeLabel.includes('사용자 직접 등록'));
 
-    const citation = buildSourceCitationCopyText('v2.2');
-    assert.ok(citation.includes('[바다꼼꼬미 v2.2 데이터 · API · 지도 · 기술 출처 요약]'));
+    const citation = buildSourceCitationCopyText('v2.4');
+    assert.ok(citation.includes('[바다꼼꼬미 v2.4 데이터 · API · 지도 · 기술 출처 요약]'));
     assert.ok(citation.includes('국립해양조사원(KHOA)'));
     assert.ok(citation.includes('유럽중기예보센터(ECMWF'));
   });
 });
+
+describe('6. v2.4 Spatial CRS Detection, Route Leg Label Toggle & Nearby Marine Label (Memo 3 & Map Fixes)', () => {
+  it('formats route leg label parts cleanly across all 4 toggle states without stray separators', () => {
+    const bothOn = getRouteLegLabelParts(24.4, 6.234, true, true);
+    assert.deepEqual(bothOn, {
+      durationText: '24분',
+      distanceText: '6.2NM',
+      combinedText: '24분 · 6.2NM',
+      isHidden: false,
+    });
+
+    const durationOnly = getRouteLegLabelParts(24.4, 6.234, true, false);
+    assert.deepEqual(durationOnly, {
+      durationText: '24분',
+      distanceText: null,
+      combinedText: '24분',
+      isHidden: false,
+    });
+
+    const distanceOnly = getRouteLegLabelParts(24.4, 6.234, false, true);
+    assert.deepEqual(distanceOnly, {
+      durationText: null,
+      distanceText: '6.2NM',
+      combinedText: '6.2NM',
+      isHidden: false,
+    });
+
+    const bothOff = getRouteLegLabelParts(24.4, 6.234, false, false);
+    assert.deepEqual(bothOff, {
+      durationText: null,
+      distanceText: null,
+      combinedText: '',
+      isHidden: true,
+    });
+  });
+
+  it('appends ( 인근: ... ) only for custom sea coordinates within 5 NM and preserves official port names', () => {
+    const samdeok = portById.get('KR-GN-TY-0002');
+    assert.ok(samdeok);
+
+    // 1) Official port snap (<500m) must keep exact official name without ( 인근: ... )
+    const snappedOfficial = resolveSmartWaypoint(
+      samdeok.lat + 0.0002,
+      samdeok.lng + 0.0002,
+      ports,
+      '해상 출발지',
+      500,
+    );
+    assert.equal(snappedOfficial.isCustomCoord, false);
+    assert.equal(snappedOfficial.name, samdeok.name);
+    assert.equal(snappedOfficial.name.includes('인근:'), false);
+
+    // 2) Custom sea coordinate ~2.2 km from port (>500m snap radius, <=5 NM) appends nearby marine place label
+    const nearCustom = resolveSmartWaypoint(
+      34.745,
+      128.415,
+      ports,
+      '경유지 1',
+      500,
+    );
+    assert.equal(nearCustom.isCustomCoord, true);
+    assert.ok(
+      nearCustom.name.includes('인근 해상'),
+      `Expected nearby place label for custom coordinate within 5 NM, got: ${nearCustom.name}`,
+    );
+
+    // 3) Far offshore (>5 NM from any port) returns null from getNearbyMarinePlaceLabel
+    const farLabel = getNearbyMarinePlaceLabel(34.35, 128.95, ports, 5);
+    assert.equal(farLabel, null);
+  });
+
+  it('detects EPSG:5181 from Korea_2000_Korea_Central_Belt WKT with spaces after commas', () => {
+    const prjWkt5181 =
+      'PROJCS["Korea_2000_Korea_Central_Belt",GEOGCS["GCS_Korea_2000",DATUM["D_Korea_2000",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",200000.0],PARAMETER["False_Northing", 500000.0],PARAMETER["Central_Meridian", 127.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Latitude_Of_Origin",38.0],UNIT["Meter",1.0]]';
+    assert.equal(detectCrsFromMetadata(prjWkt5181), 'EPSG:5181');
+  });
+
+  it('detects legacy dummy polygon IDs (NP-TY-01, NP-GJ-02, SPA-01, SPA-02) for automatic cache purge', () => {
+    assert.equal(
+      hasLegacyDummyFeatures({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            id: 'NP-TY-01',
+            properties: { id: 'NP-TY-01', name: '한려해상국립공원 (통영·한산지구)' },
+            geometry: { type: 'Polygon', coordinates: [] },
+          },
+        ],
+      }),
+      true,
+    );
+
+    const realProtectedFc = JSON.parse(
+      fs.readFileSync(
+        new URL('../../public/data/layers/protected_area.geojson', import.meta.url),
+        'utf8',
+      ),
+    );
+    assert.equal(hasLegacyDummyFeatures(realProtectedFc), false);
+    assert.equal(realProtectedFc.features.length, 20);
+  });
+});
+
 
 

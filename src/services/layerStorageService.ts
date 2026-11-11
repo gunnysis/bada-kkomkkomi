@@ -9,10 +9,57 @@ const DB_VERSION = 1;
 const STORE_OPERATIONAL = 'operational_state';
 const STORE_SNAPSHOTS = 'release_snapshots';
 
+export const OPERATIONAL_STORAGE_SCHEMA_VERSION = '2026.11.11-v2.4';
+const LS_KEY_SCHEMA_VERSION = 'bada_operational_schema_version';
 const LS_KEY_OPERATIONAL_META = 'bada_operational_layers_meta_v2';
 const LS_KEY_OPERATIONAL_GEOJSON_PREFIX = 'bada_operational_geojson_v2:';
 const LS_KEY_SNAPSHOTS_FALLBACK = 'bada_operational_snapshots_v2';
 const MAX_SNAPSHOTS = 12;
+
+/**
+ * 구버전 임의 추정 더미 폴리곤 ID 목록 (검증된 QGIS 원본으로 교체됨에 따라 영구 차단)
+ */
+const LEGACY_DUMMY_FEATURE_IDS = new Set([
+  'NP-TY-01',
+  'NP-GJ-02',
+  'SPA-01',
+  'SPA-02',
+]);
+
+export function hasLegacyDummyFeatures(
+  fc?: SpatialFeatureCollection | null,
+): boolean {
+  if (!fc || !Array.isArray(fc.features)) return false;
+  return fc.features.some((f) => {
+    const id = String(f?.id ?? f?.properties?.id ?? '').trim();
+    return LEGACY_DUMMY_FEATURE_IDS.has(id);
+  });
+}
+
+function ensureStorageSchemaUpToDateSync(): boolean {
+  try {
+    if (typeof localStorage === 'undefined') return true;
+    const currentSchema = localStorage.getItem(LS_KEY_SCHEMA_VERSION);
+    if (currentSchema === OPERATIONAL_STORAGE_SCHEMA_VERSION) {
+      return true;
+    }
+    // 스키마 버전 불일치 시 구버전 로컬 캐시 즉시 무효화
+    localStorage.removeItem(LS_KEY_OPERATIONAL_META);
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(LS_KEY_OPERATIONAL_GEOJSON_PREFIX)) {
+        localStorage.removeItem(k);
+      }
+    }
+    localStorage.setItem(
+      LS_KEY_SCHEMA_VERSION,
+      OPERATIONAL_STORAGE_SCHEMA_VERSION,
+    );
+    return false;
+  } catch {
+    return true;
+  }
+}
 
 export interface OperationalLayerState {
   releaseId: string;
@@ -59,6 +106,9 @@ export function loadSyncOperationalMetaFromLocalStorage(): {
   remoteCommitUrl?: string;
 } | null {
   try {
+    if (!ensureStorageSchemaUpToDateSync()) {
+      return null;
+    }
     const raw = localStorage.getItem(LS_KEY_OPERATIONAL_META);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
@@ -75,9 +125,21 @@ export function loadSyncOperationalMetaFromLocalStorage(): {
  * 로컬스토리지 + IndexedDB에서 전체 운영 레이어 상태 및 GeoJSON 본문 로드
  */
 export async function loadOperationalLayerState(): Promise<OperationalLayerState | null> {
+  const isFreshSchema = ensureStorageSchemaUpToDateSync();
+
   // 1. IndexedDB 우선 조회
   try {
     const db = await openSpatialDb();
+    if (!isFreshSchema) {
+      await new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE_OPERATIONAL, 'readwrite');
+        tx.objectStore(STORE_OPERATIONAL).delete('current');
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      });
+      db.close();
+      return null;
+    }
     const record = await new Promise<any>((resolve, reject) => {
       const tx = db.transaction(STORE_OPERATIONAL, 'readonly');
       const store = tx.objectStore(STORE_OPERATIONAL);
@@ -87,12 +149,20 @@ export async function loadOperationalLayerState(): Promise<OperationalLayerState
     });
     db.close();
     if (record && Array.isArray(record.layers)) {
+      const sanitizedGeoJsonById: Record<string, SpatialFeatureCollection> = {};
+      for (const [lid, fc] of Object.entries(
+        (record.geoJsonById ?? {}) as Record<string, SpatialFeatureCollection>,
+      )) {
+        if (!hasLegacyDummyFeatures(fc)) {
+          sanitizedGeoJsonById[lid] = fc;
+        }
+      }
       return {
         releaseId: record.releaseId,
         updatedAt: record.updatedAt,
         summary: record.summary ?? '운영 반영 완료',
         layers: record.layers,
-        geoJsonById: record.geoJsonById ?? {},
+        geoJsonById: sanitizedGeoJsonById,
         remoteSyncStatus: record.remoteSyncStatus,
         remoteCommitSha: record.remoteCommitSha,
         remoteCommitUrl: record.remoteCommitUrl,
@@ -110,7 +180,12 @@ export async function loadOperationalLayerState(): Promise<OperationalLayerState
     try {
       const gRaw = localStorage.getItem(`${LS_KEY_OPERATIONAL_GEOJSON_PREFIX}${layer.id}`);
       if (gRaw) {
-        geoJsonById[layer.id] = JSON.parse(gRaw);
+        const parsedFc = JSON.parse(gRaw) as SpatialFeatureCollection;
+        if (!hasLegacyDummyFeatures(parsedFc)) {
+          geoJsonById[layer.id] = parsedFc;
+        } else {
+          localStorage.removeItem(`${LS_KEY_OPERATIONAL_GEOJSON_PREFIX}${layer.id}`);
+        }
       }
     } catch {
       // ignore

@@ -58,6 +58,10 @@ interface RouteTimeCalculatorProps {
   onSelectLeg?: (legIndex: number | null) => void;
   showDirectionArrows?: boolean;
   onToggleDirectionArrows?: () => void;
+  showLegDurationOnMap?: boolean;
+  onToggleLegDurationOnMap?: () => void;
+  showLegDistanceOnMap?: boolean;
+  onToggleLegDistanceOnMap?: () => void;
   onFitRouteBounds?: () => void;
   onOpenSourcesInfo?: (sourceId: SourceCategoryKey) => void;
 }
@@ -94,6 +98,10 @@ export function RouteTimeCalculator({
   onSelectLeg,
   showDirectionArrows = true,
   onToggleDirectionArrows,
+  showLegDurationOnMap = true,
+  onToggleLegDurationOnMap,
+  showLegDistanceOnMap = true,
+  onToggleLegDistanceOnMap,
   onFitRouteBounds,
   onOpenSourcesInfo,
 }: RouteTimeCalculatorProps) {
@@ -418,6 +426,37 @@ export function RouteTimeCalculator({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {onToggleLegDurationOnMap && (
+                <button
+                  type="button"
+                  onClick={onToggleLegDurationOnMap}
+                  aria-pressed={showLegDurationOnMap}
+                  className={`inline-flex h-7 shrink-0 items-center gap-0.5 rounded-lg border px-1.5 text-[10px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
+                    showLegDurationOnMap
+                      ? 'border-amber-500 bg-amber-50 text-amber-900'
+                      : 'border-slate-300 bg-white text-slate-500'
+                  }`}
+                  title="지도 구간 배지에 예상 소요시간(분) 표시/숨김"
+                >
+                  <Clock className="h-2.5 w-2.5 shrink-0" />
+                  <span>시간</span>
+                </button>
+              )}
+              {onToggleLegDistanceOnMap && (
+                <button
+                  type="button"
+                  onClick={onToggleLegDistanceOnMap}
+                  aria-pressed={showLegDistanceOnMap}
+                  className={`inline-flex h-7 shrink-0 items-center gap-0.5 rounded-lg border px-1.5 text-[10px] font-extrabold whitespace-nowrap tabular-nums transition active:scale-95 ${
+                    showLegDistanceOnMap
+                      ? 'border-sky-400 bg-sky-50 text-sky-900'
+                      : 'border-slate-300 bg-white text-slate-500'
+                  }`}
+                  title="지도 구간 배지에 해리(NM) 거리 표시/숨김"
+                >
+                  <span>NM</span>
+                </button>
+              )}
               {onToggleDirectionArrows && (
                 <button
                   type="button"

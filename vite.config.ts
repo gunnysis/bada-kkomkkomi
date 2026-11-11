@@ -56,7 +56,7 @@ export default defineConfig({
         name: '바다꼼꼬미 — 국립공원공단 해양 현장업무 접안·항해 지원 PWA',
         short_name: '바다꼼꼬미',
         description:
-          '국립공원공단 한려해상(통영·거제 해역) 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 136개 항포구·선착장) 오프라인 PWA [v2.2]',
+          '국립공원공단 한려해상(통영·거제 해역) 해양 현장업무 지원 (꼬미의 바다수첩 55개소 & 바닷길 콕콕 136개 항포구·선착장 · 특별보호구역 20개소) PWA [v2.4]',
         lang: 'ko',
         start_url: base,
         scope: base,
@@ -87,6 +87,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cacheId: 'bada-kkomkkomi-v2.4',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,json,geojson}'],
         globIgnores: ['**/dev/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
@@ -103,7 +104,7 @@ export default defineConfig({
               url.pathname.endsWith('.geojson') || url.pathname.endsWith('.json'),
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'bada-geojson-and-config-v2',
+              cacheName: 'bada-geojson-and-config-v2.4',
               networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 40,

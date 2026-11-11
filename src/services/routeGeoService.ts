@@ -212,6 +212,41 @@ export function calculateDurationMinutes(distanceNm: number, speedKnots: number)
 }
 
 /**
+ * 커스텀 해상 좌표(isCustomCoord === true) 전용 인근 지명 보조 라벨 생성
+ * - 주의: 공식 항구/선착장(!isCustomCoord)의 원래 이름을 절대 덮어쓰지 않고,
+ *   사용자가 바다 위 임의 좌표를 찍어 생성된 커스텀 경유지에만 인근 도서·항포구 지명을 보조 표기합니다.
+ */
+export function getNearbyMarinePlaceLabel(
+  lat: number,
+  lng: number,
+  ports: MarinePort[],
+  maxRadiusNm = 5,
+): string | null {
+  if (!ports || ports.length === 0) return null;
+
+  let closestPort: MarinePort | null = null;
+  let minKm = Infinity;
+
+  for (const port of ports) {
+    const dKm = calculateHaversineKm(lat, lng, port.lat, port.lng);
+    if (dKm < minKm) {
+      minKm = dKm;
+      closestPort = port;
+    }
+  }
+
+  const minNm = kmToNauticalMiles(minKm);
+  if (!closestPort || minNm > maxRadiusNm) {
+    return null;
+  }
+
+  const placeName = closestPort.islandName
+    ? `${closestPort.islandName}·${closestPort.name}`
+    : closestPort.name;
+  return `${placeName} 인근 해상`;
+}
+
+/**
  * 지능형 항구/소규모 선착장/좌표 스냅 판정 (500m 이내 항포구/접안지 자동 매칭, 육지 산악/내륙 클릭 시 최근접 해상/항포구 자동 보정)
  */
 export function resolveSmartWaypoint(
@@ -279,8 +314,9 @@ export function resolveSmartWaypoint(
         hazards: p.hazards,
       };
     }
+    const nearbySnapLabel = getNearbyMarinePlaceLabel(snapped.lat, snapped.lng, ports);
     return {
-      name: `${fallbackLabel}·해상보정 (${snapped.lat.toFixed(3)}°N, ${snapped.lng.toFixed(3)}°E)`,
+      name: `${nearbySnapLabel ?? `${fallbackLabel}·해상보정`} (${snapped.lat.toFixed(3)}°N, ${snapped.lng.toFixed(3)}°E)`,
       lat: snapped.lat,
       lng: snapped.lng,
       matchedPortId: undefined,
@@ -288,8 +324,9 @@ export function resolveSmartWaypoint(
     };
   }
 
+  const nearbyLabel = getNearbyMarinePlaceLabel(lat, lng, ports);
   return {
-    name: `${fallbackLabel} (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`,
+    name: `${nearbyLabel ?? fallbackLabel} (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`,
     lat,
     lng,
     matchedPortId: undefined,

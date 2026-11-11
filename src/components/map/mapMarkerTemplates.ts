@@ -1,6 +1,7 @@
 import type { MarkerColor } from '../../types/docking';
 import { MARKER_COLOR_MAP } from '../../types/docking';
 import type { MarinePort } from '../../types/port';
+import { getRouteLegLabelParts } from '../../services/routeLegLabelService';
 
 export interface MarkerTemplateSpec {
   html: string;
@@ -351,8 +352,18 @@ export function buildRouteLegBadgeSpec(
     legIndex?: number;
     safetyLevel?: 'safe' | 'caution' | 'danger';
     isSelected?: boolean;
+    showDuration?: boolean;
+    showDistance?: boolean;
   },
 ): MarkerTemplateSpec {
+  const showDuration = options?.showDuration ?? true;
+  const showDistance = options?.showDistance ?? true;
+  const labelParts = getRouteLegLabelParts(
+    durationMinutes,
+    distanceNm,
+    showDuration,
+    showDistance,
+  );
   const mins = Math.round(durationMinutes);
   const nmStr = distanceNm.toFixed(1);
   const safeCardinal = escapeHtml(cardinal);
@@ -379,6 +390,17 @@ export function buildRouteLegBadgeSpec(
   const boxShadow = isSelected
     ? '0 0 0 2px rgba(52, 211, 153, 0.35), 0 4px 12px rgba(0,0,0,0.85)'
     : '0 3px 10px rgba(0,0,0,0.78)';
+
+  const durationHtml = labelParts.durationText
+    ? `<span style="color: ${isSelected ? '#6ee7b7' : '#fbbf24'}; font-size: 12px;">${escapeHtml(labelParts.durationText)}</span>`
+    : '';
+  const separatorHtml =
+    labelParts.durationText && labelParts.distanceText
+      ? `<span style="color: #64748b;">·</span>`
+      : '';
+  const distanceHtml = labelParts.distanceText
+    ? `<span style="color: #e0f2fe;">${escapeHtml(labelParts.distanceText)}</span>`
+    : '';
 
   const html = `
     <div style="
@@ -426,9 +448,9 @@ export function buildRouteLegBadgeSpec(
             <path d="M10 2.5L16.2 16.2L10 12.8L3.8 16.2L10 2.5Z" fill="#020617" />
           </svg>
         </span>
-        <span style="color: ${isSelected ? '#6ee7b7' : '#fbbf24'}; font-size: 12px;">${mins}분</span>
-        <span style="color: #64748b;">·</span>
-        <span style="color: #e0f2fe;">${nmStr}NM</span>
+        ${durationHtml}
+        ${separatorHtml}
+        ${distanceHtml}
         <span style="color: #94a3b8; font-size: 10px;">${roundedDeg}°${safeCardinal}</span>
       </button>
     </div>

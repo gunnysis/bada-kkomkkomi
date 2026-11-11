@@ -1395,66 +1395,71 @@ export function LayerControlModal({
                 </div>
               </div>
 
-              {/* 좌표계(CRS) · 한글 인코딩 · 경량화 옵션 바 */}
-              <div className="grid grid-cols-1 gap-2 rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3 sm:grid-cols-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#003360]">
-                    원본 좌표계 (CRS 자동 감지/지정)
-                  </label>
-                  <select
-                    value={crsOverride}
-                    onChange={(e) =>
-                      void handleChangeCrsOverride(
-                        e.target.value as SupportedCrsCode,
-                      )
-                    }
-                    className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#003360]"
-                  >
-                    <option value="AUTO">자동 감지 (권장 · .prj/GPKG/범위)</option>
-                    {Object.entries(KOREAN_CRS_DEFINITIONS).map(([code, meta]) => (
-                      <option key={code} value={code}>
-                        {meta.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* 좌표계(CRS) · 한글 인코딩 · 경량화 옵션 바 (기본 자동 감지 · 관리자 고급 설정 접기) */}
+              <details className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3">
+                <summary className="cursor-pointer text-xs font-black text-[#003360]">
+                  ⚙️ 관리자 고급 변환 옵션 (좌표계·한글 인코딩·정밀도 수동 지정 — 기본값: 자동 감지)
+                </summary>
+                <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#003360]">
+                      원본 좌표계 (CRS 자동 감지/지정)
+                    </label>
+                    <select
+                      value={crsOverride}
+                      onChange={(e) =>
+                        void handleChangeCrsOverride(
+                          e.target.value as SupportedCrsCode,
+                        )
+                      }
+                      className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#003360]"
+                    >
+                      <option value="AUTO">자동 감지 (권장 · .prj/GPKG/범위)</option>
+                      {Object.entries(KOREAN_CRS_DEFINITIONS).map(([code, meta]) => (
+                        <option key={code} value={code}>
+                          {meta.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-[#003360]">
-                    한글 속성 인코딩 (.dbf / 텍스트)
-                  </label>
-                  <select
-                    value={encodingOverride}
-                    onChange={(e) =>
-                      void handleChangeEncodingOverride(
-                        e.target.value as SupportedTextEncoding,
-                      )
-                    }
-                    className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#00846c]"
-                  >
-                    <option value="AUTO">자동 감지 (UTF-8 / CP949·EUC-KR)</option>
-                    <option value="EUC-KR">EUC-KR / CP949 (관공서 Shapefile)</option>
-                    <option value="UTF-8">UTF-8 (표준 유니코드)</option>
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#003360]">
+                      한글 속성 인코딩 (.dbf / 텍스트)
+                    </label>
+                    <select
+                      value={encodingOverride}
+                      onChange={(e) =>
+                        void handleChangeEncodingOverride(
+                          e.target.value as SupportedTextEncoding,
+                        )
+                      }
+                      className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-[#00846c]"
+                    >
+                      <option value="AUTO">자동 감지 (UTF-8 / CP949·EUC-KR)</option>
+                      <option value="EUC-KR">EUC-KR / CP949 (관공서 Shapefile)</option>
+                      <option value="UTF-8">UTF-8 (표준 유니코드)</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-[#003360]">
-                    도형 정밀도 · 모바일 경량화
-                  </label>
-                  <select
-                    value={simplifyToleranceMeters}
-                    onChange={(e) =>
-                      setSimplifyToleranceMeters(Number(e.target.value))
-                    }
-                    className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-amber-900"
-                  >
-                    <option value={0}>원본 정밀도 유지 (단순화 안 함)</option>
-                    <option value={1}>모바일 최적화 단순화 (허용오차 1m)</option>
-                    <option value={5}>대용량 해안선 고속 경량화 (5m)</option>
-                  </select>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#003360]">
+                      도형 정밀도 · 모바일 경량화
+                    </label>
+                    <select
+                      value={simplifyToleranceMeters}
+                      onChange={(e) =>
+                        setSimplifyToleranceMeters(Number(e.target.value))
+                      }
+                      className="mt-1 w-full rounded-lg border-2 border-slate-400 bg-white px-2 py-1.5 text-xs font-bold text-amber-900"
+                    >
+                      <option value={0}>원본 정밀도 유지 (단순화 안 함)</option>
+                      <option value={1}>모바일 최적화 단순화 (허용오차 1m)</option>
+                      <option value={5}>대용량 해안선 고속 경량화 (5m)</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              </details>
 
               {isParsingFiles && (
                 <div className="flex items-center justify-center gap-2 rounded-2xl border border-sky-300 bg-[#f0f9ff] p-4 text-xs font-bold text-[#003360]">
@@ -1879,15 +1884,13 @@ export function LayerControlModal({
                 )}
               </div>
 
-              {/* 2. 원격 GitHub 저장소 자동 커밋 연동 설정 */}
-              <div className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3.5 text-xs">
-                <div className="flex items-center gap-2">
+              {/* 2. 원격 GitHub 저장소 자동 커밋 연동 설정 (관리자 고급 설정 접기) */}
+              <details className="rounded-2xl border border-[#d6c6b2] bg-[#f7f4ee] p-3.5 text-xs">
+                <summary className="flex cursor-pointer items-center gap-2 font-black text-[#003360]">
                   <FolderGit2 className="h-4 w-4 text-[#003360]" />
-                  <h3 className="font-black text-[#003360]">
-                    원격 GitHub 저장소(GitHub Pages) 자동 운영 배포 연동
-                  </h3>
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed font-semibold text-[#484843]">
+                  <span>관리자 고급 설정: 원격 GitHub 저장소(GitHub Pages) 자동 운영 배포 연동</span>
+                </summary>
+                <p className="mt-2 text-[11px] leading-relaxed font-semibold text-[#484843]">
                   관리 화면에서 <strong>[저장 (운영 반영)]</strong> 클릭 시 기기 내 영속 저장소(`IndexedDB`)에는 토큰 없이도 100% 즉시 반영됩니다. 모든 직원 단말기에 배포되도록 원격 GitHub 저장소(`main`)까지 동시에 자동 커밋하려면 저장소 쓰기 토큰(`contents: write` 권한 Fine-grained PAT)을 입력하세요. (토큰은 외부로 노출되지 않고 현재 기기 내부에만 격리 보관됩니다.)
                 </p>
 
@@ -1991,7 +1994,7 @@ export function LayerControlModal({
                     ✓ {gitHubConfigSavedMsg}
                   </p>
                 )}
-              </div>
+              </details>
             </div>
           )}
         </div>

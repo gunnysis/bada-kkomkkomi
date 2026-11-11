@@ -6,6 +6,7 @@ import {
   Check,
   ChevronDown,
   ChevronLeft,
+  Database,
   Download,
   Layers,
   Mail,
@@ -15,8 +16,6 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Waves,
-  Wifi,
-  WifiOff,
   X,
 } from 'lucide-react';
 
@@ -230,6 +229,15 @@ export function App() {
   const [selectedRegion, setSelectedRegion] = useState<'all' | 'tongyeong' | 'geoje'>(
     () => initialWorkspaceDraft.selectedRegion,
   );
+  const [showLegDurationOnMap, setShowLegDurationOnMap] = useState<boolean>(
+    () => initialWorkspaceDraft.showLegDurationOnMap ?? true,
+  );
+  const [showLegDistanceOnMap, setShowLegDistanceOnMap] = useState<boolean>(
+    () => initialWorkspaceDraft.showLegDistanceOnMap ?? true,
+  );
+  const [lastReporterName, setLastReporterName] = useState<string>(
+    () => initialWorkspaceDraft.lastReporterName ?? '',
+  );
   const [dockingSearchQuery, setDockingSearchQuery] = useState<string>('');
   const [isColorFilterOpen, setIsColorFilterOpen] = useState<boolean>(false);
   const colorFilterPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -385,15 +393,26 @@ export function App() {
   const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
   const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('pan_only');
 
-  // 항로 웨이포인트·선속·등급 필터·권역 필터 변경 시 WorkspaceDraftRepository에 자동 영속화 (앱 재시작·SW 업데이트 시 보존)
+  // 항로 웨이포인트·선속·등급 필터·권역 필터·지도 배지 토글·제보자명 변경 시 WorkspaceDraftRepository에 자동 영속화 (앱 재시작·SW 업데이트 시 보존)
   useEffect(() => {
     saveWorkspaceDraft({
       routeWaypoints,
       speedKnots,
       selectedColors,
       selectedRegion,
+      showLegDurationOnMap,
+      showLegDistanceOnMap,
+      lastReporterName,
     });
-  }, [routeWaypoints, speedKnots, selectedColors, selectedRegion]);
+  }, [
+    routeWaypoints,
+    speedKnots,
+    selectedColors,
+    selectedRegion,
+    showLegDurationOnMap,
+    showLegDistanceOnMap,
+    lastReporterName,
+  ]);
 
   const commitRouteWaypoints = useCallback(
     (updater: (prev: RouteWaypoint[]) => RouteWaypoint[]) => {
@@ -1371,22 +1390,16 @@ export function App() {
                   </button>
                 )}
 
-                <div
-                  role="status"
-                  title={isOnline ? '온라인 연결됨' : '오프라인 캐시 모드'}
-                  className={`flex h-8 items-center gap-1 rounded-xl border px-1.5 text-xs font-extrabold sm:h-9 sm:px-2 ${
-                    isOnline
-                      ? 'border-[#00846c]/50 bg-emerald-50 text-[#00846c]'
-                      : 'border-amber-500 bg-amber-100 text-amber-900'
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => handleOpenSourcesInfo()}
+                  aria-label="데이터·기술 출처 확인 열기"
+                  title="공공데이터·해양기상·지도·알고리즘 출처 확인"
+                  className="flex h-8 shrink-0 items-center gap-1 rounded-xl border border-sky-300 bg-sky-50 px-2 text-xs font-extrabold text-[#003360] transition hover:border-sky-400 hover:bg-sky-100 active:scale-95 sm:h-9 sm:px-2.5"
                 >
-                  {isOnline ? (
-                    <Wifi className="h-3.5 w-3.5 text-[#00846c]" />
-                  ) : (
-                    <WifiOff className="h-3.5 w-3.5 text-amber-700" />
-                  )}
-                  <span className="hidden md:inline">{isOnline ? '온라인' : '오프라인'}</span>
-                </div>
+                  <Database className="h-3.5 w-3.5 text-[#0284c7] sm:h-4 sm:w-4" aria-hidden="true" />
+                  <span className="hidden md:inline">출처 ⓘ</span>
+                </button>
 
                 <button
                   type="button"
@@ -1558,6 +1571,72 @@ export function App() {
                   />
                 </button>
               </div>
+            </div>
+
+            {/* 일반 내부 직원용 원터치 퀵 레이어 토글 바 (모달을 열지 않고 주요 레이어 ON/OFF + 특별보호구역 맞춤) */}
+            <div
+              role="group"
+              aria-label="주요 공간정보 레이어 빠른 전환"
+              className="flex w-full items-center gap-1 overflow-x-auto scrollbar-none sm:gap-1.5"
+            >
+              {layers
+                .filter(
+                  (layer) =>
+                    layer.id !== 'national_park' ||
+                    (layer.featureCount ?? 0) > 0,
+                )
+                .map((layer) => {
+                  const isProtectedArea = layer.id === 'protected_area';
+                  const countBadge =
+                    layer.id === 'docking'
+                      ? totalDockingCount || 55
+                      : (layer.featureCount ??
+                        geoJsonLayersData[layer.id]?.features?.length ??
+                        0);
+                  return (
+                    <div key={layer.id} className="flex shrink-0 items-center gap-0.5">
+                      <button
+                        type="button"
+                        aria-pressed={layer.visible}
+                        onClick={() => toggleLayer(layer.id)}
+                        title={`${layer.name} 레이어 표시 ${layer.visible ? '끄기' : '켜기'}`}
+                        className={`flex h-7 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[11px] font-extrabold whitespace-nowrap shadow-sm transition active:scale-95 ${
+                          layer.visible
+                            ? 'border-[#003360] bg-white/96 text-[#003360]'
+                            : 'border-slate-300/80 bg-white/75 text-slate-500 opacity-80'
+                        }`}
+                      >
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor: layer.visible
+                              ? layer.color
+                              : '#94a3b8',
+                          }}
+                        />
+                        <span>{layer.name}</span>
+                        {countBadge > 0 && (
+                          <span className="font-mono text-[10px] font-black text-slate-600">
+                            ({countBadge})
+                          </span>
+                        )}
+                      </button>
+                      {isProtectedArea && layer.visible && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleFlyToPoint(34.78, 128.44, 11);
+                            showToast('한려해상 특별보호구역 20개소 전체 시야로 이동했습니다.');
+                          }}
+                          title="한려해상 특별보호구역 20개소 전체 범위로 지도 시야 맞추기"
+                          className="flex h-7 shrink-0 items-center rounded-full border border-purple-400 bg-purple-50/95 px-2 text-[10px] font-black whitespace-nowrap text-purple-900 shadow-xs transition hover:bg-purple-100 active:scale-95"
+                        >
+                          🎯구역맞춤
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
 
             {/* 온디맨드 다중 등급 + 권역·검색 통합 팝오버 (필요한 사용자만 열어서 조석주의·안전접안·전용부두·비상거점·권역 선택) */}
@@ -1917,6 +1996,8 @@ export function App() {
           }
           onSelectLeg={setSelectedLegIndex}
           showDirectionArrows={showDirectionArrows}
+          showLegDurationOnMap={showLegDurationOnMap}
+          showLegDistanceOnMap={showLegDistanceOnMap}
           fitRouteBoundsTrigger={fitRouteBoundsTrigger}
           onUpdateWaypointPos={handleUpdateWaypointPos}
           onRemoveWaypoint={handleRemoveWaypoint}
@@ -2055,6 +2136,10 @@ export function App() {
                 onSelectLeg={setSelectedLegIndex}
                 showDirectionArrows={showDirectionArrows}
                 onToggleDirectionArrows={() => setShowDirectionArrows((v) => !v)}
+                showLegDurationOnMap={showLegDurationOnMap}
+                onToggleLegDurationOnMap={() => setShowLegDurationOnMap((v) => !v)}
+                showLegDistanceOnMap={showLegDistanceOnMap}
+                onToggleLegDistanceOnMap={() => setShowLegDistanceOnMap((v) => !v)}
                 onFitRouteBounds={() => setFitRouteBoundsTrigger((n) => n + 1)}
                 onOpenSourcesInfo={handleOpenSourcesInfo}
               />
@@ -2158,6 +2243,8 @@ export function App() {
             initialLng={reportLng}
             adminConfig={config.admin}
             onUpdateAdminEmail={updateAdminEmail}
+            defaultReporterName={lastReporterName}
+            onChangeReporterName={setLastReporterName}
             onPickLocationOnMap={() => {
               setIsReportModalOpen(false);
               setIsReportPickMode(true);

@@ -13,6 +13,9 @@ export interface WorkspaceDraftState {
   speedKnots: number;
   selectedColors: MarkerColor[];
   selectedRegion: RegionFilterType;
+  showLegDurationOnMap?: boolean;
+  showLegDistanceOnMap?: boolean;
+  lastReporterName?: string;
 }
 
 const VALID_MARKER_COLORS: ReadonlyArray<MarkerColor> = [
@@ -75,6 +78,9 @@ export function sanitizeWorkspaceDraft(
     speedKnots: fallbackSpeedKnots,
     selectedColors: ['red'],
     selectedRegion: 'all',
+    showLegDurationOnMap: true,
+    showLegDistanceOnMap: true,
+    lastReporterName: '',
   };
 
   if (!raw || typeof raw !== 'object') {
@@ -112,6 +118,19 @@ export function sanitizeWorkspaceDraft(
     ? (candidate.selectedRegion as RegionFilterType)
     : 'all';
 
+  const showLegDurationOnMap =
+    typeof candidate.showLegDurationOnMap === 'boolean'
+      ? candidate.showLegDurationOnMap
+      : true;
+  const showLegDistanceOnMap =
+    typeof candidate.showLegDistanceOnMap === 'boolean'
+      ? candidate.showLegDistanceOnMap
+      : true;
+  const lastReporterName =
+    typeof candidate.lastReporterName === 'string'
+      ? candidate.lastReporterName.trim().slice(0, 40)
+      : '';
+
   return {
     schemaVersion: WORKSPACE_DRAFT_SCHEMA_VERSION,
     savedAt:
@@ -122,6 +141,9 @@ export function sanitizeWorkspaceDraft(
     speedKnots,
     selectedColors,
     selectedRegion,
+    showLegDurationOnMap,
+    showLegDistanceOnMap,
+    lastReporterName,
   };
 }
 

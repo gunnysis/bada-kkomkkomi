@@ -24,7 +24,17 @@ interface FieldReportModalProps {
   adminConfig: AdminConfig;
   onUpdateAdminEmail: (newEmail: string) => void;
   onPickLocationOnMap: () => void;
+  defaultReporterName?: string;
+  onChangeReporterName?: (name: string) => void;
 }
+
+const FIELD_REPORT_QUICK_CHIPS = [
+  '⚓ 선착장·슬립웨이 점검필요',
+  '⚠️ 암초·수심 주의',
+  '🚫 특별보호구역 출입계도',
+  '🛟 부표·안내판 파손',
+  '🗑️ 해양쓰레기 유입',
+] as const;
 
 export function FieldReportModal({
   isOpen,
@@ -36,10 +46,12 @@ export function FieldReportModal({
   adminConfig,
   onUpdateAdminEmail,
   onPickLocationOnMap,
+  defaultReporterName = '',
+  onChangeReporterName,
 }: FieldReportModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [memo, setMemo] = useState('');
-  const [reporterName, setReporterName] = useState('');
+  const [reporterName, setReporterName] = useState(defaultReporterName);
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<string | null>(null);
@@ -262,25 +274,29 @@ export function FieldReportModal({
             )}
           </div>
 
-          {/* 2. 제보자 이름 (선택) */}
+          {/* 2. 제보자 이름 (선택 · 한 번 입력 시 기기에 기억) */}
           <div>
             <label
               htmlFor="report-reporter-name-input"
               className="mb-1 block text-xs font-extrabold text-[#003360]"
             >
-              제보자 이름 / 소속 (선택)
+              제보자 이름 / 소속 (선택 · 자동 기억)
             </label>
             <input
               id="report-reporter-name-input"
               type="text"
               value={reporterName}
-              onChange={(e) => setReporterName(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setReporterName(next);
+                onChangeReporterName?.(next);
+              }}
               placeholder="예: 홍길동 주무관"
               className="w-full rounded-xl border-2 border-slate-400 bg-white px-3.5 py-2.5 text-base font-bold text-[#003360] placeholder-slate-400 shadow-2xs focus:border-[#0066b3] focus:outline-none"
             />
           </div>
 
-          {/* 3. 현장 자유 메모 (필수) */}
+          {/* 3. 현장 자유 메모 (필수) + 원터치 현장 상황 태그 칩 */}
           <div>
             <label
               htmlFor="report-memo-textarea"
@@ -288,6 +304,28 @@ export function FieldReportModal({
             >
               현장 자유 메모 및 위험/특이사항 (필수)
             </label>
+            <div
+              role="group"
+              aria-label="현장 상황 빠른 입력 태그"
+              className="mb-2 flex flex-wrap gap-1.5"
+            >
+              {FIELD_REPORT_QUICK_CHIPS.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() =>
+                    setMemo((prev) => {
+                      const prefix = `[${chip}] `;
+                      if (prev.includes(prefix)) return prev;
+                      return prev.trim() ? `${prev.trim()}\n${prefix}` : prefix;
+                    })
+                  }
+                  className="rounded-lg border border-sky-300 bg-sky-50 px-2 py-1 text-[11px] font-extrabold text-[#003360] transition hover:border-[#0066b3] hover:bg-sky-100 active:scale-95"
+                >
+                  + {chip}
+                </button>
+              ))}
+            </div>
             <textarea
               id="report-memo-textarea"
               required

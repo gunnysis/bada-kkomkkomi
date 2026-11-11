@@ -1,6 +1,6 @@
 # 바다꼼꼬미 (Bada-Kkomkkomi) 외부 데이터 · API · 지도 · 기술 출처 명세서 (`DATA_AND_TECH_SOURCES.md`)
 
-- **문서 버전**: `v2.3` (기준일: `2026-11-10`, Asia/Seoul · 앱 버전 `v2.2` / `2.2.0` 정합)
+- **문서 버전**: `v2.4` (기준일: `2026-11-11`, Asia/Seoul · 앱 버전 `v2.4` / `2.4.0` 정합)
 - **코드 단일 정본(SSOT)**: [`src/config/dataSources.ts`](../src/config/dataSources.ts) · [`src/config/appVersion.ts`](../src/config/appVersion.ts)
 - **통합 구현 설계서**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./ARCHITECTURE_AND_DESIGN.md)
 
