@@ -47,9 +47,9 @@ import {
   summarizePhotoCollection,
 } from '../config/dataSources.ts';
 import {
-  applyConfirmedCandidate,
   applyDirectPortSelection,
-  buildRouteCandidateState,
+  calculatePortDetourKm,
+  findOptimalWaypointInsertIndex,
   findSiblingPorts,
   sanitizeCommittedRouteWaypoints,
   validateCandidatePort,
@@ -651,96 +651,49 @@ describe('7. Registered Port Candidate Selection, Sibling Port Switcher & Post-E
   it('blocks 0-distance direct A -> A and consecutive duplicates while allowing round-trip A -> B -> A (GAP-05)', () => {
     const portA = portById.get('TY-001');
     const portB = portById.get('TY-002');
-    assert.ok(portA && portB);
+    const portC = portById.get('TY-003');
+    assert.ok(portA && portB && portC);
 
-    // Step 1: Select start A -> confirm
-    const candStart = buildRouteCandidateState(portA.id, 'map', 'select_start', [], ports);
-    assert.ok(candStart);
-    assert.equal(candStart.validationError, null);
-    const wpsAfterStart = applyConfirmedCandidate(candStart, []);
-    assert.equal(wpsAfterStart.length, 1);
-    assert.equal(wpsAfterStart[0].type, 'start');
-    assert.equal(wpsAfterStart[0].matchedPortId, portA.id);
+    // Step 1: Select start A -> immediate commit
+    const afterStart = applyDirectPortSelection(portA, [], 'start');
+    assert.equal(afterStart.error, null);
+    assert.equal(afterStart.waypoints.length, 1);
+    assert.equal(afterStart.waypoints[0].type, 'start');
+    assert.equal(afterStart.waypoints[0].matchedPortId, portA.id);
 
     // Step 2: Selecting A again as direct destination (A -> A) must fail validation
-    const candInvalidSameEnd = buildRouteCandidateState(
-      portA.id,
-      'map',
-      'select_end',
-      wpsAfterStart,
-      ports,
-    );
-    assert.ok(candInvalidSameEnd);
-    assert.ok(candInvalidSameEnd.validationError !== null);
+    const invalidSameEnd = applyDirectPortSelection(portA, afterStart.waypoints, 'end');
+    assert.ok(invalidSameEnd.error !== null);
 
-    // Step 3: Select B as destination -> confirm (A -> B)
-    const candEndB = buildRouteCandidateState(
-      portB.id,
-      'map',
-      'select_end',
-      wpsAfterStart,
-      ports,
-    );
-    assert.ok(candEndB);
-    assert.equal(candEndB.validationError, null);
-    const wpsAfterEndB = applyConfirmedCandidate(candEndB, wpsAfterStart);
-    assert.equal(wpsAfterEndB.length, 2);
-    assert.equal(wpsAfterEndB[0].type, 'start');
-    assert.equal(wpsAfterEndB[1].type, 'end');
+    // Step 3: Select B as destination -> A -> B
+    const afterEndB = applyDirectPortSelection(portB, afterStart.waypoints, 'end');
+    assert.equal(afterEndB.error, null);
+    assert.equal(afterEndB.waypoints.length, 2);
+    assert.equal(afterEndB.waypoints[0].type, 'start');
+    assert.equal(afterEndB.waypoints[1].type, 'end');
 
-    // Step 4: Add waypoint B before end B -> consecutive duplicate (A -> B -> B), must fail validation
-    const candDupWaypoint = buildRouteCandidateState(
-      portB.id,
-      'map',
-      'add_waypoint',
-      wpsAfterEndB,
-      ports,
-    );
-    assert.ok(candDupWaypoint);
-    assert.ok(candDupWaypoint.validationError !== null);
-
-    // Step 5: Replace end B with A when only 2 waypoints -> becomes A -> A, must fail validation
+    // Step 4: Replace end B with A when only 2 waypoints -> becomes A -> A, must fail validation
     const errDirectReplace = validateCandidatePort(
       portA,
       'replace_end',
-      wpsAfterEndB,
-      wpsAfterEndB[1].id,
+      afterEndB.waypoints,
+      afterEndB.waypoints[1].id,
     );
     assert.ok(errDirectReplace !== null);
 
-    // Step 6: Build round-trip A -> C -> A by first adding waypoint C (e.g., TY-003), then replacing end with A
-    const portC = portById.get('TY-003');
-    assert.ok(portC);
-    const candWpC = buildRouteCandidateState(
-      portC.id,
-      'map',
-      'add_waypoint',
-      wpsAfterEndB,
-      ports,
-    );
-    assert.ok(candWpC && candWpC.validationError === null);
-    const wpsThree = applyConfirmedCandidate(candWpC, wpsAfterEndB);
-    assert.equal(wpsThree.length, 3);
+    // Step 5: Direct map click on start port A when A -> B is active builds round-trip A -> B -> A
+    const roundTripWps = applyDirectPortSelection(portA, afterEndB.waypoints);
+    assert.equal(roundTripWps.error, null);
+    assert.equal(roundTripWps.waypoints.length, 3);
+    assert.equal(roundTripWps.waypoints[0].matchedPortId, portA.id);
+    assert.equal(roundTripWps.waypoints[1].matchedPortId, portB.id);
+    assert.equal(roundTripWps.waypoints[1].type, 'waypoint');
+    assert.equal(roundTripWps.waypoints[2].matchedPortId, portA.id);
+    assert.equal(roundTripWps.waypoints[2].type, 'end');
 
-    const candRoundTripEndA = buildRouteCandidateState(
-      portA.id,
-      'map',
-      'replace_end',
-      wpsThree,
-      ports,
-      wpsThree[2].id,
-    );
-    assert.ok(candRoundTripEndA);
-    assert.equal(candRoundTripEndA.validationError, null);
-    const roundTripWps = applyConfirmedCandidate(candRoundTripEndA, wpsThree);
-    assert.equal(roundTripWps.length, 3);
-    assert.equal(roundTripWps[0].matchedPortId, portA.id);
-    assert.equal(roundTripWps[1].matchedPortId, portC.id);
-    assert.equal(roundTripWps[2].matchedPortId, portA.id);
-
-    // Step 7: Removing middle waypoint C from A -> C -> A must sanitize A -> A down to single start [A] (GAP-06)
+    // Step 6: Removing middle waypoint B from A -> B -> A must sanitize A -> A down to single start [A] (GAP-06)
     const afterRemoveMiddle = sanitizeCommittedRouteWaypoints(
-      roundTripWps.filter((w) => w.type !== 'waypoint'),
+      roundTripWps.waypoints.filter((w) => w.type !== 'waypoint'),
     );
     assert.equal(afterRemoveMiddle.waypoints.length, 1);
     assert.equal(afterRemoveMiddle.waypoints[0].type, 'start');
@@ -748,11 +701,13 @@ describe('7. Registered Port Candidate Selection, Sibling Port Switcher & Post-E
     assert.ok(afterRemoveMiddle.notice !== null);
   });
 
-  it('applies direct 1-step port selection (start -> end -> waypoint) and computes accurate sea-route travel time', () => {
-    const portA = portById.get('TY-001');
-    const portB = portById.get('TY-002');
-    const portC = portById.get('TY-003');
-    assert.ok(portA && portB && portC);
+  it('applies direct 1-step port selection (start -> end -> 3rd+ click optimal waypoint & 1-tap toggle removal) and computes accurate sea-route travel time', () => {
+    const portA = portById.get('TY-001'); // 강구안
+    const portB = portById.get('TY-003'); // 욕지도
+    const portMid = portById.get('KR-GN-TY-0005'); // 달아항 (강구안 -> 욕지도 항로 중간 경유지)
+    const portDetour = portById.get('KR-GN-GJ-0026'); // 거제 법동항 (항로 반대편 원거리 항구)
+    const portNearStart = portById.get('KR-GN-TY-0002'); // 삼덕항 (강구안에서 달아항 사이)
+    assert.ok(portA && portB && portMid && portDetour && portNearStart);
 
     // 1st map selection on empty route -> immediately sets start
     const first = applyDirectPortSelection(portA, []);
@@ -774,19 +729,61 @@ describe('7. Registered Port Candidate Selection, Sibling Port Switcher & Post-E
     assert.equal(second.waypoints[0].matchedPortId, portA.id);
     assert.equal(second.waypoints[1].matchedPortId, portB.id);
 
-    // Black-box engine computes accurate real-sea distance and travel duration
-    const summary = calculateRouteSummary(second.waypoints, 15, ports, marineWaypoints);
-    assert.equal(summary.legs.length, 1);
+    // Verify route corridor detour calculation (달아항 has smaller detour on 강구안->욕지도 than 거제 법동항)
+    const detourMidKm = calculatePortDetourKm(portMid, second.waypoints);
+    const detourFarKm = calculatePortDetourKm(portDetour, second.waypoints);
+    assert.ok(
+      detourMidKm < detourFarKm,
+      `Expected mid-corridor port detour (${detourMidKm}km) < far port detour (${detourFarKm}km)`,
+    );
+
+    // 3rd map click (no targetSlot needed!) -> automatically inserts as intermediate waypoint at optimal leg
+    const thirdClickWaypoint = applyDirectPortSelection(portMid, second.waypoints);
+    assert.equal(thirdClickWaypoint.error, null);
+    assert.equal(thirdClickWaypoint.addedRole, 'waypoint');
+    assert.equal(thirdClickWaypoint.waypoints.length, 3);
+    assert.equal(thirdClickWaypoint.waypoints[0].matchedPortId, portA.id);
+    assert.equal(thirdClickWaypoint.waypoints[1].matchedPortId, portMid.id);
+    assert.equal(thirdClickWaypoint.waypoints[1].type, 'waypoint');
+    assert.equal(thirdClickWaypoint.waypoints[2].matchedPortId, portB.id);
+
+    // 4th map click on another port closer to start (삼덕항 between 강구안 and 달아항) -> optimal leg insertion at index 1
+    const optimalCheck = findOptimalWaypointInsertIndex(
+      portNearStart,
+      thirdClickWaypoint.waypoints,
+    );
+    assert.equal(optimalCheck.insertIndex, 1);
+
+    const fourthClickWaypoint = applyDirectPortSelection(
+      portNearStart,
+      thirdClickWaypoint.waypoints,
+    );
+    assert.equal(fourthClickWaypoint.error, null);
+    assert.equal(fourthClickWaypoint.addedRole, 'waypoint');
+    assert.equal(fourthClickWaypoint.waypoints.length, 4);
+    assert.equal(fourthClickWaypoint.waypoints[1].matchedPortId, portNearStart.id);
+    assert.equal(fourthClickWaypoint.waypoints[2].matchedPortId, portMid.id);
+
+    // Re-clicking an existing intermediate waypoint marker on the map toggles (removes) it immediately
+    const toggledOff = applyDirectPortSelection(
+      portNearStart,
+      fourthClickWaypoint.waypoints,
+    );
+    assert.equal(toggledOff.error, null);
+    assert.equal(toggledOff.addedRole, 'removed_waypoint');
+    assert.equal(toggledOff.waypoints.length, 3);
+    assert.equal(toggledOff.waypoints[1].matchedPortId, portMid.id);
+
+    // Black-box engine computes accurate real-sea distance and travel duration across all legs
+    const summary = calculateRouteSummary(
+      toggledOff.waypoints,
+      15,
+      ports,
+      marineWaypoints,
+    );
+    assert.equal(summary.legs.length, 2);
     assert.ok(summary.totalDistanceNm > 0);
     assert.ok(summary.totalDurationMinutes > 0);
-
-    // Adding an intermediate waypoint via 'new_waypoint' slot
-    const withWaypoint = applyDirectPortSelection(portC, second.waypoints, 'new_waypoint');
-    assert.equal(withWaypoint.error, null);
-    assert.equal(withWaypoint.addedRole, 'waypoint');
-    assert.equal(withWaypoint.waypoints.length, 3);
-    assert.equal(withWaypoint.waypoints[1].matchedPortId, portC.id);
-    assert.equal(withWaypoint.waypoints[1].type, 'waypoint');
   });
 });
 

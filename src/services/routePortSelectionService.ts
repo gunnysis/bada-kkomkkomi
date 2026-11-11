@@ -1,7 +1,5 @@
 import type { MarinePort } from '../types/port.ts';
 import type {
-  RouteCandidateState,
-  RoutePortSelectionSource,
   RouteSelectionMode,
   RouteWaypoint,
 } from '../types/route.ts';
@@ -51,7 +49,6 @@ export function normalizeWaypointTypes(
 
 /**
  * [GAP-01 해소] 선택한 항구 반경 150m 이내에 중첩·인접한 등록 시설 또는 parentPortId 공유 자매 시설을 반환합니다.
- * - 자기 자신을 첫 번째 항목으로 포함하여 후보 확인 카드에서 칩으로 자유롭게 전환할 수 있게 합니다.
  */
 export function findSiblingPorts(
   targetPort: MarinePort,
@@ -89,7 +86,6 @@ export function findSiblingPorts(
 
 /**
  * 주어진 위경도 좌표에서 가장 가까운 등록 항구(MarinePort)를 반환합니다.
- * - 해상기상 패널 브릿지 등에서 임의 좌표 대신 최근접 등록 항구 후보를 제안할 때 사용합니다.
  */
 export function findNearestRegisteredPort(
   lat: number,
@@ -113,26 +109,60 @@ export function findNearestRegisteredPort(
 }
 
 /**
- * 현재 경로 상태(waypoints 길이)와 명시적 모드를 결합하여 실제 후보 지정 역할을 결정합니다.
+ * [WP-GAP-04 해소] 기존 경로(waypoints.length >= 2)의 각 인접 구간 (w_i, w_{i+1}) 중
+ * 신규 경유지(port)를 삽입했을 때 추가되는 우회 거리 Δd(i) = d(w_i, P) + d(P, w_{i+1}) - d(w_i, w_{i+1})가
+ * 최소가 되는 최적 삽입 인덱스(insertIndex = i* + 1)와 최소 우회 거리(detourKm)를 반환합니다.
+ * - 다중 경유지를 어떤 순서로 클릭하더라도 배가 역주행하지 않고 가는 길 순서대로 자연스럽게 연결됩니다.
  */
-export function resolveEffectiveSelectionMode(
-  explicitMode: RouteSelectionMode,
+export function findOptimalWaypointInsertIndex(
+  port: Pick<MarinePort, 'lat' | 'lng'>,
   waypoints: readonly RouteWaypoint[],
-): Exclude<RouteSelectionMode, 'idle'> {
-  if (waypoints.length === 0) {
-    return 'select_start';
+): { insertIndex: number; detourKm: number } {
+  if (waypoints.length < 2) {
+    return { insertIndex: waypoints.length, detourKm: 0 };
   }
-  if (waypoints.length === 1) {
-    return explicitMode === 'replace_start' ? 'replace_start' : 'select_end';
+
+  let bestInsertIndex = waypoints.length - 1;
+  let minDetourKm = Infinity;
+
+  for (let i = 0; i < waypoints.length - 1; i += 1) {
+    const fromWp = waypoints[i];
+    const toWp = waypoints[i + 1];
+    const baseLegKm = calculateHaversineKm(
+      fromWp.lat,
+      fromWp.lng,
+      toWp.lat,
+      toWp.lng,
+    );
+    const viaPortKm =
+      calculateHaversineKm(fromWp.lat, fromWp.lng, port.lat, port.lng) +
+      calculateHaversineKm(port.lat, port.lng, toWp.lat, toWp.lng);
+    const detourKm = Math.max(0, viaPortKm - baseLegKm);
+
+    if (detourKm < minDetourKm) {
+      minDetourKm = detourKm;
+      bestInsertIndex = i + 1;
+    }
   }
-  if (explicitMode !== 'idle') {
-    return explicitMode;
-  }
-  return 'add_waypoint';
+
+  return {
+    insertIndex: bestInsertIndex,
+    detourKm: Number.isFinite(minDetourKm) ? minDetourKm : 0,
+  };
 }
 
 /**
- * 후보 항구를 확정했을 때의 예상 지점 배열을 시뮬레이션합니다.
+ * 현재 경로(waypoints) 기준 특정 항구를 경유지로 넣었을 때 증가하는 최소 우회 거리(km)를 계산합니다.
+ */
+export function calculatePortDetourKm(
+  port: Pick<MarinePort, 'lat' | 'lng'>,
+  waypoints: readonly RouteWaypoint[],
+): number {
+  return findOptimalWaypointInsertIndex(port, waypoints).detourKm;
+}
+
+/**
+ * 항구를 지정 역할(mode)로 반영했을 때의 예상 지점 배열을 시뮬레이션합니다.
  */
 function simulateNextWaypoints(
   port: MarinePort,
@@ -189,22 +219,21 @@ function simulateNextWaypoints(
       return normalizeWaypointTypes(next);
     }
   }
-  // mode === 'add_waypoint' (도착지 바로 앞에 삽입)
+  // mode === 'add_waypoint': 가는 길 최적 구간 위치(findOptimalWaypointInsertIndex)에 삽입
   if (waypoints.length < 2) {
     return normalizeWaypointTypes([
       ...waypoints,
       createWaypointFromRegisteredPort(port, 'end'),
     ]);
   }
-  return normalizeWaypointTypes([
-    ...waypoints.slice(0, -1),
-    createWaypointFromRegisteredPort(port, 'waypoint'),
-    waypoints[waypoints.length - 1],
-  ]);
+  const { insertIndex } = findOptimalWaypointInsertIndex(port, waypoints);
+  const next = [...waypoints];
+  next.splice(insertIndex, 0, createWaypointFromRegisteredPort(port, 'waypoint'));
+  return normalizeWaypointTypes(next);
 }
 
 /**
- * 후보 항구가 연속 중복 또는 0거리 직항(A → A) 규칙에 위배되는지 검증합니다.
+ * 항구가 연속 중복 또는 0거리 직항(A → A) 규칙에 위배되는지 검증합니다.
  * - 경유지가 1곳 이상 포함된 왕복 운항(A → B → A)은 허용합니다.
  */
 export function validateCandidatePort(
@@ -239,60 +268,6 @@ export function validateCandidatePort(
   }
 
   return null;
-}
-
-/**
- * portId 선택 요청으로부터 RouteCandidateState를 생성합니다.
- */
-export function buildRouteCandidateState(
-  portId: string,
-  source: RoutePortSelectionSource,
-  explicitMode: RouteSelectionMode,
-  waypoints: readonly RouteWaypoint[],
-  allPorts: readonly MarinePort[],
-  targetWaypointId?: string,
-): RouteCandidateState | null {
-  const port = allPorts.find((p) => p.id === portId);
-  if (!port) {
-    return null;
-  }
-
-  const effectiveMode = resolveEffectiveSelectionMode(explicitMode, waypoints);
-  const siblingPorts = findSiblingPorts(port, allPorts, 150);
-  const validationError = validateCandidatePort(
-    port,
-    effectiveMode,
-    waypoints,
-    targetWaypointId,
-  );
-
-  return {
-    port,
-    siblingPorts,
-    mode: effectiveMode,
-    targetWaypointId:
-      effectiveMode === 'replace_waypoint' ? targetWaypointId : undefined,
-    source,
-    validationError,
-  };
-}
-
-/**
- * 사용자가 후보 확인 카드에서 [확정]을 눌렀을 때 새로운 지점 목록을 반환합니다.
- */
-export function applyConfirmedCandidate(
-  candidate: RouteCandidateState,
-  waypoints: readonly RouteWaypoint[],
-): RouteWaypoint[] {
-  if (candidate.validationError) {
-    return [...waypoints];
-  }
-  return simulateNextWaypoints(
-    candidate.port,
-    candidate.mode,
-    waypoints,
-    candidate.targetWaypointId,
-  );
 }
 
 /**
@@ -338,10 +313,13 @@ export function sanitizeCommittedRouteWaypoints(
 }
 
 /**
- * [White-Box Simplicity & Black-Box Precision]
- * 지도 마커 직접 선택 또는 [항구선택] 모달 선택 시 2단계 확인 카드 없이
- * 등록된 항구(MarinePort)를 즉시 출발지·도착지·경유지로 반영합니다.
- * - 연속 동일 항구 중복 및 경유지 없는 0거리 직항(A → A)을 자동 검증·차단합니다.
+ * [White-Box Simplicity & Black-Box Precision — Smart Waypoint UX]
+ * 지도 마커 직접 선택 또는 [항구선택] 모달 선택 시 등록된 항구(MarinePort)를
+ * 즉시 출발지·도착지·경유지로 반영하거나 기존 경유지를 원터치 토글 해제합니다.
+ * - 지도 직접 클릭(targetSlot == null):
+ *   1번째 클릭 = 출발지('start')
+ *   2번째 클릭 = 도착지('end')
+ *   3번째+ 클릭 = 가는 길 최적 위치에 경유지 자동 추가('waypoint'), 이미 선택된 경유지 재클릭 시 즉시 해제('removed_waypoint')
  */
 export function applyDirectPortSelection(
   port: MarinePort,
@@ -350,7 +328,7 @@ export function applyDirectPortSelection(
 ): {
   waypoints: RouteWaypoint[];
   error: string | null;
-  addedRole: 'start' | 'end' | 'waypoint';
+  addedRole: 'start' | 'end' | 'waypoint' | 'removed_waypoint';
 } {
   // 1. 기존 waypointId 지정 교체인 경우 역할 매핑
   if (
@@ -404,53 +382,87 @@ export function applyDirectPortSelection(
     return { waypoints: next, error: null, addedRole: 'start' };
   }
 
-  // 3. 경유지 추가 (중간 경유지 슬롯)
-  if (targetSlot === 'add_waypoint' || targetSlot === 'new_waypoint') {
+  // 3. 도착지 명시적 지정 또는 교체 (targetSlot === 'end' 또는 출발지만 있는 상태에서 지도 두 번째 선택)
+  if (targetSlot === 'end' || (!targetSlot && waypoints.length === 1)) {
     if (waypoints.length === 0) {
-      return applyDirectPortSelection(port, waypoints, 'start');
-    }
-    if (waypoints.length === 1) {
-      return applyDirectPortSelection(port, waypoints, 'end');
-    }
-    const error = validateCandidatePort(port, 'add_waypoint', waypoints);
-    if (error) {
-      return { waypoints: [...waypoints], error, addedRole: 'waypoint' };
-    }
-    const next = simulateNextWaypoints(port, 'add_waypoint', waypoints);
-    return { waypoints: next, error: null, addedRole: 'waypoint' };
-  }
-
-  // 4. 도착지 지정 또는 교체 (출발지만 있는 상태에서 지도 마커 두 번째 선택, 또는 완성된 항로에서 새 목적지 선택)
-  if (waypoints.length === 0) {
-    return {
-      waypoints: [createWaypointFromRegisteredPort(port, 'start', 'wp_start')],
-      error: null,
-      addedRole: 'start',
-    };
-  }
-
-  if (waypoints.length === 1) {
-    if ((waypoints[0].matchedPortId ?? waypoints[0].name) === port.id) {
       return {
-        waypoints: [...waypoints],
-        error: '출발지와 다른 도착지를 선택해 주세요.',
-        addedRole: 'end',
+        waypoints: [createWaypointFromRegisteredPort(port, 'start', 'wp_start')],
+        error: null,
+        addedRole: 'start',
       };
     }
-    const error = validateCandidatePort(port, 'select_end', waypoints);
+    if (waypoints.length === 1) {
+      if ((waypoints[0].matchedPortId ?? waypoints[0].name) === port.id) {
+        return {
+          waypoints: [...waypoints],
+          error: '출발지와 다른 도착지를 선택해 주세요.',
+          addedRole: 'end',
+        };
+      }
+      const error = validateCandidatePort(port, 'select_end', waypoints);
+      if (error) {
+        return { waypoints: [...waypoints], error, addedRole: 'end' };
+      }
+      const next = simulateNextWaypoints(port, 'select_end', waypoints);
+      return { waypoints: next, error: null, addedRole: 'end' };
+    }
+    const error = validateCandidatePort(port, 'replace_end', waypoints);
     if (error) {
       return { waypoints: [...waypoints], error, addedRole: 'end' };
     }
-    const next = simulateNextWaypoints(port, 'select_end', waypoints);
+    const next = simulateNextWaypoints(port, 'replace_end', waypoints);
     return { waypoints: next, error: null, addedRole: 'end' };
   }
 
-  // waypoints.length >= 2: 도착지(end) 교체
-  const error = validateCandidatePort(port, 'replace_end', waypoints);
-  if (error) {
-    return { waypoints: [...waypoints], error, addedRole: 'end' };
+  // 4. 경유지 추가 또는 지도 3번째+ 클릭 (waypoints.length >= 2)
+  if (waypoints.length === 0) {
+    return applyDirectPortSelection(port, waypoints, 'start');
   }
-  const next = simulateNextWaypoints(port, 'replace_end', waypoints);
-  return { waypoints: next, error: null, addedRole: 'end' };
-}
+  if (waypoints.length === 1) {
+    return applyDirectPortSelection(port, waypoints, 'end');
+  }
 
+  // 4-A. 지도 클릭(targetSlot == null) 시 이미 중간 경유지(wp.type === 'waypoint')로 등록된 항구를 다시 누르면 즉시 토글 해제
+  if (!targetSlot) {
+    const existingWaypointIdx = waypoints.findIndex(
+      (wp, idx) =>
+        idx > 0 &&
+        idx < waypoints.length - 1 &&
+        (wp.matchedPortId ?? wp.name) === port.id,
+    );
+    if (existingWaypointIdx !== -1) {
+      const filtered = waypoints.filter((_, idx) => idx !== existingWaypointIdx);
+      const sanitized = sanitizeCommittedRouteWaypoints(filtered).waypoints;
+      return {
+        waypoints: sanitized,
+        error: null,
+        addedRole: 'removed_waypoint',
+      };
+    }
+
+    // 4-B. 지도 클릭 시 출발지(start) 마커를 다시 누른 경우: 중간에 다른 지점이 있으면 왕복 도착지(A → ... → A)로 설정
+    const startKey = waypoints[0].matchedPortId ?? waypoints[0].name;
+    const endKey =
+      waypoints[waypoints.length - 1].matchedPortId ??
+      waypoints[waypoints.length - 1].name;
+    if (port.id === startKey && endKey !== startKey) {
+      const roundTripWaypoints = normalizeWaypointTypes([
+        ...waypoints,
+        createWaypointFromRegisteredPort(port, 'end', 'wp_end_return'),
+      ]);
+      return {
+        waypoints: roundTripWaypoints,
+        error: null,
+        addedRole: 'end',
+      };
+    }
+  }
+
+  // 4-C. 가는 길 최적 구간(findOptimalWaypointInsertIndex)에 신규 경유지로 삽입
+  const error = validateCandidatePort(port, 'add_waypoint', waypoints);
+  if (error) {
+    return { waypoints: [...waypoints], error, addedRole: 'waypoint' };
+  }
+  const next = simulateNextWaypoints(port, 'add_waypoint', waypoints);
+  return { waypoints: next, error: null, addedRole: 'waypoint' };
+}

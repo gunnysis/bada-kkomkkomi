@@ -10,11 +10,13 @@ import {
   X,
 } from 'lucide-react';
 import type { MarinePort } from '../../types/port';
+import type { RouteWaypoint } from '../../types/route';
 import {
   calculateHaversineKm,
   kmToNauticalMiles,
   searchMarinePorts,
 } from '../../services/routeGeoService';
+import { calculatePortDetourKm } from '../../services/routePortSelectionService';
 
 interface PortSelectModalProps {
   isOpen: boolean;
@@ -22,6 +24,8 @@ interface PortSelectModalProps {
   targetLabel: string;
   ports: MarinePort[];
   userLocation: { lat: number; lng: number } | null;
+  routeWaypoints?: RouteWaypoint[];
+  isWaypointMode?: boolean;
   onSelectPort: (port: MarinePort) => void;
   onSelectUserGps: () => void;
 }
@@ -47,6 +51,8 @@ export function PortSelectModal({
   targetLabel,
   ports,
   userLocation,
+  routeWaypoints = [],
+  isWaypointMode = false,
   onSelectPort,
   onSelectUserGps,
 }: PortSelectModalProps) {
@@ -54,6 +60,10 @@ export function PortSelectModal({
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTabKey>('all');
   const [sortByGpsDistance, setSortByGpsDistance] = useState<boolean>(false);
+  const hasActiveRouteCorridor = routeWaypoints.length >= 2;
+  const [sortByRouteDetour, setSortByRouteDetour] = useState<boolean>(
+    () => Boolean(isWaypointMode && routeWaypoints.length >= 2),
+  );
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -79,8 +89,24 @@ export function PortSelectModal({
     };
   }, [ports]);
 
+  const detourKmByPortId = useMemo(() => {
+    if (!hasActiveRouteCorridor) return new Map<string, number>();
+    const map = new Map<string, number>();
+    for (const p of ports) {
+      map.set(p.id, calculatePortDetourKm(p, routeWaypoints));
+    }
+    return map;
+  }, [ports, routeWaypoints, hasActiveRouteCorridor]);
+
   const filteredPorts = useMemo(() => {
     const base = searchMarinePorts(ports, query, activeFilter);
+    if (sortByRouteDetour && hasActiveRouteCorridor) {
+      return [...base].sort((a, b) => {
+        const detA = detourKmByPortId.get(a.id) ?? 0;
+        const detB = detourKmByPortId.get(b.id) ?? 0;
+        return detA - detB;
+      });
+    }
     if (!sortByGpsDistance || !userLocation) {
       return base;
     }
@@ -89,7 +115,16 @@ export function PortSelectModal({
       const distB = calculateHaversineKm(userLocation.lat, userLocation.lng, b.lat, b.lng);
       return distA - distB;
     });
-  }, [ports, query, activeFilter, sortByGpsDistance, userLocation]);
+  }, [
+    ports,
+    query,
+    activeFilter,
+    sortByRouteDetour,
+    hasActiveRouteCorridor,
+    detourKmByPortId,
+    sortByGpsDistance,
+    userLocation,
+  ]);
 
   if (!isOpen) return null;
 
@@ -133,6 +168,46 @@ export function PortSelectModal({
           </button>
         </div>
 
+        {/* [경유지 스마트 정렬] 출발→도착 항로가 설정된 상태에서 가는 길 주변(최소 우회거리) 항구 순 정렬 */}
+        {hasActiveRouteCorridor && (
+          <button
+            type="button"
+            onClick={() => {
+              setSortByRouteDetour((prev) => {
+                const next = !prev;
+                if (next) setSortByGpsDistance(false);
+                return next;
+              });
+            }}
+            aria-pressed={sortByRouteDetour}
+            className={`mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border px-3.5 py-2 text-left transition active:scale-[0.99] ${
+              sortByRouteDetour
+                ? 'border-amber-500 bg-amber-50/95 text-[#003360]'
+                : 'border-sky-300 bg-sky-50/90 text-[#003360] hover:border-[#0066b3]'
+            }`}
+          >
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Compass className="h-5 w-5 shrink-0 text-amber-700" />
+              <div className="min-w-0">
+                <p className="truncate text-xs font-black text-[#003360]">
+                  현재 항로({routeWaypoints[0]?.name} →{' '}
+                  {routeWaypoints[routeWaypoints.length - 1]?.name}) 가는 길 주변 항구 순 정렬
+                </p>
+                <p className="truncate text-[11px] font-bold text-slate-600">
+                  추가 우회 거리가 가장 적은 항로 주변 경유지부터 우선 추천합니다
+                </p>
+              </div>
+            </div>
+            <span
+              className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-black text-white shadow-2xs ${
+                sortByRouteDetour ? 'bg-amber-600' : 'bg-[#0066b3]'
+              }`}
+            >
+              {sortByRouteDetour ? '항로주변 켜짐' : '항로주변 정렬'}
+            </span>
+          </button>
+        )}
+
         {/* [GAP-03 해소] 임의 GPS 좌표 즉시 삽입 대신 현재 GPS 기준 가까운 등록 항구 순 정렬 보조 기능 제공 */}
         <button
           type="button"
@@ -140,8 +215,13 @@ export function PortSelectModal({
             if (!userLocation) {
               onSelectUserGps();
               setSortByGpsDistance(true);
+              setSortByRouteDetour(false);
             } else {
-              setSortByGpsDistance((prev) => !prev);
+              setSortByGpsDistance((prev) => {
+                const next = !prev;
+                if (next) setSortByRouteDetour(false);
+                return next;
+              });
             }
           }}
           aria-pressed={Boolean(userLocation && sortByGpsDistance)}
@@ -318,6 +398,16 @@ export function PortSelectModal({
                     <MapPin className="h-3 w-3" />
                     선택
                   </span>
+                  {hasActiveRouteCorridor && (
+                    <span
+                      className="mt-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-black text-amber-900"
+                      title="현재 항로에 경유지로 추가할 때 늘어나는 최소 우회 거리"
+                    >
+                      우회 +
+                      {kmToNauticalMiles(detourKmByPortId.get(port.id) ?? 0).toFixed(1)}{' '}
+                      NM
+                    </span>
+                  )}
                   {userLocation && (
                     <span className="mt-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-[#00846c]">
                       {kmToNauticalMiles(

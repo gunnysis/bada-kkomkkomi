@@ -43,8 +43,8 @@
 - `HomeScreen.tsx`의 4대 포스터 카드는 동일한 아이콘 슬롯 높이를 유지하며, 카드 내부 다중 단축 버튼 바를 두지 않습니다(Memo 2).
 - `MapView.tsx`는 자체적으로 GeoJSON을 중복 fetch하지 않고 `useAppConfig.ts`가 공급하는 `layers` 및 `geoJsonLayersData` 단일 SSOT만 렌더링합니다.
 - `buildNavPortPinSpec()`의 136개 항구 마커와 `buildDockingMarkerSpec()`의 55개 접안지 마커는 모두 `.bada-marker-hit-target`(`52×52px`) 터치 영역을 보장합니다.
-- `KakaoMapCanvas.tsx`와 `LegacyLeafletCanvas.tsx`는 항구/경로 마커 선택 시 `onSelectRoutePort(portId)`를 호출하여 즉시 출발지·도착지를 반영하며, 지도 위에는 복잡한 다중 변침점 수로선 대신 **어디서 어디로 가는지 한눈에 보이는 직관적 연결선(`출발 ─── 도착`)**과 **중앙 소요시간·거리 배지(`약 N분 · X.X NM`)**만 깔끔하게 표시합니다.
-- `RouteTimeCalculator.tsx`는 `sheetStage === 'summary'` 및 빈 경로 상태에서도 불필요한 설명 배너나 2단계 확인 카드 없이 **출발지 `[항구선택]` / 도착지 `[항구선택]`** 직관적 슬롯을 즉시 노출하며, `App.tsx`는 페이지 신규 접속 시 `localStorage`의 이전 경로를 자동 복원하지 않고 항상 빈 경로(`routeWaypoints = []`)로 초기화합니다.
+- `KakaoMapCanvas.tsx`와 `LegacyLeafletCanvas.tsx`는 항구/경로 마커 선택 시 `onSelectRoutePort(portId)`를 호출하여 즉시 출발지(1번째 클릭)·도착지(2번째 클릭)·경유지(3번째+ 클릭 시 최적 구간 자동 삽입 및 재클릭 시 토글 해제)를 반영하며, 지도 위에는 복잡한 다중 변침점 수로선 대신 **어디서 어디로 가는지 한눈에 보이는 직관적 연결선(`출발 ─── (경유) ─── 도착`)**과 **중앙 소요시간·거리 배지(`약 N분 · X.X NM`)**만 깔끔하게 표시합니다.
+- `RouteTimeCalculator.tsx`는 `sheetStage === 'summary'` 및 빈 경로 상태에서도 불필요한 설명 배너나 2단계 확인 카드 없이 **출발지 `[항구선택]` / 도착지 `[항구선택]`** 직관적 슬롯과 **인라인 경유지 칩(`[경유1: 항구명 | ✕]`)**을 즉시 노출하며, `App.tsx`는 페이지 신규 접속 시 `localStorage`의 이전 경로를 자동 복원하지 않고 항상 빈 경로(`routeWaypoints = []`)로 초기화합니다.
 
 ### Side Effects
 - 브라우저 History API(`window.history.pushState` / `back`), 클립보드 복사(`navigator.clipboard.writeText`), 이메일 클라이언트 호출(`mailto:`), Geolocation API(`navigator.geolocation`), Kakao Maps SDK DOM 마운트 및 Leaflet Canvas 렌더링을 수행합니다.
@@ -61,7 +61,7 @@ UI 프레임워크에 의존하지 않는 순수 비즈니스 로직 및 외부 
 
 ### Interface
 - [`src/services/routeGeoService.ts`](../../src/services/routeGeoService.ts): `calculateRouteSummary()`, `resolveSmartWaypoint()`, `doesSegmentCrossLand()`, `isPointInAnyLandBarrier()`, `getNearbyMarinePlaceLabel()`, `extractChosung()`, `matchesKoreanSearch()`
-- [`src/services/routePortSelectionService.ts`](../../src/services/routePortSelectionService.ts): `applyDirectPortSelection()`, `findSiblingPorts()`, `resolveEffectiveSelectionMode()`, `validateCandidatePort()`, `buildRouteCandidateState()`, `applyConfirmedCandidate()`, `sanitizeCommittedRouteWaypoints()`, `findNearestRegisteredPort()`
+- [`src/services/routePortSelectionService.ts`](../../src/services/routePortSelectionService.ts): `applyDirectPortSelection()`, `findOptimalWaypointInsertIndex()`, `calculatePortDetourKm()`, `findSiblingPorts()`, `validateCandidatePort()`, `sanitizeCommittedRouteWaypoints()`, `findNearestRegisteredPort()`
 - [`src/services/routeLegLabelService.ts`](../../src/services/routeLegLabelService.ts): `getRouteLegLabelParts()`
 - [`src/services/spatialFileParser.ts`](../../src/services/spatialFileParser.ts): `parseSpatialFiles()`, `detectCrsFromMetadata()`
 - [`src/services/layerStorageService.ts`](../../src/services/layerStorageService.ts): `loadOperationalLayerState()`, `saveOperationalLayerState()`, `listOperationalSnapshots()`, `restoreOperationalSnapshot()`, `hasLegacyDummyFeatures()`

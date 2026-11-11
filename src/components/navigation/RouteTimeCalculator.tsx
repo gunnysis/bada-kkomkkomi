@@ -438,7 +438,7 @@ export function RouteTimeCalculator({
               </div>
             </div>
 
-            {/* 요약(summary) 단계에서도 즉시 출발지·도착지·경유지를 변경/추가할 수 있는 직관적 슬롯 바 */}
+            {/* 요약(summary) 단계에서도 즉시 출발지·도착지·경유지를 변경/추가/삭제할 수 있는 직관적 인라인 슬롯 바 */}
             <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-xl border border-sky-200 bg-sky-50/90 px-2 py-1">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 text-[11px] font-extrabold text-[#003360]">
                 <button
@@ -446,27 +446,56 @@ export function RouteTimeCalculator({
                   onClick={() =>
                     startWaypoint && onOpenPortSelector(startWaypoint.id, '출발지')
                   }
-                  className="inline-flex max-w-[155px] items-center gap-1 truncate rounded-lg border border-[#00846c]/60 bg-white px-2 py-0.5 text-[11px] font-black text-[#003360] shadow-2xs hover:bg-emerald-50 active:scale-95"
-                  title="출발지 항구 선택"
+                  className="inline-flex max-w-[140px] items-center gap-1 truncate rounded-lg border border-[#00846c]/60 bg-white px-2 py-0.5 text-[11px] font-black text-[#003360] shadow-2xs hover:bg-emerald-50 active:scale-95"
+                  title="출발지 항구 변경"
                 >
                   <span className="shrink-0 rounded bg-[#00846c] px-1 py-0.2 text-[9px] leading-none font-black text-white">
                     출발
                   </span>
                   <span className="truncate">{startWaypoint?.name}</span>
                 </button>
-                {intermediateCount > 0 && (
-                  <span className="text-[11px] font-black text-amber-800">
-                    → 경유 {intermediateCount}곳
+
+                {waypoints.slice(1, -1).map((wp, idx) => (
+                  <span
+                    key={wp.id}
+                    className="inline-flex items-center gap-0.5"
+                  >
+                    <span className="text-slate-400">→</span>
+                    <span className="inline-flex items-center rounded-lg border border-amber-500/80 bg-amber-50/95 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onOpenPortSelector(wp.id, `경유 ${idx + 1}`)
+                        }
+                        className="inline-flex max-w-[125px] items-center gap-1 truncate px-1.5 py-0.5 text-[11px] font-black text-amber-950 hover:bg-amber-100/80 active:scale-95"
+                        title={`경유 ${idx + 1} (${wp.name}) 항구 변경`}
+                      >
+                        <span className="shrink-0 rounded bg-amber-600 px-1 py-0.2 text-[9px] leading-none font-black text-white">
+                          경유{idx + 1}
+                        </span>
+                        <span className="truncate">{wp.name}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveWaypoint(wp.id)}
+                        aria-label={`경유 ${idx + 1} ${wp.name} 삭제`}
+                        title={`경유 ${idx + 1} (${wp.name}) 즉시 삭제`}
+                        className="flex h-5 w-5 items-center justify-center rounded-r-lg border-l border-amber-300 text-amber-800 hover:bg-rose-100 hover:text-rose-700 active:scale-95"
+                      >
+                        <X className="h-3 w-3 shrink-0" />
+                      </button>
+                    </span>
                   </span>
-                )}
+                ))}
+
                 <span className="text-slate-400">→</span>
                 <button
                   type="button"
                   onClick={() =>
                     endWaypoint && onOpenPortSelector(endWaypoint.id, '도착지')
                   }
-                  className="inline-flex max-w-[155px] items-center gap-1 truncate rounded-lg border border-[#b2415f]/60 bg-white px-2 py-0.5 text-[11px] font-black text-[#003360] shadow-2xs hover:bg-rose-50 active:scale-95"
-                  title="도착지 항구 선택"
+                  className="inline-flex max-w-[140px] items-center gap-1 truncate rounded-lg border border-[#b2415f]/60 bg-white px-2 py-0.5 text-[11px] font-black text-[#003360] shadow-2xs hover:bg-rose-50 active:scale-95"
+                  title="도착지 항구 변경"
                 >
                   <span className="shrink-0 rounded bg-[#b2415f] px-1 py-0.2 text-[9px] leading-none font-black text-white">
                     도착
@@ -475,11 +504,22 @@ export function RouteTimeCalculator({
                 </button>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                {intermediateCount > 0 && onClearWaypoints && (
+                  <button
+                    type="button"
+                    onClick={onClearWaypoints}
+                    className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-amber-400 bg-white px-1.5 text-[10px] font-extrabold whitespace-nowrap text-amber-900 transition hover:bg-amber-50 active:scale-95"
+                    title="출발지와 도착지는 유지하고 중간 경유지만 모두 비웁니다"
+                  >
+                    <Trash2 className="h-2.5 w-2.5 shrink-0" />
+                    <span>경유비움</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={onAddWaypoint}
                   className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-amber-500 bg-amber-100 px-2 text-[11px] font-black whitespace-nowrap text-amber-900 transition hover:bg-amber-200 active:scale-95"
-                  title="경유할 항구·선착장 추가"
+                  title="경유할 항구·선착장 추가 (지도에서 항구 마커를 바로 클릭해도 자동 경유 추가됩니다)"
                 >
                   <Plus className="h-3 w-3 shrink-0" />
                   <span>경유지</span>

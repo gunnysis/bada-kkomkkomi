@@ -760,13 +760,17 @@ export function App() {
         showToast(notice ?? `출발지: ${port.name}`);
       } else if (nextWaypoints.length >= 2) {
         setFitRouteBoundsTrigger((n) => n + 1);
-        const roleLabel =
-          result.addedRole === 'start'
-            ? '출발지'
-            : result.addedRole === 'waypoint'
-              ? '경유지'
-              : '도착지';
-        showToast(notice ?? `${roleLabel}: ${port.name}`);
+        if (result.addedRole === 'removed_waypoint') {
+          showToast(notice ?? `경유지 해제됨: ${port.name} ([실행취소]로 복구 가능)`);
+        } else {
+          const roleLabel =
+            result.addedRole === 'start'
+              ? '출발지'
+              : result.addedRole === 'waypoint'
+                ? '경유지 추가'
+                : '도착지';
+          showToast(notice ?? `${roleLabel}: ${port.name}`);
+        }
       }
     },
     [portsList, routeWaypoints, commitRouteWaypoints, handleFlyToPoint, showToast],
@@ -2085,6 +2089,12 @@ export function App() {
             targetLabel={portSelectorTarget.label}
             ports={portsList}
             userLocation={userLocation}
+            routeWaypoints={routeWaypoints}
+            isWaypointMode={Boolean(
+              portSelectorTarget.waypointId === 'new_waypoint' ||
+                portSelectorTarget.waypointId === 'add_waypoint' ||
+                portSelectorTarget.label.includes('경유'),
+            )}
             onSelectPort={handleSelectPortForWaypoint}
             onSelectUserGps={handleSelectUserGpsForWaypoint}
           />
