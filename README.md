@@ -1,10 +1,12 @@
-# 바다꼼꼬미 (Bada-Kkomkkomi) [v2.2]
+# 바다꼼꼬미 (Bada-Kkomkkomi) [v2.4]
 
 국립공원공단 해양국립공원(한려해상·통영·거제) 직원의 해상·도서 현장업무 지원을 위한 오프라인 우선(Offline-First) PWA 웹 애플리케이션입니다.
 백엔드 서버나 외부 유료 DB 없이 **순수 정적 데이터(`GeoJSON`, `JSON`, 로컬 이미지) + 인앱 공간정보 운영 저장소(`IndexedDB` / GitHub 자동 커밋)만으로 무상(Zero-cost) 운영 및 자동 배포**되도록 설계되었습니다.
 
 - **라이브 배포 URL (GitHub Pages)**: https://gunnysis.github.io/bada-kkomkkomi/
 - **GitHub 저장소**: https://github.com/gunnysis/bada-kkomkkomi
+- **EGM 아키텍처 블루프린트 (Elephant-Goldfish Model `Hay`)**: [`AGENTS.md`](./AGENTS.md)
+- **EGM 서브시스템 계약 인덱스 (`Peanuts`)**: [`docs/designs/SITEMAP.md`](./docs/designs/SITEMAP.md)
 - **비개발자 운영자 매뉴얼**: [`DEPLOY_GUIDE.md`](./DEPLOY_GUIDE.md)
 - **외부 데이터·API·지도·기술 출처 안내서 (일반인·운영자용)**: [`docs/DATA_AND_TECH_SOURCES.md`](./docs/DATA_AND_TECH_SOURCES.md)
 - **아키텍처·구현 설계·트러블슈팅 단일 정본**: [`docs/ARCHITECTURE_AND_DESIGN.md`](./docs/ARCHITECTURE_AND_DESIGN.md)
@@ -24,11 +26,11 @@
 
 ---
 
-## 2. 핵심 도메인 기능 (v2.2)
+## 2. 핵심 도메인 기능 (v2.4)
 
 ### 2.0. 국립공원공단(KNPS) 브랜드 디자인 시스템 & 인트로 미션 런치패드 (`HomeScreen` + `useAppRoute`)
 - **국립공원공단(KNPS) 한려해상 비오필릭 디자인 시스템**: 국립공원공단 공식 상징 3원색(생태보전 그린 `#00854a`·`#10b981`, 청정 해양 블루 `#0066b3`·`#0ea5e9`, 생명력 태양 앰버 `#f59e0b`)과 한려해상 다도해 파노라마 일러스트, 국립공원 레인저(Ranger) 복장 마스코트, `accent-color` 브랜드 폼 컨트롤 및 `contrast-color()`/`oklch` 폴백 배지를 전 화면에 일관되게 적용했습니다.
-- **원터치 직행 미션 런치패드**: 초기 접속 시 무거운 지도 SDK 로드 없이 2×2 기능 그리드를 즉시 표시하며, 세부 작업 직행 칩(`[🚨위험주의 9곳]`, `[🗺️전체 55곳]`, `[📦공간 레이어]`, `[⏱️실항로 시간계산]`, `[🌊해상기상 판정]`)으로 1탭 진입을 지원합니다.
+- **2×2 포스터 런치패드 (`HomeScreen`)**: 초기 접속 시 무거운 지도 SDK 로드 없이 4대 기능 포스터 카드(`꼬미의 바다수첩`, `바닷길 콕콕`, `꼬미의 달력`(준비중), `꼬미의 조타실`(준비중))를 즉시 표시하며, 이전 작업 이어하기 배너 및 데이터·기술 출처/설정 진입을 지원합니다.
 - **2단 슬림 HUD & 깊이 인식 히스토리 라우터**: 모바일 화면 상단 고정 바 점유율을 12% 미만(`~92px`)으로 압축하고, 인앱 진입 시 `[< 홈]` 클릭이 `window.history.back()`으로 동작하여 뒤로가기 무한 루프(Back-Button Trap)를 방지합니다.
 
 ### 2.1. 꼬미의 바다수첩 (`3.1`)
@@ -50,18 +52,18 @@
 ### 2.2. 바닷길 콕콕 (`3.2`)
 - **A/B. 듀얼 모드 상단 탭**:
   - `바닷길 콕콕` 진입 시 상단 탭에서 **`시간계산 (실항로·소규모 선착장)`**과 **`기상상태판정`** 독립 화면을 즉시 전환합니다.
-- **C. 바닷길 시간계산기 (`RouteTimeCalculator` + `PortSelectModal` + `routeGeoService`)**:
-  - **통영·거제 136개 항포구·소규모 선착장 사전 & 초성·별칭·섬 검색 (`PortSelectModal`)**: 국가·지방·어촌정주·소규모어항(81개소), 소규모 선착장·접안시설(50개소), 공식 조사선 접안지(5개소) 등 총 **136개소**(`public/data/ports.json`, `docking_points.geojson` 55개소와 100% ID 정합)에 대해 한글 초성(`ㅅㄷㅎ`, `ㅈㅅㅍ`), 읍면동·옛지명·별칭(`원항`, `강구안`), 21개 부속 섬 이름(`욕지도`, `사량도`, `노대도`), 시설 유형(`부잔교`, `슬립웨이`), 최저수심·위험요소 배지 확인 및 원터치 선택을 지원합니다.
+- **C. 바닷길 시간계산기 (`RouteTimeCalculator` + `PortSelectModal` + `routePortSelectionService` + `routeGeoService`)**:
+  - **통영·거제 136개 항포구·소규모 선착장 사전 & 초성·별칭·섬·GPS 거리순 검색 (`PortSelectModal`)**: 국가·지방·어촌정주·소규모어항(81개소), 소규모 선착장·접안시설(50개소), 공식 조사선 접안지(5개소) 등 총 **136개소**(`public/data/ports.json`, `docking_points.geojson` 55개소와 100% ID 정합)에 대해 한글 초성(`ㅅㄷㅎ`, `ㅈㅅㅍ`), 읍면동·옛지명·별칭(`원항`, `강구안`), 21개 부속 섬 이름(`욕지도`, `사량도`, `노대도`), 시설 유형(`부잔교`, `슬립웨이`), 내 선박 GPS 거리순 정렬(`NM`), 최저수심·위험요소 배지 확인 및 원터치 후보 선택을 지원합니다.
+  - **등록된 136개 항구·선착장 전용 2단계 후보 확인(Candidate Confirmation) UX (`routePortSelectionService`)**: 지도 마커(`52×52px` 해상 장갑 터치 히트영역), 항구 검색 모달, 바다수첩 상세 시트, 기상 패널 등 4개 채널에서 항구를 선택하면 즉시 항로를 덮어쓰지 않고 상시 노출 후보 확인 카드(`Candidate Confirmation Card`)와 인접(150m 이내) 선착장 전환 칩을 제시한 뒤 확정합니다 (임의 바다/육지 좌표 삽입 원천 차단, 왕복 항로 `A → B → A` 허용 및 `A → A` 0거리 직행 차단).
   - **실측 해안선(378폴리곤·12,794정점) 및 해상 변침점(300개소) 2계층 하이브리드 A*·가시성 그래프 우회 실항로 계산 (`routeGeoService` + `coastlinePolygons`)**: 미륵도·거제도·한산도·사량도·좌도·송도·비산도 등 유·무인도와 리아스식 반도 관통을 100% 차단하기 위해 OpenStreetMap(`natural=coastline`) 실측 해안선 폴리곤 378개(`12,794`정점)와 이중 공간 인덱스(`Spatial Grid` + `Latitude Slab`), 방파제 외측 진입점(`seaApproach`), 300개 해상 변침점(`waypoints`), C-Space 외향 법선 가시성 그래프(`Visibility Graph`) 및 `Theta*` String-Pulling(좌·우현 95m 안전 여유폭 보장)을 결합해 최단 해상 실항로 폴리라인과 우회 계수(`detourFactor`), 접안 수심·위험 경고를 자동 산출합니다 (**136개 항포구 전 조합 18,360쌍 육지 관통 0건 전수 검증 통과**).
-  - **경유지 직관적 취소·순서 변경·일괄 비우기·Undo 히스토리 & 브리핑 복사**: 지도 탭 모드 4종(`[✋이동만]`, `[+경유추가]`, `[출발지정]`, `[도착지정]`), 지도 마커 인라인 `[✕]` 취소 버튼, 패널 행 `[✕ 취소]`·`[▲/▼]` 순서 변경, `[경유지 비우기 (N)]`, 최대 10단계 `[↩ 실행취소]`, **KST 예상 도착시각(`HH:MM 도착예정`)**, **`[📋 브리핑복사]`(무전·단톡방 공유)**, 구간별 **`[🌊 기상]` 원터치 기상 확인**을 지원합니다.
-  - **지도 마커 드래그 & 500m 스마트 스냅 (`resolveSmartWaypoint`)**: 지도 위 출발·경유·도착 마커를 드래그하거나 지도 위 선착장 마커를 탭하면 Haversine 거리 `500m` 이내의 항구·소규모 선착장으로 자동 스냅되며, 반경 밖 해상은 `해상 좌표`로 실시간 동기화됩니다.
-  - **지도 항로 폴리라인 구간 배지**: 각 구간(Leg) 중점에 `14분 · 3.5NM (142°SE)` 형태의 소요시간·해리·방위각(8방위) 캡슐 배지를 표시합니다.
-  - **편의 제어**: 선박 속도 입력(기본 `15kn`) 및 원터치 프리셋(`10kn`, `15kn`, `20kn`, `28kn`), `출발↔도착 반전`, 지도 위 `선착장핀` 표시/숨김, 하단 패널 `접기/펼치기` 토글을 지원합니다.
+  - **경유지 직관적 취소·순서 변경·일괄 비우기·Undo 히스토리 & 브리핑 복사**: 시트 요약(`summary`) 단계에서도 상시 노출되는 단계별 안내 및 빠른 역할 바(`[출발변경]`, `[+경유지]`, `[도착변경]`, `[항구검색]`), 지도 마커 인라인 `[✕]` 취소 버튼, 패널 행 `[✕ 취소]`·`[▲/▼]` 순서 변경, `[비우기(N)]`, 최대 10단계 `[↩ 실행취소]`, **KST 예상 도착시각(`HH:MM 도착예정`)**, **`[📋 브리핑복사]`(무전·단톡방 공유)**, 구간별 **`[🌊 기상]` 원터치 기상 확인**을 지원합니다.
+  - **지도 항로 폴리라인 구간 배지 (`routeLegLabelService`)**: 각 구간(Leg) 중점에 줌 레벨·구간 길이에 적응하는 소요시간·해리(`NM`)·진행 방향 화살표 캡슐 배지를 표시합니다.
+  - **편의 제어**: 선박 속도 입력(기본 `15kn`) 및 원터치 프리셋(`10kn`, `15kn`, `20kn`, `28kn`), `출발↔도착 반전`, 지도 위 `선착장핀` 표시/숨김, 하단 패널 3단계(`요약/중간/전체`) 높이 토글을 지원합니다.
 - **D. ECMWF 전용 해상 기상상태 판정 (`MarineWeatherPanel` + `ecmwfWeatherService` + `useMarineWeather`)**:
   - **ECMWF 단일 모델 고정 (`ecmwf_ifs` + `ecmwf_wam`)**: Open-Meteo Forecast API(`models=ecmwf_ifs`, 9km 해상도 10m 풍속 `kn`)와 Marine API(`models=ecmwf_wam`, 9km 해상도 유의파고 `m`)를 명시적으로 고정 호출하며, 타 모델이나 Best Match로 임의 폴백하지 않습니다.
   - **타임스탬프(`Map`) 정합 결합 및 안전 실패(`unknown`) 원칙**: 단순 배열 인덱스가 아닌 동일 KST(`Asia/Seoul`) 타임스탬프 기준으로 풍속·파고를 결합하며, 두 값 중 하나라도 결측(`null`/`NaN`)이거나 오프라인/네트워크 오류 시 과거 캐시를 재사용하지 않고 상단 서브탭 배지와 패널 모두 즉시 `미확인(?)` / `판정불가 (?)`로 정직하게 표시합니다.
   - **양방향 항로 브릿지 & 활성 판정 기준치 상시 표기**: 현재 적용 중인 주의/보류 풍속·파고 기준치 요약 바, 48시간 타임라인 `[현재시각으로]` 원터치 복귀, `[+이 해역 경유지 추가]` 역방향 브릿지를 제공합니다.
-  - **출처 및 연안 격자 한계 고지**: 화면 하단에 `예보 모델: ECMWF IFS HRES 9 km · ECMWF WAM 9 km / API 제공: Open-Meteo` 출처와 9km 연안 격자 해상도 한계 및 안전 안내를 상시 표기합니다.
+  - **출처 및 연안 격자 한계 고지**: 화면 하단 `[출처·한계 상세 ⓘ]` 버튼을 통해 `ECMWF IFS HRES 9km · WAM 9km (Open-Meteo)` 원천 명세 및 9km 연안 격자 해상도 한계·안전 안내를 확인할 수 있습니다.
 
 ---
 
@@ -69,11 +71,21 @@
 
 ```text
 bada-kkomkkomi/
+├── AGENTS.md                          # Google EGM 최상위 아키텍처 블루프린트 (Hay)
+├── _agents/skills/
+│   └── bada-kkomkkomi-elephant/
+│       └── SKILL.md                   # 프로젝트 전용 Elephant 아키텍처 컨텍스트 로더 스킬
 ├── .github/workflows/
 │   └── deploy-pages.yml               # GitHub Pages 자동 빌드·배포 워크플로 (정적 설정·GeoJSON 무결성 검증 포함)
 ├── docs/
 │   ├── ARCHITECTURE_AND_DESIGN.md     # 최종 구현 설계서 · 데이터 사전 · 트러블슈팅 단일 정본
-│   └── DATA_AND_TECH_SOURCES.md       # 외부 데이터 · API · 지도 · 기술 및 에셋 출처 안내서
+│   ├── DATA_AND_TECH_SOURCES.md       # 외부 데이터 · API · 지도 · 기술 및 에셋 출처 안내서
+│   └── designs/
+│       └── SITEMAP.md                 # Google EGM 서브시스템 살아있는 명세서 & 계약 인덱스 (Peanuts)
+├── scripts/
+│   ├── build-coastline-polygons.mjs   # OSM 실측 해안선 폴리곤 추출·단순화 빌드 스크립트
+│   ├── sync-qgis-protected-areas.mjs  # 국립공원공단 공식 QGIS 특별보호구역(20개소) EPSG:5181→4326 동기화 스크립트
+│   └── verify-integrity.mjs           # 전사 버전·데이터·항로(18,360쌍)·SW·EGM 계약·문서 링크 무결성 검증 게이트
 ├── public/
 │   ├── _headers                       # Cloudflare Pages / 정적 서버 캐시 무효화 헤더 규칙
 │   ├── config/
@@ -83,7 +95,7 @@ bada-kkomkkomi/
 │   │   ├── ports.json                 # 통영·거제 136개 항포구·선착장 사전 및 300개 해상 변침점 단일 연결 그래프
 │   │   └── layers/
 │   │       ├── national_park.geojson  # 한려해상국립공원 경계 폴리곤
-│   │       └── protected_area.geojson # 특별보호구역 폴리곤
+│   │       └── protected_area.geojson # 한려해상국립공원 특별보호구역 정밀 폴리곤 (공단 공식 QGIS 20개소 전수 내장)
 │   ├── icons/                         # PWA 홈 화면 아이콘 (192x192, 512x512, apple-touch-icon)
 │   └── images/docking/                # 현장 접안지 사진/일러스트 에셋
 ├── .env.example                       # Kakao Map JavaScript API 키(KAKAO_MAP_API_KEY) 환경변수 예시
@@ -91,13 +103,13 @@ bada-kkomkkomi/
 │   ├── App.tsx                        # 메인 워크스페이스 오케스트레이터 (2단 슬림 HUD, 도메인 브릿지, 다중 필터)
 │   ├── components/
 │   │   ├── home/
-│   │   │   └── HomeScreen.tsx         # 초기 접속 2×2 인트로 미션 런치패드 & 세부 기능 원터치 직행 칩
+│   │   │   └── HomeScreen.tsx         # 초기 접속 2×2 인트로 포스터 런치패드 & 이전 작업 이어하기
 │   │   ├── MapView.tsx                # 통합 GIS 퍼사드 (Kakao Primary ↔ Legacy Leaflet 전환, 다중 배경지도·3D 독)
 │   │   ├── map/
-│   │   │   ├── KakaoMapCanvas.tsx     # Kakao Maps SDK v3 렌더링 엔진 (MapTypeId 10종, CustomOverlay 드래그, 폴리곤/항로)
+│   │   │   ├── KakaoMapCanvas.tsx     # Kakao Maps SDK v3 렌더링 엔진 (MapTypeId 10종, CustomOverlay, 폴리곤/항로)
 │   │   │   ├── LegacyLeafletCanvas.tsx# 레거시 Leaflet + OpenStreetMap 폴백 엔진 (무중단 가용성 보장)
 │   │   │   ├── Roadview3DModal.tsx    # 360° 3D 구면 현장 로드뷰 모달 (80m→200m 확장 탐색 및 위성+지형도 폴백)
-│   │   │   └── mapMarkerTemplates.ts  # 5색 접안 마커(Hazard Halo)·선착장핀·상괭이·항로배지·기상핀 HTML 팩토리
+│   │   │   └── mapMarkerTemplates.ts  # 5색 접안 마커(Hazard Halo)·선착장핀(52x52 히트영역·후보 링)·상괭이·항로배지·기상핀 HTML 팩토리
 │   │   ├── DockingDetailSheet.tsx     # 접안 포인트 하단 슬라이딩 상세 시트 (3D 현장뷰 & 바닷길 계산 브릿지)
 │   │   ├── PhotoGallery.tsx           # 현장 사진 전체화면 라이트박스 모달
 │   │   ├── notebook/
@@ -105,10 +117,10 @@ bada-kkomkkomi/
 │   │   │   ├── FieldReportModal.tsx         # 현장정보 이메일 제보 & 지도 위치 선택 모달
 │   │   │   └── PorpoiseObservationModal.tsx # 개인 상괭이 관찰 기록 추가/수정/삭제 모달
 │   │   └── navigation/
-│   │       ├── RouteTimeCalculator.tsx      # 바닷길 시간계산기 패널 (A* 실항로·경유지 제어·KST 도착예정·브리핑복사)
-│   │       ├── PortSelectModal.tsx          # 136개 항구·선착장 초성/별칭/섬 검색 모달
+│   │       ├── RouteTimeCalculator.tsx      # 바닷길 시간계산기 패널 (후보 확인 카드·A* 실항로·KST 도착예정·브리핑복사)
+│   │       ├── PortSelectModal.tsx          # 136개 항구·선착장 초성/별칭/섬/GPS 거리순 검색 모달
 │   │       ├── MarineWeatherPanel.tsx       # ECMWF 전용 해상 기상상태 3단계 판정 패널 (항로 해역 칩 연동)
-│   │       └── WeatherThresholdSettings.tsx # 기상 판정 기준값(풍속·파고) 설정 모달
+│   │       └── WeatherThresholdSettings.tsx # 기상 판정 기준값(풍속·파고) 설정 및 데이터·기술 출처 센터 모달
 │   ├── config/
 │   │   ├── appVersion.ts              # 앱 릴리즈 버전(APP_VERSION) 및 데이터셋 버전 단일 정본
 │   │   └── dataSources.ts             # 6대 데이터·API·지도·알고리즘 출처 및 오프라인 동작 매트릭스 단일 정본(SSOT)
@@ -128,9 +140,12 @@ bada-kkomkkomi/
 │   │   ├── githubLayerSyncService.ts  # [저장] 시 GitHub Git Data API 기반 원격 main 브랜치 원자적 자동 커밋
 │   │   ├── ecmwfWeatherService.ts     # ECMWF IFS(풍속) + WAM(파고) 전용 URL 생성 및 KST 타임스탬프 결합기
 │   │   ├── emailReportService.ts      # 이메일 제보 전문 포맷팅, mailto URI 생성, 클립보드 복사
-│   │   └── routeGeoService.ts         # 378개 실측 해안선 이중 공간 인덱싱, 300개 변침점 2계층 A*·가시성 그래프 우회, Theta* String-Pulling
+│   │   ├── routeGeoService.ts         # 378개 실측 해안선 이중 공간 인덱싱, 300개 변침점 2계층 A*·가시성 그래프 우회, Theta* String-Pulling
+│   │   ├── routeLegLabelService.ts    # 줌 레벨·구간 길이 적응형 지도 구간 배지(시간·NM·화살표) 포맷팅 서비스
+│   │   ├── routePortSelectionService.ts # 136개 등록 항구 후보 선택·인접 시설 전환·유효성 검증·편집 후 정규화 서비스
+│   │   └── workspaceDraftRepository.ts# 항로·선속·필터·제보자명 localStorage 드래프트 영속화 및 GPS 오류 분류기
 │   ├── tests/
-│   │   └── coreServices.test.ts       # 핵심 도메인(해상 항로·기상·딥링크·워크스페이스·출처 SSOT) 단위 테스트 (13 tests)
+│   │   └── coreServices.test.ts       # 핵심 도메인(해상 항로·후보 선택·기상·딥링크·워크스페이스·출처·EGM 계약) 단위 테스트
 │   └── types/                         # 도메인별 TypeScript 엄격 타입 정의 (kakao, config, spatialLayer, docking, port, route, weather, porpoise, report)
 ├── DEPLOY_GUIDE.md                    # 비개발자 운영자용 데이터 교체 및 무상 배포 가이드
 ├── README.md                          # 프로젝트 개요 문서

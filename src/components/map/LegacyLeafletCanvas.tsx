@@ -21,10 +21,8 @@ import {
   buildGpsPulseSpec,
   buildNavPortPinSpec,
   buildPorpoiseSpec,
-  buildRouteDirectionArrowSpec,
   buildRouteLegBadgeSpec,
   buildRouteWaypointSpec,
-  buildSeaWaypointGuideSpec,
   buildWeatherPinSpec,
   getDockingMarkerLeafletZOffset,
 } from './mapMarkerTemplates';
@@ -60,6 +58,8 @@ export interface LegacyLeafletCanvasProps {
   showLegDurationOnMap?: boolean;
   showLegDistanceOnMap?: boolean;
   fitRouteBoundsTrigger?: number;
+  candidatePortId?: string | null;
+  onSelectRoutePort?: (portId: string) => void;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
@@ -115,11 +115,15 @@ function getDockingMarkerIcon(
   });
 }
 
-function getNavPortPinIcon(port: MarinePort, showLabel: boolean): L.DivIcon {
+function getNavPortPinIcon(
+  port: MarinePort,
+  showLabel: boolean,
+  isCandidate = false,
+): L.DivIcon {
   const isSmallBerth = port.subCategory === 'small_berth' || port.category === 'docking';
-  const cacheKey = `navport:${port.id}:${isSmallBerth ? 'sb' : 'pt'}:${showLabel ? 'lbl' : 'dot'}`;
+  const cacheKey = `navport:${port.id}:${isSmallBerth ? 'sb' : 'pt'}:${showLabel ? 'lbl' : 'dot'}:${isCandidate ? 'cand' : 'norm'}`;
   return getCachedDivIcon(cacheKey, () => {
-    const spec = buildNavPortPinSpec(port, showLabel);
+    const spec = buildNavPortPinSpec(port, showLabel || isCandidate, isCandidate);
     return L.divIcon({
       className: 'bada-custom-marker',
       html: spec.html,
@@ -183,37 +187,6 @@ function getRouteLegBadgeIcon(
       showDuration,
       showDistance,
     });
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html: spec.html,
-      iconSize: [spec.width, spec.height],
-      iconAnchor: [spec.anchorX, spec.anchorY],
-    });
-  });
-}
-
-function getRouteDirectionArrowIcon(
-  bearingDeg: number,
-  safetyLevel: 'safe' | 'caution' | 'danger' = 'safe',
-  isSelected = false,
-): L.DivIcon {
-  const quantizedDeg = ((Math.round(bearingDeg / 5) * 5) % 360 + 360) % 360;
-  const cacheKey = `dirarrow:${quantizedDeg}:${safetyLevel}:${isSelected ? 1 : 0}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const spec = buildRouteDirectionArrowSpec(quantizedDeg, safetyLevel, isSelected);
-    return L.divIcon({
-      className: 'bada-custom-marker',
-      html: spec.html,
-      iconSize: [spec.width, spec.height],
-      iconAnchor: [spec.anchorX, spec.anchorY],
-    });
-  });
-}
-
-function getSeaWaypointGuideIcon(name: string, isSelected = false): L.DivIcon {
-  const cacheKey = `wpguide:${name}:${isSelected ? 1 : 0}`;
-  return getCachedDivIcon(cacheKey, () => {
-    const spec = buildSeaWaypointGuideSpec(name, isSelected);
     return L.divIcon({
       className: 'bada-custom-marker',
       html: spec.html,
@@ -395,11 +368,13 @@ export function LegacyLeafletCanvas({
   showPortMarkersOnMap,
   selectedLegIndex = null,
   onSelectLeg,
-  showDirectionArrows = true,
+  showDirectionArrows: _showDirectionArrows = true,
   showLegDurationOnMap = true,
   showLegDistanceOnMap = true,
   fitRouteBoundsTrigger = 0,
-  onUpdateWaypointPos,
+  candidatePortId = null,
+  onSelectRoutePort,
+  onUpdateWaypointPos: _onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
   weatherCoords,
@@ -434,89 +409,8 @@ export function LegacyLeafletCanvas({
   }, [routeWaypoints]);
 
   const polylinePositions = useMemo(() => {
-    if (
-      routeLegs.length > 0 &&
-      routeLegs.some((leg) => leg.pathPositions && leg.pathPositions.length >= 2)
-    ) {
-      const merged: [number, number][] = [];
-      for (const leg of routeLegs) {
-        const pts =
-          leg.pathPositions && leg.pathPositions.length >= 2
-            ? leg.pathPositions
-            : ([
-                [leg.from.lat, leg.from.lng],
-                [leg.to.lat, leg.to.lng],
-              ] as [number, number][]);
-        for (let i = 0; i < pts.length; i++) {
-          if (merged.length === 0 || i > 0) {
-            merged.push(pts[i]);
-          }
-        }
-      }
-      return merged;
-    }
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
-  }, [routeLegs, routeWaypoints]);
-
-  const routeArrowZoomTier = currentZoom <= 10 ? 0 : currentZoom <= 12 ? 1 : 2;
-  const showSeaChannelGuides = currentZoom >= 12;
-
-  const visibleDirectionArrows = useMemo(() => {
-    if (!showDirectionArrows) return [];
-    const maxTotalArrows = routeArrowZoomTier === 0 ? 6 : routeArrowZoomTier === 1 ? 14 : 24;
-    const list: {
-      key: string;
-      lat: number;
-      lng: number;
-      bearingDeg: number;
-      safetyLevel: 'safe' | 'caution' | 'danger';
-      isSelected: boolean;
-    }[] = [];
-
-    routeLegs.forEach((leg, legIdx) => {
-      const isSelected = selectedLegIndex === legIdx;
-      const arrows = leg.directionArrows ?? [];
-      const filtered =
-        routeArrowZoomTier === 0
-          ? arrows.slice(0, 1)
-          : routeArrowZoomTier === 1
-            ? arrows.filter((_, i) => i % 2 === 0).slice(0, 3)
-            : arrows;
-      filtered.forEach((a, aIdx) => {
-        if (list.length >= maxTotalArrows) return;
-        list.push({
-          key: `dir-arrow-${leg.id}-${aIdx}`,
-          lat: a.lat,
-          lng: a.lng,
-          bearingDeg: a.bearingDeg,
-          safetyLevel: leg.safetyLevel ?? 'safe',
-          isSelected,
-        });
-      });
-    });
-    return list;
-  }, [showDirectionArrows, routeArrowZoomTier, routeLegs, selectedLegIndex]);
-
-  const visibleChannelGuides = useMemo(() => {
-    if (!showDirectionArrows || !showSeaChannelGuides) return [];
-    const seen = new Set<string>();
-    const list: { id: string; name: string; lat: number; lng: number; isSelected: boolean }[] = [];
-    routeLegs.forEach((leg, legIdx) => {
-      const isSelected = selectedLegIndex === legIdx;
-      for (const wpGuide of leg.activeWaypoints ?? []) {
-        if (seen.has(wpGuide.id)) continue;
-        seen.add(wpGuide.id);
-        list.push({
-          id: wpGuide.id,
-          name: wpGuide.name,
-          lat: wpGuide.lat,
-          lng: wpGuide.lng,
-          isSelected,
-        });
-      }
-    });
-    return list;
-  }, [showDirectionArrows, showSeaChannelGuides, routeLegs, selectedLegIndex]);
+  }, [routeWaypoints]);
 
   return (
     <MapContainer
@@ -682,47 +576,34 @@ export function LegacyLeafletCanvas({
           {showPortMarkersOnMap &&
             portsList
               .filter((port) => !activeWaypointPortIds.has(port.id))
-              .map((port) => (
-                <Marker
-                  key={`nav-port-${port.id}`}
-                  position={[port.lat, port.lng]}
-                  icon={getNavPortPinIcon(port, currentZoom >= 13)}
-                  zIndexOffset={150}
-                  eventHandlers={{
-                    click: () => onMapClickForRoute(port.lat, port.lng),
-                  }}
-                />
-              ))}
+              .map((port) => {
+                const isCandidate = candidatePortId === port.id;
+                return (
+                  <Marker
+                    key={`nav-port-${port.id}`}
+                    position={[port.lat, port.lng]}
+                    icon={getNavPortPinIcon(port, currentZoom >= 13, isCandidate)}
+                    zIndexOffset={isCandidate ? 620 : 150}
+                    eventHandlers={{
+                      click: (e) => {
+                        e.originalEvent?.stopPropagation();
+                        if (onSelectRoutePort) {
+                          onSelectRoutePort(port.id);
+                        } else {
+                          onMapClickForRoute(port.lat, port.lng);
+                        }
+                      },
+                    }}
+                  />
+                );
+              })}
 
-          {/* 선택된 구간이 있을 때만 해당 구간의 직선 대권 참고선 표시 */}
-          {selectedLegIndex !== null && routeLegs[selectedLegIndex] && (
-            <Polyline
-              positions={[
-                [
-                  routeLegs[selectedLegIndex].from.lat,
-                  routeLegs[selectedLegIndex].from.lng,
-                ],
-                [routeLegs[selectedLegIndex].to.lat, routeLegs[selectedLegIndex].to.lng],
-              ]}
-              pathOptions={{
-                color: '#94a3b8',
-                weight: 1.5,
-                dashArray: '4 6',
-                opacity: 0.55,
-              }}
-            />
-          )}
-
-          {/* 구간별 3중 케이싱(3-Tier Casing) 해상 실항로 폴리라인 */}
+          {/* 구간별 출발지 ─── (경유지) ─── 도착지 직관적 연결선 (3-Tier 고대비 케이싱) */}
           {routeLegs.map((leg, legIdx) => {
-            const pts =
-              leg.pathPositions && leg.pathPositions.length >= 2
-                ? leg.pathPositions
-                : ([
-                    [leg.from.lat, leg.from.lng],
-                    [leg.to.lat, leg.to.lng],
-                  ] as [number, number][]);
-            if (pts.length < 2) return null;
+            const pts: [number, number][] = [
+              [leg.from.lat, leg.from.lng],
+              [leg.to.lat, leg.to.lng],
+            ];
             const isSelected = selectedLegIndex === legIdx;
             const mainColor = isSelected
               ? '#34d399'
@@ -761,87 +642,64 @@ export function LegacyLeafletCanvas({
             );
           })}
 
-          {/* 진행 방향 화살표(➤) */}
-          {visibleDirectionArrows.map((arrow) => (
-            <Marker
-              key={arrow.key}
-              position={[arrow.lat, arrow.lng]}
-              icon={getRouteDirectionArrowIcon(
-                arrow.bearingDeg,
-                arrow.safetyLevel,
-                arrow.isSelected,
-              )}
-              interactive={false}
-              zIndexOffset={arrow.isSelected ? 390 : 340}
-            />
-          ))}
-
-          {/* 해상 변침점 수로 가이드(◆) */}
-          {visibleChannelGuides.map((guide) => (
-            <Marker
-              key={`wp-guide-${guide.id}`}
-              position={[guide.lat, guide.lng]}
-              icon={getSeaWaypointGuideIcon(guide.name, guide.isSelected)}
-              interactive={false}
-              zIndexOffset={guide.isSelected ? 385 : 330}
-            />
-          ))}
-
-          {/* 구간 진중점(50% Arc-Length) 소요시간·해리·회전 침로 배지 */}
-          {routeLegs.map((leg, legIdx) => {
-            const isSelected = selectedLegIndex === legIdx;
-            return (
-              <Marker
-                key={`leg-badge-${leg.id}`}
-                position={[leg.midLat, leg.midLng]}
-                icon={getRouteLegBadgeIcon(
-                  leg.durationMinutes,
-                  leg.distanceNm,
-                  leg.bearingDeg,
-                  leg.cardinal,
-                  legIdx,
-                  leg.safetyLevel ?? 'safe',
-                  isSelected,
-                  showLegDurationOnMap,
-                  showLegDistanceOnMap,
-                )}
-                interactive={Boolean(onSelectLeg)}
-                zIndexOffset={isSelected ? 460 : 420}
-                eventHandlers={
-                  onSelectLeg
-                    ? {
-                        click: (e) => {
-                          e.originalEvent?.stopPropagation();
-                          onSelectLeg(isSelected ? null : legIdx);
-                        },
-                      }
-                    : undefined
-                }
-              />
-            );
-          })}
+          {/* 구간 연결선 중앙 소요시간·해리 배지 */}
+          {(showLegDurationOnMap || showLegDistanceOnMap) &&
+            routeLegs.map((leg, legIdx) => {
+              const isSelected = selectedLegIndex === legIdx;
+              const visualMidLat = (leg.from.lat + leg.to.lat) / 2;
+              const visualMidLng = (leg.from.lng + leg.to.lng) / 2;
+              return (
+                <Marker
+                  key={`leg-badge-${leg.id}`}
+                  position={[visualMidLat, visualMidLng]}
+                  icon={getRouteLegBadgeIcon(
+                    leg.durationMinutes,
+                    leg.distanceNm,
+                    leg.bearingDeg,
+                    leg.cardinal,
+                    legIdx,
+                    leg.safetyLevel ?? 'safe',
+                    isSelected,
+                    showLegDurationOnMap,
+                    showLegDistanceOnMap,
+                  )}
+                  interactive={Boolean(onSelectLeg)}
+                  zIndexOffset={isSelected ? 460 : 420}
+                  eventHandlers={
+                    onSelectLeg
+                      ? {
+                          click: (e) => {
+                            e.originalEvent?.stopPropagation();
+                            onSelectLeg(isSelected ? null : legIdx);
+                          },
+                        }
+                      : undefined
+                  }
+                />
+              );
+            })}
 
           {routeWaypoints.map((wp, idx) => (
             <Marker
               key={wp.id}
               position={[wp.lat, wp.lng]}
               icon={getRouteWaypointIcon(wp.type, wp.name, idx, wp.id)}
-              draggable={true}
+              draggable={false}
               zIndexOffset={700}
               eventHandlers={{
                 click: (e) => {
+                  e.originalEvent?.stopPropagation();
                   const origTarget = e.originalEvent?.target as HTMLElement | null;
                   const removeBtn = origTarget?.closest(
                     '[data-remove-waypoint-id]',
                   ) as HTMLElement | null;
                   if (removeBtn && onRemoveWaypoint) {
-                    e.originalEvent?.stopPropagation();
                     onRemoveWaypoint(wp.id);
+                    return;
                   }
-                },
-                dragend: (e) => {
-                  const latlng = e.target.getLatLng();
-                  onUpdateWaypointPos(wp.id, latlng.lat, latlng.lng);
+                  if (wp.matchedPortId && onSelectRoutePort) {
+                    onSelectRoutePort(wp.matchedPortId);
+                  }
                 },
               }}
             />

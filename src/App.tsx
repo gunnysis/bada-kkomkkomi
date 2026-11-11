@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 
 import { HomeScreen, type NotebookLaunchPreset } from './components/home/HomeScreen';
-import type { RouteMapTapMode } from './components/navigation/RouteTimeCalculator';
 import type { SettingsInitialSection } from './components/navigation/WeatherThresholdSettings';
 import { APP_VERSION_DISPLAY } from './config/appVersion';
 import type { SourceCategoryKey } from './config/dataSources';
@@ -92,8 +91,12 @@ import { useMarineWeather } from './hooks/useMarineWeather';
 import {
   calculateRouteSummary,
   describeNearestPortArea,
-  resolveSmartWaypoint,
 } from './services/routeGeoService';
+import {
+  applyDirectPortSelection,
+  findNearestRegisteredPort,
+  sanitizeCommittedRouteWaypoints,
+} from './services/routePortSelectionService';
 import {
   classifyGpsError,
   loadWorkspaceDraft,
@@ -181,7 +184,6 @@ export function App() {
   const [marineWaypoints, setMarineWaypoints] = useState<MarineWaypointNode[]>([]);
   const [snapRadiusMeters, setSnapRadiusMeters] = useState<number>(500);
   const [showPortMarkersOnMap, setShowPortMarkersOnMap] = useState<boolean>(true);
-  const [showDirectionArrows, setShowDirectionArrows] = useState<boolean>(true);
   const [selectedLegIndex, setSelectedLegIndex] = useState<number | null>(null);
   const [fitRouteBoundsTrigger, setFitRouteBoundsTrigger] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -370,7 +372,13 @@ export function App() {
     () => initialWorkspaceDraft.routeWaypoints,
   );
   const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
-  const [routeMapTapMode, setRouteMapTapMode] = useState<RouteMapTapMode>('pan_only');
+
+  // 출발지 또는 도착지가 아직 선택되지 않은 상태(waypoints.length < 2)에서는 지도 항구 마커를 항상 활성화
+  useEffect(() => {
+    if (routeWaypoints.length < 2) {
+      setShowPortMarkersOnMap(true);
+    }
+  }, [routeWaypoints.length]);
 
   // 항로 웨이포인트·선속·등급 필터·권역 필터·지도 배지 토글·제보자명 변경 시 WorkspaceDraftRepository에 자동 영속화 (앱 재시작·SW 업데이트 시 보존)
   useEffect(() => {
@@ -743,217 +751,76 @@ export function App() {
     }
   };
 
-  // [3.2.C 바닷길 시간계산기] 핀 드래그 시 항구/소규모 선착장 500m 스냅 및 해상 좌표 실시간 동기화
+  // [3.2.C] 등록된 136개 항구·선착장 즉시 선택 처리 (지도 마커 선택 및 [항구선택] 모달 공통 창구)
+  const handleSelectRoutePort = useCallback(
+    (
+      portId: string,
+      targetSlot?: 'start' | 'end' | 'add_waypoint' | 'new_waypoint' | string | null,
+    ) => {
+      const port = portsList.find((p) => p.id === portId);
+      if (!port) return;
+
+      const result = applyDirectPortSelection(port, routeWaypoints, targetSlot);
+      if (result.error) {
+        showToast(result.error);
+        return;
+      }
+
+      const { waypoints: nextWaypoints, notice } = sanitizeCommittedRouteWaypoints(
+        result.waypoints,
+      );
+      commitRouteWaypoints(() => nextWaypoints);
+      setShowPortMarkersOnMap(true);
+
+      if (nextWaypoints.length === 1) {
+        handleFlyToPoint(port.lat, port.lng, 13);
+        showToast(notice ?? `출발지: ${port.name}`);
+      } else if (nextWaypoints.length >= 2) {
+        setFitRouteBoundsTrigger((n) => n + 1);
+        const roleLabel =
+          result.addedRole === 'start'
+            ? '출발지'
+            : result.addedRole === 'waypoint'
+              ? '경유지'
+              : '도착지';
+        showToast(notice ?? `${roleLabel}: ${port.name}`);
+      }
+    },
+    [portsList, routeWaypoints, commitRouteWaypoints, handleFlyToPoint, showToast],
+  );
+
+  // [3.2.C 바닷길 시간계산기] 등록 항구 스냅 업데이트
   const handleUpdateWaypointPos = useCallback(
     (id: string, lat: number, lng: number) => {
-      commitRouteWaypoints((prev) =>
-        prev.map((wp, idx) => {
-          if (wp.id !== id) return wp;
-          const fallbackRole =
-            wp.type === 'start' ? '해상 출발지' : wp.type === 'end' ? '해상 목적지' : `경유지 ${idx}`;
-          const resolved = resolveSmartWaypoint(
-            lat,
-            lng,
-            portsList,
-            fallbackRole,
-            snapRadiusMeters,
-          );
-          if (resolved.matchedPortId) {
-            showToast(`자동 스냅: ${resolved.name}`);
-          }
-          return {
-            ...wp,
-            name: resolved.name,
-            lat: resolved.lat,
-            lng: resolved.lng,
-            matchedPortId: resolved.matchedPortId,
-            isCustomCoord: resolved.isCustomCoord,
-            subCategory: resolved.subCategory,
-            facilityLabel: resolved.facilityLabel,
-            minDepthMeters: resolved.minDepthMeters,
-            tidalSensitivity: resolved.tidalSensitivity,
-            maxVesselTons: resolved.maxVesselTons,
-            hazards: resolved.hazards,
-          };
-        }),
-      );
+      const nearest = findNearestRegisteredPort(lat, lng, portsList, snapRadiusMeters);
+      if (!nearest) return;
+      handleSelectRoutePort(nearest.id, id);
     },
-    [commitRouteWaypoints, portsList, snapRadiusMeters, showToast],
+    [portsList, snapRadiusMeters, handleSelectRoutePort],
   );
 
-  // [3.2.C] 지도 탭으로 포인트 지정 (이동 잠금 / 경유지 추가 / 출발지 1회 지정 후 자동 잠금 / 목적지 1회 지정 후 자동 잠금)
-  const handleMapClickForRoute = useCallback(
-    (lat: number, lng: number) => {
-      if (routeMapTapMode === 'pan_only') {
-        return;
-      }
-      if (routeMapTapMode === 'set_start') {
-        const startWp = routeWaypoints[0];
-        if (startWp) {
-          handleUpdateWaypointPos(startWp.id, lat, lng);
-        } else {
-          const resolved = resolveSmartWaypoint(lat, lng, portsList, '해상 출발지', snapRadiusMeters);
-          commitRouteWaypoints(() => [
-            {
-              id: `wp_start_${Date.now()}`,
-              name: resolved.name,
-              lat: resolved.lat,
-              lng: resolved.lng,
-              type: 'start',
-              matchedPortId: resolved.matchedPortId,
-              isCustomCoord: resolved.isCustomCoord,
-              subCategory: resolved.subCategory,
-              facilityLabel: resolved.facilityLabel,
-              minDepthMeters: resolved.minDepthMeters,
-              tidalSensitivity: resolved.tidalSensitivity,
-              maxVesselTons: resolved.maxVesselTons,
-              hazards: resolved.hazards,
-            },
-          ]);
-        }
-        setRouteMapTapMode('pan_only');
-        showToast('출발지 지정 완료 · 다음으로 목적지를 지정해 주세요');
-        return;
-      }
-      if (routeMapTapMode === 'set_end') {
-        const endWp = routeWaypoints[routeWaypoints.length - 1];
-        if (routeWaypoints.length >= 2 && endWp) {
-          handleUpdateWaypointPos(endWp.id, lat, lng);
-          setRouteMapTapMode('pan_only');
-          showToast('목적지 지정 완료 · 실수 방지를 위해 [이동만] 모드로 전환됨');
-        } else if (routeWaypoints.length === 1) {
-          const resolved = resolveSmartWaypoint(lat, lng, portsList, '해상 목적지', snapRadiusMeters);
-          commitRouteWaypoints((prev) => [
-            ...prev,
-            {
-              id: `wp_end_${Date.now()}`,
-              name: resolved.name,
-              lat: resolved.lat,
-              lng: resolved.lng,
-              type: 'end',
-              matchedPortId: resolved.matchedPortId,
-              isCustomCoord: resolved.isCustomCoord,
-              subCategory: resolved.subCategory,
-              facilityLabel: resolved.facilityLabel,
-              minDepthMeters: resolved.minDepthMeters,
-              tidalSensitivity: resolved.tidalSensitivity,
-              maxVesselTons: resolved.maxVesselTons,
-              hazards: resolved.hazards,
-            },
-          ]);
-          setRouteMapTapMode('pan_only');
-          showToast('목적지 지정 완료 · 항로를 계산했습니다');
-        } else {
-          showToast('먼저 [출발지]를 선택한 뒤 목적지를 지정해 주세요');
-        }
-        return;
-      }
-      // 'add_waypoint': 목적지 바로 앞에 신규 경유지 삽입
-      const wpIndex = routeWaypoints.length - 1;
-      const resolved = resolveSmartWaypoint(
-        lat,
-        lng,
-        portsList,
-        `경유지 ${wpIndex}`,
-        snapRadiusMeters,
-      );
-      const newWp: RouteWaypoint = {
-        id: `wp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        name: resolved.name,
-        lat: resolved.lat,
-        lng: resolved.lng,
-        type: 'waypoint',
-        matchedPortId: resolved.matchedPortId,
-        isCustomCoord: resolved.isCustomCoord,
-        subCategory: resolved.subCategory,
-        facilityLabel: resolved.facilityLabel,
-        minDepthMeters: resolved.minDepthMeters,
-        tidalSensitivity: resolved.tidalSensitivity,
-        maxVesselTons: resolved.maxVesselTons,
-        hazards: resolved.hazards,
-      };
-      commitRouteWaypoints((prev) => {
-        const next = [...prev];
-        next.splice(next.length - 1, 0, newWp);
-        return next;
-      });
-      showToast(`경유지 추가됨: ${resolved.name} ([실행취소] 또는 마커 [✕]로 취소 가능)`);
-    },
-    [
-      routeMapTapMode,
-      routeWaypoints,
-      handleUpdateWaypointPos,
-      portsList,
-      snapRadiusMeters,
-      commitRouteWaypoints,
-      showToast,
-    ],
-  );
+  // [3.2.C] 빈 바다/육지 지도 배경 클릭 시 임의 좌표를 경로에 넣지 않음 (등록 항구 마커 선택 전용)
+  const handleMapClickForRoute = useCallback((_lat: number, _lng: number) => {
+    // 의도적 No-op: 등록된 항구 마커 선택 또는 [항구선택]으로만 출발·도착지 설정
+  }, []);
 
-  // 버튼으로 경유지 추가 (중복 유령 구간 생성 방지를 위해 오프셋 분산 적용)
+  // [+ 경유지] 버튼 클릭 시 경유지 항구선택 모달 오픈
   const handleAddWaypointButton = useCallback(() => {
-    const newIdx = routeWaypoints.length - 1;
-    const prevWp = routeWaypoints[newIdx - 1] || routeWaypoints[0];
-    const endWp = routeWaypoints[routeWaypoints.length - 1];
-    // 연속 추가 시 동일 항구 중복 스냅을 피하기 위해 경유지 순번에 따라 수직·수평 오프셋 분산
-    const stepOffset = 0.007 * ((newIdx % 3) + 1);
-    const dirSign = newIdx % 2 === 1 ? 1 : -1;
-    const midLat = (prevWp.lat + endWp.lat) / 2 + stepOffset * dirSign;
-    const midLng = (prevWp.lng + endWp.lng) / 2 + stepOffset;
-
-    let resolved = resolveSmartWaypoint(
-      midLat,
-      midLng,
-      portsList,
-      `경유지 ${newIdx}`,
-      snapRadiusMeters,
-    );
-
-    // 만약 직전 지점 또는 도착 지점과 동일한 항구로 스냅되었다면 순수 해상 중간 좌표로 보존하여 0.00 NM 유령 구간 방지
-    if (
-      resolved.matchedPortId &&
-      (resolved.matchedPortId === prevWp.matchedPortId ||
-        resolved.matchedPortId === endWp.matchedPortId)
-    ) {
-      resolved = {
-        name: `해상 경유지 ${newIdx} (${midLat.toFixed(3)}°N, ${midLng.toFixed(3)}°E)`,
-        lat: midLat,
-        lng: midLng,
-        matchedPortId: undefined,
-        isCustomCoord: true,
-      };
-    }
-
-    const newWp: RouteWaypoint = {
-      id: `wp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      name: resolved.name,
-      lat: resolved.lat,
-      lng: resolved.lng,
-      type: 'waypoint',
-      matchedPortId: resolved.matchedPortId,
-      isCustomCoord: resolved.isCustomCoord,
-      subCategory: resolved.subCategory,
-      facilityLabel: resolved.facilityLabel,
-      minDepthMeters: resolved.minDepthMeters,
-      tidalSensitivity: resolved.tidalSensitivity,
-      maxVesselTons: resolved.maxVesselTons,
-      hazards: resolved.hazards,
-    };
-
-    commitRouteWaypoints((prev) => {
-      const next = [...prev];
-      next.splice(next.length - 1, 0, newWp);
-      return next;
+    setShowPortMarkersOnMap(true);
+    setPortSelectorTarget({
+      waypointId: 'new_waypoint',
+      label: '경유지 추가',
     });
-    handleFlyToPoint(resolved.lat, resolved.lng, 12);
-    showToast(`경유지 ${newIdx} 추가됨: ${resolved.name}`);
-  }, [routeWaypoints, portsList, snapRadiusMeters, commitRouteWaypoints, handleFlyToPoint, showToast]);
+  }, []);
 
   const handleRemoveWaypoint = useCallback(
     (id: string) => {
       const target = routeWaypoints.find((wp) => wp.id === id);
-      commitRouteWaypoints((prev) =>
-        prev.filter((wp) => wp.id !== id || wp.type !== 'waypoint'),
+      commitRouteWaypoints(
+        (prev) =>
+          sanitizeCommittedRouteWaypoints(
+            prev.filter((wp) => wp.id !== id || wp.type !== 'waypoint'),
+          ).waypoints,
       );
       if (target) {
         showToast(`경유지 취소됨: ${target.name} ([실행취소]로 복구 가능)`);
@@ -962,15 +829,18 @@ export function App() {
     [routeWaypoints, commitRouteWaypoints, showToast],
   );
 
-  // 중간 경유지 일괄 비우기 (출발지와 목적지만 유지)
+  // 중간 경유지 일괄 비우기 (출발지와 목적지만 유지 + A→B→A 비우기 시 A→A 붕괴 방지)
   const handleClearWaypoints = useCallback(() => {
     const intermediateCount = Math.max(0, routeWaypoints.length - 2);
     if (intermediateCount === 0) return;
-    commitRouteWaypoints((prev) => prev.filter((wp) => wp.type !== 'waypoint'));
+    commitRouteWaypoints(
+      (prev) =>
+        sanitizeCommittedRouteWaypoints(prev.filter((wp) => wp.type !== 'waypoint')).waypoints,
+    );
     showToast(`중간 경유지 ${intermediateCount}곳이 모두 취소되었습니다 ([실행취소]로 복구 가능)`);
   }, [routeWaypoints.length, commitRouteWaypoints, showToast]);
 
-  // 다중 경유지 순서 위/아래 이동
+  // 다중 경유지 순서 위/아래 이동 (이동 후 연속 중복 무결성 검증)
   const handleMoveWaypoint = useCallback(
     (id: string, direction: 'up' | 'down') => {
       commitRouteWaypoints((prev) => {
@@ -981,7 +851,7 @@ export function App() {
         const next = [...prev];
         const [moved] = next.splice(idx, 1);
         next.splice(targetIdx, 0, moved);
-        return next;
+        return sanitizeCommittedRouteWaypoints(next).waypoints;
       });
       showToast(
         direction === 'up'
@@ -1007,179 +877,89 @@ export function App() {
     commitRouteWaypoints((prev) => {
       if (prev.length < 2) return prev;
       const reversed = [...prev].reverse();
-      return reversed.map((wp, idx) => ({
-        ...wp,
-        type: idx === 0 ? 'start' : idx === reversed.length - 1 ? 'end' : 'waypoint',
-      }));
+      return sanitizeCommittedRouteWaypoints(reversed).waypoints;
     });
     showToast('출발지와 목적지 경로가 반전되었습니다.');
   }, [commitRouteWaypoints, showToast]);
 
   const handleResetRoute = useCallback(() => {
+    setShowPortMarkersOnMap(true);
     commitRouteWaypoints(() => []);
     handleFlyToPoint(34.805, 128.445, 12);
-    showToast('항로를 비웠습니다. 출발지와 목적지를 새로 지정해 주세요.');
+    showToast('항로를 비웠습니다.');
   }, [commitRouteWaypoints, handleFlyToPoint, showToast]);
 
-  // 항구 선택 모달에서 항구·소규모 선착장 선택 시 반영
+  // 항구 선택 모달에서 항구·소규모 선착장 선택 시 즉시 반영
   const handleSelectPortForWaypoint = useCallback(
     (port: MarinePort) => {
-      if (!portSelectorTarget) return;
-      commitRouteWaypoints((prev) =>
-        prev.map((wp) =>
-          wp.id === portSelectorTarget.waypointId
-            ? {
-                ...wp,
-                name: port.name,
-                lat: port.lat,
-                lng: port.lng,
-                matchedPortId: port.id,
-                isCustomCoord: false,
-                subCategory: port.subCategory,
-                facilityLabel: port.facilityLabel,
-                minDepthMeters: port.minDepthMeters,
-                tidalSensitivity: port.tidalSensitivity,
-                maxVesselTons: port.maxVesselTons,
-                hazards: port.hazards,
-              }
-            : wp,
-        ),
-      );
-      handleFlyToPoint(port.lat, port.lng, 13);
-      showToast(`${portSelectorTarget.label}: ${port.name} 설정 완료`);
+      const targetSlot = portSelectorTarget?.waypointId ?? null;
+      handleSelectRoutePort(port.id, targetSlot);
+      setPortSelectorTarget(null);
     },
-    [portSelectorTarget, commitRouteWaypoints, handleFlyToPoint, showToast],
+    [portSelectorTarget, handleSelectRoutePort],
   );
 
-  // 항구 선택 모달에서 '내 선박 현재 GPS 위치' 선택 시 반영
+  // 항구 선택 모달에서 현재 GPS 기준 거리순 정렬 활성화 (모달 닫지 않음)
   const handleSelectUserGpsForWaypoint = useCallback(() => {
-    if (!portSelectorTarget) return;
-    const lat = userLocation?.lat ?? 34.8125;
-    const lng = userLocation?.lng ?? 128.5085;
     if (!userLocation) {
-      setUserLocation({ lat, lng, accuracy: 85, isSimulated: true });
+      setUserLocation({
+        lat: 34.8125,
+        lng: 128.5085,
+        accuracy: 85,
+        isSimulated: true,
+      });
     }
-    commitRouteWaypoints((prev) =>
-      prev.map((wp) =>
-        wp.id === portSelectorTarget.waypointId
-          ? {
-              ...wp,
-              name: `내 선박 GPS (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`,
-              lat,
-              lng,
-              matchedPortId: undefined,
-              isCustomCoord: true,
-              subCategory: undefined,
-              facilityLabel: undefined,
-              minDepthMeters: undefined,
-              tidalSensitivity: undefined,
-              maxVesselTons: undefined,
-              hazards: undefined,
-            }
-          : wp,
-      ),
-    );
-    handleFlyToPoint(lat, lng, 13);
-    showToast(`${portSelectorTarget.label}: 현재 선박 GPS 위치 적용`);
-  }, [portSelectorTarget, userLocation, commitRouteWaypoints, handleFlyToPoint, showToast]);
+  }, [userLocation]);
 
-  // [교차 기능 브릿지] 3.1 꼬미의 바다수첩 상세 시트에서 선택한 접안지를 목적지(end)로 설정하고 3.2 바닷길 콕콕으로 즉시 이동
+  // [교차 기능 브릿지] 3.1 꼬미의 바다수첩 상세 시트에서 선택한 접안지를 즉시 출발지/도착지로 반영하고 3.2 바닷길 콕콕으로 이동
   const handleNavigateToDockingPoint = useCallback(
     (feature: DockingFeature) => {
       const [lng, lat] = feature.geometry.coordinates;
       const p = feature.properties;
-      const matchedPort = portsList.find((port) => port.id === p.id);
-      commitRouteWaypoints((prev) => {
-        if (prev.length === 0) return prev;
-        return prev.map((wp, idx) =>
-          idx === prev.length - 1
-            ? {
-                ...wp,
-                name: p.name,
-                lat,
-                lng,
-                matchedPortId: p.id,
-                isCustomCoord: false,
-                subCategory: matchedPort?.subCategory ?? 'official_docking',
-                facilityLabel: matchedPort?.facilityLabel ?? (p.purpose || '접안시설'),
-                minDepthMeters: matchedPort?.minDepthMeters,
-                tidalSensitivity:
-                  matchedPort?.tidalSensitivity ??
-                  (p.color === 'red' || p.color === 'amber' ? 'HIGH' : 'MEDIUM'),
-                maxVesselTons: matchedPort?.maxVesselTons,
-                hazards:
-                  matchedPort?.hazards && matchedPort.hazards.length > 0
-                    ? matchedPort.hazards
-                    : p.hazard
-                      ? [p.hazard]
-                      : undefined,
-              }
-            : wp,
-        );
-      });
+      const matchedPort =
+        portsList.find((port) => port.id === p.id) ??
+        findNearestRegisteredPort(lat, lng, portsList);
       updateWeatherCoordinates(lat, lng);
       setSelectedFeature(null);
       setIsPorpoiseAddMode(false);
       setIsReportPickMode(false);
       setIsColorFilterOpen(false);
+      setShowPortMarkersOnMap(true);
       setLastTriggeredCardId('navigation');
       switchWorkspaceScreen('navigation', 'route');
-      handleFlyToPoint(lat, lng, 13);
-      showToast(`'${p.name}' 목적지 설정 · 바닷길 시간·기상 계산 모드 전환`);
+
+      if (matchedPort) {
+        handleSelectRoutePort(matchedPort.id);
+      } else {
+        handleFlyToPoint(lat, lng, 13);
+      }
     },
     [
       portsList,
-      commitRouteWaypoints,
       updateWeatherCoordinates,
       switchWorkspaceScreen,
+      handleSelectRoutePort,
       handleFlyToPoint,
-      showToast,
     ],
   );
 
-  // [기상 -> 항로 역방향 브릿지] 해상기상 상태판정에서 조회 중인 해역을 항로 경유지로 즉시 추가
+  // [기상 -> 항로 역방향 브릿지] 해상기상 상태판정에서 조회 중인 해역의 최인접 등록 항구를 즉시 반영하고 시간계산 탭으로 전환
   const handleAddWeatherCoordAsWaypoint = useCallback(() => {
-    const wpIndex = routeWaypoints.length - 1;
-    const resolved = resolveSmartWaypoint(
-      marineWeather.lat,
-      marineWeather.lng,
-      portsList,
-      `기상확인 해역 ${wpIndex}`,
-      snapRadiusMeters,
-    );
-    const newWp: RouteWaypoint = {
-      id: `wp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      name: resolved.name,
-      lat: resolved.lat,
-      lng: resolved.lng,
-      type: 'waypoint',
-      matchedPortId: resolved.matchedPortId,
-      isCustomCoord: resolved.isCustomCoord,
-      subCategory: resolved.subCategory,
-      facilityLabel: resolved.facilityLabel,
-      minDepthMeters: resolved.minDepthMeters,
-      tidalSensitivity: resolved.tidalSensitivity,
-      maxVesselTons: resolved.maxVesselTons,
-      hazards: resolved.hazards,
-    };
-    commitRouteWaypoints((prev) => {
-      const next = [...prev];
-      next.splice(next.length - 1, 0, newWp);
-      return next;
-    });
+    const nearest = findNearestRegisteredPort(marineWeather.lat, marineWeather.lng, portsList);
+    setShowPortMarkersOnMap(true);
     replaceNavPanel('route');
-    handleFlyToPoint(resolved.lat, resolved.lng, 12);
-    showToast(`'${resolved.name}' 경유지 추가 및 시간계산 탭 전환`);
+    if (!nearest) return;
+    handleSelectRoutePort(
+      nearest.id,
+      routeWaypoints.length >= 2 ? 'add_waypoint' : undefined,
+    );
   }, [
-    routeWaypoints.length,
     marineWeather.lat,
     marineWeather.lng,
     portsList,
-    snapRadiusMeters,
-    commitRouteWaypoints,
+    routeWaypoints.length,
     replaceNavPanel,
-    handleFlyToPoint,
-    showToast,
+    handleSelectRoutePort,
   ]);
 
   const nearestWeatherAreaLabel = useMemo(
@@ -2011,13 +1791,13 @@ export function App() {
           routeLegs={routeCalculation.legs}
           portsList={portsList}
           showPortMarkersOnMap={showPortMarkersOnMap}
+          onSelectRoutePort={(portId) => handleSelectRoutePort(portId)}
           selectedLegIndex={
             selectedLegIndex !== null && selectedLegIndex < routeCalculation.legs.length
               ? selectedLegIndex
               : null
           }
           onSelectLeg={setSelectedLegIndex}
-          showDirectionArrows={showDirectionArrows}
           showLegDurationOnMap={showLegDurationOnMap}
           showLegDistanceOnMap={showLegDistanceOnMap}
           fitRouteBoundsTrigger={fitRouteBoundsTrigger}
@@ -2131,11 +1911,9 @@ export function App() {
                 waypoints={routeWaypoints}
                 speedKnots={speedKnots}
                 calculation={routeCalculation}
-                mapTapMode={routeMapTapMode}
-                onChangeMapTapMode={setRouteMapTapMode}
-                onOpenPortSelector={(waypointId, label) =>
-                  setPortSelectorTarget({ waypointId, label })
-                }
+                onOpenPortSelector={(waypointId, label) => {
+                  setPortSelectorTarget({ waypointId, label });
+                }}
                 onAddWaypoint={handleAddWaypointButton}
                 onRemoveWaypoint={handleRemoveWaypoint}
                 onClearWaypoints={handleClearWaypoints}
@@ -2156,8 +1934,6 @@ export function App() {
                     : null
                 }
                 onSelectLeg={setSelectedLegIndex}
-                showDirectionArrows={showDirectionArrows}
-                onToggleDirectionArrows={() => setShowDirectionArrows((v) => !v)}
                 showLegDurationOnMap={showLegDurationOnMap}
                 onToggleLegDurationOnMap={() => setShowLegDurationOnMap((v) => !v)}
                 showLegDistanceOnMap={showLegDistanceOnMap}

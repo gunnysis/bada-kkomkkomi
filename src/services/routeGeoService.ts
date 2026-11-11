@@ -1654,6 +1654,17 @@ export function calculateRouteSummary(
       safetyNote = hazards[0] ?? `최저수심 ${minDepth ?? 2.0}m 확인 권장`;
     }
 
+    // [GAP-09 안전 가드] 만일 우회 탐색 실패로 폴리라인에 육지 교차 선분이 남아 있으면 절대 'safe'로 반환하지 않고 즉시 'danger' 경고 표시
+    for (let pIdx = 0; pIdx < seg.pathPositions.length - 1; pIdx++) {
+      const [pA0, pA1] = seg.pathPositions[pIdx];
+      const [pB0, pB1] = seg.pathPositions[pIdx + 1];
+      if (doesSegmentCrossLand(pA0, pA1, pB0, pB1)) {
+        safetyLevel = 'danger';
+        safetyNote = '해안선 우회 경로 탐색 제한 구간 — 현장 수로 확인 필수';
+        break;
+      }
+    }
+
     legs.push({
       id: `${from.id}-${to.id}`,
       index: i + 1,

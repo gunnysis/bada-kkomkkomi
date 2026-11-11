@@ -10,7 +10,11 @@ import {
   X,
 } from 'lucide-react';
 import type { MarinePort } from '../../types/port';
-import { searchMarinePorts } from '../../services/routeGeoService';
+import {
+  calculateHaversineKm,
+  kmToNauticalMiles,
+  searchMarinePorts,
+} from '../../services/routeGeoService';
 
 interface PortSelectModalProps {
   isOpen: boolean;
@@ -49,6 +53,7 @@ export function PortSelectModal({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTabKey>('all');
+  const [sortByGpsDistance, setSortByGpsDistance] = useState<boolean>(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -75,8 +80,16 @@ export function PortSelectModal({
   }, [ports]);
 
   const filteredPorts = useMemo(() => {
-    return searchMarinePorts(ports, query, activeFilter);
-  }, [ports, query, activeFilter]);
+    const base = searchMarinePorts(ports, query, activeFilter);
+    if (!sortByGpsDistance || !userLocation) {
+      return base;
+    }
+    return [...base].sort((a, b) => {
+      const distA = calculateHaversineKm(userLocation.lat, userLocation.lng, a.lat, a.lng);
+      const distB = calculateHaversineKm(userLocation.lat, userLocation.lng, b.lat, b.lng);
+      return distA - distB;
+    });
+  }, [ports, query, activeFilter, sortByGpsDistance, userLocation]);
 
   if (!isOpen) return null;
 
@@ -120,30 +133,43 @@ export function PortSelectModal({
           </button>
         </div>
 
-        {/* 현재 내 선박 GPS 위치로 즉시 지정 버튼 */}
+        {/* [GAP-03 해소] 임의 GPS 좌표 즉시 삽입 대신 현재 GPS 기준 가까운 등록 항구 순 정렬 보조 기능 제공 */}
         <button
           type="button"
           onClick={() => {
-            onSelectUserGps();
-            onClose();
+            if (!userLocation) {
+              onSelectUserGps();
+              setSortByGpsDistance(true);
+            } else {
+              setSortByGpsDistance((prev) => !prev);
+            }
           }}
-          className="mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border border-sky-300 bg-sky-50/90 px-3.5 py-2 text-left transition hover:border-[#0066b3] active:scale-[0.99]"
+          aria-pressed={Boolean(userLocation && sortByGpsDistance)}
+          className={`mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border px-3.5 py-2 text-left transition active:scale-[0.99] ${
+            userLocation && sortByGpsDistance
+              ? 'border-[#00846c] bg-emerald-50/90 text-[#003360]'
+              : 'border-sky-300 bg-sky-50/90 text-[#003360] hover:border-[#0066b3]'
+          }`}
         >
           <div className="flex min-w-0 items-center gap-2.5">
             <LocateFixed className="h-5 w-5 shrink-0 text-[#0066b3]" />
             <div className="min-w-0">
               <p className="truncate text-xs font-black text-[#003360]">
-                내 선박 현재 GPS 위치로 설정
+                내 선박 현재 GPS에서 가까운 등록 항구 순 정렬
               </p>
               <p className="truncate font-mono text-[11px] font-bold tabular-nums text-slate-600">
                 {userLocation
-                  ? `${userLocation.lat.toFixed(4)}°N, ${userLocation.lng.toFixed(4)}°E`
-                  : '클릭 시 GPS 신호 수신 또는 통영·거제 해역 기준점 적용'}
+                  ? `기준 위치: ${userLocation.lat.toFixed(4)}°N, ${userLocation.lng.toFixed(4)}°E`
+                  : '클릭 시 현재 GPS 위치를 확인하여 가까운 등록 항포구 순으로 정렬합니다'}
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-lg bg-[#0066b3] px-2.5 py-1 text-[11px] font-black text-white shadow-2xs">
-            즉시 적용
+          <span
+            className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-black text-white shadow-2xs ${
+              userLocation && sortByGpsDistance ? 'bg-[#00846c]' : 'bg-[#0066b3]'
+            }`}
+          >
+            {userLocation && sortByGpsDistance ? '가까운 순 켜짐' : '가까운 순 정렬'}
           </span>
         </button>
 
@@ -292,6 +318,19 @@ export function PortSelectModal({
                     <MapPin className="h-3 w-3" />
                     선택
                   </span>
+                  {userLocation && (
+                    <span className="mt-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-[#00846c]">
+                      {kmToNauticalMiles(
+                        calculateHaversineKm(
+                          userLocation.lat,
+                          userLocation.lng,
+                          port.lat,
+                          port.lng,
+                        ),
+                      ).toFixed(1)}{' '}
+                      NM
+                    </span>
+                  )}
                   <span className="mt-1">{port.lat.toFixed(3)}°N</span>
                   <span>{port.lng.toFixed(3)}°E</span>
                   {port.maxVesselTons !== undefined && (
@@ -306,7 +345,7 @@ export function PortSelectModal({
 
           {filteredPorts.length === 0 && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-xs font-bold text-slate-600">
-              검색어와 일치하는 항포구·소규모 선착장이 없습니다. 지도에서 직접 핀을 드래그하거나 탭하여 지정할 수 있습니다.
+              검색어와 일치하는 항포구·소규모 선착장이 없습니다. 다른 검색어나 권역 필터를 선택해 보세요.
             </div>
           )}
         </div>

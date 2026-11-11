@@ -1,11 +1,11 @@
-# 바다꼼꼬미 (Bada-Kkomkkomi) v2.4 마스터 아키텍처 및 통합 구현 설계서
+# 바다꼼꼬미 (Bada-Kkomkkomi) v2.5 마스터 아키텍처 및 Google EGM 통합 구현 설계서
 
-> **문서 등급**: 최종 구현·검증·배포 완료 마스터 설계 정본 (Production-Verified Master Architecture & Implementation Specification)
-> **문서 버전**: `v2.4.0` (2026-11-11 — 지도 핵심 오류 3건 근본 해결 · 최신 정본 우선 로드(Always-Fresh) PWA · 일반 내부 직원용 초간편 UX/UI · 해안선 정밀 우회 통합본 · **구현 및 검증 완료**)
-> **적용 대상**: 한려해상국립공원동부사무소 내부 직원용 해양공간 통합 지원 PWA 앱 (`C:\Users\Administrator\apps_ln\bada-kkomkkomi`, `v2.4.0`)
+> **문서 등급**: 최종 구현 직전 단계 통합 마스터 설계 정본 (Pre-Implementation Master Architecture & Google EGM Specification)
+> **문서 버전**: `v2.5.0-draft` (2026-11-11 — Google Elephant-Goldfish Model(EGM) 아키텍처 도입 · 바닷길 콕콕 등록 항구(136개) 후보 확인형 선택 UX 통합 · 초기 빈 경로 요약 시트 UX 데드락 근본 해결 · 7대 문서↔코드 드리프트 청산 설계본)
+> **적용 대상**: 한려해상국립공원동부사무소 내부 직원용 해양공간 통합 지원 PWA 앱 (`C:\Users\Administrator\apps_ln\bada-kkomkkomi`) 및 호스트 AI 에이전트 런타임 (`Antigravity CLI v1.5.5` · `Claude Code`)
 > **주요 사용자 페르소나**: 국립공원공단 일반 내부 직원 (현장 해상순찰대원, 해양자원·상괭이 조사원, 공원시설 관리담당자, 사무소 행정실무자 — **비개발자·비GIS 전공자 기준**)
 > **총괄 및 참여 에이전트**: 수석 테크니컬 아키텍트 (Senior Technical Architect) & 6대 전문 에이전트 컨트롤러 (**PWA 앱 · 디자인 · 아키텍처 · QA · UI/UX · 리팩토링 전문 에이전트**)
-> **정본 원칙**: 본 문서는 프로젝트의 유일한 통합 설계 정본(Single Source of Truth)입니다. 본 문서로 통합 완료된 일시 비교·메모 문서는 레거시 청산 절차에 따라 완전히 제거되었습니다.
+> **정본 원칙 (Single Source of Truth)**: 본 문서는 프로젝트의 유일한 통합 설계 정본입니다. 어제·오늘 수행된 모든 산출물(`v2.2` ~ `v2.4.0` ~ `HEAD: a9dd1f2`), 바닷길 항구 선택 UX 기획안(`ROUTE_PORT_SELECTION_UX_PROPOSAL.md`), 그리고 **Google Elephant-Goldfish Model (EGM)** 도입 설계를 단 하나의 문서로 통합했습니다.
 
 ---
 
@@ -13,133 +13,112 @@
 
 ### 1.1 6대 전문 에이전트(Multi-Agent System) 전수 검토 결과
 
-어제와 오늘 수행된 정본 저장소(`Ours`, `HEAD: dacba3c`)의 고도화 산출물, 외부 직원 수정본(`Theirs`, `바다꼼꼬미_수정본`), 국립공원공단 QGIS 원본 공간데이터(`21_특별보호구역_구획_201224\20_특별보호구역_신규_최종_201109.shp`), 그리고 사용자 핵심 지시사항(지도 오류 3건, 일반 내부 직원용 간편 UX/UI, `memo.txt` 4대 개선안)을 **6대 전문 에이전트 관점**에서 전수 검증했습니다.
+어제와 오늘 작업한 전체 커밋(`a200b5b` → `f817cd3` → `dacba3c` → `1af962c` → `9075f95` → `7b62127` → `45c8c65` → `a9dd1f2`), 워킹 트리 내 기획 문서([`docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md)), 그리고 Google의 오픈소스 **Elephant-Goldfish Model (EGM)** 프레임워크([`google/elephant-goldfish-model`](https://github.com/google/elephant-goldfish-model))를 6대 전문 에이전트 관점에서 전수 검증·점검했습니다.
 
 | 전문 에이전트 | 핵심 검증 영역 및 대상 파일 | 심층 진단 및 실측 결과 요약 | 판정 |
 | :--- | :--- | :--- | :--- |
-| **1. PWA 앱 에이전트<br>(PWA App Agent)** | • [`vite.config.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/vite.config.ts) (`VitePWA` / Workbox)<br>• [`layerStorageService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/layerStorageService.ts)<br>• 최신 정본 우선 로드 · SW 캐시 갱신 · 모바일 앱 설치(`standalone`) | • **진단 1 (과도한 오프라인 캐시 우선 정책으로 인한 구버전 고착)**: 기존에는 오프라인 우선(Offline-First)에 과도하게 치중하여 [`useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts#L216-L233)가 부팅 시 최신 정적 GeoJSON보다 로컬 `IndexedDB`/`localStorage` 캐시를 무조건 우선 로드했음. 그 결과 정적 파일을 수정해도 구버전 잘못된 공원구역/특별보호구역이 계속 재표시됨.<br>• **해결**: 과도한 오프라인 캐시 중심 구조를 탈피하고 **공식 기준 레이어(`national_park`, `protected_area`, `docking`, `ports`)는 항상 최신 정본 파일을 우선 반영(Always-Fresh)**하도록 개선하며, 기존 브라우저에 남은 구버전 캐시는 즉시 자동 퍼지. | **최신 정본 우선(Always-Fresh) PWA 설계 완료** |
-| **2. 디자인 에이전트<br>(Design Agent)** | • [`index.css`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/index.css) (`Daylight Breeze` 테마)<br>• [`HomeScreen.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/home/HomeScreen.tsx)<br>• [`mapMarkerTemplates.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts) | • **진단 1 (캐릭터 콘셉트 및 야외 시인성)**: 반달이·꼬미 마스코트 일러스트와 `KNPS & NPIP Daylight Breeze` 명랑한 해양 테마(WCAG AAA 명도비 `7.2:1` 이상)는 해상 직사광선 아래에서 시인성이 우수하므로 100% 유지해야 함.<br>• **진단 2 (시각 위계 과밀)**: 인트로 포스터 카드 내에 상단 작은 캡슐 배지와 하단 쪼개진 단축 버튼들이 혼재하여 포스터 고유 감성과 주목도를 떨어뜨림.<br>• **해결**: 인트로는 순수 포스터 카드형으로 정제하고, 상태 배지·단축 액션·기관 푸터는 상단 HUD 헤더와 조타실 모달로 시각적 위계에 맞게 재배치. | **시각 위계 및 테마 정립** |
-| **3. 아키텍처 에이전트<br>(Architecture Agent)** | • [`useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts)<br>• [`MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx)<br>• [`spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts)<br>• [`routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts) | • **진단 1 (이중 레이어 로더)**: `useAppConfig.ts`의 `fetchStaticGeoJsonForLayers()`와 `MapView.tsx`의 `fetchMissingGeoJsonLayers()`가 중복 구현되어 두 지도 화면 간 레이어 상태 불일치 위험을 초래함.<br>• **진단 2 (QGIS `.prj` 투영계 오판)**: `spatialFileParser.ts`에 `EPSG:5181`(`Korea_2000_Korea_Central_Belt`, `False_Northing=500,000m`) 분기가 누락되어 `EPSG:5186`(`False_Northing=600,000m`)으로 잘못 변환됨.<br>• **해결**: `useAppConfig.ts` 단일 레이어 파이프라인(SSOT) 통합 및 WKT 파라미터 기반 동적 CRS 판별기 설계. | **SSOT 데이터 흐름 확정** |
-| **4. QA 에이전트<br>(QA Agent)** | • 지도 오류 3건(`1-1`, `1-2`, `1-3`) 실측 검증<br>• [`verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)<br>• [`coreServices.test.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/tests/coreServices.test.ts) | • **실측 1 (오류 1-1)**: `public/data/layers/national_park.geojson`의 `NP-TY-01`, `NP-GJ-02`가 실제 공원구역이 아닌 5점 직사각형 더미임을 확인. `Theirs`는 `바닷길 콕콕`에서만 숨겨 `바다수첩`에 오류가 그대로 노출됨.<br>• **실측 2 (오류 1-2)**: `20_특별보호구역_신규_최종_201109.shp` 실측 결과, `EPSG:5186` 오판 시 거제 학동동백림(`한동-01`)과 통영 홍도(`한동-02`)가 **남쪽으로 정확히 100.0km 밀려 제주해협 먼바다에 찍히는 현상**을 수학적으로 입증.<br>• **실측 3 (오류 1-3)**: 136개 항구·55개 접안지 좌표가 OSM 378개 해안선 폴리곤을 침범하지 않고 `ports.json` ↔ `docking_points.geojson` 간 `1e-5` 이내로 일치함을 검증. | **근본 원인 규명 및 검증 게이트 확립** |
-| **5. UI/UX 에이전트<br>(UI/UX Agent)** | • 일반 내부 직원용 간편 조작성<br>• [`LayerControlModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/LayerControlModal.tsx)<br>• [`FieldReportModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/FieldReportModal.tsx)<br>• [`MarineWeatherPanel.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/MarineWeatherPanel.tsx) | • **진단 1 (전문용어 장벽)**: `SHA-256`, `BBox`, `EPSG:5186`, `Douglas-Peucker`, `9km 모델 격자 한계` 등 비전공 내부 직원에게 생소한 기술 용어가 전면 노출됨.<br>• **진단 2 (조작 단계 과다)**: 레이어 하나를 켜고 끄기 위해 4탭짜리 거대 모달(`2,104`줄)을 열어야 하고, 순찰선 위에서 제보 문구와 이름을 매번 수기 타이핑해야 함.<br>• **해결**: **전문용어 제로(Zero-Jargon), 지도 위 원터치 레이어 알약 스위치, 제보/상괭이 빠른 상용구 칩, 작성자 자동 기억, QGIS 원클릭 자동 변환 마법사** 도입. | **내부 직원 맞춤형 간편 UX 확정** |
-| **6. 리팩토링 에이전트<br>(Refactoring Agent)** | • [`routeLegLabelService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeLegLabelService.ts)<br>• [`routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts)<br>• 레거시 코드·문서·더미 자산 정리 | • **리팩토링 1**: 구간 소요시간·거리 라벨 조합 로직을 순수 함수 모듈(`routeLegLabelService.ts`)로 추출하여 테스트 가능성 확보.<br>• **리팩토링 2**: `getNearbyMarinePlaceLabel`을 `wp.isCustomCoord === true`(바다 위 임의 클릭 지점)에만 한정 적용하여 정식 항포구 명칭 오염 차단.<br>• **리팩토링 3**: 일시 비교 문서(`docs/reports/*`), 중복 fetch 훅, 가짜 더미 폴리곤(`NP-TY-01`, `SPA-01`) 완전 청산. | **클린 모듈화 및 레거시 청산** |
+| **1. PWA 앱 에이전트<br>(PWA App Agent)** | • [`vite.config.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/vite.config.ts) (`VitePWA` / Workbox `7.4`)<br>• [`layerStorageService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/layerStorageService.ts)<br>• [`workspaceDraftRepository.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/workspaceDraftRepository.ts)<br>• 호스트 에이전트 런타임 (`agy` / `claude`) | • **진단 1 (Always-Fresh 레이어 캐시 정착 확인)**: `1af962c`에서 `bada-geojson-and-config-v2.4` `NetworkFirst` 캐시 및 구버전 더미(`NP-TY-01`, `SPA-01`) 자동 퍼지가 정상 작동 중임.<br>• **진단 2 (초기 빈 경로 드래프트 복원 경계)**: `a9dd1f2`에서 초기 샘플 경로(`당동항→제승당`)를 제거하고 빈 경로(`[]`)로 시작하도록 변경됨. 단, `workspaceDraftRepository.ts`는 `routeWaypoints.length === 1`을 손상된 데이터로 간주해 거부하므로, 출발지만 선택한 단계(`length === 1`)와 완성 경로(`length >= 2`)의 영속화 경계를 명확히 분리해야 함.<br>• **진단 3 (EGM 플러그인 미설치)**: 호스트 PC에 `agy` (`1.5.5`)와 `claude` CLI가 설치되어 있으나 두 환경 모두 `egm` 플러그인이 아직 설치되지 않은 상태임. | **EGM 플러그인 설치 및 드래프트 영속 경계 설계 완료** |
+| **2. 디자인 에이전트<br>(Design Agent)** | • [`index.css`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/index.css) (`Daylight Breeze` 테마)<br>• [`HomeScreen.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/home/HomeScreen.tsx)<br>• [`mapMarkerTemplates.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts) | • **진단 1 (인트로 4대 카드 리디자인 정합)**: `9075f95`·`7b62127` 커밋을 통해 인트로 4대 포스터 카드가 `꼬미의 바다수첩(해양정보 · 현장기록)`, `바닷길 콕콕(시간계산 · 날씨콕콕)`, `꼬미의 달력(운항일정 · 직원메모)`, `꼬미의 조타실(환경설정 · 이용안내, ShipWheel 아이콘)`로 정제됨.<br>• **진단 2 (선착장 마커 히트 영역 미달 실측)**: `.bada-marker-hit-target`(`52×52px`)이 바다수첩 55개 접안지 마커에만 적용되어 있고, 바닷길 콕콕의 136개 항구 마커([`buildNavPortPinSpec`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts#L137-L206))는 실제 터치 크기가 축소 시 **`22×22px`**(WCAG 2.2 최소 기준 `24×24px` 미달), 확대 시 `44×32px`에 불과함. | **136개 항구 마커 52×52px 히트 타깃 및 후보 하이라이트 링 설계** |
+| **3. 아키텍처 에이전트<br>(Architecture Agent)** | • Google EGM (`skills/`, `agents/`, `resources/`)<br>• [`App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx)<br>• [`routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts)<br>• [`spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts) | • **진단 1 (EGM 아키텍처 거버넌스 부재)**: 현재 저장소에 루트 `AGENTS.md`(EGM Root Blueprint & `EGM artifact directory: .dev/docs`), `docs/designs/SITEMAP.md`(컴포넌트 계약 인덱스), `_agents/skills/bada-kkomkkomi-elephant/SKILL.md`가 없어 AI 세션마다 컨텍스트를 처음부터 재탐색해야 함.<br>• **진단 2 (좌표 콜백과 항구 ID 선택의 혼재)**: `KakaoMapCanvas.tsx`와 `LegacyLeafletCanvas.tsx`가 항구 마커 클릭과 빈 바다 클릭을 구분하지 않고 `onMapClickForRoute(lat, lng)`로 전달하여 500m 스냅 불투명성과 오터치 즉시 반영을 유발함. | **EGM 4-Layer 아키텍처 및 `portId` 기반 후보 확인 상태 머신 설계** |
+| **4. QA 에이전트<br>(QA Agent)** | • [`verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)<br>• [`coreServices.test.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/tests/coreServices.test.ts)<br>• [`ports.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/ports.json) 136개 항구 전수 실측 | • **실측 1 (동일·초근접 항구 마커 중첩 14쌍 발견)**: `ports.json` 전수 거리 행렬 계산 결과, **`0m` 완전 동일 좌표 2쌍**(`TY-003`↔`KR-GN-TY-0033`, `KR-GN-TY-0003`↔`KR-GN-TY-BERTH-0008`) 및 `26m~59m` 초근접 3쌍 등 150m 이내 10쌍(500m 이내 14쌍)이 존재하여 지도 마커 클릭만으로는 136개 전수 선택이 불가능함.<br>• **실측 2 (문서↔코드 드리프트 7건 적발)**: `README.md`(`v2.2` 잔존, 삭제된 인트로 칩 설명, 신규 서비스 2종 누락), `DEPLOY_GUIDE.md`(`변침점 35개소` 구버전 수치), `DATA_AND_TECH_SOURCES.md` 및 `dataSources.ts`(구버전 도식화 설명 잔존), `ARCHITECTURE_AND_DESIGN.md`(미존재 `SourceCredibilityModal.tsx` 링크) 등 7건의 드리프트 확인. | **동일 해역 인접 시설 전환 칩 및 `verify-integrity.mjs` EGM 드리프트 가드 확립** |
+| **5. UI/UX 에이전트<br>(UI/UX Agent)** | • [`RouteTimeCalculator.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx)<br>• [`PortSelectModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/PortSelectModal.tsx)<br>• [`DockingDetailSheet.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/DockingDetailSheet.tsx) | • **진단 1 (초기 진입 UX 데드락 발견 — 긴급)**: 최근 커밋 `a9dd1f2`(빈 경로 `[]` 초기화)와 `45c8c65`(하단 시트 기본값 `'summary'` 접힘)가 결합되면서, 최초 `바닷길 콕콕` 진입 시 경로는 비어 있는데 하단 시트가 `'summary'`로 접혀 있어 `[출발지]` 모드 버튼과 `[항구선택]` 버튼이 모두 숨겨지고 지도는 `'pan_only'`라 아무것도 선택할 수 없는 **조작 불능(UX Deadlock)** 상태가 발생함.<br>• **진단 2 (바다수첩→바닷길 브릿지 빈 경로 무반응 버그)**: `App.tsx`의 `handleNavigateToDockingPoint`에 `if (prev.length === 0) return prev;`가 있어 빈 경로 상태에서 바다수첩 상세창의 `[이 접안지를 목적지로...]` 버튼을 누르면 경로가 전혀 설정되지 않음. | **상시 노출 단계 안내 배너·후보 확인 카드 및 브릿지 빈 경로 버그 근본 해결** |
+| **6. 리팩토링 에이전트<br>(Refactoring Agent)** | • [`docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md)<br>• [`routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts)<br>• 레거시 문서·코드·주석 정리 | • **리팩토링 1**: 워킹 트리에 분리 생성된 `docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md`의 모든 설계·검증 내용을 본 마스터 정본(`docs/ARCHITECTURE_AND_DESIGN.md`) 및 EGM 설계 인덱스로 통합 후 중복 파일 청산.<br>• **리팩토링 2**: 항구 선택 및 경로 불변식 검증(연속 중복 병합, 왕복 `A→B→A` 허용 및 중간 경유지 삭제 시 `A→A` 0거리 방지, 150m 인접 자매 항구 탐색)을 순수 함수 모듈(`src/services/routePortSelectionService.ts`)로 분리. | **단일 정본 통합 및 순수 서비스 모듈화 완료** |
 
 ---
 
-### 1.2 어제·오늘 산출물(`v2.2` ~ `v2.3` `dacba3c`) 및 외부 수정본(`바다꼼꼬미_수정본`) 비교 분석
+### 1.2 어제·오늘 전체 산출물(`v2.2` ~ `HEAD: a9dd1f2`) 타임라인 및 정합성 대조 분석
 
-정본 저장소(`Ours`, `HEAD: dacba3c`)와 직원 수정본(`Theirs`, `바다꼼꼬미_수정본`)의 아키텍처·기능·데이터 격차를 전수 대조한 결과는 다음과 같습니다.
-
-| 비교 영역 | 정본 저장소 (`Ours`, `HEAD: dacba3c`) | 외부 직원 수정본 (`Theirs`, `바다꼼꼬미_수정본`) | 통합 설계 채택 전략 (`v2.4` 정본) |
+| 커밋 / 산출물 | 핵심 변경 내용 | 현시점 정합성 진단 (KEEP vs. FIX) | 통합 설계 반영 방침 |
 | :--- | :--- | :--- | :--- |
-| **해상 항로 탐색 엔진 (`routeGeoService.ts`)** | • **OSM 실측 해안선 폴리곤 378개(`12,794` 정점)** + **해상 변침점 300개** 2-Tier 하이브리드 엔진<br>• `18,360`개 전 항구 쌍 육지 관통 **0건** 보장 | • 구버전 67개 단순 장벽 + 56개 변침점<br>• 다도해 협수로 및 만 안쪽 항구에서 육지 관통 발생 | **`Ours` (`dacba3c`) 100% 보존** |
-| **항구·접안지 데이터 (`ports.json`, `docking_points.geojson`)** | • 136개 항구 + 55개 접안지 전수 해안선 밖 정밀 보정 완료<br>• 두 파일 간 좌표 오차 `1e-5` 이내 패리티 강제 | • 58개 항구 및 21개 접안지가 해안선 내부 육지에 위치 | **`Ours` (`dacba3c`) 100% 보존** |
-| **공원구역·특별보호구역 레이어 처리 (`MapView.tsx`)** | • 두 지도 모두 동일한 `layers` 렌더링 (단, 정적 파일에 더미 `NP-TY-01`, `SPA-01` 존재) | • `activeMainTab === 'navigation'`일 때만 하드코딩으로 숨겨 **`바다수첩`에 가짜 공원구역이 그대로 남는 반쪽 수정** | **더미 공원구역 영구 제거 + QGIS 원본(`EPSG:5181`) 특별보호구역 정밀 반영 + 두 지도 공통 SSOT 표시** |
-| **커스텀 경유지 인근 지명 표기 (`routeGeoService.ts`)** | • `해상 지점 N` 기본 표기 | • `getNearbyMarinePlaceLabel` 도입했으나 정식 항포구까지 덮어쓰는 부작용 존재 | **`wp.isCustomCoord === true`일 때만 인근 해역 지명 보조 표기하도록 개선 채택 (Memo 4)** |
-| **구간 배지 라벨 서비스 (`routeLegLabelService.ts`)** | • `mapMarkerTemplates.ts` 내부 인라인 처리 | • `routeLegLabelService.ts` 순수 함수 분리 및 소요시간/거리 개별 토글 지원 | **순수 함수 모듈 분리 및 드래프트 영속화 채택 (Memo 3)** |
-| **해양기상 패널 안내 (`MarineWeatherPanel.tsx`)** | • 중단부에 9km 격자 한계 주황색 박스 노출 (`L338-347`) | • 동일한 안내 박스 노출 | **패널 내 9km 격자 안내 박스 제거 후 상단 `[출처·한계 ⓘ]` 모달로 일원화 (Memo 1)** |
-| **인트로 홈 화면 (`HomeScreen.tsx`)** | • 상단 온라인/오프라인 배지 + 카드 배지 + 하단 10개 단축 버튼 + 하단 푸터 과밀 배치 | • 배지·버튼·푸터를 단순 삭제하여 일부 기능 진입점 유실 | **불필요한 온라인/오프라인 배지는 제거하고, 인트로는 미니멀 포스터 카드로 정제하며, 단축 진입점과 출처 버튼은 상단 서브바·조타실 모달로 적재적소 재배치 (Memo 2)** |
+| **`a200b5b` & `f817cd3`** | • 6대 데이터·기술 출처 SSOT([`src/config/dataSources.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/config/dataSources.ts)) 및 320px~412px 모바일 텍스트 짤림 수정 | • 코어 구조 우수. 단, `dataSources.ts` L3 주석에 삭제된 `docs/SOURCE_CREDIBILITY_UX_DESIGN.md`가 남아 있고 L113에 구버전 경량 도식화 문구가 잔존함. | **SSOT 유지 + 레거시 주석·문구 현행화 (`FIX`)** |
+| **`dacba3c`** | • OSM 실측 해안선 폴리곤 378개(`12,794`정점) + 300개 변침점 2-Tier 하이브리드 해상 항로 엔진 (`18,360`쌍 육지 관통 0건) | • 100% 정상 작동. 단, `computeSeaRouteSegment()` 말미(L1468)에 만일의 우회 실패 시 직선 좌표를 반환하는 폴백이 남아 있음. | **2-Tier 엔진 100% 보존 + 우회 실패 시 직선 폴백 금지 (`KEEP & HARDEN`)** |
+| **`1af962c` (`v2.4.0`)** | • 지도 오류 3건 해결 (`NP-TY-01` 더미 제거, QGIS 특별보호구역 `EPSG:5181` 20개소 정밀 변환, `useAppConfig.ts` 단일 SSOT, Always-Fresh PWA, 간편 UX) | • 공간데이터 및 PWA 캐시 구조 완벽 작동. 단, `README.md`, `DEPLOY_GUIDE.md`, `DATA_AND_TECH_SOURCES.md` 일부가 `v2.4.0` 변경사항을 따라가지 못해 문서 드리프트 발생. | **코드 100% 보존 + 7대 문서 드리프트 일괄 동기화 (`FIX`)** |
+| **`9075f95` & `7b62127`** | • `HomeScreen.tsx` 4대 카드 명칭(`꼬미의 바다수첩`, `바닷길 콕콕`, `꼬미의 달력`, `꼬미의 조타실`) 및 `ShipWheel` 아이콘 적용 | • UI 가독성 우수. 단, `README.md` 2.0절이 구버전 카드 설명에 머물러 있음. | **UI 유지 + `README.md` 및 설계 정본 동기화 (`FIX`)** |
+| **`45c8c65` & `a9dd1f2`** | • `RouteTimeCalculator.tsx` 기본 시트를 `'summary'`로 접고, `App.tsx` 초기 경로를 빈 배열(`[]`)로 초기화 | • **심각한 상호작용 충돌 발생**: 빈 경로(`[]`)인데 시트가 `'summary'`로 접혀 있어 초기 진입 시 출발지/목적지 지정 버튼과 항구 검색 버튼이 모두 가려지고 지도 탭도 `'pan_only'`라 먹통이 됨. | **`summary` 상태에서도 상시 노출되는 단계 안내 배너 + 후보 확인 카드 UX로 근본 해결 (`CRITICAL FIX`)** |
+| **`ROUTE_PORT_SELECTION_UX_PROPOSAL.md`** | • 등록 항구 136개만 선택 허용, `출발→도착→경유` 단계형 흐름, 후보 확인 카드 도입 기획 | • 기획 방향 우수하나 별도 파일로 분리되어 단일 정본 규칙(`LEG-22`)과 충돌 가능. | **본 마스터 설계서(2.4절) 및 EGM Living Spec으로 완전 통합 후 개별 임시 파일 정리 (`MERGE & CLEAN`)** |
 
 ---
 
-### 1.3 사용 기술 스택 공식 문서 및 표준 스펙 기반 팩트체크
+### 1.3 사용 기술 스택 및 Google EGM 공식 문서 기반 팩트체크
 
-| 기술 분류 | 적용 라이브러리 / 표준 | 공식 문서 및 1차 기술 출처 검증 내역 | 팩트체크 결과 |
+| 기술 분류 | 적용 프레임워크 / 표준 | 공식 문서 및 1차 기술 출처 검증 내역 | 팩트체크 결과 |
 | :--- | :--- | :--- | :--- |
-| **PWA & Service Worker** | `vite-plugin-pwa` `^1.2.0` (`workbox-build` / `generateSW`) | • **Workbox 공식 문서**: `cleanupOutdatedCaches: true`는 이전 버전의 Workbox 프리캐시 테이블만 정리하며, `runtimeCaching`에 지정된 커스텀 `cacheName`(`bada-geojson-and-config-v2`)과 브라우저 `IndexedDB`/`localStorage`는 자동 삭제하지 않음.<br>• 따라서 공간데이터 스키마 변경 시 **① 런타임 `cacheName` 버전 갱신(`v2.4`), ② `IndexedDB`/`localStorage` 스키마 버전 대조 및 자동 퍼지**를 병행해야 PWA 업데이트 후 구버전 레이어 재표시를 100% 차단할 수 있음. | **공식 동작 검증 및 설계 반영 완료** |
-| **한국 측지계 및 투영 변환** | `proj4` `^2.20.4` (`EPSG:5181`, `EPSG:5186`, `EPSG:5179`, `EPSG:4326`) | • **국토지리정보원(NGII) 고시 제2019-179호 및 EPSG Registry 공식 스펙**:<br>  - `EPSG:5181` (`Korea_2000_Korea_Central_Belt`, 구 중부원점): `+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +units=m +no_defs`<br>  - `EPSG:5186` (`Korea_2000_Central_Belt_2010`, 신 중부원점): `+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +units=m +no_defs`<br>• 두 좌표계는 오직 **`False_Northing`(`500,000m` vs `600,000m`) 100km 차이**만 존재하므로, `.prj` WKT의 `PARAMETER["False_Northing", ...]`를 정확히 파싱해야 100km 남북 오차를 예방함. | **수치 및 스펙 100% 일치 확인** |
-| **공간데이터 표준 포맷** | GeoJSON (IETF RFC 7946) & Shapefile (ESRI Technical Description) | • **IETF RFC 7946 Section 3.1.1 & Section 4**: 모든 GeoJSON 좌표계는 `WGS84`(`EPSG:4326`) 경위도 `[longitude, latitude]` 순서여야 함.<br>• **ESRI Shapefile 스펙**: `.dbf` 헤더의 필드명(11바이트)은 `.cpg`가 `UTF-8`일 때 멀티바이트 한글 컬럼명을 포함할 수 있으므로 `ascii` 디코더가 아닌 `.cpg` 기반 `TextDecoder`로 읽어야 한글 속성 유실이 없음. | **표준 규격 검증 완료** |
-| **지도 렌더링 엔진** | Kakao Maps JavaScript SDK v3 + React 19 / Leaflet `1.9.4` (VWorld/OSM) | • **Kakao Maps 공식 문서**: `kakao.maps.LatLng(lat, lng)` 및 `kakao.maps.Polygon`은 `WGS84`(`EPSG:4326`) 좌표를 입력받아 내부 `WCONGNAMUL` 타일에 정합 렌더링함. 따라서 원본 좌표를 눈대중으로 이동시키면 줌 레벨 변경이나 하이브리드/위성 타일 전환 시 위치가 틀어지므로 반드시 공인 `EPSG:4326` 정밀 좌표를 사용해야 함. | **좌표 정합 원칙 검증 완료** |
-| **해양 기상 데이터 API** | Open-Meteo Marine API & Weather Forecast API (`ecmwf_ifs025`) | • **Open-Meteo 공식 문서**: 해양 파고(`wave_height`, `swell_wave_height`)는 약 9km~25km 해상도 격자 모델이므로 다도해 내만·협수로에서는 최근접 외해 격자값을 반환함. 일반 직원 화면에서는 복잡한 격자 한계 문구를 숨기고 상단 `[출처·한계 ⓘ]` 모달에서 상세 안내하는 것이 적합함. | **API 스펙 정합** |
+| **Google Elephant-Goldfish Model (EGM)** | [`google/elephant-goldfish-model`](https://github.com/google/elephant-goldfish-model) (`v0.1.1`, Apache-2.0)<br>[Google Open Source Blog (2026-10-22)](https://opensource.googleblog.com/2026/10/introducing-elephant-goldfish-model-plugin.html) | • **핵심 메커니즘 검증**: 장기 컨텍스트 설계 세션(**Elephant**)과 무상태 제로 컨텍스트 검증 서브에이전트(**Goldfish**, `invoke_subagent` / `Agent`)를 분리하여 확증 편향(Confirmation Bias)과 문맥 오염을 차단함.<br>• **4대 문서 표준 (`resources/document_standards/`)**:<br>  1. `zoom-out-standard.md`: YAGNI, 기존 모듈 재사용, 고수준 설계 내 저수준 코드 침투 방지(Anti-Weeds).<br>  2. `feature-spec-standard.md`: 최소 2개 이상의 대안 비교 및 기각 사유 명시(The Alternatives Rule).<br>  3. `heilmeier-standard.md`: 전문용어 없는 목표(Objectives), 현황, 신규 접근법, 리스크, 검증 시험(Exams) 명시.<br>  4. `implementation-readiness-standard.md`: 구현 에이전트가 스스로 설계 결정을 내릴 여지를 0으로 만드는 **Zero-Decision Rule** 및 **Target Scope & File Boundary** 명시.<br>• **하네스 격리 주의사항 (`docs/harnesses.md` · Issue `#237`)**: Antigravity CLI 및 Codex에서 서브에이전트 호출 시 부모 대화 턴(`parent turns`)은 격리되나 루트 `AGENTS.md`는 서브에이전트에 로드될 수 있음. 따라서 `AGENTS.md`에는 **검증된 불변식(Invariants)과 시스템 경계만** 수록하고, Goldfish가 비판적으로 검증해야 할 개별 기능 가정은 `docs/designs/*.md`에만 작성해야 함. | **원문 저장소 및 블로그 100% 실측 검증 완료** |
+| **지도 이벤트 및 포인터 분리** | Kakao Maps Web SDK v3 (`CustomOverlay`) + Leaflet `1.9.4` + [W3C Pointer Events Level 3](https://www.w3.org/TR/pointerevents3/) | • **Kakao Maps 공식 스펙**: `CustomOverlay`에서 `clickable: true` 설정 및 `kakao.maps.event.preventMap()` 호출로 지도 클릭 전파를 차단할 수 있음.<br>• **W3C Pointer Events**: 마우스·터치·펜을 단일 포인터 모델로 처리하되, 마커 위에서 시작된 터치라도 포인터 이동 거리가 임계값(`Math.hypot(dx, dy) > 4px`)을 넘거나 `pointercancel`이 발생하면 지도 패닝(드래그)으로 양보하고 선택 이벤트를 발생시키지 않아야 모바일 오터치를 막을 수 있음. | **이벤트 전파 차단 및 4px 드래그 임계값 규격 확립** |
+| **웹 접근성 및 현장 터치 규격** | [W3C WCAG 2.2](https://www.w3.org/TR/WCAG22/) (SC 2.5.7 Dragging Movements, SC 2.5.8 Target Size Minimum, SC 4.1.3 Status Messages) | • **SC 2.5.7**: 드래그로 수행하는 동작은 반드시 단일 포인터(탭/클릭) 대안을 제공해야 함.<br>• **SC 2.5.8**: 포인터 타깃은 최소 `24×24 CSS px` 이상이어야 하며, 흔들리는 선박 환경에서는 `48~52px` 확보가 권장됨.<br>• **SC 4.1.3**: 단계 전환 및 후보 선택·확정·취소 메시지는 `role="status"` / `aria-live="polite"`로 보조기술에 전달되어야 함. | **자유 드래그 제거 · 단일 포인터 선택 · 52×52px 히트 타깃 적용** |
+| **PWA & 한국 측지계 변환** | `vite-plugin-pwa` `^2.0.0` (Workbox `7.4`) + `proj4` `^2.22.0` (`EPSG:5181`, `EPSG:5186`, `EPSG:4326`) | • **Workbox**: `runtimeCaching`의 `cacheName`(`bada-geojson-and-config-v2.4`)과 `OPERATIONAL_STORAGE_SCHEMA_VERSION`(`2026.11.11-v2.4`)으로 구버전 더미 캐시 부활 차단.<br>• **NGII 고시 제2019-179호**: `EPSG:5181`(구 중부원점, `False_Northing=500,000m`)과 `EPSG:5186`(신 중부원점, `False_Northing=600,000m`)의 100km 위도 오차를 `.prj` WKT 파라미터 파싱으로 완벽 구분. | **v2.4.0 구현 검증 완료 및 불변식 유지** |
 
 ---
 
-### 1.4 발견된 문제점 및 심층 근본 원인 분석 (Root-Cause Analysis)
+### 1.4 발견된 핵심 문제점 및 심층 근본 원인 분석 (Root-Cause Analysis)
 
-#### [문제 1-1] 최우선 지도 오류 1: 잘못된 공원구역 레이어 잔존 및 두 지도 화면 불일치
+#### [문제 1] `바닷길 콕콕` 초기 진입 시 빈 경로(`[]`) + 요약 시트(`summary`) 결합에 의한 조작 불능(UX Deadlock) 및 항구 선택 취약점 (9대 GAP)
 
-1. **현상 확인**:
-   - `'바닷길 콕콕'`에서는 직원 수정본(`Theirs`)이 임시 필터링으로 공원구역 레이어를 숨겼으나, **`'꼬미의 바다수첩'`에는 육지와 바다를 대각선·직사각형으로 가로지르는 잘못된 공원구역 레이어가 그대로 표시**되고 있었습니다.
-2. **근본 원인 (4중 구조적 결함)**:
-   - **원인 ① (정적 파일 더미 데이터)**: [`public/data/layers/national_park.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/national_park.geojson) 내부에 실제 국립공원 경계가 아닌 초기 프로토타입용 **5점 직사각형 가짜 폴리곤 2개(`NP-TY-01` `[128.40, 34.87]~[128.58, 34.72]`, `NP-GJ-02` `[128.54, 34.84]~[128.72, 34.68]`)**가 들어 있었습니다.
-   - **원인 ② (탭 조건부 눈가림 코드)**: `Theirs`의 `MapView.tsx` (`L452-460`)에서 `activeMainTab === 'navigation' ? layers.filter(l => l.id !== 'national_park' && l.id !== 'protected_area') : layers`로 `'바닷길 콕콕'`에서만 레이어를 숨겨 `'꼬미의 바다수첩'`에는 가짜 레이어가 그대로 노출되었습니다.
-   - **원인 ③ (이중 Fetch 및 하드코딩)**: [`public/config/app_config.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/config/app_config.json)과 [`src/hooks/useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts)의 `DEFAULT_LAYERS`에 하드코딩되어 있고, `useAppConfig.ts`와 [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx#L303-L351) 양쪽에서 중복으로 GeoJSON을 fetch하고 있었습니다.
-   - **원인 ④ (PWA · IndexedDB · localStorage 캐시 부활)**: [`src/hooks/useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts#L216-L233)는 앱 시작 시 정적 파일보다 [`layerStorageService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/layerStorageService.ts)의 `IndexedDB`(`bada_kkomkkomi_spatial_db`)와 `localStorage`(`bada_operational_geojson_v2:national_park`)에 저장된 캐시를 무조건 우선 채택합니다. 따라서 정적 파일만 수정하면 기존 사용자의 PWA 앱 재실행 시 캐시된 잘못된 공원구역이 다시 살아납니다.
+1. **현상 및 근본 원인**:
+   - **원인 ① (초기 진입 데드락)**: `a9dd1f2` 커밋에서 초기 샘플 항로를 제거해 `routeWaypoints = []`로 시작하도록 변경했고, `45c8c65` 커밋에서 [`RouteTimeCalculator.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx#L108)의 초기 `sheetStage`를 `'summary'`로 변경했습니다. 그러나 `'summary'` 상태에서는 지도 탭 모드 선택 바(Zone 2)와 `[항구선택]` 버튼(Zone 4)이 DOM에서 숨겨지며, 기본 지도 탭 모드는 `'pan_only'`(`이동만`)입니다. 그 결과 사용자가 처음 화면에 들어왔을 때 **어떻게 출발지를 선택해야 하는지 안내도 없고 버튼도 보이지 않으며 지도를 눌러도 아무 동작이 일어나지 않는 데드락**이 발생합니다.
+   - **원인 ② (동일·초근접 항구 마커 중첩 — `GAP-01`)**: [`public/data/ports.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/ports.json) 136개 항구 중 **완전 동일 좌표(`0m`) 2쌍**(`TY-003` 통영 매물도 당금항 비상 대피 계류지 ↔ `KR-GN-TY-0033` 매물도 당금항, `KR-GN-TY-0003` 욕지항 ↔ `KR-GN-TY-BERTH-0008` 욕지 동항 부잔교)과 **초근접(`26m~59m`) 3쌍**(`내도항`↔`내도 도선 부잔교` 26m, `사량 외지항`↔`사량도 외지 도선 선착장` 43m, `우도항`↔`우도 구멍섬 부잔교` 59m) 등 반경 150m 이내에 10쌍의 항구가 겹쳐 있습니다. 단순 마커 클릭만으로는 겹친 아래쪽 시설을 선택할 수 없습니다.
+   - **원인 ③ (항구 마커 히트 영역 미달 — `GAP-02`)**: [`buildNavPortPinSpec()`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts#L137-L206)이 `.bada-marker-hit-target`(`52×52px`)을 사용하지 않아 축소 시 `22×22px`로 터치가 극도로 어렵습니다.
+   - **원인 ④ (즉시 반영 및 임의 좌표 진입점 잔존 — `GAP-03` ~ `GAP-09`)**: 마커 오터치 시 확인 단계 없이 즉시 경로가 변경되며, 바다수첩 상세 시트 브릿지([`DockingDetailSheet.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/DockingDetailSheet.tsx))는 빈 경로일 때(`prev.length === 0`) 아무 동작도 하지 않는 버그가 있습니다. 또한 왕복 운항(`A → B → A`) 시 출발지 마커(`RouteWaypoint`)에 클릭 핸들러가 없어 출발지를 다시 도착지로 선택할 수 없으며, 경유지 `B` 삭제 시 `A → A` 0거리 경로가 남는 상태 불변식 허점이 존재합니다.
 
----
+#### [문제 2] 프로젝트 문서↔코드 드리프트(Doc-to-Code Drift) 7건 및 EGM 검증 체계 부재
 
-#### [문제 1-2] 최우선 지도 오류 2: 특별보호구역 표시 오류 (QGIS 원본과 불일치)
+1. **현상 및 근본 원인**:
+   - 코드와 데이터가 `v2.2` → `v2.4.0` → `a9dd1f2`로 빠르게 진화하는 동안, [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)가 일부 파일의 버전 문자열만 검사하고 **전체 마크다운 문서의 버전·모듈 목록·상대 경로 링크 유효성(Link Integrity)·구버전 문구 잔존 여부**를 검사하지 않았습니다.
+2. **실측으로 적발된 7대 드리프트 명세**:
+   - **`[DRIFT-01]` [`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md#L1) 버전 미동기화**: 1행(`# 바다꼼꼬미 (Bada-Kkomkkomi) [v2.2]`)과 27행(`## 2. 핵심 도메인 기능 (v2.2)`)이 `v2.2`로 방치됨 (`appVersion.ts`는 `v2.4`).
+   - **`[DRIFT-02]` [`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md#L29-L32) 2.0절 인트로 화면 설명 모순**: 이미 제거된 인트로 카드 내 세부 단축 칩(`[🚨위험주의 9곳]` 등)을 있는 것처럼 서술하고, 최신 4대 카드(`꼬미의 바다수첩`, `바닷길 콕콕`, `꼬미의 달력`, `꼬미의 조타실`) 구성을 반영하지 않음.
+   - **`[DRIFT-03]` [`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md#L64) 2.2.D절 기상 패널 하단 안내 모순**: `v2.4`에서 제거된 하단 9km 격자 한계 상시 표기 박스를 여전히 상시 표기한다고 기술함.
+   - **`[DRIFT-04]` [`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md#L70-L138) 디렉터리 트리 내 핵심 파일 5종 누락**: `src/services/routeLegLabelService.ts`, `src/services/workspaceDraftRepository.ts`, `scripts/build-coastline-polygons.mjs`, `scripts/sync-qgis-protected-areas.mjs`, `scripts/verify-integrity.mjs`가 디렉터리 구조도에서 누락됨.
+   - **`[DRIFT-05]` [`DEPLOY_GUIDE.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/DEPLOY_GUIDE.md#L48) 변침점 수량 구버전 표기**: L48 표에 `통합 항구·소규모 선착장 사전 (136개소 + 변침점 35개소)`라고 구버전 수치(`35개소`, 실제는 `300개소`)가 남아 있음.
+   - **`[DRIFT-06]` [`docs/DATA_AND_TECH_SOURCES.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/DATA_AND_TECH_SOURCES.md#L96) 및 [`src/config/dataSources.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/config/dataSources.ts#L3) 구버전 문구 잔존**: `dataSources.ts` L3 주석이 이미 삭제된 `docs/SOURCE_CREDIBILITY_UX_DESIGN.md`를 가리키고, L113 및 `DATA_AND_TECH_SOURCES.md` L96이 특별보호구역을 "오프라인 경량 도식화 폴리곤 내장"으로 서술함(실제는 공단 QGIS 원본 `EPSG:5181 → EPSG:4326` 정밀 변환 20개소 탑재 완료).
+   - **`[DRIFT-07]` 마스터 설계서 내 미존재 컴포넌트 링크**: 기존 `ARCHITECTURE_AND_DESIGN.md` L271에 실제로는 생성하지 않은 `src/components/common/SourceCredibilityModal.tsx` 경로가 기재되어 있었음.
 
-국립공원공단 QGIS 원본(`C:\Users\Administrator\Desktop\국립공원공단\바다꼼꼬미\21_특별보호구역_구획_201224\20_특별보호구역_신규_최종_201109.*`)을 바이너리 분석하여 **3가지 근본 원인**을 규명했습니다.
-
-1. **원인 ① (정적 파일 4점 더미 박스)**:
-   - 현재 [`public/data/layers/protected_area.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/protected_area.geojson)에는 실제 QGIS 경계가 아닌 4점 직사각형 더미 2건(`SPA-01` 홍도 바운딩 박스, `SPA-02` 소매물도 바운딩 박스)만 들어 있습니다.
-2. **원인 ② ([`spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts)의 `.prj` 좌표계 오판으로 인한 100km 남쪽 해상 이탈 버그)**:
-   - QGIS 원본 `20_특별보호구역_신규_최종_201109.prj`의 실제 WKT 문자열:
-     ```text
-     PROJCS["Korea_2000_Korea_Central_Belt",GEOGCS["GCS_Korea_2000",...],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",200000.0],PARAMETER["False_Northing",500000.0],PARAMETER["Central_Meridian",127.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Latitude_Of_Origin",38.0],UNIT["Meter",1.0]]
-     ```
-   - 이는 **`False_Northing = 500,000m`인 `EPSG:5181` (구 중부원점)**입니다.
-   - 그러나 [`src/services/spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts#L31-L41)의 `detectProj4Def()`는 `u.includes('CENTRAL_BELT_2010')`(`EPSG:5186`, `False_Northing = 600,000m`)만 검사하고 `Korea_2000_Korea_Central_Belt`를 처리하지 않아 `null`을 반환했습니다.
-   - 그 결과 `reprojectCoords()`(`L62`)가 기본값 `EPSG:5186`(`+y_0=600000`)으로 폴백 변환하면서, **모든 특별보호구역 폴리곤의 Y축이 100,000m(100km, 위도 약 0.901°) 남쪽으로 밀려 제주해협 먼바다 한가운데에 잘못 표시**되었습니다.
-
-| 특별보호구역 코드·명칭 (QGIS 원본) | 원본 주소 및 폴리곤 정점 수 | 원본 XY (`EPSG:5181`) | 정상 변환 좌표 (`EPSG:5181 → WGS84`) | 기존 버그 파서 좌표 (`EPSG:5186` 폴백) | 실측 오차 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`한동-01` 학동동백림 팔색조** | 거제시 동부면 학동리 산125 (2 parts, 28 pts) | `[349820.03, 141598.97]` | **`[128.636319, 34.759183]`** (거제 학동 정위치) | `[128.618926, 33.858062]` (제주해협 먼바다) | **남쪽 100.0 km 이탈** |
-| **`한동-02` 홍도 괭이갈매기 산란지** | 통영시 한산면 매죽리 산54 (7 parts, 3,062 pts) | `[358804.30, 116841.64]` | **`[128.729765, 34.534756]`** (통영 홍도 정위치) | `[128.711532, 33.633645]` (동중국해 먼바다) | **남쪽 100.0 km 이탈** |
-| **`한동-11` 필도** | 통영시 인평동 산25 (1 part, 692 pts) | `[322560.83, 151488.96]` | **`[128.340119, 34.851945]`** (통영 필도 정위치) | `[128.325824, 33.950718]` (남해 먼바다) | **남쪽 100.0 km 이탈** |
-
-3. **원인 ③ (`.dbf` 한글 필드명 `ascii` 디코딩 깨짐)**:
-   - `20_특별보호구역_신규_최종_201109.dbf`(`.cpg = UTF-8`)의 필드명은 한글(`코드명`, `NO`, `관리`, `명칭`, `입지`, `유형`, `상태`, `변경사`, `주소`, `광역시`, `지정일`, `지정년`, `만료년`, `소유주`, `용도지`, `고시면`)이나, [`spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts#L130) `parseDbfBuffer()`가 컬럼명을 `new TextDecoder('ascii')`로 디코딩하여 한글 속성명이 전부 깨졌습니다.
-
----
-
-#### [문제 1-3] 최우선 지도 오류 3: 실제 항구 위치와 지도 표시 위치 불일치
-
-1. **근본 원인 진단 (눈대중 이동 보정 절대 금지)**:
-   - **원인 ① (내륙 행정지번 대표점 지오코딩 오차)**: 초기 항구 데이터 구축 당시 실제 선박이 접안하는 물양장·선착장 슬립웨이·부잔교 끝단이 아니라, 내륙 마을회관이나 섬 중앙 산악 지번의 중심점(Administrative Centroid)으로 지오코딩되어 58개 항구와 21개 접안지가 해안선 안쪽 육지 폴리곤 내부에 찍혀 있었습니다.
-   - **원인 ② (`ports.json` ↔ `docking_points.geojson` 이중 원장 드리프트)**: [`public/data/ports.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/ports.json) (`{ lat, lng }`)과 [`public/data/docking_points.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/docking_points.geojson) (`[lng, lat]`)이 별도 관리되면서 동일 항구의 좌표가 서로 어긋났습니다.
-   - **원인 ③ (정식 항포구 명칭에 인근 지명 보조 라벨 과잉 부착)**: 직원 수정본(`Theirs`)에서 `getNearbyMarinePlaceLabel`을 모든 경유지에 일괄 적용하면서, 정식 항포구를 선택했음에도 인근 5 NM 내 다른 지명이 덧붙여져 위치·명칭 혼선을 유발했습니다.
-2. **근본 해결 현황 (`dacba3c` + `v2.4`)**:
-   - OpenStreetMap `natural=coastline` 실측 해안선 폴리곤 378개(`12,794` 정점) 및 공인 해안선·선착장 접안단 기준점을 대조하여, 눈대중 보정 없이 **실제 선착장/부잔교 해안 접안점 기준 WGS84(`EPSG:4326`) 정밀 좌표로 136개 항구 및 55개 접안지를 동기화**했습니다.
-   - [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs#L109-L120)에 **`docking_points.geojson` ↔ `ports.json` 1:1 좌표 일치 검증(`|Δlat| <= 1e-5`, `|Δlng| <= 1e-5`)** 및 **육지 폴리곤 침범 0건 자동 검증**을 구축하여 재발을 영구 차단했습니다.
+#### [문제 3] 어제·오늘 기해결 완료된 지도 핵심 오류 3건 (`v2.4.0` 불변식 유지 대상)
+- **[오류 1-1 해결 완료]**: [`public/data/layers/national_park.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/national_park.geojson)의 가짜 직사각형 더미(`NP-TY-01`, `NP-GJ-02`) 영구 제거 및 [`useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts) 단일 레이어 SSOT 통합 완료.
+- **[오류 1-2 해결 완료]**: [`src/services/spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts)에 `EPSG:5181`(`False_Northing=500,000m`) 및 `.dbf` 멀티바이트 한글 컬럼 디코더를 탑재하여 100km 남쪽 해상 이탈 버그를 해결하고, [`public/data/layers/protected_area.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/protected_area.geojson)에 한려해상 관할 20개소 정밀 폴리곤 반영 완료.
+- **[오류 1-3 해결 완료]**: 136개 항구(`ports.json`)와 55개 접안지(`docking_points.geojson`)의 `1e-5` 좌표 패리티 및 378개 OSM 실측 해안선 폴리곤 비침범 검증 완료.
 
 ---
 
 ## 2장. 통합 구현 설계 및 개선 명세서
 
-### 2.1 사전 기획 연구 및 일반 내부 직원 맞춤형 초간편 UX/UI 설계 원칙
+### 2.1 사전 기획 연구: Google Elephant-Goldfish Model (EGM) 프로젝트 적용 설계
 
-국립공원공단 일반 내부 직원(현장 해상순찰대원, 해양자원 조사원, 행정실무자)이 복잡한 매뉴얼이나 개발/GIS 지식 없이도 현장에서 스마트폰(PWA 앱)으로 즉시 사용할 수 있도록 **4대 간편 UX/UI 설계 원칙**을 적용합니다.
+Google의 **Elephant-Goldfish Model (EGM)**을 본 프로젝트(`bada-kkomkkomi`)와 호스트 워크스테이션에 도입하기 위해, 단순 플러그인 설치를 넘어 **컴포넌트 계약(Contracts)·시맨틱 설계 경계(Semantic Boundaries)·자동 드리프트 가드(Automated Drift Guard)**가 결합된 **4-Layer EGM 아키텍처**를 구축합니다.
 
 ```mermaid
-flowchart LR
-    subgraph AsIs["AS-IS: 개발자·GIS 전문가 중심 화면"]
-        B1["과밀한 인트로 화면<br/>(상단 배지 + 카드 배지 + 하위 버튼 10개 + 푸터)"]
-        B2["4탭 거대 레이어 편집 모달<br/>(CRS·인코딩·단순화·원격 토큰 전면 노출)"]
-        B3["반복적인 수기 타이핑<br/>(작성자명·현장 제보 문구 매번 직접 입력)"]
-        B4["어려운 기술 용어 노출<br/>(9km 모델 격자 한계, SHA-256, BBox)"]
+flowchart TB
+    subgraph Layer1["Layer 1: 호스트 에이전트 EGM 플러그인 계층"]
+        AGY_PLUGIN["Antigravity Global Plugin<br/>(~/.gemini/config/plugins/egm)<br/>• /egm:egm-brainstorm, /egm:egm-draft<br/>• /egm:egm-review, /egm:egm-drift-report"]
+        CLAUDE_PLUGIN["Claude Code Plugin (egm@egm)<br/>• Subagent isolation (omitClaudeMd: true)<br/>• 10 Named Goldfish Personas"]
     end
 
-    subgraph ToBe["TO-BE: 일반 내부 직원용 초간편 PWA 실무 UX/UI"]
-        A1["미니멀 포스터 홈 카드<br/>(반달이·꼬미 캐릭터 + 카드 전체 원터치 진입)"]
-        A2["지도 위 원터치 레이어 알약 스위치<br/>(모달 안 열고 0.1초 만에 켜기/끄기)"]
-        A3["타이핑 줄이는 빠른 상용구 칩<br/>(작성자 자동 기억 + 제보/상괭이 원터치 태그)"]
-        A4["쉬운 우리말 & 원클릭 파일 등록<br/>(QGIS 파일 올리면 좌표계 자동 변환·즉시 적용)"]
+    subgraph Layer2["Layer 2: 프로젝트 Elephant 컨텍스트 & 루트 블루프린트"]
+        ROOT_AGENTS["AGENTS.md (Repository Root Blueprint / Hay)<br/>• EGM artifact directory: .dev/docs (.gitignore 격리)<br/>• Global Invariants (5대 도메인 불변식)<br/>• Global Side Effects & System Verification"]
+        ELEPHANT_SKILL["_agents/skills/bada-kkomkkomi-elephant/SKILL.md<br/>• Elephant 세션 즉시 컨텍스트 로더<br/>• 호스트 격리 규칙 (Issue #237 대응)"]
     end
 
-    AsIs ==>|"6대 전문 에이전트 통합 리팩토링"| ToBe
+    subgraph Layer3["Layer 3: Living Specifications & Component Contracts"]
+        MASTER_DOC["docs/ARCHITECTURE_AND_DESIGN.md<br/>(단일 마스터 설계 정본 · FeatureRange + DetailedRange)"]
+        SITEMAP_DOC["docs/designs/SITEMAP.md<br/>(6대 서브시스템 Peanuts 계약: Interface / Invariants / Side Effects)"]
+        SOURCES_DOC["docs/DATA_AND_TECH_SOURCES.md<br/>(6대 데이터·API·알고리즘 출처 정본)"]
+    end
+
+    subgraph Layer4["Layer 4: 결정론적 CI / 로컬 Drift Guard"]
+        VERIFY_SCRIPT["scripts/verify-integrity.mjs (Section 7 신설)<br/>• 전 문서 버전(v2.4) 100% 패리티 검사<br/>• src/services & src/hooks 전 모듈 문서 등재 검사<br/>• 마크다운 상대 경로 링크 유효성(Broken Link = 0) 전수 검사"]
+        UNIT_TEST["src/tests/coreServices.test.ts<br/>• 항구 선택 상태 머신 & EGM 무드리프트 단위 테스트"]
+    end
+
+    Layer1 --> Layer2 --> Layer3 --> Layer4
 ```
 
-1. **원칙 1 — 전문용어 제로(Zero-Jargon) & 쉬운 현장 우리말 사용**:
-   - 일반 직원이 보는 기본 화면에서 `EPSG:5186`, `CRS`, `GeoJSON`, `SHA-256`, `BBox`, `Douglas-Peucker`, `9km 모델 격자 한계` 같은 개발자·GIS 전문 용어를 제거합니다.
-   - 모든 버튼과 안내문은 **`[🟣 특별보호구역]`, `[⚓ 주요 접안지 55]`, `[🐬 상괭이 분포]`, `[➕ 새 QGIS 파일 올리기 (자동 변환)]`**처럼 공단 직원이 현장에서 바로 이해할 수 있는 직관적인 우리말로 표기합니다.
-2. **원칙 2 — '3-Tap Rule' & 수기 타이핑 최소화**:
-   - 흔들리는 순찰선 위나 야외 선착장에서 글자를 길게 타이핑하지 않도록 **빠른 상황 상용구 칩(Quick Tag Chips)**과 **작성자 이름 자동 기억(`localStorage`)**을 적용하여 3번 이내의 터치로 현장 기록을 완료합니다.
-3. **원칙 3 — 지도 위 원터치 레이어 알약 스위치 (Quick Layer Pill Bar)**:
-   - 레이어를 켜고 끄기 위해 무거운 설정 모달을 열 필요가 없도록, 지도 상단 서브바 아래에 알약형 원터치 스위치를 상시 배치하여 두 지도 화면(`꼬미의 바다수첩`, `바닷길 콕콕`) 어디서든 즉시 겹쳐 볼 수 있게 합니다.
-4. **원칙 4 — 일반 직원용 `[간편 모드]`와 관리자용 `[고급 설정]`의 분리 (Progressive Disclosure)**:
-   - [`LayerControlModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/LayerControlModal.tsx)는 기본 진입 시 **① 레이어 켜기/끄기 및 색상 변경, ② QGIS 파일 드래그 앤 드롭 원클릭 등록**만 보여주는 **`[직원 간편 모드]`**로 동작하며, 수동 좌표계 오버라이드·속성 테이블 편집·원격 저장소 설정은 하단 `[관리자 고급 설정 펼치기 ▾]` 아코디언 내부로 격리합니다.
+#### EGM 설계 대안 비교 (Alternatives Considered — `feature-spec-standard.md` 준수)
+
+| 대안 | 장점 | 단점 | 채택 여부 및 기술적 근거 |
+| :--- | :--- | :--- | :--- |
+| **대안 1: 플러그인만 설치하고 저장소 내 계약 파일을 두지 않음** | 저장소 변경 없음. | `.dev/docs` 격리 미적용으로 루트 폴더에 임시 마크다운이 생성되며, 서브에이전트가 도메인 불변식을 몰라 매번 환각 위험에 노출됨. | **기각**: EGM의 Living Spec 원칙 미달. |
+| **대안 2: `src/` 하위 모든 폴더마다 개별 `README.md` 12개 생성** | 리프 폴더마다 파일 존재. | 46개 파일 규모의 단일 PWA에서 문서 12개가 파편화되어 코드 수정 시 문서 유지보수 비용과 드리프트 확률이 급증함 (`zoom-out-standard.md` YAGNI 위반). | **기각**: EGM 가이드(`getting_started.md` L142)에 따라 과도한 문서 파편화 지양. |
+| **대안 3 (채택): 루트 `AGENTS.md` + `_agents/skills/bada-kkomkkomi-elephant` + `docs/designs/SITEMAP.md` + `verify-integrity.mjs` 자동 Drift Guard** | 1. 파일 파편화 없이 루트 블루프린트와 `SITEMAP.md`에서 전 모듈의 `Interface`/`Invariants`/`Side Effects`를 100% 정의.<br>2. `.dev/docs`로 스크래치 파일 오염 원천 차단.<br>3. `npm run verify` 실행 시 문서↔코드 드리프트와 깨진 링크를 0.5초 내 결정론적으로 차단. | `verify-integrity.mjs`에 마크다운 링크 파서 및 모듈 대조 어설션 구현 필요. | **채택**: YAGNI와 엄격한 드리프트 방지를 동시에 충족. |
 
 ---
 
@@ -147,214 +126,108 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    subgraph BuildPipeline["1. 빌드 타임 공간데이터 컴파일 및 무결성 검증 (Node CLI)"]
-        QGIS_SHP["QGIS 특별보호구역 원본<br/>20_특별보호구역_신규_최종_201109.shp<br/>(EPSG:5181, False_Northing=500,000m)"] -->|"scripts/sync-qgis-protected-areas.mjs<br/>EPSG:5181 → EPSG:4326 정밀 변환<br/>UTF-8 한글 컬럼 정규화"| PA_STATIC["public/data/layers/protected_area.geojson<br/>(한려·한동 20개소 정밀 폴리곤)"]
-        NP_STATIC["public/data/layers/national_park.geojson<br/>(가짜 더미 NP-TY-01, NP-GJ-02 제거<br/>추후 공식 공원구역 지속 업데이트 슬롯)"]
-        MARINE_DATA["public/data/ports.json (136항구·300변침점)<br/>public/data/docking_points.geojson (55접안지)<br/>src/data/coastlinePolygons.ts (378해안선)"]
-        PA_STATIC & NP_STATIC & MARINE_DATA -->|"scripts/verify-integrity.mjs<br/>• 1e-5 좌표 패리티 & 육지 침범 0건<br/>• 가짜 더미 ID 0건 & SW 중복 0건"| BUILD_OK["프로덕션 PWA 빌드 (dist/sw.js)"]
+    subgraph StaticSSOT["1. 정적 공간데이터 & 출처 SSOT (Build & Runtime)"]
+        PORTS_JSON["public/data/ports.json<br/>(136개 등록 항구·선착장 + 300개 변침점)"]
+        DOCKING_GEO["public/data/docking_points.geojson<br/>(55개 접안지 · ports.json과 1e-5 좌표 일치)"]
+        LAYERS_GEO["public/data/layers/protected_area.geojson (QGIS 20개소)<br/>public/data/layers/national_park.geojson (공식 슬롯)"]
+        COAST_TS["src/data/coastlinePolygons.ts<br/>(OSM 378개 실측 해안선 폴리곤 · 12,794정점)"]
     end
 
-    subgraph RuntimePWA["2. 런타임 최신 정본 우선 로드(Always-Fresh) 및 단일 레이어 파이프라인 (SSOT)"]
-        SW["Workbox Service Worker (sw.js)<br/>• skipWaiting + clientsClaim + cleanupOutdatedCaches<br/>• NetworkFirst (최신 정본 우선 조회)"] --> BOOT["useAppConfig.ts (앱 부팅)"]
-        BOOT --> CACHE_GUARD{"layerStorageService.ts<br/>구버전 더미 캐시(NP-TY-01/SPA-01) 자동 퍼지 &<br/>공식 레이어는 항상 최신 정적 정본 우선 반영"}
-        CACHE_GUARD --> FETCH_SSOT["최신 정적 정본 GeoJSON 단일 Fetch (useAppConfig.ts)"]
-        FETCH_SSOT --> STATE_SSOT["단일 상태 공급 (layers + geoJsonLayersData)"]
+    subgraph SelectionEngine["2. 바닷길 콕콕 등록 항구 즉시 선택 엔진 (White-Box Simplicity & Black-Box Precision)"]
+        INPUT_CHANNELS["2대 직관적 항구 선택 채널<br/>① 지도 위 항구 마커 직접 선택 (1번째=출발지, 2번째=도착지 즉시 반영)<br/>② 출발지·도착지·경유지 [항구선택] 버튼 (검색·상세 확인 모달)"]
+        PORT_SERVICE["src/services/routePortSelectionService.ts (순수 함수)<br/>• applyDirectPortSelection: 2단계 확인 카드 없이 즉시 반영<br/>• 연속 중복 및 0거리 직항(A→A) 차단, 경유 포함 왕복(A→B→A) 허용<br/>• 삭제·이동·비우기 사후 불변식 가드 (sanitizeCommittedRouteWaypoints)"]
+        CLEAN_LINE["MapView.tsx 직관적 연결선 렌더링<br/>• 출발지 ─── (경유지) ─── 도착지 깔끔 연결선<br/>• 선 중앙 예상 소요시간·거리 배지 (약 N분 · X.X NM)"]
     end
 
-    subgraph UIWorkspace["3. 내부 직원용 워크스페이스 및 공통 지도 렌더링"]
-        STATE_SSOT --> APP["src/App.tsx<br/>(상단 HUD 헤더: 메인 탭 · 출처 ⓘ · 조타실 ⚙)"]
-        APP --> HOME["HomeScreen.tsx<br/>(미니멀 포스터 카드)"]
-        APP --> PILL["지도 상단 원터치 레이어 알약 바<br/>([🟣 특별보호구역] [⚓ 주요 접안지] [🐬 상괭이])"]
-        APP --> MAPVIEW["MapView.tsx (내부 중복 fetch 제거, 단일 props 소비)"]
-        MAPVIEW --> KAKAO["KakaoMapCanvas.tsx (Primary)"]
-        MAPVIEW --> LEAFLET["LegacyLeafletCanvas.tsx (VWorld/OSM Fallback)"]
+    subgraph RouteAndWeather["3. 해상 실항로 정밀 블랙박스 & ECMWF 기상 판정"]
+        ROUTE_GEO["src/services/routeGeoService.ts<br/>• 2-Tier 하이브리드 A* + 가시성 그래프 우회 (육지 관통 0건)<br/>• 378개 해안선·300개 변침점 실항로 거리 기반 정밀 소요시간 계산"]
+        WEATHER_SVC["src/services/ecmwfWeatherService.ts<br/>• ECMWF IFS(풍속) + WAM(파고) KST 타임스탬프 결합<br/>• 결측·오프라인 시 즉시 '미확인(?)' 안전 실패"]
     end
+
+    PORTS_JSON & DOCKING_GEO --> INPUT_CHANNELS --> PORT_SERVICE --> ROUTE_GEO
+    COAST_TS & PORTS_JSON --> ROUTE_GEO
+    ROUTE_GEO --> CLEAN_LINE --> MAP_RENDER["MapView.tsx (Kakao Primary / Leaflet Fallback)"]
+    LAYERS_GEO -->|"useAppConfig.ts (Always-Fresh SSOT)"| MAP_RENDER
+    WEATHER_SVC --> MAP_RENDER
 ```
 
-#### 핵심 컴포넌트 및 서비스 모듈 구조 명세
+---
 
-| 계층 | 파일 경로 | 핵심 역할 및 `v2.4` 설계 변경 명세 |
-| :--- | :--- | :--- |
-| **PWA 설정** | [`vite.config.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/vite.config.ts) | 모바일 홈 화면 앱 설치(`standalone`) 지원 및 `NetworkFirst` 기반 최신 정본 데이터 우선 제공(`bada-geojson-and-config-v2.4`). |
-| **공간 파서 서비스** | [`src/services/spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts) | `EPSG:5181`(`False_Northing=500,000m`) 등록 및 `.prj` WKT `PARAMETER["False_Northing", ...]` 동적 파싱, `.dbf` UTF-8/EUC-KR 한글 필드명 디코딩 및 표준 속성(`id`, `name`, `category`, `address`) 정규화. |
-| **레이어 영속 서비스** | [`src/services/layerStorageService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/layerStorageService.ts) | 레거시 더미 피처(`NP-TY-01`, `NP-GJ-02`, `SPA-01`, `SPA-02`) 및 구버전 캐시 자동 퍼지. 공식 기본 레이어는 로컬 캐시가 최신 정적 파일을 덮어쓰지 않도록 개선. |
-| **설정·레이어 SSOT 훅** | [`src/hooks/useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts) | 앱 전체의 `layers` 및 `geoJsonLayersData`를 관리하는 **유일한 단일 진실 공급원(SSOT)**. 최신 정본 GeoJSON을 로드하여 두 지도 화면에 동일하게 공급. |
-| **해안선 우회·지명 서비스** | [`src/services/routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts) | 378개 OSM 실측 해안선 폴리곤 + 300개 변침점 2-Tier 항로 탐색 유지 + **`wp.isCustomCoord === true`일 때만** `getNearbyMarinePlaceLabel`(5 NM 내 최근접 지명 보조 라벨) 적용. |
-| **구간 배지 순수 서비스** | [`src/services/routeLegLabelService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeLegLabelService.ts) | `getRouteLegLabelParts(durationMinutes, distanceNm, showDuration, showDistance)` 순수 함수 모듈 신설 (단위 테스트 포함). |
-| **드래프트 저장소** | [`src/services/workspaceDraftRepository.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/workspaceDraftRepository.ts) | 항로 경유지, 선박 속력, 지도 위 구간 소요시간(`showLegDurationOnMap`)·거리(`showLegDistanceOnMap`) 표시 여부, 최근 입력한 제보자 이름(`lastReporterName`) 로컬 영속화. |
-| **인트로 화면** | [`src/components/home/HomeScreen.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/home/HomeScreen.tsx) | 상단 온라인/오프라인 배지, 카드 상단 배지, 카드 하단 세부 단축 버튼, 하단 푸터를 제거하고 반달이·꼬미 일러스트 중심의 깔끔한 포스터 카드 그리드로 리팩토링. |
-| **메인 셸 & 상단 HUD** | [`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx) | `[출처 ⓘ]` 버튼, 서브 컨트롤 바, 그리고 **지도 위 원터치 레이어 알약 스위치 바**를 통합 제공. |
-| **공통 지도 뷰포트** | [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx) | 내부 중복 `localGeoJsonLayersData` 및 `fetchMissingGeoJsonLayers`를 제거하고, `useAppConfig.ts`로부터 전달받은 검증된 `layers`와 `geoJsonLayersData`만 렌더링. |
-| **해양기상 패널** | [`src/components/navigation/MarineWeatherPanel.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/MarineWeatherPanel.tsx) | 중단부 `'참고 상태 및 연안 격자 한계 안내(9km 모델 격자 한계)'` 주황색 박스를 제거하고 상단 `[출처·한계 상세 ⓘ]` 모달로 일원화. |
-| **조타실(설정) 모달** | [`src/components/navigation/WeatherThresholdSettings.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/WeatherThresholdSettings.tsx) | 선박 속력·기상 임계치 설정 하단에 인트로 푸터에서 이동된 **'플랫폼 정보 및 데이터·기술 출처 아카이브'** 섹션 카드를 통합 배치. |
-| **간편 레이어 모달** | [`src/components/notebook/LayerControlModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/LayerControlModal.tsx) | 일반 직원용 **`[간편 모드]`**(레이어 On/Off, 색상 변경, 원클릭 QGIS 파일 자동 변환 등록)를 기본 표시하고, 전문가용 옵션은 `[관리자 고급 설정 ▾]` 아코디언으로 분리. |
-| **간편 현장제보 모달** | [`src/components/notebook/FieldReportModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/FieldReportModal.tsx) | 자주 쓰는 현장 상황 원터치 상용구 칩 5종 및 작성자 이름 자동 기억 기능 추가. |
+### 2.3 바닷길 콕콕 등록 항구(136개) 직관적 즉시 선택 UX 및 블랙박스 정밀 엔진 구현 명세
+
+확정된 설계(**White-Box Simplicity & Black-Box Precision**)에 따라 다음과 같이 구현·검증을 완료하였습니다.
+
+1. **복잡한 안내·모드·확인 카드 제거 및 2채널 즉시 선택 (`applyDirectPortSelection`)**:
+   - 마우스/터치 등 입력장치 분기 로직, 4버튼 탭 모드(`이동만/+경유지/출발지/목적지`), 장황한 설명 배너, 2단계 후보 확인 카드를 모두 제거하였습니다.
+   - **채널 1 (지도 직접 선택)**: 지도 위 등록 항구(136개) 마커를 선택하면 첫 번째 선택은 **출발지**, 두 번째 선택은 **도착지**로 즉시 반영되어 소요시간과 거리가 바로 계산됩니다.
+   - **채널 2 (`[항구선택]` 입력 방식)**: 하단 시트가 `summary` 상태이거나 빈 경로일 때도 상단에 **출발지 `[항구선택]`** / **도착지 `[항구선택]`** 슬롯을 상시 노출하여, 사용자가 더 알아보고 싶을 때 기존 검색·필터 모달(`PortSelectModal.tsx`)을 즉시 이용할 수 있습니다.
+2. **어디서 어디로 가는지 한눈에 보이는 깔끔한 연결선 & 블랙박스 정밀 시간 계산**:
+   - 일반 현장 직원이 배에서 **"어디서 어디로 가는지"**와 **"얼마나 시간이 걸리는지"**를 직관적으로 인지할 수 있도록, 지도(`KakaoMapCanvas.tsx`, `LegacyLeafletCanvas.tsx`)에는 항해사용 다중 변침 수로선·`◆ 수로 가이드`·다중 화살표·방위각 표기를 제거하고 **`출발지 ─── (경유지) ─── 도착지` 직관적 연결선**과 **중앙 소요시간·거리 배지(`약 N분 · X.X NM`)**만 깔끔하게 표시합니다.
+   - 보이지 않는 내부 엔진(`routeGeoService.ts`)은 136개 항구 해역 진입점(`seaApproachLat/Lng`), 300개 해상 변침점, 378개 실측 해안선 폴리곤을 우회하는 **실제 바닷길 운항 거리**를 블랙박스로 정밀 연산하여 정확한 예상 소요시간을 제공합니다.
 
 ---
 
-### 2.3 [최우선 수정] 지도 관련 오류 3건 근본 해결 및 PWA 캐시 무효화 상세 설계
+### 2.4 대상 파일별 구체적 변경 명세 (Target Scope & File Boundary — EGM Stage 9 준수)
 
-#### 2.3.1 [오류 1-1 해결] 잘못된 공원구역 레이어 제거 및 공통 레이어 소스(SSOT) 일원화
-
-1. **가짜 더미 공원구역(`NP-TY-01`, `NP-GJ-02`) 영구 제거 및 지속 업데이트 슬롯화**:
-   - [`public/data/layers/national_park.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/national_park.geojson)에 하드코딩된 5점 직사각형 더미 피처 2건(`NP-TY-01`, `NP-GJ-02`)을 삭제하고 빈 `FeatureCollection`(`{ "type": "FeatureCollection", "features": [] }`)으로 초기화합니다.
-   - [`public/config/app_config.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/config/app_config.json) 및 [`src/hooks/useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts)의 `DEFAULT_LAYERS`에서 `national_park` 레이어는 피처 수가 0건일 때 지도 위에 아무런 가짜 폴리곤도 그리지 않도록 처리하며, **추후 사용자께서 공식 공원구역 QGIS 원본 파일을 순차 제공·업데이트하실 때마다 코드 수정 없이 즉시 표시되는 표준 슬롯**으로 유지합니다.
-2. **두 지도 화면(`꼬미의 바다수첩` · `바닷길 콕콕`) 레이어 로딩 파이프라인 통합**:
-   - [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx#L303-L351) 내부의 `localGeoJsonLayersData` 상태와 `fetchMissingGeoJsonLayers()` 중복 훅을 완전히 제거하고, `externalGeoJsonLayersData`(`useAppConfig.ts`에서 공급하는 SSOT 객체)를 단일 소스로 사용합니다.
-   - `activeMainTab === 'navigation'`일 때 특정 레이어를 임의로 숨기는 필터링을 금지하고, 두 지도 화면 모두 동일한 검증 레이어(`layers`)를 렌더링합니다.
-
-#### 2.3.2 [오류 1-2 해결] 특별보호구역 QGIS 원본(`EPSG:5181`) 정밀 변환 및 한글 속성 복원
-
-1. **[`src/services/spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts) `EPSG:5181` 지원 및 WKT 동적 파라미터 파서**:
-   ```typescript
-   // src/services/spatialFileParser.ts — Korea 2000 구 중부원점(EPSG:5181, False_Northing=500,000m) 및 동적 WKT 감지
-   proj4.defs(
-     'EPSG:5181',
-     '+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +units=m +no_defs',
-   );
-   proj4.defs(
-     'EPSG:5180',
-     '+proj=tmerc +lat_0=38 +lon_0=125 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +units=m +no_defs',
-   );
-   proj4.defs(
-     'EPSG:5183',
-     '+proj=tmerc +lat_0=38 +lon_0=129 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +units=m +no_defs',
-   );
-
-   function detectProj4Def(prjText?: string): string | null {
-     if (!prjText) return null;
-     const u = prjText.toUpperCase();
-     if (u.includes('WGS_1984') || u.includes('WGS 84') || u.includes('GCS_WGS_1984')) {
-       return 'EPSG:4326';
-     }
-     const isFalseNorthing500k = /PARAMETER\s*\[\s*"FALSE_NORTHING"\s*,\s*500000(\.0+)?\s*\]/i.test(prjText);
-     if (u.includes('KOREA_2000')) {
-       if (u.includes('CENTRAL_BELT_2010')) return 'EPSG:5186';
-       if (u.includes('WEST_BELT_2010')) return 'EPSG:5185';
-       if (u.includes('EAST_BELT_2010')) return 'EPSG:5187';
-       if (u.includes('CENTRAL_BELT') || isFalseNorthing500k) return 'EPSG:5181';
-       if (u.includes('WEST_BELT')) return 'EPSG:5180';
-       if (u.includes('EAST_BELT')) return 'EPSG:5183';
-       if (u.includes('UNIFIED')) return 'EPSG:5179';
-     }
-     if (u.includes('BESSEL') || u.includes('KOREA_1985')) return 'EPSG:5174';
-     return null;
-   }
-   ```
-2. **`.dbf` 한글 필드명 복원 및 표준 속성 매핑**:
-   - `parseDbfBuffer()`에서 컬럼명 바이트(`nameBytes`)를 디코딩할 때 `'ascii'` 대신 본문과 동일한 `decoder`(`UTF-8` 또는 `EUC-KR`)를 사용합니다.
-   - QGIS 특별보호구역 원본의 한글 속성(`코드명`, `관리`, `명칭`, `입지`, `유형`, `상태`, `주소`, `고시면`, `지정일`, `만료년`)을 보존함과 동시에 지도 클릭 팝업 호환을 위해 `id: row['코드명']`, `name: row['명칭']`, `description: "${row['유형']} (${row['입지']}) · ${row['주소']}"` 표준 키를 자동 생성합니다.
-3. **QGIS 원본 컴파일 스크립트 (`scripts/sync-qgis-protected-areas.mjs`)**:
-   - `C:\Users\Administrator\Desktop\국립공원공단\바다꼼꼬미\21_특별보호구역_구획_201224\20_특별보호구역_신규_최종_201109.shp` 원본은 건드리지 않고 읽기 전용(Read-Only)으로 파싱하여, 한려해상국립공원 관할 20개소(`한동` 9개소 + `한려` 11개소) 폴리곤을 [`public/data/layers/protected_area.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/protected_area.geojson)에 정밀 생성합니다.
-
-#### 2.3.3 [오류 1-3 해결] 실제 항구 위치 정합성 유지 및 검증 게이트 강화
-
-- 눈대중 좌표 이동을 엄격히 금지하고, OSM `natural=coastline` 378개 실측 해안선 폴리곤(`12,794` 정점) 및 공인 해안선·선착장 접안단 기준 `EPSG:4326` 좌표로 정합된 136개 항구([`public/data/ports.json`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/ports.json))와 55개 접안지([`public/data/docking_points.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/docking_points.geojson))를 유지합니다.
-- [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)에서 두 파일 간 좌표 일치(`|Δlat| <= 1e-5`, `|Δlng| <= 1e-5`), 육지 폴리곤 침범 0건, 그리고 `national_park.geojson` / `protected_area.geojson` 내 구버전 더미 ID(`NP-TY-01`, `NP-GJ-02`, `SPA-01`, `SPA-02`) 0건 여부를 빌드 시마다 강제 검증합니다.
-
-#### 2.3.4 [PWA 앱 에이전트 핵심 설계] 최신 정본 우선 로드(Always-Fresh) 및 구버전 캐시 퍼지
-
-오프라인 우선(Offline-First)에 과도하게 의존하던 기존 캐시 정책을 걷어내고, **항상 서버(정적 파일)의 최신 검증 데이터를 우선 표시(Always-Fresh)**하도록 개선합니다:
-
-| 저장 계층 | 대상 키 / 캐시 | 최신 정본 우선(Always-Fresh) 및 구버전 재표시 차단 설계 |
-| :--- | :--- | :--- |
-| **1. 정적 기준 레이어 로더** | [`useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts) | • 공식 기본 레이어(`national_park`, `protected_area`, `docking`)는 로컬 캐시가 정적 파일을 덮어쓰지 않고 **항상 최신 정적 GeoJSON을 우선 로드**하여, 추후 QGIS 원본 파일 업데이트 시 모든 직원 단말에 즉시 반영되도록 개선. |
-| **2. IndexedDB & localStorage** | `bada_kkomkkomi_spatial_db`<br>`bada_operational_*` ([`layerStorageService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/layerStorageService.ts)) | • 기존 브라우저에 캐시되어 있던 구버전 가짜 더미 피처(`NP-TY-01`, `NP-GJ-02`, `SPA-01`, `SPA-02`)를 부팅 즉시 자동 퍼지(`OPERATIONAL_STORAGE_SCHEMA_VERSION = '2026.11.11-v2.4'`).<br>• 로컬 저장소는 직원이 직접 추가·수정한 사용자 레이어나 개인 설정 보관 용도로만 깔끔하게 한정. |
-| **3. Workbox PWA 캐시** | `bada-geojson-and-config-v2.4` ([`vite.config.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/vite.config.ts)) | • `NetworkFirst` 전략 및 런타임 캐시 버전 갱신(`v2.4`)으로 앱 재실행·PWA 업데이트 직후 구버전 데이터가 절대 재표시되지 않도록 보장. |
-
----
-
-### 2.4 디자인 · UI/UX · 레이아웃 리팩토링 및 `memo.txt` 4대 개선 명세
-
-#### 2.4.1 [Memo 1] [`MarineWeatherPanel.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/MarineWeatherPanel.tsx) 9km 모델 격자 한계 안내 박스 제거
-- **구현 위치**: [`src/components/navigation/MarineWeatherPanel.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/MarineWeatherPanel.tsx#L338-L347)
-- **리팩토링 내역**: 패널 중간의 주황색 `'참고 상태 및 연안 격자 한계 안내(9km 모델 격자 한계)'` 박스를 제거하고, 패널 헤더 우측의 **`[출처·한계 상세 ⓘ]`** 버튼 모달([`SourceCredibilityModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/common/SourceCredibilityModal.tsx))로 안내를 일원화합니다. 모바일 화면에서 기상 판정 배너와 4대 기상 수치 카드가 스크롤 없이 즉시 한눈에 노출됩니다.
-
-#### 2.4.2 [Memo 2] [`HomeScreen.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/home/HomeScreen.tsx) 미니멀 포스터 개편 및 제거 요소 적재적소 재배치
-
-| 인트로(`HomeScreen.tsx`)에서 제거하는 요소 | 처리 및 적재적소 재배치 목표 | UX/UI · 가독성 · 시인성 개선 상세 설계 |
-| :--- | :--- | :--- |
-| **① 상단 온라인 / 오프라인 배지** (`L80-95`) | **상시 노출 제거** (오프라인 우선 강조 탈피) | 평소 온라인 환경에서 불필요한 시각적 노이즈를 주던 상단 배지를 제거하여 화면을 깔끔하게 정리. |
-| **② 카드 상단 작은 영문/메타 배지** | **포스터 카드 본문 2줄 쉬운 우리말 요약으로 통합** ([`src/components/home/HomeScreen.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/home/HomeScreen.tsx)) | 작은 캡슐 배지를 없애고 반달이·꼬미 원형 캐릭터 일러스트 + 굵은 한글 제목 + 2줄 핵심 설명의 깔끔한 포스터 카드로 정제(카드 전체가 단일 터치 영역). |
-| **③ 카드 하단 세부 단축 버튼** | **워크스페이스 상단 서브 컨트롤 바 & 지도 위 원터치 알약 스위치** ([`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx)) | `꼬미의 바다수첩` 진입 시 상단 서브바의 큼직한 **`[⚓ 접안시설 55] [🐬 상괭이 관찰] [📸 현장 제보] [🗺️ 레이어]`** 버튼과 지도 위 알약 스위치로 즉시 실행. |
-| **④ 하단 푸터 기관명·버전·`[데이터·기술 출처 ⓘ]` 버튼** (`L153-173`) | **워크스페이스 상단 `[출처 ⓘ]` 버튼** ([`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx)) 및 **`꼬미의 조타실` 모달 하단** ([`WeatherThresholdSettings.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/WeatherThresholdSettings.tsx)) | `꼬미의 조타실(설정)` 모달 하단에 **'플랫폼 정보 및 데이터·기술 출처 아카이브'** 섹션 카드를 신설하여 기관명(`한려해상국립공원동부사무소`), 버전(`v2.4.0`), `[데이터·기술 출처 및 한계 상세 보기 ⓘ]` 버튼을 깔끔하게 통합. |
-
-#### 2.4.3 [Memo 3] 구간 소요시간·거리 라벨 순수 함수 모듈(`src/services/routeLegLabelService.ts`) 분리
-- **구현 위치**: `src/services/routeLegLabelService.ts` (신규), [`src/components/map/mapMarkerTemplates.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts), [`src/services/workspaceDraftRepository.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/workspaceDraftRepository.ts), [`src/tests/coreServices.test.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/tests/coreServices.test.ts)
-- **설계 명세**:
-  ```typescript
-  // src/services/routeLegLabelService.ts
-  export function getRouteLegLabelParts(
-    durationMinutes: number,
-    distanceNm: number,
-    showDuration: boolean,
-    showDistance: boolean,
-  ): string[] {
-    const parts: string[] = [];
-    if (showDuration) {
-      parts.push(`${Math.max(1, Math.round(durationMinutes))}분`);
-    }
-    if (showDistance) {
-      parts.push(`${distanceNm.toFixed(1)} NM`);
-    }
-    return parts;
-  }
-  ```
-  - 직원이 `바닷길 콕콕`에서 **`[⏱️ 구간 소요시간 표시]`**와 **`[📏 구간 거리(NM) 표시]`**를 자유롭게 켜고 끌 수 있으며, 선택 상태는 `workspaceDraftRepository.ts`를 통해 로컬에 자동 보존됩니다.
-
-#### 2.4.4 [Memo 4] [`routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts) 커스텀 해상 좌표 한정 인근 해역 지명 보조 라벨링
-- **구현 위치**: [`src/services/routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts), [`src/components/navigation/RouteTimeCalculator.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx)
-- **설계 명세**:
-  - `getNearbyMarinePlaceLabel(lat, lng, portsList, maxRadiusNm = 5)` 함수를 추가하되, **오직 `wp.isCustomCoord === true`(직원이 지도 위 빈 바다를 직접 클릭해 생성한 임의 해상 지점)인 경유지에만** 호출하여 `해상 지점 1 (비진도 인근 해역)` 형태로 표시합니다.
-  - 정식 항구·어항·선착장(`!wp.isCustomCoord`)은 원래의 공인 항포구 명칭을 100% 그대로 보존합니다.
-
-#### 2.4.5 일반 내부 직원용 현장 기록 & 레이어 간편 조작 UX 강화
-1. **지도 위 원터치 레이어 알약 스위치 바**: 모달을 열지 않고도 지도 상단에서 **`[🟣 특별보호구역] [⚓ 주요 접안지 55] [🐬 상괭이 분포]`**를 원터치로 즉시 ON/OFF 전환합니다.
-2. **현장 제보 모달([`FieldReportModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/FieldReportModal.tsx)) 빠른 상용구 칩 & 작성자 기억**:
-   - 메모 입력창 위에 **`[⚓ 선착장·슬립웨이 점검필요] [⚠️ 암초·수심 주의] [🚫 특별보호구역 출입계도] [🛟 부표·안내판 파손] [🗑️ 해양쓰레기 유입]`** 원터치 상용구 칩을 배치하고, 직전에 입력한 작성자명을 자동 기억하여 타이핑 부담을 없앱니다.
-3. **QGIS 파일 업로드 원클릭 자동 마법사 ([`LayerControlModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/notebook/LayerControlModal.tsx))**:
-   - 파일을 선택하면 좌표계(`EPSG:5181`/`EPSG:5186`/`EPSG:4326`)와 한글 인코딩(`UTF-8`/`EUC-KR`)을 100% 자동 판별·변환하여 **`[지도에 바로 적용하기]`** 버튼 하나로 즉시 반영합니다.
+| 구분 | 대상 파일 경로 (Repository-Relative) | 변경 유형 | 핵심 구현 및 수정 명세 |
+| :--- | :--- | :---: | :--- |
+| **1. EGM 루트 계약** | [`AGENTS.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/AGENTS.md) | **[NEW]** | `EGM artifact directory: .dev/docs` 설정, `System Overview`, `Subdirectories & System Boundaries`, 5대 `Global Invariants`, `Global Side Effects`, `System Verification` 정의 |
+| **2. Elephant 스킬** | [`_agents/skills/bada-kkomkkomi-elephant/SKILL.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/_agents/skills/bada-kkomkkomi-elephant/SKILL.md) | **[NEW]** | 프로젝트 전용 Elephant 컨텍스트 로더 스킬 및 Phase 1~4 Write Boundary 규칙 정의 |
+| **3. EGM 설계 인덱스** | [`docs/designs/SITEMAP.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/designs/SITEMAP.md) | **[NEW]** | 전체 설계 문서 인덱스 및 6대 서브시스템의 `Interface` / `Invariants` / `Side Effects` / `Verification` 계약 매트릭스 |
+| **4. Git 무시 규칙** | [`.gitignore`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/.gitignore) | **[MODIFY]** | EGM 임시 산출물 폴더 `.dev/` 추가 |
+| **5. 경로 타입 정의** | [`src/types/route.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/types/route.ts) | **[MODIFY]** | `RoutePortSelectionSource`, `RoutePortSelectionRequest`, `RouteSelectionMode`, `RouteCandidateState` 타입 추가 |
+| **6. 항구 선택 서비스** | [`src/services/routePortSelectionService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routePortSelectionService.ts) | **[NEW]** | `findSiblingPorts`(150m 인접 시설), `resolveEffectiveSelectionMode`, `validateCandidatePort`, `applyConfirmedCandidate`, `sanitizeCommittedRouteWaypoints` 순수 함수 구현 |
+| **7. 해상 항로 서비스** | [`src/services/routeGeoService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/routeGeoService.ts) | **[MODIFY]** | `computeSeaRouteSegment`에서 우회 실패로 육지 교차가 남을 경우 직선 폴백을 성공처럼 반환하지 않도록 안전 가드 보강(`GAP-09`) |
+| **8. 마커 템플릿** | [`src/components/map/mapMarkerTemplates.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/mapMarkerTemplates.ts) | **[MODIFY]** | `buildNavPortPinSpec()`에 `.bada-marker-hit-target`(`52×52px`) 적용 및 후보 선택(`isCandidate`) 강조 링 스타일 추가 |
+| **9. 지도 뷰 & 캔버스** | [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx)<br>[`src/components/map/KakaoMapCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/KakaoMapCanvas.tsx)<br>[`src/components/map/LegacyLeafletCanvas.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/map/LegacyLeafletCanvas.tsx) | **[MODIFY]** | 4px 포인터 이동 임계값 판정, 항구/확정 마커 클릭 시 `onSelectRoutePort({ portId, source: 'map' })` 1회 호출, 빈 지도 탭 시 `onEmptyMapTapForRoute()` 호출, 경로 마커 자유 드래그 제거 |
+| **10. 시간계산기 패널** | [`src/components/navigation/RouteTimeCalculator.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/RouteTimeCalculator.tsx) | **[MODIFY]** | `sheetStage === 'summary'` 상시 노출 단계 안내 배너 & 역할 액션 바, 후보 확인 카드(150m 인접 시설 전환 칩 포함), 개별 경유지 `[변경]` 버튼, `Escape` 후보 취소 및 `role="status"` 알림 구현 |
+| **11. 항구 검색 모달** | [`src/components/navigation/PortSelectModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/PortSelectModal.tsx) | **[MODIFY]** | 임의 GPS 위치 직접 확정 버튼 제거 → `[📍 현재 GPS에서 가까운 항구 순]` 정렬 토글로 대체 및 `portId` 후보 선택 연동 |
+| **12. 메인 오케스트레이터** | [`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx) | **[MODIFY]** | `routeSelectionMode` 및 `routeCandidate` 상태 관리, 바다수첩·기상 브릿지 `portId` 후보 연동, `ports.json` 로드 에러 배너 및 재시도 버튼(`GAP-08`), 선택 대기 시 `showPortMarkersOnMap` 자동 활성화 |
+| **13. 출처 SSOT & 문서** | [`src/config/dataSources.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/config/dataSources.ts)<br>[`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md)<br>[`DEPLOY_GUIDE.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/DEPLOY_GUIDE.md)<br>[`docs/DATA_AND_TECH_SOURCES.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/DATA_AND_TECH_SOURCES.md) | **[MODIFY]** | 7대 문서↔코드 드리프트(`DRIFT-01` ~ `DRIFT-07`) 전수 교정 (`v2.4`/`v2.5` 버전 정합, 300개 변침점, QGIS 20개소 정밀 폴리곤, 신규 서비스 모듈 등재) |
+| **14. 검증 & 테스트** | [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)<br>[`src/tests/coreServices.test.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/tests/coreServices.test.ts) | **[MODIFY]** | `verify-integrity.mjs`에 Section 7 (EGM 계약·전 문서 버전·모듈 목록·마크다운 상대 링크 무결성 검증) 추가 및 `coreServices.test.ts`에 항구 선택 상태 머신·150m 인접 시설·왕복 불변식 테스트 추가 |
+| **15. 중복 기획서 청산** | `docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md` | **[DELETE]** | 본 마스터 설계서(2.3절) 및 `docs/designs/SITEMAP.md`로 100% 통합 완료 후 중복 문서 제거 (`LEG-22` 단일 정본 원칙 준수) |
 
 ---
 
 ### 2.5 MCP 및 내부/외부 도구·라이브러리·API 연동 최적화 명세
 
-| 도구 / MCP / API 명칭 | 활용 단계 및 연동 대상 | 시스템 효율 및 품질 극대화 방안 |
+| 도구 / MCP / 플러그인 명칭 | 활용 단계 및 연동 대상 | 시스템 효율 및 품질 극대화 방안 |
 | :--- | :--- | :--- |
-| **`modern-web-guidance` Skill** | 프론트엔드 UI/UX 설계 및 구현 전 단계 | `content-first-noise-reduction` 및 `form-factor-adaptation` 규칙을 적용하여 모바일 PWA 뷰포트 내 불필요한 안내 박스와 과밀 배지를 제거하고 터치 타깃(`44px+`) 확보. |
-| **`chrome-devtools-mcp` & `a11y-debugging`** | 런타임 지도 렌더링 · PWA 캐시 · 접근성 실측 검증 | 로컬 개발 서버 구동 후 실제 브라우저 DOM 스냅샷, 콘솔 에러 0건 확인, 모바일(`390×844`) 레이아웃 오버플로우 및 키보드/다이얼로그 포커스 검증에 활용. |
-| **`proj4` + `fflate` (`vendor-gis` 청크)** | [`src/services/spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts) | 별도 백엔드 서버 없이 브라우저와 Node CLI 양쪽에서 `.zip` 압축 해제(`fflate`) 및 한국 측지계(`EPSG:5181`/`5186`/`5179` → `EPSG:4326`) 실시간 정밀 변환 수행. |
-| **OpenStreetMap Overpass 해안선 & `verify-integrity.mjs`** | [`src/data/coastlinePolygons.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/data/coastlinePolygons.ts)<br>[`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs) | 378개 실측 해안선 폴리곤(`12,794` 정점)을 기반으로 항구 위치 육지 침범 0건, 항로 육지 관통 0건, 레이어 더미 데이터 0건을 빌드 타임에 `0.5초` 내 자동 검증. |
-| **Open-Meteo Marine & Forecast API** | [`src/services/ecmwfWeatherService.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/ecmwfWeatherService.ts) | 별도 유료 API 키 없이 ECMWF 해양 파고·너울·풍속·돌풍 시계열 데이터를 조회하고, 오프라인 시 마지막 성공 기상 스냅샷을 로컬 캐시에서 즉시 복원. |
+| **Google EGM Plugin (`egm@egm`)** | Antigravity (`~/.gemini/config/plugins/egm`) & Claude Code | `/egm:egm-brainstorm`, `/egm:egm-draft`, `/egm:egm-review`, `/egm:egm-drift-report` 워크플로를 통해 향후 모든 기능 추가 시 Elephant(설계)와 Goldfish(무상태 검증)를 분리 실행. |
+| **`modern-web-guidance` Skill** | `RouteTimeCalculator.tsx` 후보 확인 카드 및 `mapMarkerTemplates.ts` | 모바일 뷰포트(`320px~412px`)에서 하단 시트가 `'summary'`일 때도 후보 확인 카드와 1단계 안내 배너가 짤림 없이 노출되도록 레이아웃 설계 및 `52×52px` 터치 영역 확보. |
+| **`chrome-devtools-mcp` & `a11y-debugging`** | 구현 직후 런타임 브라우저 실측 검증 | 로컬 개발 서버 구동 후 ① 초기 빈 경로 진입 시 1단계 안내 노출, ② 항구 마커 클릭 시 후보 확인 카드 및 150m 인접 시설 전환 칩 작동, ③ `Escape` 취소 및 확정 후 A* 항로선 생성, ④ 콘솔 에러 0건을 직접 검증. |
+| **Node.js Built-in Test Runner & `verify-integrity.mjs`** | 로컬(`npm test`, `npm run verify`) 및 GitHub Actions CI(`deploy-pages.yml`) | 외부 무거운 테스트 프레임워크 없이 Node 내장 러너와 정적 무결성 스크립트로 18,360쌍 해안선 비관통, 136개 항구 인접 전환 커버리지, EGM 문서↔코드 무드리프트 및 마크다운 링크 무결성을 1초 내 검증. |
 
 ---
 
 ### 2.6 레거시 식별 및 완전 청산 내역 (Legacy Cleanup Registry)
 
-| 청산 ID | 식별된 레거시 대상 (파일 / 코드 / 캐시) | 레거시 판정 사유 | 청산 및 재발 방지 조치 |
+| 청산 ID | 식별된 레거시 대상 (파일 / 코드 / 문서) | 레거시 판정 사유 | 청산 및 재발 방지 조치 |
 | :--- | :--- | :--- | :--- |
-| **LEG-01** | `docs/reports/2026-11-11_STAFF_CLONE_COMPARISON_AND_INTERFACE_REPORT.md` | 본 마스터 설계 문서([`docs/ARCHITECTURE_AND_DESIGN.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/ARCHITECTURE_AND_DESIGN.md) `v2.4.0`)로 모든 분석·비교 내역이 통합됨. | **파일 및 폴더 완전 삭제 완료** |
-| **LEG-02** | `docs/reports/memo.txt` | 4대 요구사항이 본 마스터 설계서 2.4절 정식 구현 명세로 승격됨. | **파일 완전 삭제 완료** |
-| **LEG-03** | [`public/data/layers/national_park.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/national_park.geojson) 내 `NP-TY-01`, `NP-GJ-02` | 실제 공원구역이 아닌 5점 직사각형 가짜 더미 폴리곤으로 `'꼬미의 바다수첩'` 지도 오류(1-1)의 직접 원인. | **더미 피처 영구 제거 + `verify-integrity.mjs` 재발 방지 어설션 추가** |
-| **LEG-04** | [`public/data/layers/protected_area.geojson`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/public/data/layers/protected_area.geojson) 내 `SPA-01`, `SPA-02` | 실제 QGIS 경계가 아닌 4점 사각형 가짜 더미 폴리곤으로 특별보호구역 표시 오류(1-2)의 직접 원인. | **QGIS 원본(`20_특별보호구역_신규_최종_201109.shp`) `EPSG:5181 → EPSG:4326` 정밀 변환본으로 완전 교체** |
-| **LEG-05** | [`src/components/MapView.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/MapView.tsx) 내 `localGeoJsonLayersData` 및 `fetchMissingGeoJsonLayers` (`L303-351`) | [`useAppConfig.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/hooks/useAppConfig.ts)의 정적 GeoJSON 로더와 중복되어 두 지도 간 레이어 상태 불일치를 유발. | **`MapView.tsx` 내부 중복 로더 제거 및 `useAppConfig.ts` 단일 SSOT로 일원화** |
-| **LEG-06** | [`src/services/spatialFileParser.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/services/spatialFileParser.ts) 내 DBF 헤더 `TextDecoder('ascii')` (`L130`) | 한글 컬럼명(`.dbf` UTF-8/EUC-KR)을 깨뜨리는 레거시 ASCII 전용 디코더. | **본문과 동일한 멀티바이트 `decoder`(`UTF-8`/`EUC-KR`)로 교체** |
-| **LEG-07** | [`src/components/navigation/MarineWeatherPanel.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/MarineWeatherPanel.tsx) 내 9km 격자 한계 안내 박스 (`L338-347`) | 상단 `[출처·한계 상세 ⓘ]` 모달과 중복되며 모바일 기상 패널 가독성을 저해함. | **안내 박스 코드 제거 및 상단 모달로 일원화** |
-| **LEG-08** | 브라우저 구버전 캐시 (`bada-geojson-and-config-v2`, 구버전 `IndexedDB`/`localStorage` 레이어 상태) | 정적 파일 수정 후에도 구버전 가짜 레이어(`NP-TY-01`, `SPA-01`)를 재표시시키는 캐시 잔재. | **런타임 캐시명 `v2.4` 갱신 및 `OPERATIONAL_STORAGE_SCHEMA_VERSION` 자동 퍼지 가드로 청산** |
+| **LEG-09** | `docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md` | 바닷길 항구 선택 UX 기획안이 본 마스터 설계 정본([`docs/ARCHITECTURE_AND_DESIGN.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/ARCHITECTURE_AND_DESIGN.md) 2.3절)과 `docs/designs/SITEMAP.md`로 완전 통합됨. | **구현 단계에서 파일 삭제 및 `verify-integrity.mjs` 단일 정본 가드 유지** |
+| **LEG-10** | [`src/App.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/App.tsx) 내 `handleAddWaypointButton`(임의 중간 해상 좌표 자동 생성) 및 경로 마커 자유 드래그(`handleUpdateWaypointPos`) | 등록되지 않은 임의 해상 좌표(`isCustomCoord: true`)를 즉시 삽입하여 136개 등록 항구 선택 계약과 충돌함. | **임의 좌표 생성·드래그 제거 후 `add_waypoint` 선택 모드 및 `portId` 후보 확인 흐름으로 일원화** |
+| **LEG-11** | [`src/components/navigation/PortSelectModal.tsx`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/components/navigation/PortSelectModal.tsx) 내 `[내 선박 현재 GPS 위치로 설정]` 즉시 삽입 버튼 | 임의 GPS 좌표를 항구 검증 없이 경로에 즉시 삽입함. | **즉시 삽입 버튼 제거 후 `[📍 내 선박 위치에서 가까운 항구 순]` 정렬 필터로 교체** |
+| **LEG-12** | [`README.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/README.md) (`[v2.2]` 헤더, 제거된 인트로 단축 칩 설명, 제거된 9km 하단 상시 박스 설명), [`DEPLOY_GUIDE.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/DEPLOY_GUIDE.md) (`변침점 35개소`), [`src/config/dataSources.ts`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/src/config/dataSources.ts) (`SOURCE_CREDIBILITY_UX_DESIGN.md` 주석) | `v2.4.0` 리팩토링 이후 미처 갱신되지 않은 7대 문서↔코드 드리프트(`DRIFT-01` ~ `DRIFT-07`). | **전 문서 현행화 + `verify-integrity.mjs` Section 7 자동 드리프트 가드로 재발 영구 차단** |
 
 ---
 
 ## 3장. 사용자 필수 실행 요청 목록 (Action Items)
 
 > [!IMPORTANT]
-> **권한 분리 및 외부 폴더 비침습 원칙 준수**
-> • 워크스페이스 외부의 바탕화면 참고 폴더(`C:\Users\Administrator\Desktop\국립공원공단\...`)는 사용자 지침에 따라 **절대 건드리지 않고 원형 그대로 보존**합니다.
-> • 에이전트가 임의로 가짜 공간데이터를 생성하거나 우회하지 않으며, 추후 공간데이터 업데이트 일정에 맞춰 아래 항목만 협업 요청드립니다.
+> **우회 금지 및 사용자 승인 게이트 (Explicit Approval Gates)**
+> 에이전트는 아래 항목들을 임의로 우회하거나 승인 없이 먼저 코드를 변경하지 않습니다. 본 설계서의 내용을 검토하신 후 승인(`승인` 또는 `Proceed`)해 주시면 즉시 구현부터 검증까지 책임지고 완수하겠습니다.
 
-1. **`[ACTION-01]` 추후 공원구역(`national_park`) 및 신규·갱신 QGIS 원본 파일 순차 제공 (지속 업데이트 체계)**:
-   - **현재 단계 에이전트 기본 조치**:
-     - `'꼬미의 바다수첩'`에 남아 있던 잘못된 가짜 사각형 공원구역(`NP-TY-01`, `NP-GJ-02`)과 브라우저 3중 캐시(`Workbox Runtime Cache` · `IndexedDB` · `localStorage`)는 즉시 제거하여, 두 지도 화면 모두에서 잘못된 레이어가 다시 나타나지 않도록 조치합니다.
-     - 현재 확보된 **특별보호구역(`20_특별보호구역_신규_최종_201109.shp`)** 원본은 `EPSG:5181 → EPSG:4326` 정밀 변환 및 한글 속성 복원을 거쳐 두 지도에 일치하도록 우선 반영합니다.
-   - **사용자 추후 실행 사항 (지속 업데이트)**:
-     - 추후 **공원구역(`national_park`) QGIS 원본 파일**이나 **개정·추가된 해양공간 QGIS 파일(`.shp`/`.zip`/`.gpkg`/`.geojson`)**이 준비될 때마다 제공해 주시면, 구축된 자동 좌표계 판별(`EPSG:5181`/`EPSG:5186`/`EPSG:5179`/`EPSG:4326`) 및 캐시 버전 갱신 파이프라인을 통해 두 지도에 즉시 업데이트합니다.
-     - 아울러 내부 직원들도 PWA 앱 내 **`[레이어 → 새 QGIS 파일 올리기(원클릭 자동 변환)]`** 간편 기능을 통해 수시로 최신 공간데이터를 직접 반영할 수 있도록 지원합니다.
+### 1. `[ACTION-GATE-01]` 통합 구현 설계 승인 요청 (현재 단계 — 사용자 의사결정 필요)
+
+아래 3가지 핵심 설계 항목에 대해 **승인 여부**를 결정해 주십시오:
+
+1. **Google EGM (`google/elephant-goldfish-model`) 도입 및 드리프트 가드 구축**:
+   - 호스트 PC(`Antigravity CLI` 및 `Claude Code`)에 공식 EGM 플러그인 설치
+   - 프로젝트 내 [`AGENTS.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/AGENTS.md)(`EGM artifact directory: .dev/docs` 포함), [`_agents/skills/bada-kkomkkomi-elephant/SKILL.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/_agents/skills/bada-kkomkkomi-elephant/SKILL.md), [`docs/designs/SITEMAP.md`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/docs/designs/SITEMAP.md) 생성 및 [`scripts/verify-integrity.mjs`](file:///C:/Users/Administrator/apps_ln/bada-kkomkkomi/scripts/verify-integrity.mjs)에 문서↔코드 드리프트·마크다운 링크 무결성 자동 검증 게이트 추가
+   - 실측으로 발견된 7대 문서↔코드 드리프트(`README.md`, `DEPLOY_GUIDE.md`, `DATA_AND_TECH_SOURCES.md`, `dataSources.ts`) 일괄 해소
+2. **바닷길 콕콕 등록 항구(136개) 후보 확인형 선택 UX 및 초기 진입 데드락 해결**:
+   - 초기 빈 경로(`[]`) + 요약 시트(`summary`) 진입 시에도 항상 보이는 **단계별 안내 배너(`1단계: 출발 항구 선택` → `2단계: 도착 항구 선택`)** 및 **`후보 확인 카드`** 적용
+   - 등록 항구 136개(`ports.json`)만 선택 허용(빈 지도 클릭·경로 마커 자유 드래그·임의 좌표 경유지 생성 제외), 항구 마커 히트 영역 `52×52px` 확대, **반경 150m 동일·초근접 인접 시설 전환 칩** 제공, 왕복(`A → B → A`) 허용 및 편집 사후 불변식 가드 적용
+   - 통합 완료된 임시 제안 문서(`docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md`) 정리
+3. **추후 공원구역(`national_park`) 등 신규 QGIS 원본 파일 순차 제공 (`[ACTION-02]` 상시 열림)**:
+   - 외부 바탕화면 폴더(`C:\Users\Administrator\Desktop\국립공원공단\...`)는 절대 건드리지 않고 원형 그대로 보존합니다. 추후 공원구역(`national_park.geojson`)이나 추가 해양공간 QGIS 원본 파일이 준비될 때 제공해 주시면 구축된 `EPSG:5181`/`5186` 자동 변환 파이프라인으로 즉시 반영합니다.

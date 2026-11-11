@@ -132,76 +132,84 @@ export function buildDockingMarkerSpec(
 
 /**
  * 1-B. 바닷길 콕콕용 항포구 / 소규모 선착장 마커 아이콘
+ * - [GAP-02 해소] .bada-marker-hit-target (52×52px) 히트 영역 보장 및 후보 선택(isCandidate) 강조 링 지원
  * (확대 시 이름 라벨 표시, 축소 시 깔끔한 도트)
  */
 export function buildNavPortPinSpec(
   port: MarinePort,
   showLabel: boolean,
+  isCandidate = false,
 ): MarkerTemplateSpec {
   const isSmallBerth = port.subCategory === 'small_berth' || port.category === 'docking';
   const rawShortName = port.name.length > 8 ? `${port.name.slice(0, 8)}…` : port.name;
   const shortName = escapeHtml(rawShortName);
-  const safeTitle = escapeHtml(port.name);
-  const color = isSmallBerth ? '#f59e0b' : '#38bdf8';
-  const bg = isSmallBerth ? '#451a03' : '#082f49';
+  const safeTitle = escapeHtml(
+    `${port.name} (${port.region} · ${port.facilityLabel ?? port.portClassLabel ?? '선착장'})`,
+  );
+  const color = isCandidate ? '#10b981' : isSmallBerth ? '#f59e0b' : '#38bdf8';
+  const bg = isCandidate ? '#064e3b' : isSmallBerth ? '#451a03' : '#082f49';
+  const candidateRingStyle = isCandidate
+    ? 'box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.45), 0 3px 8px rgba(0,0,0,0.85); transform: scale(1.18);'
+    : 'box-shadow: 0 1px 4px rgba(0,0,0,0.8);';
 
-  if (!showLabel) {
+  if (!showLabel && !isCandidate) {
     const dotHtml = `
-      <div style="display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; cursor: pointer;" title="${safeTitle}">
+      <div class="bada-marker-hit-target" style="display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; cursor: pointer;" title="${safeTitle}">
         <div style="
-          width: 11px;
-          height: 11px;
+          width: 12px;
+          height: 12px;
           border-radius: 9999px;
           background: ${bg};
           border: 2px solid ${color};
-          box-shadow: 0 1px 4px rgba(0,0,0,0.8);
+          ${candidateRingStyle}
         "></div>
       </div>
     `;
     return {
       html: dotHtml,
-      width: 22,
-      height: 22,
-      anchorX: 11,
-      anchorY: 11,
+      width: 52,
+      height: 52,
+      anchorX: 26,
+      anchorY: 26,
       xAnchorRatio: 0.5,
       yAnchorRatio: 0.5,
     };
   }
 
+  const labelPrefix = isCandidate ? '✓ 후보 · ' : '';
   const html = `
-    <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+    <div class="bada-marker-hit-target" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 52px; height: 52px; cursor: pointer;" title="${safeTitle}">
       <div style="
         padding: 1px 5px;
         border-radius: 5px;
-        background: rgba(2, 6, 23, 0.9);
-        border: 1px solid ${color};
+        background: ${isCandidate ? '#064e3b' : 'rgba(2, 6, 23, 0.9)'};
+        border: 1.5px solid ${isCandidate ? '#34d399' : color};
         color: #f8fafc;
-        font-size: 9px;
-        font-weight: 800;
+        font-size: ${isCandidate ? '10px' : '9px'};
+        font-weight: 900;
         white-space: nowrap;
         margin-bottom: 2px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.65);
-      ">${shortName}</div>
+      ">${labelPrefix}${shortName}</div>
       <div style="
-        width: 14px;
-        height: 14px;
+        width: ${isCandidate ? '16px' : '14px'};
+        height: ${isCandidate ? '16px' : '14px'};
         border-radius: 9999px;
         background: ${bg};
-        border: 2.5px solid ${color};
-        box-shadow: 0 2px 6px rgba(0,0,0,0.75);
+        border: 2.5px solid ${isCandidate ? '#ffffff' : color};
+        ${candidateRingStyle}
       "></div>
     </div>
   `;
 
   return {
     html,
-    width: 44,
-    height: 32,
-    anchorX: 22,
-    anchorY: 26,
+    width: 52,
+    height: 52,
+    anchorX: 26,
+    anchorY: 34,
     xAnchorRatio: 0.5,
-    yAnchorRatio: 26 / 32,
+    yAnchorRatio: 34 / 52,
   };
 }
 
@@ -296,7 +304,7 @@ export function buildRouteWaypointSpec(
       : '';
 
   const html = `
-    <div class="bada-draggable-overlay" style="display: flex; flex-direction: column; align-items: center; cursor: grab; user-select: none; -webkit-user-select: none;">
+    <div class="bada-draggable-overlay" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; user-select: none; -webkit-user-select: none;">
       <div style="
         display: inline-flex;
         align-items: center;
@@ -339,15 +347,15 @@ export function buildRouteWaypointSpec(
 }
 
 /**
- * 4. 구간 선 위 예상 소요시간(분) · 거리(NM) · 회전 침로 화살표 배지
- * - Modern Web Guidance (individual-transform-properties): 개별 `rotate` CSS 속성으로 침로 화살표를 회전합니다.
+ * 4. 구간 선 위 예상 소요시간(분) · 거리(NM) 깔끔 배지
+ * - 일반 현장 사용자에게 필요한 "어디서 어디로 가는지 + 얼마나 걸리는지" 핵심 정보만 고대비 캡슐로 표시합니다.
  * - 배지 클릭 시 `data-select-leg-index` 속성을 통해 해당 구간을 양방향 하이라이트합니다.
  */
 export function buildRouteLegBadgeSpec(
   durationMinutes: number,
   distanceNm: number,
-  bearingDeg: number,
-  cardinal: string,
+  _bearingDeg: number,
+  _cardinal: string,
   options?: {
     legIndex?: number;
     safetyLevel?: 'safe' | 'caution' | 'danger';
@@ -364,10 +372,20 @@ export function buildRouteLegBadgeSpec(
     showDuration,
     showDistance,
   );
+  if (labelParts.isHidden) {
+    return {
+      html: '<div style="display:none;"></div>',
+      width: 0,
+      height: 0,
+      anchorX: 0,
+      anchorY: 0,
+      xAnchorRatio: 0.5,
+      yAnchorRatio: 0.5,
+    };
+  }
+
   const mins = Math.round(durationMinutes);
   const nmStr = distanceNm.toFixed(1);
-  const safeCardinal = escapeHtml(cardinal);
-  const roundedDeg = ((Math.round(bearingDeg) % 360) + 360) % 360;
   const isSelected = Boolean(options?.isSelected);
   const safetyLevel = options?.safetyLevel ?? 'safe';
   const legIndexAttr =
@@ -382,17 +400,12 @@ export function buildRouteLegBadgeSpec(
       : safetyLevel === 'caution'
         ? '#38bdf8'
         : '#22d3ee';
-  const arrowBg = isSelected
-    ? '#10b981'
-    : safetyLevel === 'danger'
-      ? '#f59e0b'
-      : '#0ea5e9';
   const boxShadow = isSelected
     ? '0 0 0 2px rgba(52, 211, 153, 0.35), 0 4px 12px rgba(0,0,0,0.85)'
     : '0 3px 10px rgba(0,0,0,0.78)';
 
   const durationHtml = labelParts.durationText
-    ? `<span style="color: ${isSelected ? '#6ee7b7' : '#fbbf24'}; font-size: 12px;">${escapeHtml(labelParts.durationText)}</span>`
+    ? `<span style="color: ${isSelected ? '#6ee7b7' : '#fbbf24'}; font-size: 12px;">약 ${escapeHtml(labelParts.durationText)}</span>`
     : '';
   const separatorHtml =
     labelParts.durationText && labelParts.distanceText
@@ -412,12 +425,12 @@ export function buildRouteLegBadgeSpec(
       <button
         type="button"
         ${legIndexAttr}
-        title="구간 상세 포커스 (${nmStr}NM · 약 ${mins}분 · 침로 ${roundedDeg}° ${safeCardinal})"
+        title="구간 소요시간 · 거리 (${nmStr}NM · 약 ${mins}분)"
         style="
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          padding: 3px 8px 3px 5px;
+          padding: 4px 10px;
           border-radius: 9999px;
           background: rgba(2, 6, 23, 0.94);
           border: ${isSelected ? '2.5px' : '2px'} solid ${borderColor};
@@ -430,37 +443,18 @@ export function buildRouteLegBadgeSpec(
           cursor: pointer;
         "
       >
-        <span
-          aria-hidden="true"
-          style="
-            width: 17px;
-            height: 17px;
-            border-radius: 9999px;
-            background: ${arrowBg};
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            rotate: ${roundedDeg}deg;
-          "
-        >
-          <svg width="11" height="11" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M10 2.5L16.2 16.2L10 12.8L3.8 16.2L10 2.5Z" fill="#020617" />
-          </svg>
-        </span>
         ${durationHtml}
         ${separatorHtml}
         ${distanceHtml}
-        <span style="color: #94a3b8; font-size: 10px;">${roundedDeg}°${safeCardinal}</span>
       </button>
     </div>
   `;
   return {
     html,
-    width: 158,
-    height: 30,
-    anchorX: 79,
-    anchorY: 15,
+    width: 124,
+    height: 28,
+    anchorX: 62,
+    anchorY: 14,
     xAnchorRatio: 0.5,
     yAnchorRatio: 0.5,
   };

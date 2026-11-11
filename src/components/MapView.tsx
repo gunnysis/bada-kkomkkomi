@@ -119,6 +119,8 @@ export interface MapViewProps {
   showLegDurationOnMap?: boolean;
   showLegDistanceOnMap?: boolean;
   fitRouteBoundsTrigger?: number;
+  candidatePortId?: string | null;
+  onSelectRoutePort?: (portId: string) => void;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
@@ -165,6 +167,8 @@ export function MapView({
   showLegDurationOnMap = true,
   showLegDistanceOnMap = true,
   fitRouteBoundsTrigger = 0,
+  candidatePortId = null,
+  onSelectRoutePort,
   onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
@@ -447,6 +451,8 @@ export function MapView({
           showLegDurationOnMap={showLegDurationOnMap}
           showLegDistanceOnMap={showLegDistanceOnMap}
           fitRouteBoundsTrigger={fitRouteBoundsTrigger}
+          candidatePortId={candidatePortId}
+          onSelectRoutePort={onSelectRoutePort}
           onUpdateWaypointPos={onUpdateWaypointPos}
           onRemoveWaypoint={onRemoveWaypoint}
           onMapClickForRoute={onMapClickForRoute}
@@ -494,6 +500,8 @@ export function MapView({
             showLegDurationOnMap={showLegDurationOnMap}
             showLegDistanceOnMap={showLegDistanceOnMap}
             fitRouteBoundsTrigger={fitRouteBoundsTrigger}
+            candidatePortId={candidatePortId}
+            onSelectRoutePort={onSelectRoutePort}
             onUpdateWaypointPos={onUpdateWaypointPos}
             onRemoveWaypoint={onRemoveWaypoint}
             onMapClickForRoute={onMapClickForRoute}

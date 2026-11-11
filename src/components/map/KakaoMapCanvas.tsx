@@ -25,10 +25,8 @@ import {
   buildGpsPulseSpec,
   buildNavPortPinSpec,
   buildPorpoiseSpec,
-  buildRouteDirectionArrowSpec,
   buildRouteLegBadgeSpec,
   buildRouteWaypointSpec,
-  buildSeaWaypointGuideSpec,
   buildSpatialLayerLabelSpec,
   buildSpatialLayerPointSpec,
   buildWeatherPinSpec,
@@ -69,6 +67,8 @@ export interface KakaoMapCanvasProps {
   showLegDurationOnMap?: boolean;
   showLegDistanceOnMap?: boolean;
   fitRouteBoundsTrigger?: number;
+  candidatePortId?: string | null;
+  onSelectRoutePort?: (portId: string) => void;
   onUpdateWaypointPos: (id: string, lat: number, lng: number) => void;
   onRemoveWaypoint?: (id: string) => void;
   onMapClickForRoute: (lat: number, lng: number) => void;
@@ -116,11 +116,29 @@ function createOverlayElement(
   };
 
   if (onClick) {
-    el.addEventListener('pointerdown', stopMapPropagation);
+    let downX = 0;
+    let downY = 0;
+    let pointerMoved = false;
+
+    el.addEventListener('pointerdown', (e: PointerEvent) => {
+      stopMapPropagation(e);
+      downX = e.clientX;
+      downY = e.clientY;
+      pointerMoved = false;
+    });
+    el.addEventListener('pointermove', (e: PointerEvent) => {
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 4) {
+        pointerMoved = true;
+      }
+    });
     el.addEventListener('mousedown', stopMapPropagation);
     el.addEventListener('touchstart', stopMapPropagation, { passive: true });
     el.addEventListener('click', (e) => {
       stopMapPropagation(e);
+      if (pointerMoved) {
+        pointerMoved = false;
+        return;
+      }
       onClick();
     });
   }
@@ -381,11 +399,13 @@ export function KakaoMapCanvas({
   showPortMarkersOnMap,
   selectedLegIndex = null,
   onSelectLeg,
-  showDirectionArrows = true,
+  showDirectionArrows: _showDirectionArrows = true,
   showLegDurationOnMap = true,
   showLegDistanceOnMap = true,
   fitRouteBoundsTrigger = 0,
-  onUpdateWaypointPos,
+  candidatePortId = null,
+  onSelectRoutePort,
+  onUpdateWaypointPos: _onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
   weatherCoords,
@@ -887,17 +907,22 @@ export function KakaoMapCanvas({
 
     for (const port of portsList) {
       if (activeWaypointPortIds.has(port.id)) continue;
-      const spec = buildNavPortPinSpec(port, showLabel);
-      const el = createOverlayElement(kakaoMaps, spec, () =>
-        onMapClickForRoute(port.lat, port.lng),
-      );
+      const isCandidate = candidatePortId === port.id;
+      const spec = buildNavPortPinSpec(port, showLabel || isCandidate, isCandidate);
+      const el = createOverlayElement(kakaoMaps, spec, () => {
+        if (onSelectRoutePort) {
+          onSelectRoutePort(port.id);
+        } else {
+          onMapClickForRoute(port.lat, port.lng);
+        }
+      });
       const overlay = new kakaoMaps.CustomOverlay({
         map,
         position: new kakaoMaps.LatLng(port.lat, port.lng),
         content: el,
         xAnchor: spec.xAnchorRatio,
         yAnchor: spec.yAnchorRatio,
-        zIndex: showLabel ? 220 : 160,
+        zIndex: isCandidate ? 620 : showLabel ? 220 : 160,
         clickable: true,
       });
       created.push(overlay);
@@ -915,34 +940,15 @@ export function KakaoMapCanvas({
     portsList,
     activeWaypointPortIds,
     showPortLabels,
+    candidatePortId,
+    onSelectRoutePort,
     onMapClickForRoute,
   ]);
 
-  // 바닷길 콕콕 실항로 좌표선 계산
+  // 바닷길 콕콕 출발지 → (경유지) → 도착지 직관적 연결선 좌표
   const polylinePositions = useMemo(() => {
-    if (
-      routeLegs.length > 0 &&
-      routeLegs.some((leg) => leg.pathPositions && leg.pathPositions.length >= 2)
-    ) {
-      const merged: [number, number][] = [];
-      for (const leg of routeLegs) {
-        const pts =
-          leg.pathPositions && leg.pathPositions.length >= 2
-            ? leg.pathPositions
-            : ([
-                [leg.from.lat, leg.from.lng],
-                [leg.to.lat, leg.to.lng],
-              ] as [number, number][]);
-        for (let i = 0; i < pts.length; i++) {
-          if (merged.length === 0 || i > 0) {
-            merged.push(pts[i]);
-          }
-        }
-      }
-      return merged;
-    }
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
-  }, [routeLegs, routeWaypoints]);
+  }, [routeWaypoints]);
 
   // 8-B. [전체항로 보기 (Fit Bounds)] 초기 바닷길 시간계산 진입 시 1회 자동 프레이밍 + 수동 트리거 반영 (하단 계산기 패널 여백 320px 확보)
   const lastFittedTriggerRef = useRef<number>(-1);
@@ -983,12 +989,7 @@ export function KakaoMapCanvas({
     }
   }, [kakaoMaps, activeMainTab, navSubTab, fitRouteBoundsTrigger, polylinePositions]);
 
-  // 줌 단계별 방향 화살표 샘플링 티어 (0: zoom<=10, 1: zoom 11~12, 2: zoom>=13)
-  const routeArrowZoomTier =
-    currentLeafletZoom <= 10 ? 0 : currentLeafletZoom <= 12 ? 1 : 2;
-  const showSeaChannelGuides = currentLeafletZoom >= 12;
-
-  // 9. [3.2 바닷길 콕콕 - 시간계산] 구간별 3중 케이싱 폴리라인 + 진행 방향 화살표(➤) + 수로 가이드(◆) + 구간 배지 + 드래그 마커
+  // 9. [3.2 바닷길 콕콕 - 시간계산] 어디서 어디로 가는지 한눈에 보이는 직관적 연결선 + 소요시간·거리 중점 배지 + 출발·경유·도착 마커
   useEffect(() => {
     const map = mapRef.current;
     const container = containerRef.current;
@@ -1007,39 +1008,13 @@ export function KakaoMapCanvas({
     const createdLegBadges: KakaoCustomOverlay[] = [];
     const createdWaypoints: KakaoCustomOverlay[] = [];
 
-    // 9-A. 구간 선택(포커스) 시에만 해당 구간의 직선 대권 참고선을 보조 점선으로 표시 (육지 관통 오인 방지)
-    if (selectedLegIndex !== null && routeLegs[selectedLegIndex]) {
-      const selLeg = routeLegs[selectedLegIndex];
-      const directPath = [
-        new kakaoMaps.LatLng(selLeg.from.lat, selLeg.from.lng),
-        new kakaoMaps.LatLng(selLeg.to.lat, selLeg.to.lng),
-      ];
-      createdLines.push(
-        new kakaoMaps.Polyline({
-          map,
-          path: directPath,
-          strokeWeight: 1.5,
-          strokeColor: '#94a3b8',
-          strokeOpacity: 0.55,
-          strokeStyle: 'shortdot',
-          zIndex: 255,
-        }),
-      );
-    }
-
-    // 9-B. 구간(Leg)별 3중 케이싱(3-Tier Casing) 해상 실항로 폴리라인
+    // 9-A. 구간(Leg)별 출발지 ─── (경유지) ─── 도착지 직관적 연결선 (3-Tier 고대비 케이싱)
     routeLegs.forEach((leg, legIdx) => {
-      const pts =
-        leg.pathPositions && leg.pathPositions.length >= 2
-          ? leg.pathPositions
-          : ([
-              [leg.from.lat, leg.from.lng],
-              [leg.to.lat, leg.to.lng],
-            ] as [number, number][]);
-      if (pts.length < 2) return;
-
       const isSelected = selectedLegIndex === legIdx;
-      const seaPath = pts.map(([lat, lng]) => new kakaoMaps.LatLng(lat, lng));
+      const directPath = [
+        new kakaoMaps.LatLng(leg.from.lat, leg.from.lng),
+        new kakaoMaps.LatLng(leg.to.lat, leg.to.lng),
+      ];
       const mainColor = isSelected
         ? '#34d399'
         : leg.safetyLevel === 'danger'
@@ -1050,7 +1025,7 @@ export function KakaoMapCanvas({
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
-          path: seaPath,
+          path: directPath,
           strokeWeight: isSelected ? 11 : 8.5,
           strokeColor: '#020617',
           strokeOpacity: 0.88,
@@ -1063,7 +1038,7 @@ export function KakaoMapCanvas({
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
-          path: seaPath,
+          path: directPath,
           strokeWeight: isSelected ? 6.5 : 4.8,
           strokeColor: mainColor,
           strokeOpacity: 0.96,
@@ -1076,7 +1051,7 @@ export function KakaoMapCanvas({
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
-          path: seaPath,
+          path: directPath,
           strokeWeight: isSelected ? 2.2 : 1.6,
           strokeColor: isSelected ? '#ecfdf5' : '#e0f2fe',
           strokeOpacity: 0.9,
@@ -1086,105 +1061,76 @@ export function KakaoMapCanvas({
       );
     });
 
-    // 9-C. 폴리라인 위 진행 방향 화살표(➤) 및 해상 변침점 수로 가이드(◆) 렌더링
-    if (showDirectionArrows) {
-      let totalArrowsRendered = 0;
-      const maxTotalArrows = routeArrowZoomTier === 0 ? 6 : routeArrowZoomTier === 1 ? 14 : 24;
-      const renderedGuideIds = new Set<string>();
-
+    // 9-B. 구간 연결선 중앙 소요시간·거리 배지 (내부 계산은 실항로 정밀 시간/거리 기준)
+    if (showLegDurationOnMap || showLegDistanceOnMap) {
       routeLegs.forEach((leg, legIdx) => {
         const isSelected = selectedLegIndex === legIdx;
-        const arrows = leg.directionArrows ?? [];
-        const filteredArrows =
-          routeArrowZoomTier === 0
-            ? arrows.slice(0, 1)
-            : routeArrowZoomTier === 1
-              ? arrows.filter((_, i) => i % 2 === 0).slice(0, 3)
-              : arrows;
-
-        for (const arrow of filteredArrows) {
-          if (totalArrowsRendered >= maxTotalArrows) break;
-          const arrowSpec = buildRouteDirectionArrowSpec(
-            arrow.bearingDeg,
-            leg.safetyLevel ?? 'safe',
+        const visualMidLat = (leg.from.lat + leg.to.lat) / 2;
+        const visualMidLng = (leg.from.lng + leg.to.lng) / 2;
+        const spec = buildRouteLegBadgeSpec(
+          leg.durationMinutes,
+          leg.distanceNm,
+          leg.bearingDeg,
+          leg.cardinal,
+          {
+            legIndex: legIdx,
+            safetyLevel: leg.safetyLevel,
             isSelected,
-          );
-          const arrowEl = createOverlayElement(kakaoMaps, arrowSpec);
-          createdLegBadges.push(
-            new kakaoMaps.CustomOverlay({
-              map,
-              position: new kakaoMaps.LatLng(arrow.lat, arrow.lng),
-              content: arrowEl,
-              xAnchor: arrowSpec.xAnchorRatio,
-              yAnchor: arrowSpec.yAnchorRatio,
-              zIndex: isSelected ? 390 : 340,
-              clickable: false,
-            }),
-          );
-          totalArrowsRendered++;
-        }
-
-        if (showSeaChannelGuides && leg.activeWaypoints) {
-          for (const wpGuide of leg.activeWaypoints) {
-            if (renderedGuideIds.has(wpGuide.id)) continue;
-            renderedGuideIds.add(wpGuide.id);
-            const guideSpec = buildSeaWaypointGuideSpec(wpGuide.name, isSelected);
-            const guideEl = createOverlayElement(kakaoMaps, guideSpec);
-            createdLegBadges.push(
-              new kakaoMaps.CustomOverlay({
-                map,
-                position: new kakaoMaps.LatLng(wpGuide.lat, wpGuide.lng),
-                content: guideEl,
-                xAnchor: guideSpec.xAnchorRatio,
-                yAnchor: guideSpec.yAnchorRatio,
-                zIndex: isSelected ? 385 : 330,
-                clickable: false,
-              }),
-            );
-          }
-        }
+            showDuration: showLegDurationOnMap,
+            showDistance: showLegDistanceOnMap,
+          },
+        );
+        const el = createOverlayElement(
+          kakaoMaps,
+          spec,
+          onSelectLeg
+            ? () => onSelectLeg(isSelected ? null : legIdx)
+            : undefined,
+        );
+        const badgeOverlay = new kakaoMaps.CustomOverlay({
+          map,
+          position: new kakaoMaps.LatLng(visualMidLat, visualMidLng),
+          content: el,
+          xAnchor: spec.xAnchorRatio,
+          yAnchor: spec.yAnchorRatio,
+          zIndex: isSelected ? 460 : 420,
+          clickable: Boolean(onSelectLeg),
+        });
+        createdLegBadges.push(badgeOverlay);
       });
     }
 
-    // 9-D. 구간 진중점(50% Arc-Length) 소요시간·해리·회전 침로 화살표 배지 (클릭 시 구간 포커스)
-    routeLegs.forEach((leg, legIdx) => {
-      const isSelected = selectedLegIndex === legIdx;
-      const spec = buildRouteLegBadgeSpec(
-        leg.durationMinutes,
-        leg.distanceNm,
-        leg.bearingDeg,
-        leg.cardinal,
-        {
-          legIndex: legIdx,
-          safetyLevel: leg.safetyLevel,
-          isSelected,
-          showDuration: showLegDurationOnMap,
-          showDistance: showLegDistanceOnMap,
-        },
-      );
-      const el = createOverlayElement(
-        kakaoMaps,
-        spec,
-        onSelectLeg
-          ? () => onSelectLeg(isSelected ? null : legIdx)
-          : undefined,
-      );
-      const badgeOverlay = new kakaoMaps.CustomOverlay({
-        map,
-        position: new kakaoMaps.LatLng(leg.midLat, leg.midLng),
-        content: el,
-        xAnchor: spec.xAnchorRatio,
-        yAnchor: spec.yAnchorRatio,
-        zIndex: isSelected ? 460 : 420,
-        clickable: Boolean(onSelectLeg),
-      });
-      createdLegBadges.push(badgeOverlay);
-    });
-
-    // 9-E. 출발·경유·도착지 드래그 가능 마커 (Pointer-Capture 60fps 드래그 엔진 + 경유지 [×] 즉시 취소)
+    // 9-C. 출발·경유·도착지 확정 마커 ([✕] 즉시 취소 및 왕복 도착지 선택 지원)
     routeWaypoints.forEach((wp, idx) => {
       const spec = buildRouteWaypointSpec(wp.type, wp.name, idx, wp.id);
       const el = createOverlayElement(kakaoMaps, spec);
+      const stopBubble = (ev: Event) => {
+        ev.stopPropagation();
+        try {
+          kakaoMaps.event.preventMap();
+        } catch {
+          // ignore
+        }
+      };
+      el.addEventListener('pointerdown', stopBubble);
+      el.addEventListener('mousedown', stopBubble);
+      el.addEventListener('touchstart', stopBubble, { passive: true });
+      el.addEventListener('click', (ev: MouseEvent) => {
+        stopBubble(ev);
+        const target = ev.target as HTMLElement | null;
+        const removeBtn = target?.closest('[data-remove-waypoint-id]') as HTMLElement | null;
+        if (removeBtn && onRemoveWaypoint) {
+          const wpId = removeBtn.getAttribute('data-remove-waypoint-id');
+          if (wpId) {
+            onRemoveWaypoint(wpId);
+            return;
+          }
+        }
+        if (wp.matchedPortId && onSelectRoutePort) {
+          onSelectRoutePort(wp.matchedPortId);
+        }
+      });
+
       const wpOverlay = new kakaoMaps.CustomOverlay({
         map,
         position: new kakaoMaps.LatLng(wp.lat, wp.lng),
@@ -1194,18 +1140,6 @@ export function KakaoMapCanvas({
         zIndex: 700 + idx,
         clickable: true,
       });
-
-      attachDraggableToCustomOverlay(
-        kakaoMaps,
-        map,
-        container,
-        wpOverlay,
-        el,
-        (nextLat, nextLng) => {
-          onUpdateWaypointPos(wp.id, nextLat, nextLng);
-        },
-        onRemoveWaypoint,
-      );
 
       createdWaypoints.push(wpOverlay);
     });
@@ -1227,12 +1161,9 @@ export function KakaoMapCanvas({
     routeLegs,
     selectedLegIndex,
     onSelectLeg,
-    showDirectionArrows,
     showLegDurationOnMap,
     showLegDistanceOnMap,
-    routeArrowZoomTier,
-    showSeaChannelGuides,
-    onUpdateWaypointPos,
+    onSelectRoutePort,
     onRemoveWaypoint,
   ]);
 

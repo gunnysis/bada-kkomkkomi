@@ -1,3 +1,34 @@
+import type { MarinePort } from './port';
+
+export type RoutePortSelectionSource =
+  | 'map'
+  | 'search'
+  | 'notebook_bridge'
+  | 'weather_bridge';
+
+export interface RoutePortSelectionRequest {
+  portId: string;
+  source: RoutePortSelectionSource;
+}
+
+export type RouteSelectionMode =
+  | 'idle'
+  | 'select_start'
+  | 'select_end'
+  | 'add_waypoint'
+  | 'replace_start'
+  | 'replace_end'
+  | 'replace_waypoint';
+
+export interface RouteCandidateState {
+  port: MarinePort;
+  siblingPorts: MarinePort[];
+  mode: Exclude<RouteSelectionMode, 'idle'>;
+  targetWaypointId?: string;
+  source: RoutePortSelectionSource;
+  validationError: string | null;
+}
+
 export interface RouteWaypoint {
   id: string;
   name: string;

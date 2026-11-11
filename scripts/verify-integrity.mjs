@@ -204,12 +204,12 @@ assert(
   'WeatherThresholdSettings.tsx: source accordion titles and offline matrix labels must wrap cleanly ([word-break:keep-all]) instead of truncating with ellipsis',
 );
 
-// 바닷길 시간계산기 기본 지도 탭 모드가 'pan_only'이고 300변침점·378실측해안선 표기가 정합하는지 확인 (RC-UX-04 / RC-UX-05 / LEG-21)
+// 바닷길 시간계산기 등록 항구 즉시 선택(applyDirectPortSelection) 및 300변침점·378실측해안선 표기 정합 확인 (RC-UX-04 / RC-UX-05 / LEG-21)
 const appTsx = fs.readFileSync('src/App.tsx', 'utf8');
 const routeCalcTsx = fs.readFileSync('src/components/navigation/RouteTimeCalculator.tsx', 'utf8');
 assert(
-  appTsx.includes("useState<RouteMapTapMode>('pan_only')"),
-  "src/App.tsx: routeMapTapMode must default to 'pan_only' to prevent accidental inland waypoint creation",
+  appTsx.includes('applyDirectPortSelection'),
+  'src/App.tsx: route port selection must use applyDirectPortSelection to prevent arbitrary inland/sea waypoint creation',
 );
 assert(
   routeCalcTsx.includes('300변침점·378실측해안선 우회') &&
@@ -253,6 +253,104 @@ if (fs.existsSync('dist/sw.js')) {
   swPrecacheCount = uniqueUrls.size;
 }
 
+// 7. Google EGM (Elephant-Goldfish Model) 아키텍처 계약 · 문서-코드 드리프트 · 마크다운 상대경로 링크 무결성 검증
+const readmeMd = fs.readFileSync('README.md', 'utf8');
+const dataSourcesMd = fs.readFileSync('docs/DATA_AND_TECH_SOURCES.md', 'utf8');
+const dataSourcesTs = fs.readFileSync('src/config/dataSources.ts', 'utf8');
+
+assert(
+  readmeMd.includes(`[${displayMatch[1]}]`) && readmeMd.includes(`(${displayMatch[1]})`),
+  `README.md must reference current APP_VERSION_DISPLAY (${displayMatch[1]})`,
+);
+assert(
+  dataSourcesMd.includes(displayMatch[1]),
+  `docs/DATA_AND_TECH_SOURCES.md must reference current APP_VERSION_DISPLAY (${displayMatch[1]})`,
+);
+assert(
+  deployGuideMd.includes('변침점 300개소') && !deployGuideMd.includes('변침점 35개소'),
+  'DEPLOY_GUIDE.md must reference 변침점 300개소 (no legacy 변침점 35개소)',
+);
+assert(
+  !dataSourcesTs.includes('docs/SOURCE_CREDIBILITY_UX_DESIGN.md'),
+  'src/config/dataSources.ts must not reference removed docs/SOURCE_CREDIBILITY_UX_DESIGN.md',
+);
+
+assert(
+  !fs.existsSync('docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md'),
+  'Temporary proposal docs/ROUTE_PORT_SELECTION_UX_PROPOSAL.md must be merged and removed',
+);
+
+const egmRequiredFiles = [
+  'AGENTS.md',
+  '_agents/skills/bada-kkomkkomi-elephant/SKILL.md',
+  'docs/designs/SITEMAP.md',
+];
+for (const egmFile of egmRequiredFiles) {
+  assert(fs.existsSync(egmFile), `Required EGM file is missing: ${egmFile}`);
+}
+
+const agentsMd = fs.readFileSync('AGENTS.md', 'utf8');
+const sitemapMd = fs.readFileSync('docs/designs/SITEMAP.md', 'utf8');
+for (const requiredSection of [
+  'EGM artifact directory: .dev/docs',
+  '## System Overview',
+  '## Subdirectories & System Boundaries',
+  '## Global Invariants',
+  '## Global Side Effects',
+  '## System Verification',
+]) {
+  assert(
+    agentsMd.includes(requiredSection),
+    `AGENTS.md must contain EGM Hay section: ${requiredSection}`,
+  );
+}
+
+for (const dir of ['src/services', 'src/hooks']) {
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.ts'));
+  for (const file of files) {
+    assert(
+      readmeMd.includes(file),
+      `README.md directory tree is missing ${dir}/${file}`,
+    );
+    assert(
+      sitemapMd.includes(file),
+      `docs/designs/SITEMAP.md contract index is missing ${dir}/${file}`,
+    );
+  }
+}
+
+const markdownDocsToVerify = [
+  'README.md',
+  'AGENTS.md',
+  'DEPLOY_GUIDE.md',
+  'docs/ARCHITECTURE_AND_DESIGN.md',
+  'docs/DATA_AND_TECH_SOURCES.md',
+  'docs/designs/SITEMAP.md',
+];
+const mdLinkRegex = /\[[^\]]+\]\(([^)]+)\)/g;
+for (const docPath of markdownDocsToVerify) {
+  const content = fs.readFileSync(docPath, 'utf8');
+  const docDir = path.dirname(docPath);
+  for (const match of content.matchAll(mdLinkRegex)) {
+    const rawTarget = match[1].trim().split('#')[0];
+    if (
+      !rawTarget ||
+      rawTarget.startsWith('http://') ||
+      rawTarget.startsWith('https://') ||
+      rawTarget.startsWith('mailto:') ||
+      rawTarget.startsWith('file://') ||
+      rawTarget.startsWith('conversation://')
+    ) {
+      continue;
+    }
+    const resolvedPath = path.resolve(docDir, rawTarget);
+    assert(
+      fs.existsSync(resolvedPath),
+      `Broken relative markdown link in ${docPath}: (${match[1]}) -> ${resolvedPath} does not exist`,
+    );
+  }
+}
+
 console.log(
-  `[Verify OK] Version ${pkg.version} (${displayMatch[1]}) | Docking: ${dockingFc.features.length} | Ports: ${portsData.ports.length} | Waypoints: ${portsData.waypoints.length} | SW Precache: ${swPrecacheCount || 'pre-build'} | Legacy Bloat: 0`,
+  `[Verify OK] Version ${pkg.version} (${displayMatch[1]}) | Docking: ${dockingFc.features.length} | Ports: ${portsData.ports.length} | Waypoints: ${portsData.waypoints.length} | EGM Contracts: OK | SW Precache: ${swPrecacheCount || 'pre-build'} | Legacy Bloat: 0`,
 );

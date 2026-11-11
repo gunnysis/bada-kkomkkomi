@@ -1,6 +1,6 @@
 /**
  * 바다꼼꼬미 (Bada-Kkomkkomi) 외부 데이터 · API · 지도 · 자체 알고리즘 출처 단일 정본 (SSOT)
- * - 정본 문서: docs/DATA_AND_TECH_SOURCES.md & docs/SOURCE_CREDIBILITY_UX_DESIGN.md
+ * - 정본 문서: docs/DATA_AND_TECH_SOURCES.md & docs/ARCHITECTURE_AND_DESIGN.md
  * - 활용처: WeatherThresholdSettings(출처 센터), HomeScreen, DockingDetailSheet, PhotoGallery,
  *          RouteTimeCalculator, MarineWeatherPanel, LayerControlModal, MapView, PortSelectModal
  */
@@ -110,7 +110,7 @@ export const DATA_SOURCE_REGISTRY: readonly DataSourceItem[] = [
     technicalSpecs: [
       '해양수산부 국립해양조사원(KHOA) 기본수준면(DL) 수심·해안선(138섬) 및 기상청(KMA) 해역 기준',
       '경상남도·통영시·거제시 어항 고시 및 현장 옛 지명·별칭(강구안, 원항, 제승당항 등) 통합',
-      '환경부·국립공원공단 경계 기반 오프라인 경량 도식화 폴리곤 내장 (QGIS 원본 .gpkg/.shp 업로드 시 즉시 정밀 교체)',
+      '환경부·국립공원공단 공식 QGIS 특별보호구역 20개소 정밀 폴리곤(EPSG:5181→EPSG:4326) 및 공원 경계 내장 (QGIS 원본 .gpkg/.shp 업로드 시 즉시 추가·교체)',
     ],
   },
   {

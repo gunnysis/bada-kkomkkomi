@@ -93,7 +93,7 @@ flowchart LR
 | :--- | :--- | :---: | :--- |
 | **항포구·선착장 사전 및 해상 변침점** | [`public/data/ports.json`](../public/data/ports.json)<br>[`src/data/coastlinePolygons.ts`](../src/data/coastlinePolygons.ts) | **136개 항포구**<br>+ **300개 변침점**<br>+ **378개 해안선** | · **국립해양조사원(KHOA)** 수로·조석·해안선, **OpenStreetMap(`natural=coastline`) 실측 해안선 폴리곤 378개(12,794정점)** 및 **지자체 어항 지정 고시**(국가·지방·정주·소규모어항 81곳 + 소규모 선착장 50곳 + 조사선 거점 5곳) 통합<br>· 현장 옛 지명·별칭(`강구안`, `원항`, `제승당항` 등) 및 방파제 외측 진입점(`seaApproach`) 전수 실측 해수면 보정 내장 |
 | **현장 접안지 상세 및 수심 모식도** | [`public/data/docking_points.geojson`](../public/data/docking_points.geojson)<br>[`public/images/docking/*.svg`](../public/images/docking/) | **55개 접안지**<br>+ **10종 모식도** | · 국립공원공단 현장 점검 데이터(접안 목적, 만조·간조 수심, 암초·폐로프 위험요소) 수록<br>· 💡 **왜 실제 사진 대신 그림(`.svg`)인가요?**: 오프라인 즉시 열람과 수심·위험요소 도해를 위해 자체 제작한 **현장 이해용 모식도**이며, 실사 사진(`.jpg`/`.png`) 등록 시 앱이 확장자를 자동 판별해 **`📷 현장 실사 사진`** 배지로 즉시 전환 표시함 |
-| **국립공원 경계 · 특별보호구역** | [`national_park.geojson`](../public/data/layers/national_park.geojson)<br>[`protected_area.geojson`](../public/data/layers/protected_area.geojson) | **기본 2개 레이어**<br>(교체 가능) | · **환경부·국립공원공단** 고시 구역(한려해상 통영·거제 지구, 홍도 천연기념물 제335호 등) 기반 **오프라인 경량 도식화 내장본**<br>· 실무자가 `[레이어 > + 파일 등록]`에서 공단 QGIS 원본(`.gpkg`/`.shp`) 업로드 시 즉시 정밀 도면으로 교체 |
+| **국립공원 경계 · 특별보호구역** | [`national_park.geojson`](../public/data/layers/national_park.geojson)<br>[`protected_area.geojson`](../public/data/layers/protected_area.geojson) | **기본 2개 레이어**<br>(20개 보호구역 내장) | · **환경부·국립공원공단** 공식 QGIS 원천 데이터 기반 **한려해상국립공원 특별보호구역 20개소 정밀 폴리곤(`EPSG:5181 → EPSG:4326` 전수 변환)** 및 공원 경계 내장<br>· 실무자가 `[레이어 > + 파일 등록]`에서 신규 공단 QGIS 원본(`.gpkg`/`.shp`) 업로드 시 즉시 추가·교체 가능 |
 
 ---
 

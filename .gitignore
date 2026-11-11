@@ -3,6 +3,7 @@
 public/backup/*
 public/dev/*
 tmp/
+.dev/
 
 # Logs
 logs
