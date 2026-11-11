@@ -110,16 +110,6 @@ interface UserGpsState {
   isSimulated?: boolean;
 }
 
-function isLegacySampleRoute(waypoints: RouteWaypoint[]): boolean {
-  return (
-    waypoints.length === 2 &&
-    waypoints[0]?.id === 'wp_start' &&
-    waypoints[1]?.id === 'wp_end' &&
-    waypoints[0]?.matchedPortId === 'TY-001' &&
-    waypoints[1]?.matchedPortId === 'TY-002'
-  );
-}
-
 export function App() {
   const {
     config,
@@ -190,19 +180,13 @@ export function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
 
-  // '위험주의(red)' 우선 인지(Hazard-First) 기본값 + 권역(전체/통영/거제) 및 검색어 필터 (WorkspaceDraftRepository 영속 복원 지원)
-  const initialWorkspaceDraft = useMemo(() => {
-    const draft = loadWorkspaceDraft([], config.route_defaults?.default_speed_knots || 15);
-
-    // 이전 버전이 자동으로 넣었던 당동항→제승당 예시는 사용자가 설정한 항로가 아니므로
-    // 새 빈 항로로 한 번만 정리한다. 그 밖의 저장 항로는 계속 복원한다.
-    return isLegacySampleRoute(draft.routeWaypoints)
-      ? { ...draft, routeWaypoints: [] }
-      : draft;
-  },
-    // 초기 마운트 시 1회만 로컬스토리지 드래프트 복원
+  // '위험주의(red)' 우선 인지(Hazard-First) 기본값 + 권역(전체/통영/거제) 및 검색어 필터 (선속·필터 설정만 영속 복원, 초기 경로는 항상 빈 배열 [])
+  const initialWorkspaceDraft = useMemo(
+    () => loadWorkspaceDraft([], config.route_defaults?.default_speed_knots || 15),
+    // 초기 마운트 시 1회만 로컬스토리지 환경설정 복원
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []);
+    [],
+  );
 
   const [selectedColors, setSelectedColors] = useState<MarkerColor[]>(
     () => initialWorkspaceDraft.selectedColors,
@@ -368,9 +352,8 @@ export function App() {
       // ignore storage error
     }
   }, []);
-  const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>(
-    () => initialWorkspaceDraft.routeWaypoints,
-  );
+  // [초기 빈 경로 불변식] 페이지 접속 시 사용자가 아직 선택하지 않은 경로가 미리 지정되어 있지 않도록 항상 빈 배열([])로 시작
+  const [routeWaypoints, setRouteWaypoints] = useState<RouteWaypoint[]>([]);
   const [routeUndoStack, setRouteUndoStack] = useState<RouteWaypoint[][]>([]);
 
   // 출발지 또는 도착지가 아직 선택되지 않은 상태(waypoints.length < 2)에서는 지도 항구 마커를 항상 활성화
@@ -1015,10 +998,16 @@ export function App() {
 
   // 인트로 복귀 시 상단 이어하기 배너 요약 문구
   const activeWorkspaceSummary = useMemo(() => {
-    const startWp = routeWaypoints[0]?.name ?? '출발지';
-    const endWp = routeWaypoints[routeWaypoints.length - 1]?.name ?? '목적지';
     if (lastTriggeredCardId === 'navigation') {
-      return `바닷길 콕콕 · ${startWp} → ${endWp} (${Math.round(routeCalculation.totalDurationMinutes)}분)`;
+      if (routeWaypoints.length >= 2) {
+        const startWp = routeWaypoints[0].name;
+        const endWp = routeWaypoints[routeWaypoints.length - 1].name;
+        return `바닷길 콕콕 · ${startWp} → ${endWp} (약 ${Math.round(routeCalculation.totalDurationMinutes)}분)`;
+      }
+      if (routeWaypoints.length === 1) {
+        return `바닷길 콕콕 · 출발지(${routeWaypoints[0].name}) 지정 · 도착지 선택 대기`;
+      }
+      return '바닷길 콕콕 · 출발지·도착지 선택 대기 중';
     }
     return isRedOnly
       ? `꼬미의 바다수첩 · 위험주의 ${filteredFeatures.length}개소 집중 표시 중`
@@ -1137,7 +1126,11 @@ export function App() {
                                 ? '거제권 '
                                 : ''
                           }${filteredFeatures.length}/${totalDockingCount}개 접안지 표시`
-                      : `실항로 ${routeCalculation.totalDistanceKm.toFixed(1)}km · 약 ${Math.round(routeCalculation.totalDurationMinutes)}분`}
+                      : routeWaypoints.length >= 2
+                        ? `실항로 ${routeCalculation.totalDistanceKm.toFixed(1)}km · 약 ${Math.round(routeCalculation.totalDurationMinutes)}분`
+                        : routeWaypoints.length === 1
+                          ? `출발: ${routeWaypoints[0].name} · 도착지 선택 대기`
+                          : '출발지·도착지 항구를 선택해 소요시간 계산'}
                   </p>
                 </div>
                 <img

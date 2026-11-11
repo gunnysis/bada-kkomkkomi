@@ -152,7 +152,7 @@ export function sanitizeWorkspaceDraft(
 }
 
 export function loadWorkspaceDraft(
-  fallbackWaypoints: RouteWaypoint[],
+  fallbackWaypoints: RouteWaypoint[] = [],
   fallbackSpeedKnots = 15,
 ): WorkspaceDraftState {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -165,7 +165,13 @@ export function loadWorkspaceDraft(
       return sanitizeWorkspaceDraft(null, fallbackWaypoints, fallbackSpeedKnots);
     }
     const parsed = JSON.parse(rawStr);
-    return sanitizeWorkspaceDraft(parsed, fallbackWaypoints, fallbackSpeedKnots);
+    const sanitized = sanitizeWorkspaceDraft(parsed, fallbackWaypoints, fallbackSpeedKnots);
+    // [초기 빈 경로 불변식] 페이지 신규 접속 시 사용자가 아직 선택하지 않은 이전 세션의 경로가
+    // 지도에 미리 지정되어 나타나지 않도록 초기 로드 시에는 fallbackWaypoints(기본 빈 배열 [])를 사용합니다.
+    return {
+      ...sanitized,
+      routeWaypoints: fallbackWaypoints,
+    };
   } catch {
     return sanitizeWorkspaceDraft(null, fallbackWaypoints, fallbackSpeedKnots);
   }

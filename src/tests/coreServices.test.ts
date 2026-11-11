@@ -34,6 +34,7 @@ import { parseRouteFromUrl } from '../hooks/useAppRoute.ts';
 import {
   classifyGpsError,
   isValidRouteWaypointsDraft,
+  loadWorkspaceDraft,
   sanitizeWorkspaceDraft,
   WORKSPACE_DRAFT_SCHEMA_VERSION,
 } from '../services/workspaceDraftRepository.ts';
@@ -450,6 +451,10 @@ describe('4. Workspace Draft Persistence & GPS Error Classification (workspaceDr
     assert.equal(corrupted.speedKnots, 15);
     assert.deepEqual(corrupted.selectedColors, ['red']);
     assert.equal(corrupted.selectedRegion, 'all');
+
+    // Clean Empty Route Initialization Invariant: loadWorkspaceDraft([], 15) must always return empty routeWaypoints
+    const initialBootDraft = loadWorkspaceDraft([], 15);
+    assert.deepEqual(initialBootDraft.routeWaypoints, []);
   });
 
   it('classifies GPS GeolocationPositionError codes into explicit field messages without faking coordinates', () => {
