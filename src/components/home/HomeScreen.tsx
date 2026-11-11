@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import {
   ArrowRight,
   Download,
+  ShipWheel
 } from 'lucide-react';
 import type { NavPanelType } from '../../hooks/useAppRoute';
 
@@ -224,17 +225,16 @@ export function HomeScreen({
                 className="group flex min-h-36 w-full flex-1 flex-col items-center justify-center rounded-3xl px-2 py-4 text-center transition active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0d9488] sm:min-h-44 sm:py-5"
               >
                 <div className="mb-2.5 flex h-20 w-full items-center justify-center sm:h-24">
-                  <img
-                    src={`${base}images/brand/icon_settings_gear_alpha.png`}
-                    alt=""
+                  <ShipWheel
+                    className="h-14 w-14 text-[#0f766e] transition-transform group-hover:scale-105 min-[380px]:h-16 min-[380px]:w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
+                    strokeWidth={2}
                     aria-hidden="true"
-                    className="h-full w-auto object-contain transition-transform group-hover:scale-105"
                   />
                 </div>
 
                 <div className="flex w-full flex-col items-center">
                   <span className="text-[16px] leading-tight font-black tracking-tight whitespace-nowrap text-[#072a40] [text-wrap:balance] min-[380px]:text-[18px] sm:text-xl">
-                    설정
+                    꼬미의 조타실
                   </span>
                   <span className="mt-1 flex min-h-[1.25rem] items-center justify-center text-[10.5px] leading-tight font-extrabold tracking-tight whitespace-nowrap text-[#0f403c] min-[380px]:text-[11.5px] sm:text-xs">
                     환경설정 · 이용안내
