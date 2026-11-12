@@ -374,7 +374,7 @@ export function LegacyLeafletCanvas({
   fitRouteBoundsTrigger = 0,
   candidatePortId = null,
   onSelectRoutePort,
-  onUpdateWaypointPos: _onUpdateWaypointPos,
+  onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
   weatherCoords,
@@ -409,8 +409,19 @@ export function LegacyLeafletCanvas({
   }, [routeWaypoints]);
 
   const polylinePositions = useMemo(() => {
+    if (routeLegs.length > 0) {
+      const pts: [number, number][] = [];
+      for (const leg of routeLegs) {
+        if (leg.pathPositions && leg.pathPositions.length >= 2) {
+          pts.push(...leg.pathPositions);
+        } else {
+          pts.push([leg.from.lat, leg.from.lng], [leg.to.lat, leg.to.lng]);
+        }
+      }
+      if (pts.length >= 2) return pts;
+    }
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
-  }, [routeWaypoints]);
+  }, [routeLegs, routeWaypoints]);
 
   return (
     <MapContainer
@@ -598,12 +609,15 @@ export function LegacyLeafletCanvas({
                 );
               })}
 
-          {/* 구간별 출발지 ─── (경유지) ─── 도착지 직관적 연결선 (3-Tier 고대비 케이싱) */}
+          {/* 구간별 실제 해안선 우회 바닷길 곡선(Option A: leg.pathPositions, 3-Tier 고대비 케이싱) */}
           {routeLegs.map((leg, legIdx) => {
-            const pts: [number, number][] = [
-              [leg.from.lat, leg.from.lng],
-              [leg.to.lat, leg.to.lng],
-            ];
+            const pts: [number, number][] =
+              leg.pathPositions && leg.pathPositions.length >= 2
+                ? leg.pathPositions
+                : [
+                    [leg.from.lat, leg.from.lng],
+                    [leg.to.lat, leg.to.lng],
+                  ];
             const isSelected = selectedLegIndex === legIdx;
             const mainColor = isSelected
               ? '#34d399'
@@ -642,16 +656,20 @@ export function LegacyLeafletCanvas({
             );
           })}
 
-          {/* 구간 연결선 중앙 소요시간·해리 배지 */}
+          {/* 실항로 곡선 50% 중점(leg.midLat, leg.midLng) 소요시간·해리 배지 */}
           {(showLegDurationOnMap || showLegDistanceOnMap) &&
             routeLegs.map((leg, legIdx) => {
               const isSelected = selectedLegIndex === legIdx;
-              const visualMidLat = (leg.from.lat + leg.to.lat) / 2;
-              const visualMidLng = (leg.from.lng + leg.to.lng) / 2;
+              const badgeLat = Number.isFinite(leg.midLat)
+                ? leg.midLat
+                : (leg.from.lat + leg.to.lat) / 2;
+              const badgeLng = Number.isFinite(leg.midLng)
+                ? leg.midLng
+                : (leg.from.lng + leg.to.lng) / 2;
               return (
                 <Marker
                   key={`leg-badge-${leg.id}`}
-                  position={[visualMidLat, visualMidLng]}
+                  position={[badgeLat, badgeLng]}
                   icon={getRouteLegBadgeIcon(
                     leg.durationMinutes,
                     leg.distanceNm,
@@ -684,7 +702,7 @@ export function LegacyLeafletCanvas({
               key={wp.id}
               position={[wp.lat, wp.lng]}
               icon={getRouteWaypointIcon(wp.type, wp.name, idx, wp.id)}
-              draggable={false}
+              draggable={true}
               zIndexOffset={700}
               eventHandlers={{
                 click: (e) => {
@@ -700,6 +718,10 @@ export function LegacyLeafletCanvas({
                   if (wp.matchedPortId && onSelectRoutePort) {
                     onSelectRoutePort(wp.matchedPortId);
                   }
+                },
+                dragend: (e) => {
+                  const latlng = e.target.getLatLng();
+                  onUpdateWaypointPos(wp.id, latlng.lat, latlng.lng);
                 },
               }}
             />

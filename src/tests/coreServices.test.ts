@@ -47,7 +47,9 @@ import {
   summarizePhotoCollection,
 } from '../config/dataSources.ts';
 import {
+  appendSequentialRouteWaypoint,
   applyDirectPortSelection,
+  applyResolvedWaypointSelection,
   calculatePortDetourKm,
   findOptimalWaypointInsertIndex,
   findSiblingPorts,
@@ -784,6 +786,125 @@ describe('7. Registered Port Candidate Selection, Sibling Port Switcher & Post-E
     assert.equal(summary.legs.length, 2);
     assert.ok(summary.totalDistanceNm > 0);
     assert.ok(summary.totalDurationMinutes > 0);
+  });
+
+  it('supports sequential drawing (1 -> 2 -> 3), non-port sea/coastal berthing points, marker drag updates, and live GPS origin without land crossing (RC-BERTH-01..08)', () => {
+    const portStart = portById.get('KR-GN-TY-0002'); // 삼덕항
+    assert.ok(portStart);
+
+    // 1. 1st tap: Official port (삼덕항) -> keeps exact official name without "인근"
+    const tap1Resolved = resolveSmartWaypoint(
+      portStart.lat,
+      portStart.lng,
+      ports,
+      '해상 출발지',
+      500,
+    );
+    assert.equal(tap1Resolved.isCustomCoord, false);
+    assert.equal(tap1Resolved.name, '삼덕항');
+    const step1 = appendSequentialRouteWaypoint(tap1Resolved, []);
+    assert.equal(step1.error, null);
+    assert.equal(step1.addedRole, 'start');
+    assert.equal(step1.waypoints.length, 1);
+    assert.equal(step1.waypoints[0].type, 'start');
+
+    // 2. 2nd tap: Non-port offshore enforcement coordinate (불법 단속 해역, >500m from any port)
+    const tap2Resolved = resolveSmartWaypoint(
+      34.745,
+      128.415,
+      ports,
+      '해상 목적지',
+      500,
+    );
+    assert.equal(tap2Resolved.isCustomCoord, true);
+    assert.equal(tap2Resolved.wasSnappedFromLand, false);
+    const step2 = appendSequentialRouteWaypoint(tap2Resolved, step1.waypoints);
+    assert.equal(step2.error, null);
+    assert.equal(step2.addedRole, 'end');
+    assert.equal(step2.waypoints.length, 2);
+    assert.equal(step2.waypoints[0].type, 'start');
+    assert.equal(step2.waypoints[1].type, 'end');
+    assert.equal(step2.waypoints[1].isCustomCoord, true);
+
+    // 3. 3rd tap: Sequential append (1 -> 2 -> 3) promotes point 2 to 'waypoint' and sets point 3 as 'end'
+    const tap3Resolved = resolveSmartWaypoint(
+      34.715,
+      128.435,
+      ports,
+      '해상 경유지',
+      500,
+    );
+    const step3 = appendSequentialRouteWaypoint(tap3Resolved, step2.waypoints);
+    assert.equal(step3.error, null);
+    assert.equal(step3.addedRole, 'waypoint');
+    assert.equal(step3.waypoints.length, 3);
+    assert.equal(step3.waypoints[0].type, 'start');
+    assert.equal(step3.waypoints[0].name, '삼덕항');
+    assert.equal(step3.waypoints[1].type, 'waypoint');
+    assert.equal(step3.waypoints[1].lat, tap2Resolved.lat);
+    assert.equal(step3.waypoints[2].type, 'end');
+    assert.equal(step3.waypoints[2].lat, tap3Resolved.lat);
+
+    // 4. Marker drag update (handleUpdateWaypointPos equivalent) on intermediate custom waypoint
+    const draggedResolved = resolveSmartWaypoint(
+      34.738,
+      128.422,
+      ports,
+      '해상 경유지',
+      500,
+    );
+    const afterDrag = applyResolvedWaypointSelection(
+      draggedResolved,
+      step3.waypoints,
+      step3.waypoints[1].id,
+    );
+    assert.equal(afterDrag.error, null);
+    assert.equal(afterDrag.waypoints[1].lat, 34.738);
+    assert.equal(afterDrag.waypoints[1].lng, 128.422);
+    assert.equal(afterDrag.waypoints[1].type, 'waypoint');
+
+    // 5. Replacing start slot with live vessel GPS coordinate in open sea
+    const gpsResolved = resolveSmartWaypoint(
+      34.762,
+      128.398,
+      ports,
+      '내 선박 현재 위치',
+      500,
+    );
+    const afterGpsStart = applyResolvedWaypointSelection(
+      {
+        ...gpsResolved,
+        name: '내 선박 현재 위치 (34.762°N, 128.398°E)',
+        facilityLabel: '선박 실시간 GPS',
+      },
+      afterDrag.waypoints,
+      'start',
+    );
+    assert.equal(afterGpsStart.error, null);
+    assert.equal(afterGpsStart.waypoints[0].type, 'start');
+    assert.ok(afterGpsStart.waypoints[0].name.includes('내 선박 현재 위치'));
+
+    // 6. Verify sea route calculation on custom sea berthing points produces multi-vertex pathPositions with 0 land crossing
+    const customSummary = calculateRouteSummary(
+      afterGpsStart.waypoints,
+      15,
+      ports,
+      marineWaypoints,
+    );
+    assert.equal(customSummary.legs.length, 2);
+    for (const leg of customSummary.legs) {
+      assert.ok(leg.pathPositions && leg.pathPositions.length >= 2);
+      assert.ok(Number.isFinite(leg.midLat) && Number.isFinite(leg.midLng));
+      for (let i = 0; i < leg.pathPositions.length - 1; i++) {
+        const [lat1, lng1] = leg.pathPositions[i];
+        const [lat2, lng2] = leg.pathPositions[i + 1];
+        assert.equal(
+          doesSegmentCrossLand(lat1, lng1, lat2, lng2),
+          false,
+          `Custom sea route segment [${i} -> ${i + 1}] crossed land barrier`,
+        );
+      }
+    }
   });
 });
 

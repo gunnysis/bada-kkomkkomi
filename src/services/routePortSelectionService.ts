@@ -466,3 +466,271 @@ export function applyDirectPortSelection(
   const next = simulateNextWaypoints(port, 'add_waypoint', waypoints);
   return { waypoints: next, error: null, addedRole: 'waypoint' };
 }
+
+export interface ResolvedWaypointCandidate {
+  name: string;
+  lat: number;
+  lng: number;
+  matchedPortId?: string;
+  isCustomCoord?: boolean;
+  subCategory?: RouteWaypoint['subCategory'];
+  facilityLabel?: string;
+  minDepthMeters?: number;
+  tidalSensitivity?: RouteWaypoint['tidalSensitivity'];
+  maxVesselTons?: number;
+  hazards?: string[];
+}
+
+function areWaypointsEffectivelySame(
+  a: Pick<RouteWaypoint, 'lat' | 'lng' | 'matchedPortId'>,
+  b: Pick<RouteWaypoint, 'lat' | 'lng' | 'matchedPortId'>,
+): boolean {
+  if (a.matchedPortId && b.matchedPortId) {
+    return a.matchedPortId === b.matchedPortId;
+  }
+  if (a.matchedPortId || b.matchedPortId) {
+    return false;
+  }
+  return calculateHaversineKm(a.lat, a.lng, b.lat, b.lng) * 1000 < 25;
+}
+
+function createWaypointFromResolvedCandidate(
+  resolved: ResolvedWaypointCandidate,
+  type: RouteWaypoint['type'],
+  existingId?: string,
+): RouteWaypoint {
+  return {
+    id:
+      existingId ??
+      `wp_${type}_${resolved.matchedPortId ?? 'custom'}_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 6)}`,
+    name: resolved.name,
+    lat: resolved.lat,
+    lng: resolved.lng,
+    type,
+    matchedPortId: resolved.matchedPortId,
+    isCustomCoord: resolved.isCustomCoord ?? !resolved.matchedPortId,
+    subCategory: resolved.subCategory,
+    facilityLabel:
+      resolved.facilityLabel ??
+      (resolved.isCustomCoord || !resolved.matchedPortId
+        ? '해상·해안 정박지'
+        : undefined),
+    minDepthMeters: resolved.minDepthMeters,
+    tidalSensitivity: resolved.tidalSensitivity,
+    maxVesselTons: resolved.maxVesselTons,
+    hazards: resolved.hazards ? [...resolved.hazards] : undefined,
+  };
+}
+
+function validateSimulatedCustomWaypoints(
+  simulated: readonly RouteWaypoint[],
+): string | null {
+  if (simulated.length === 2 && areWaypointsEffectivelySame(simulated[0], simulated[1])) {
+    return '출발지와 도착지가 같습니다. 왕복 운항은 경유지를 1곳 이상 추가한 뒤 설정하세요.';
+  }
+  for (let i = 0; i < simulated.length - 1; i += 1) {
+    if (areWaypointsEffectivelySame(simulated[i], simulated[i + 1])) {
+      return '직전(또는 다음) 지점과 동일한 위치는 연속해서 지정할 수 없습니다.';
+    }
+  }
+  return null;
+}
+
+/**
+ * [RC-BERTH-01 & RC-BERTH-04 해결]
+ * 비교 프로젝트(바다꼼꼬미_수정본)의 직관적 순차 연결 UX와 378개 해안선 안전 스냅을 결합한 순차 추가 함수:
+ * - 1번째 탭: 출발지('start')
+ * - 2번째 탭: 도착지('end')
+ * - 3번째+ 탭: 직전 도착지를 경유지('waypoint')로 자동 승격하고 새 지점을 도착지('end')로 순차 연장 (1 ➔ 2 ➔ 3)
+ * - 이미 중간 경유지(1 .. length-2)로 등록된 지점을 다시 탭하면 즉시 토글 해제('removed_waypoint')
+ */
+export function appendSequentialRouteWaypoint(
+  resolved: ResolvedWaypointCandidate,
+  waypoints: readonly RouteWaypoint[],
+): {
+  waypoints: RouteWaypoint[];
+  error: string | null;
+  addedRole: 'start' | 'end' | 'waypoint' | 'removed_waypoint';
+} {
+  // 1. 이미 중간 경유지(wp.type === 'waypoint')로 등록된 지점을 재클릭한 경우 즉시 토글 해제
+  if (waypoints.length >= 3) {
+    const existingIntermediateIdx = waypoints.findIndex((wp, idx) => {
+      if (idx === 0 || idx === waypoints.length - 1) return false;
+      if (resolved.matchedPortId && wp.matchedPortId) {
+        return resolved.matchedPortId === wp.matchedPortId;
+      }
+      return calculateHaversineKm(resolved.lat, resolved.lng, wp.lat, wp.lng) * 1000 < 60;
+    });
+    if (existingIntermediateIdx !== -1) {
+      const filtered = waypoints.filter((_, idx) => idx !== existingIntermediateIdx);
+      const sanitized = sanitizeCommittedRouteWaypoints(filtered).waypoints;
+      return {
+        waypoints: sanitized,
+        error: null,
+        addedRole: 'removed_waypoint',
+      };
+    }
+  }
+
+  // 2. 직전 마지막 지점과 연속 중복 차단
+  const prev = waypoints[waypoints.length - 1];
+  if (prev && areWaypointsEffectivelySame(prev, resolved)) {
+    return {
+      waypoints: [...waypoints],
+      error:
+        waypoints.length === 1
+          ? '출발지와 다른 도착지를 선택해 주세요.'
+          : '직전 지점과 동일한 위치입니다. 다른 지점을 선택해 주세요.',
+      addedRole: waypoints.length === 1 ? 'end' : 'waypoint',
+    };
+  }
+
+  const nextRole: RouteWaypoint['type'] = waypoints.length === 0 ? 'start' : 'end';
+  const newWp = createWaypointFromResolvedCandidate(
+    resolved,
+    nextRole,
+    waypoints.length === 0 ? 'wp_start' : undefined,
+  );
+
+  const next = sanitizeCommittedRouteWaypoints([...waypoints, newWp]).waypoints;
+  return {
+    waypoints: next,
+    error: null,
+    addedRole:
+      next.length === 1 ? 'start' : waypoints.length === 1 ? 'end' : 'waypoint',
+  };
+}
+
+/**
+ * [RC-BERTH-02 / RC-BERTH-03 / RC-BERTH-07 해결]
+ * 비항구 해상·해안 좌표, 선박 실시간 GPS 좌표, 또는 등록 항포구(ResolvedWaypointCandidate)를
+ * 특정 슬롯('start' | 'end' | 'add_waypoint' | 'new_waypoint' | 'append_sequential' | waypoint.id)에 반영합니다.
+ */
+export function applyResolvedWaypointSelection(
+  resolved: ResolvedWaypointCandidate,
+  waypoints: readonly RouteWaypoint[],
+  targetSlot?:
+    | 'start'
+    | 'end'
+    | 'add_waypoint'
+    | 'new_waypoint'
+    | 'append_sequential'
+    | string
+    | null,
+): {
+  waypoints: RouteWaypoint[];
+  error: string | null;
+  addedRole: 'start' | 'end' | 'waypoint' | 'removed_waypoint';
+} {
+  if (!targetSlot || targetSlot === 'append_sequential') {
+    return appendSequentialRouteWaypoint(resolved, waypoints);
+  }
+
+  // 1. 특정 waypointId 지정 교체 (마커 드래그 드롭 또는 슬롯별 변경)
+  if (
+    targetSlot !== 'start' &&
+    targetSlot !== 'end' &&
+    targetSlot !== 'add_waypoint' &&
+    targetSlot !== 'new_waypoint'
+  ) {
+    const existingIdx = waypoints.findIndex((wp) => wp.id === targetSlot);
+    if (existingIdx === 0) {
+      return applyResolvedWaypointSelection(resolved, waypoints, 'start');
+    }
+    if (existingIdx === waypoints.length - 1 && waypoints.length >= 2) {
+      return applyResolvedWaypointSelection(resolved, waypoints, 'end');
+    }
+    if (existingIdx > 0) {
+      const next = [...waypoints];
+      next[existingIdx] = createWaypointFromResolvedCandidate(
+        resolved,
+        next[existingIdx].type,
+        next[existingIdx].id,
+      );
+      const normalized = normalizeWaypointTypes(next);
+      const error = validateSimulatedCustomWaypoints(normalized);
+      if (error) {
+        return { waypoints: [...waypoints], error, addedRole: 'waypoint' };
+      }
+      return { waypoints: normalized, error: null, addedRole: 'waypoint' };
+    }
+  }
+
+  // 2. 출발지 지정 또는 교체
+  if (targetSlot === 'start') {
+    if (waypoints.length === 0) {
+      return {
+        waypoints: [createWaypointFromResolvedCandidate(resolved, 'start', 'wp_start')],
+        error: null,
+        addedRole: 'start',
+      };
+    }
+    const next = normalizeWaypointTypes([
+      createWaypointFromResolvedCandidate(resolved, 'start', waypoints[0].id),
+      ...waypoints.slice(1),
+    ]);
+    const error = validateSimulatedCustomWaypoints(next);
+    if (error) {
+      return { waypoints: [...waypoints], error, addedRole: 'start' };
+    }
+    return { waypoints: next, error: null, addedRole: 'start' };
+  }
+
+  // 3. 도착지 지정 또는 교체
+  if (targetSlot === 'end') {
+    if (waypoints.length === 0) {
+      return {
+        waypoints: [createWaypointFromResolvedCandidate(resolved, 'start', 'wp_start')],
+        error: null,
+        addedRole: 'start',
+      };
+    }
+    if (waypoints.length === 1) {
+      const next = normalizeWaypointTypes([
+        waypoints[0],
+        createWaypointFromResolvedCandidate(resolved, 'end', 'wp_end'),
+      ]);
+      const error = validateSimulatedCustomWaypoints(next);
+      if (error) {
+        return { waypoints: [...waypoints], error, addedRole: 'end' };
+      }
+      return { waypoints: next, error: null, addedRole: 'end' };
+    }
+    const next = normalizeWaypointTypes([
+      ...waypoints.slice(0, -1),
+      createWaypointFromResolvedCandidate(
+        resolved,
+        'end',
+        waypoints[waypoints.length - 1].id,
+      ),
+    ]);
+    const error = validateSimulatedCustomWaypoints(next);
+    if (error) {
+      return { waypoints: [...waypoints], error, addedRole: 'end' };
+    }
+    return { waypoints: next, error: null, addedRole: 'end' };
+  }
+
+  // 4. 경유지 추가 ('add_waypoint' | 'new_waypoint')
+  if (waypoints.length < 2) {
+    return appendSequentialRouteWaypoint(resolved, waypoints);
+  }
+  const { insertIndex } = findOptimalWaypointInsertIndex(
+    { lat: resolved.lat, lng: resolved.lng },
+    waypoints,
+  );
+  const next = [...waypoints];
+  next.splice(
+    insertIndex,
+    0,
+    createWaypointFromResolvedCandidate(resolved, 'waypoint'),
+  );
+  const normalized = normalizeWaypointTypes(next);
+  const error = validateSimulatedCustomWaypoints(normalized);
+  if (error) {
+    return { waypoints: [...waypoints], error, addedRole: 'waypoint' };
+  }
+  return { waypoints: normalized, error: null, addedRole: 'waypoint' };
+}

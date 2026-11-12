@@ -7,6 +7,13 @@ export type RouteSelectionMode =
   | 'replace_end'
   | 'replace_waypoint';
 
+export type RouteMapTapMode =
+  | 'draw'
+  | 'pan_only'
+  | 'add_waypoint'
+  | 'set_start'
+  | 'set_end';
+
 export interface RouteWaypoint {
   id: string;
   name: string;

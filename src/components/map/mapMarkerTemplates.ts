@@ -304,7 +304,7 @@ export function buildRouteWaypointSpec(
       : '';
 
   const html = `
-    <div class="bada-draggable-overlay" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; user-select: none; -webkit-user-select: none;">
+    <div class="bada-draggable-overlay" title="드래그하여 정박지 위치 미세 조정" style="display: flex; flex-direction: column; align-items: center; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;">
       <div style="
         display: inline-flex;
         align-items: center;

@@ -204,9 +204,11 @@ assert(
   'WeatherThresholdSettings.tsx: source accordion titles and offline matrix labels must wrap cleanly ([word-break:keep-all]) instead of truncating with ellipsis',
 );
 
-// 바닷길 시간계산기 초기 빈 경로([]) 불변식, 등록 항구 즉시 선택(applyDirectPortSelection) 및 300변침점·378실측해안선 표기 정합 확인
+// 바닷길 시간계산기 초기 빈 경로([]) 불변식, 순차·비항구·항구 정박지 선택(appendSequentialRouteWaypoint / applyResolvedWaypointSelection / applyDirectPortSelection), 실항로 곡선(leg.pathPositions) 렌더링 및 300변침점·378실측해안선 표기 정합 확인
 const appTsx = fs.readFileSync('src/App.tsx', 'utf8');
 const routeCalcTsx = fs.readFileSync('src/components/navigation/RouteTimeCalculator.tsx', 'utf8');
+const kakaoCanvasTsx = fs.readFileSync('src/components/map/KakaoMapCanvas.tsx', 'utf8');
+const leafletCanvasTsx = fs.readFileSync('src/components/map/LegacyLeafletCanvas.tsx', 'utf8');
 assert(
   appTsx.includes('useState<RouteWaypoint[]>([])') &&
     !appTsx.includes('initialWorkspaceDraft.routeWaypoints') &&
@@ -214,8 +216,15 @@ assert(
   'src/App.tsx: routeWaypoints must always initialize as an empty array ([]) and never restore a pre-selected route from localStorage or static constants on page load',
 );
 assert(
-  appTsx.includes('applyDirectPortSelection'),
-  'src/App.tsx: route port selection must use applyDirectPortSelection to prevent arbitrary inland/sea waypoint creation',
+  appTsx.includes('applyDirectPortSelection') &&
+    appTsx.includes('appendSequentialRouteWaypoint') &&
+    appTsx.includes('applyResolvedWaypointSelection'),
+  'src/App.tsx: route selection must wire applyDirectPortSelection, appendSequentialRouteWaypoint, and applyResolvedWaypointSelection',
+);
+assert(
+  kakaoCanvasTsx.includes('leg.pathPositions') &&
+    leafletCanvasTsx.includes('leg.pathPositions'),
+  'KakaoMapCanvas.tsx and LegacyLeafletCanvas.tsx must render multi-vertex sea-route detour curves (leg.pathPositions, Option A)',
 );
 assert(
   routeCalcTsx.includes('300변침점·378실측해안선 우회') &&
@@ -331,6 +340,7 @@ const markdownDocsToVerify = [
   'DEPLOY_GUIDE.md',
   'docs/ARCHITECTURE_AND_DESIGN.md',
   'docs/DATA_AND_TECH_SOURCES.md',
+  'docs/ROUTE_BERTHING_UX_ANALYSIS_REPORT.md',
   'docs/designs/SITEMAP.md',
 ];
 const mdLinkRegex = /\[[^\]]+\]\(([^)]+)\)/g;

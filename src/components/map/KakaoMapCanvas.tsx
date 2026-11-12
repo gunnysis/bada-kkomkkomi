@@ -160,12 +160,18 @@ function attachDraggableToCustomOverlay(
   el: HTMLElement,
   onDragEnd: (lat: number, lng: number) => void,
   onRemoveWaypoint?: (id: string) => void,
+  onClickWithoutDrag?: () => void,
 ): void {
   let isPointerDown = false;
   let hasMoved = false;
+  let suppressNextClick = false;
   let startX = 0;
   let startY = 0;
   let activePointerId: number | null = null;
+  let initialPosition: KakaoLatLng | null = null;
+
+  el.style.touchAction = 'none';
+  el.style.cursor = 'grab';
 
   const stopBubble = (e: Event) => {
     e.stopPropagation();
@@ -187,13 +193,21 @@ function attachDraggableToCustomOverlay(
       if (wpId) {
         onRemoveWaypoint(wpId);
       }
+      return;
+    }
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
+    if (onClickWithoutDrag) {
+      onClickWithoutDrag();
     }
   });
 
   el.addEventListener('pointerdown', (e: PointerEvent) => {
     stopBubble(e);
     const target = e.target as HTMLElement | null;
-    if (target?.closest('button, input, select, textarea, a')) {
+    if (target?.closest('button, input, select, textarea, a, [data-remove-waypoint-id]')) {
       return;
     }
     if (e.button !== 0 && e.pointerType === 'mouse') {
@@ -201,9 +215,11 @@ function attachDraggableToCustomOverlay(
     }
     isPointerDown = true;
     hasMoved = false;
+    suppressNextClick = false;
     startX = e.clientX;
     startY = e.clientY;
     activePointerId = e.pointerId;
+    initialPosition = overlay.getPosition();
     map.setDraggable(false);
     try {
       el.setPointerCapture(e.pointerId);
@@ -220,6 +236,7 @@ function attachDraggableToCustomOverlay(
       const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
       if (dist <= 4) return;
       hasMoved = true;
+      suppressNextClick = true;
       el.style.cursor = 'grabbing';
     }
 
@@ -239,6 +256,7 @@ function attachDraggableToCustomOverlay(
     if (!isPointerDown || e.pointerId !== activePointerId) return;
     stopBubble(e);
     const didMove = hasMoved;
+    const isCancelled = e.type === 'pointercancel';
     isPointerDown = false;
     hasMoved = false;
     activePointerId = null;
@@ -253,6 +271,15 @@ function attachDraggableToCustomOverlay(
       // ignore
     }
 
+    if (isCancelled) {
+      if (initialPosition) {
+        overlay.setPosition(initialPosition);
+      }
+      initialPosition = null;
+      return;
+    }
+
+    initialPosition = null;
     if (didMove) {
       const finalPos = overlay.getPosition();
       onDragEnd(finalPos.getLat(), finalPos.getLng());
@@ -405,7 +432,7 @@ export function KakaoMapCanvas({
   fitRouteBoundsTrigger = 0,
   candidatePortId = null,
   onSelectRoutePort,
-  onUpdateWaypointPos: _onUpdateWaypointPos,
+  onUpdateWaypointPos,
   onRemoveWaypoint,
   onMapClickForRoute,
   weatherCoords,
@@ -945,10 +972,21 @@ export function KakaoMapCanvas({
     onMapClickForRoute,
   ]);
 
-  // 바닷길 콕콕 출발지 → (경유지) → 도착지 직관적 연결선 좌표
+  // 바닷길 콕콕 출발지 → (경유지) → 도착지 실항로 우회 곡선(Option A: leg.pathPositions) 전체 경계 좌표
   const polylinePositions = useMemo(() => {
+    if (routeLegs.length > 0) {
+      const pts: [number, number][] = [];
+      for (const leg of routeLegs) {
+        if (leg.pathPositions && leg.pathPositions.length >= 2) {
+          pts.push(...leg.pathPositions);
+        } else {
+          pts.push([leg.from.lat, leg.from.lng], [leg.to.lat, leg.to.lng]);
+        }
+      }
+      if (pts.length >= 2) return pts;
+    }
     return routeWaypoints.map((wp) => [wp.lat, wp.lng] as [number, number]);
-  }, [routeWaypoints]);
+  }, [routeLegs, routeWaypoints]);
 
   // 8-B. [전체항로 보기 (Fit Bounds)] 초기 바닷길 시간계산 진입 시 1회 자동 프레이밍 + 수동 트리거 반영 (하단 계산기 패널 여백 320px 확보)
   const lastFittedTriggerRef = useRef<number>(-1);
@@ -1008,13 +1046,19 @@ export function KakaoMapCanvas({
     const createdLegBadges: KakaoCustomOverlay[] = [];
     const createdWaypoints: KakaoCustomOverlay[] = [];
 
-    // 9-A. 구간(Leg)별 출발지 ─── (경유지) ─── 도착지 직관적 연결선 (3-Tier 고대비 케이싱)
+    // 9-A. 구간(Leg)별 실제 해안선 우회 바닷길 곡선(Option A: leg.pathPositions, 3-Tier 고대비 케이싱)
     routeLegs.forEach((leg, legIdx) => {
       const isSelected = selectedLegIndex === legIdx;
-      const directPath = [
-        new kakaoMaps.LatLng(leg.from.lat, leg.from.lng),
-        new kakaoMaps.LatLng(leg.to.lat, leg.to.lng),
-      ];
+      const rawCoords =
+        leg.pathPositions && leg.pathPositions.length >= 2
+          ? leg.pathPositions
+          : ([
+              [leg.from.lat, leg.from.lng],
+              [leg.to.lat, leg.to.lng],
+            ] as [number, number][]);
+      const seaRoutePath = rawCoords.map(
+        ([lat, lng]) => new kakaoMaps.LatLng(lat, lng),
+      );
       const mainColor = isSelected
         ? '#34d399'
         : leg.safetyLevel === 'danger'
@@ -1025,7 +1069,7 @@ export function KakaoMapCanvas({
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
-          path: directPath,
+          path: seaRoutePath,
           strokeWeight: isSelected ? 11 : 8.5,
           strokeColor: '#020617',
           strokeOpacity: 0.88,
@@ -1038,7 +1082,7 @@ export function KakaoMapCanvas({
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
-          path: directPath,
+          path: seaRoutePath,
           strokeWeight: isSelected ? 6.5 : 4.8,
           strokeColor: mainColor,
           strokeOpacity: 0.96,
@@ -1051,7 +1095,7 @@ export function KakaoMapCanvas({
       createdLines.push(
         new kakaoMaps.Polyline({
           map,
-          path: directPath,
+          path: seaRoutePath,
           strokeWeight: isSelected ? 2.2 : 1.6,
           strokeColor: isSelected ? '#ecfdf5' : '#e0f2fe',
           strokeOpacity: 0.9,
@@ -1061,12 +1105,16 @@ export function KakaoMapCanvas({
       );
     });
 
-    // 9-B. 구간 연결선 중앙 소요시간·거리 배지 (내부 계산은 실항로 정밀 시간/거리 기준)
+    // 9-B. 실항로 곡선 50% 누적 거리 중점(leg.midLat, leg.midLng)에 소요시간·거리 배지 배치 (섬·내륙 겹침 원천 차단)
     if (showLegDurationOnMap || showLegDistanceOnMap) {
       routeLegs.forEach((leg, legIdx) => {
         const isSelected = selectedLegIndex === legIdx;
-        const visualMidLat = (leg.from.lat + leg.to.lat) / 2;
-        const visualMidLng = (leg.from.lng + leg.to.lng) / 2;
+        const badgeLat = Number.isFinite(leg.midLat)
+          ? leg.midLat
+          : (leg.from.lat + leg.to.lat) / 2;
+        const badgeLng = Number.isFinite(leg.midLng)
+          ? leg.midLng
+          : (leg.from.lng + leg.to.lng) / 2;
         const spec = buildRouteLegBadgeSpec(
           leg.durationMinutes,
           leg.distanceNm,
@@ -1089,7 +1137,7 @@ export function KakaoMapCanvas({
         );
         const badgeOverlay = new kakaoMaps.CustomOverlay({
           map,
-          position: new kakaoMaps.LatLng(visualMidLat, visualMidLng),
+          position: new kakaoMaps.LatLng(badgeLat, badgeLng),
           content: el,
           xAnchor: spec.xAnchorRatio,
           yAnchor: spec.yAnchorRatio,
@@ -1100,36 +1148,10 @@ export function KakaoMapCanvas({
       });
     }
 
-    // 9-C. 출발·경유·도착지 확정 마커 ([✕] 즉시 취소 및 왕복 도착지 선택 지원)
+    // 9-C. 출발·경유·도착지 마커 (60fps 포인터 캡처 드래그 이동 + [✕] 즉시 취소 + 왕복 도착지 선택 지원)
     routeWaypoints.forEach((wp, idx) => {
       const spec = buildRouteWaypointSpec(wp.type, wp.name, idx, wp.id);
       const el = createOverlayElement(kakaoMaps, spec);
-      const stopBubble = (ev: Event) => {
-        ev.stopPropagation();
-        try {
-          kakaoMaps.event.preventMap();
-        } catch {
-          // ignore
-        }
-      };
-      el.addEventListener('pointerdown', stopBubble);
-      el.addEventListener('mousedown', stopBubble);
-      el.addEventListener('touchstart', stopBubble, { passive: true });
-      el.addEventListener('click', (ev: MouseEvent) => {
-        stopBubble(ev);
-        const target = ev.target as HTMLElement | null;
-        const removeBtn = target?.closest('[data-remove-waypoint-id]') as HTMLElement | null;
-        if (removeBtn && onRemoveWaypoint) {
-          const wpId = removeBtn.getAttribute('data-remove-waypoint-id');
-          if (wpId) {
-            onRemoveWaypoint(wpId);
-            return;
-          }
-        }
-        if (wp.matchedPortId && onSelectRoutePort) {
-          onSelectRoutePort(wp.matchedPortId);
-        }
-      });
 
       const wpOverlay = new kakaoMaps.CustomOverlay({
         map,
@@ -1140,6 +1162,23 @@ export function KakaoMapCanvas({
         zIndex: 700 + idx,
         clickable: true,
       });
+
+      attachDraggableToCustomOverlay(
+        kakaoMaps,
+        map,
+        container,
+        wpOverlay,
+        el,
+        (nextLat, nextLng) => {
+          onUpdateWaypointPos(wp.id, nextLat, nextLng);
+        },
+        onRemoveWaypoint,
+        () => {
+          if (wp.matchedPortId && onSelectRoutePort) {
+            onSelectRoutePort(wp.matchedPortId);
+          }
+        },
+      );
 
       createdWaypoints.push(wpOverlay);
     });
@@ -1164,6 +1203,7 @@ export function KakaoMapCanvas({
     showLegDurationOnMap,
     showLegDistanceOnMap,
     onSelectRoutePort,
+    onUpdateWaypointPos,
     onRemoveWaypoint,
   ]);
 

@@ -11,6 +11,7 @@
 | **루트 블루프린트 (`Hay`)** | [`AGENTS.md`](../../AGENTS.md) | 전역 불변식(`Global Invariants`), 전역 부수효과(`Global Side Effects`), `.dev/docs` 아티팩트 경로 격리 및 통합 검증 명령 정의 |
 | **Elephant 컨텍스트 스킬** | [`_agents/skills/bada-kkomkkomi-elephant/SKILL.md`](../../_agents/skills/bada-kkomkkomi-elephant/SKILL.md) | EGM 설계 세션 시 프로젝트 핵심 맥락 및 Phase Write Boundary 로드 |
 | **마스터 아키텍처 & 구현 설계서** | [`docs/ARCHITECTURE_AND_DESIGN.md`](../ARCHITECTURE_AND_DESIGN.md) | **1장(현상태 분석·팩트체크·근본 원인)** + **2장(아키텍처·데이터 흐름·UI/UX·항구 선택 상태 머신·Target Scope & File Boundary)** + **3장(사용자 Action Items)** 통합 정본 |
+| **정박지·경유지 UX 및 실항로 곡선 구현 명세서** | [`docs/ROUTE_BERTHING_UX_ANALYSIS_REPORT.md`](../ROUTE_BERTHING_UX_ANALYSIS_REPORT.md) | 비항구 해상·해안 정박지 클릭, 마커 드래그 미세 조정, 선박 GPS 즉시 설정, 찍은 순서대로 자동 연결(`1 ➔ 2 ➔ 3`), `[도착 완료]` 자동 잠금, 옵션 A 우회 곡선(`leg.pathPositions`) 통합 구현 정본 |
 | **데이터·API·기술 출처 명세서** | [`docs/DATA_AND_TECH_SOURCES.md`](../DATA_AND_TECH_SOURCES.md) | 6대 데이터·API·알고리즘 출처 및 해상 음영지역(오프라인) 동작 보장 매트릭스 정본 |
 | **운영자 무상 배포 매뉴얼** | [`DEPLOY_GUIDE.md`](../../DEPLOY_GUIDE.md) | 비개발자 운영자용 정적 데이터(`ports.json`, `docking_points.geojson`, 사진) 관리 및 자동 배포 가이드 |
 
@@ -43,8 +44,8 @@
 - `HomeScreen.tsx`의 4대 포스터 카드는 동일한 아이콘 슬롯 높이를 유지하며, 카드 내부 다중 단축 버튼 바를 두지 않습니다(Memo 2).
 - `MapView.tsx`는 자체적으로 GeoJSON을 중복 fetch하지 않고 `useAppConfig.ts`가 공급하는 `layers` 및 `geoJsonLayersData` 단일 SSOT만 렌더링합니다.
 - `buildNavPortPinSpec()`의 136개 항구 마커와 `buildDockingMarkerSpec()`의 55개 접안지 마커는 모두 `.bada-marker-hit-target`(`52×52px`) 터치 영역을 보장합니다.
-- `KakaoMapCanvas.tsx`와 `LegacyLeafletCanvas.tsx`는 항구/경로 마커 선택 시 `onSelectRoutePort(portId)`를 호출하여 즉시 출발지(1번째 클릭)·도착지(2번째 클릭)·경유지(3번째+ 클릭 시 최적 구간 자동 삽입 및 재클릭 시 토글 해제)를 반영하며, 지도 위에는 복잡한 다중 변침점 수로선 대신 **어디서 어디로 가는지 한눈에 보이는 직관적 연결선(`출발 ─── (경유) ─── 도착`)**과 **중앙 소요시간·거리 배지(`약 N분 · X.X NM`)**만 깔끔하게 표시합니다.
-- `RouteTimeCalculator.tsx`는 `sheetStage === 'summary'` 및 빈 경로 상태에서도 불필요한 설명 배너나 2단계 확인 카드 없이 **출발지 `[항구선택]` / 도착지 `[항구선택]`** 직관적 슬롯과 **인라인 경유지 칩(`[경유1: 항구명 | ✕]`)**을 즉시 노출하며, `App.tsx`는 페이지 신규 접속 시 `localStorage`의 이전 경로를 자동 복원하지 않고 항상 빈 경로(`routeWaypoints = []`)로 초기화합니다.
+- `KakaoMapCanvas.tsx`와 `LegacyLeafletCanvas.tsx`는 항로 작성(`isRouteDrawing`) 중 지도(바다·해안·항구 마커) 클릭 시 찍은 순서대로 순차 연결(`출발 ➔ 도착 ➔ 경유+도착 연장`)하고, 모든 정박지 마커(`routeWaypoints`)의 60fps 드래그 미세 조정(`onUpdateWaypointPos`)을 지원하며, 지도 위에는 378개 해안선 폴리곤을 우회하는 **실제 바닷길 곡선(`leg.pathPositions`, 옵션 A)**과 **실항로 50% 누적 거리 중점 배지(`leg.midLat`, `leg.midLng`)**를 렌더링합니다.
+- `RouteTimeCalculator.tsx`는 `[항로 그리기 / 이동만]` 모드 스위치와 `[✅ 도착 완료 / 🔄 새 항로]` 원터치 잠금 제어를 제공하며, `PortSelectModal.tsx`는 `[📍 내 선박 현재 GPS 위치로 설정 — 즉시 적용]` 버튼과 `[거리순 / 항로주변 정렬]`을 함께 제공합니다. `App.tsx`는 페이지 신규 접속 시 `localStorage`의 이전 경로를 자동 복원하지 않고 항상 빈 경로(`routeWaypoints = []`)로 초기화합니다.
 
 ### Side Effects
 - 브라우저 History API(`window.history.pushState` / `back`), 클립보드 복사(`navigator.clipboard.writeText`), 이메일 클라이언트 호출(`mailto:`), Geolocation API(`navigator.geolocation`), Kakao Maps SDK DOM 마운트 및 Leaflet Canvas 렌더링을 수행합니다.
@@ -61,7 +62,7 @@ UI 프레임워크에 의존하지 않는 순수 비즈니스 로직 및 외부 
 
 ### Interface
 - [`src/services/routeGeoService.ts`](../../src/services/routeGeoService.ts): `calculateRouteSummary()`, `resolveSmartWaypoint()`, `doesSegmentCrossLand()`, `isPointInAnyLandBarrier()`, `getNearbyMarinePlaceLabel()`, `extractChosung()`, `matchesKoreanSearch()`
-- [`src/services/routePortSelectionService.ts`](../../src/services/routePortSelectionService.ts): `applyDirectPortSelection()`, `findOptimalWaypointInsertIndex()`, `calculatePortDetourKm()`, `findSiblingPorts()`, `validateCandidatePort()`, `sanitizeCommittedRouteWaypoints()`, `findNearestRegisteredPort()`
+- [`src/services/routePortSelectionService.ts`](../../src/services/routePortSelectionService.ts): `appendSequentialRouteWaypoint()`, `applyResolvedWaypointSelection()`, `applyDirectPortSelection()`, `findOptimalWaypointInsertIndex()`, `calculatePortDetourKm()`, `findSiblingPorts()`, `validateCandidatePort()`, `sanitizeCommittedRouteWaypoints()`, `findNearestRegisteredPort()`
 - [`src/services/routeLegLabelService.ts`](../../src/services/routeLegLabelService.ts): `getRouteLegLabelParts()`
 - [`src/services/spatialFileParser.ts`](../../src/services/spatialFileParser.ts): `parseSpatialFiles()`, `detectCrsFromMetadata()`
 - [`src/services/layerStorageService.ts`](../../src/services/layerStorageService.ts): `loadOperationalLayerState()`, `saveOperationalLayerState()`, `listOperationalSnapshots()`, `restoreOperationalSnapshot()`, `hasLegacyDummyFeatures()`

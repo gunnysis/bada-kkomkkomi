@@ -12,9 +12,11 @@ import {
   Eye,
   EyeOff,
   Gauge,
+  Hand,
   Info,
   MapPin,
   Maximize2,
+  MousePointerClick,
   Plus,
   RotateCcw,
   Trash2,
@@ -25,11 +27,12 @@ import {
 } from 'lucide-react';
 import type {
   RouteCalculationResult,
+  RouteMapTapMode,
   RouteWaypoint,
 } from '../../types/route';
 import type { SourceCategoryKey } from '../../config/dataSources';
 
-export type RouteMapTapMode = 'pan_only' | 'add_waypoint' | 'set_start' | 'set_end';
+export type { RouteMapTapMode } from '../../types/route';
 export type RouteSheetStage = 'summary' | 'compact' | 'full';
 
 interface RouteTimeCalculatorProps {
@@ -46,6 +49,11 @@ interface RouteTimeCalculatorProps {
   onReverseRoute: () => void;
   onChangeSpeed: (speed: number) => void;
   onResetRoute: () => void;
+  isRouteDrawing?: boolean;
+  onCompleteRoute?: () => void;
+  onStartNewRoute?: () => void;
+  routeMapTapMode?: RouteMapTapMode;
+  onChangeRouteMapTapMode?: (mode: RouteMapTapMode) => void;
   onFlyToWaypoint: (lat: number, lng: number) => void;
   onCheckWeatherAtPoint?: (lat: number, lng: number, label: string) => void;
   showPortMarkersOnMap?: boolean;
@@ -82,6 +90,11 @@ export function RouteTimeCalculator({
   onReverseRoute,
   onChangeSpeed,
   onResetRoute,
+  isRouteDrawing = true,
+  onCompleteRoute,
+  onStartNewRoute,
+  routeMapTapMode = 'draw',
+  onChangeRouteMapTapMode,
   onFlyToWaypoint,
   onCheckWeatherAtPoint,
   showPortMarkersOnMap = true,
@@ -212,6 +225,39 @@ export function RouteTimeCalculator({
             <span className="shrink-0 rounded-md border border-amber-500/80 bg-amber-100 px-1.5 py-0.5 font-mono text-[10px] font-black whitespace-nowrap tabular-nums text-amber-900">
               {speedKnots}kn
             </span>
+            {onChangeRouteMapTapMode && (
+              <button
+                type="button"
+                onClick={() =>
+                  onChangeRouteMapTapMode(
+                    routeMapTapMode === 'pan_only' ? 'draw' : 'pan_only',
+                  )
+                }
+                aria-pressed={routeMapTapMode !== 'pan_only'}
+                title={
+                  routeMapTapMode === 'pan_only'
+                    ? '현재: 이동만 모드 (탭하면 항로 그리기 모드로 전환)'
+                    : '현재: 항로 그리기 모드 (탭하면 이동만 모드로 잠금)'
+                }
+                className={`inline-flex h-6 shrink-0 items-center gap-1 rounded-lg border px-1.5 text-[10px] font-black whitespace-nowrap transition active:scale-95 ${
+                  routeMapTapMode === 'pan_only'
+                    ? 'border-slate-400 bg-slate-100 text-[#003360] hover:bg-slate-200'
+                    : 'border-[#00846c] bg-emerald-50 text-[#00846c] hover:bg-emerald-100'
+                }`}
+              >
+                {routeMapTapMode === 'pan_only' ? (
+                  <>
+                    <Hand className="h-2.5 w-2.5 shrink-0" />
+                    <span>이동만</span>
+                  </>
+                ) : (
+                  <>
+                    <MousePointerClick className="h-2.5 w-2.5 shrink-0" />
+                    <span>항로 그리기</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
@@ -356,52 +402,71 @@ export function RouteTimeCalculator({
 
         {/* Row 2: 출발지 / 도착지 직관적 선택 슬롯 + 소요시간·거리 요약 */}
         {!hasCalculatedRoute ? (
-          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              onClick={() =>
-                onOpenPortSelector(startWaypoint?.id ?? 'start', '출발지')
-              }
-              className={`flex min-h-11 items-center justify-between gap-1.5 rounded-2xl border-2 px-3 py-1.5 text-left transition active:scale-[0.99] ${
-                startWaypoint
-                  ? 'border-[#00846c] bg-emerald-50/95 text-[#003360]'
-                  : 'border-[#00846c] bg-[#00846c] text-white shadow-xs hover:bg-[#006e5a]'
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <span
-                  className={`block text-[10px] font-black ${
-                    startWaypoint ? 'text-[#00846c]' : 'text-emerald-100'
-                  }`}
-                >
-                  출발지
-                </span>
-                <span className="block truncate text-xs font-extrabold sm:text-sm">
-                  {startWaypoint ? startWaypoint.name : '항구선택'}
-                </span>
-              </div>
-              <MapPin
-                className={`h-4 w-4 shrink-0 ${
-                  startWaypoint ? 'text-[#00846c]' : 'text-white'
+          <div className="mt-1.5 space-y-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenPortSelector(startWaypoint?.id ?? 'start', '출발지')
+                }
+                className={`flex min-h-11 items-center justify-between gap-1.5 rounded-2xl border-2 px-3 py-1.5 text-left transition active:scale-[0.99] ${
+                  startWaypoint
+                    ? 'border-[#00846c] bg-emerald-50/95 text-[#003360]'
+                    : 'border-[#00846c] bg-[#00846c] text-white shadow-xs hover:bg-[#006e5a]'
                 }`}
-              />
-            </button>
+              >
+                <div className="min-w-0 flex-1">
+                  <span
+                    className={`block text-[10px] font-black ${
+                      startWaypoint ? 'text-[#00846c]' : 'text-emerald-100'
+                    }`}
+                  >
+                    출발지
+                  </span>
+                  <span className="block truncate text-xs font-extrabold sm:text-sm">
+                    {startWaypoint ? startWaypoint.name : '항구·GPS 선택'}
+                  </span>
+                </div>
+                <MapPin
+                  className={`h-4 w-4 shrink-0 ${
+                    startWaypoint ? 'text-[#00846c]' : 'text-white'
+                  }`}
+                />
+              </button>
 
-            <button
-              type="button"
-              onClick={() => onOpenPortSelector('end', '도착지')}
-              className="flex min-h-11 items-center justify-between gap-1.5 rounded-2xl border-2 border-[#b2415f] bg-[#b2415f] px-3 py-1.5 text-left text-white shadow-xs transition hover:bg-[#870b41] active:scale-[0.99]"
-            >
-              <div className="min-w-0 flex-1">
-                <span className="block text-[10px] font-black text-rose-100">
-                  도착지
-                </span>
-                <span className="block truncate text-xs font-extrabold sm:text-sm">
-                  항구선택
-                </span>
-              </div>
-              <MapPin className="h-4 w-4 shrink-0 text-white" />
-            </button>
+              <button
+                type="button"
+                onClick={() => onOpenPortSelector('end', '도착지')}
+                className="flex min-h-11 items-center justify-between gap-1.5 rounded-2xl border-2 border-[#b2415f] bg-[#b2415f] px-3 py-1.5 text-left text-white shadow-xs transition hover:bg-[#870b41] active:scale-[0.99]"
+              >
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-black text-rose-100">
+                    도착지
+                  </span>
+                  <span className="block truncate text-xs font-extrabold sm:text-sm">
+                    항구·GPS 선택
+                  </span>
+                </div>
+                <MapPin className="h-4 w-4 shrink-0 text-white" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-1.5 rounded-xl border border-sky-200 bg-sky-50/95 px-2.5 py-1 text-[11px] font-extrabold text-[#003360]">
+              <span className="min-w-0 truncate">
+                {startWaypoint
+                  ? `📍 출발지(${startWaypoint.name}) 지정됨 — 지도를 탭해 도착지(바다·해안·항구)를 찍으세요`
+                  : '📍 지도(바다·해안·항구)를 직접 탭해 순서대로 잇거나 위 [항구·GPS 선택]을 누르세요'}
+              </span>
+              {onChangeRouteMapTapMode && routeMapTapMode === 'pan_only' && (
+                <button
+                  type="button"
+                  onClick={() => onChangeRouteMapTapMode('draw')}
+                  className="shrink-0 rounded-lg bg-[#00846c] px-2 py-0.5 text-[10px] font-black text-white shadow-2xs active:scale-95"
+                >
+                  그리기 켜기
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="mt-1.5 space-y-1.5">
@@ -519,11 +584,32 @@ export function RouteTimeCalculator({
                   type="button"
                   onClick={onAddWaypoint}
                   className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-amber-500 bg-amber-100 px-2 text-[11px] font-black whitespace-nowrap text-amber-900 transition hover:bg-amber-200 active:scale-95"
-                  title="경유할 항구·선착장 추가 (지도에서 항구 마커를 바로 클릭해도 자동 경유 추가됩니다)"
+                  title="경유할 항구·선착장 추가 (지도에서 바다·항구를 바로 탭해도 연결됩니다)"
                 >
                   <Plus className="h-3 w-3 shrink-0" />
                   <span>경유지</span>
                 </button>
+                {isRouteDrawing && onCompleteRoute ? (
+                  <button
+                    type="button"
+                    onClick={onCompleteRoute}
+                    className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-[#00846c] bg-[#00846c] px-2 text-[11px] font-black whitespace-nowrap text-white shadow-2xs transition hover:bg-[#006e5a] active:scale-95"
+                    title="도착지 지정을 확정하고 지도를 '이동만' 모드로 잠급니다 (오터치 방지)"
+                  >
+                    <Check className="h-3 w-3 shrink-0 stroke-[2.8]" />
+                    <span>도착 완료</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onStartNewRoute ?? onResetRoute}
+                    className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-[#0284c7] bg-sky-100 px-2 text-[11px] font-black whitespace-nowrap text-[#003360] shadow-2xs transition hover:bg-sky-200 active:scale-95"
+                    title="현재 확정된 항로를 비우고 새 항로 그리기를 시작합니다"
+                  >
+                    <RotateCcw className="h-2.5 w-2.5 shrink-0" />
+                    <span>새 항로</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -532,11 +618,48 @@ export function RouteTimeCalculator({
 
       {!isCollapsed && (
         <div className="mt-2 min-h-0 flex-1 space-y-1.5 overflow-y-auto border-t border-sky-200 pt-2 pr-0.5">
-          {/* Zone 2: 지도 표시 옵션 바 (시간 · NM 거리 · 선착장 마커 토글) */}
+          {/* Zone 2: 지도 탭 동작 모드(항로 그리기 vs 이동만) + 지도 표시 옵션 바 (시간 · NM 거리 · 선착장 마커 토글) */}
           <div className="flex items-center justify-between gap-1.5 overflow-x-auto rounded-xl border border-sky-200 bg-sky-50/95 px-2.5 py-1 scrollbar-none">
-            <span className="text-[11px] font-extrabold whitespace-nowrap text-[#003360]">
-              지도 표시 설정
-            </span>
+            {onChangeRouteMapTapMode ? (
+              <div
+                role="group"
+                aria-label="지도 터치 동작 모드"
+                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-sky-300 bg-white p-0.5"
+              >
+                <button
+                  type="button"
+                  onClick={() => onChangeRouteMapTapMode('draw')}
+                  aria-pressed={routeMapTapMode !== 'pan_only'}
+                  title="지도(바다·해안·항구)를 탭하면 찍은 순서대로 항로가 연결됩니다"
+                  className={`inline-flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black whitespace-nowrap transition active:scale-95 ${
+                    routeMapTapMode !== 'pan_only'
+                      ? 'bg-[#00846c] text-white shadow-2xs'
+                      : 'text-[#003360] hover:bg-sky-50'
+                  }`}
+                >
+                  <MousePointerClick className="h-3 w-3 shrink-0" />
+                  <span>항로 그리기</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChangeRouteMapTapMode('pan_only')}
+                  aria-pressed={routeMapTapMode === 'pan_only'}
+                  title="지도를 탭해도 지점이 추가되지 않고 화면 이동·확대만 수행합니다"
+                  className={`inline-flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black whitespace-nowrap transition active:scale-95 ${
+                    routeMapTapMode === 'pan_only'
+                      ? 'bg-[#003360] text-white shadow-2xs'
+                      : 'text-[#003360] hover:bg-sky-50'
+                  }`}
+                >
+                  <Hand className="h-3 w-3 shrink-0" />
+                  <span>이동만</span>
+                </button>
+              </div>
+            ) : (
+              <span className="text-[11px] font-extrabold whitespace-nowrap text-[#003360]">
+                지도 표시 설정
+              </span>
+            )}
 
             <div className="flex shrink-0 items-center gap-1">
               {onToggleLegDurationOnMap && (
@@ -728,12 +851,19 @@ export function RouteTimeCalculator({
                           <div className="mt-1 flex items-center gap-1 text-[10px]">
                             <span
                               className={`shrink-0 rounded px-1.5 py-0.2 text-[9px] font-bold whitespace-nowrap ${
-                                isSmallBerth
-                                  ? 'bg-amber-100 text-amber-900'
-                                  : 'bg-sky-100 text-sky-900'
+                                wp.isCustomCoord || !wp.matchedPortId
+                                  ? 'bg-teal-100 text-[#00846c]'
+                                  : isSmallBerth
+                                    ? 'bg-amber-100 text-amber-900'
+                                    : 'bg-sky-100 text-sky-900'
                               }`}
                             >
-                              {wp.facilityLabel || (isSmallBerth ? '선착장' : '항구')}
+                              {wp.facilityLabel ||
+                                (wp.isCustomCoord || !wp.matchedPortId
+                                  ? '해상·해안 정박지'
+                                  : isSmallBerth
+                                    ? '선착장'
+                                    : '항구')}
                             </span>
                             {wp.minDepthMeters !== undefined && (
                               <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-sky-100 px-1.5 py-0.2 font-mono text-[9px] font-bold whitespace-nowrap tabular-nums text-sky-900">
@@ -820,8 +950,12 @@ export function RouteTimeCalculator({
                       leg.endCumulativeMinutes ?? leg.durationMinutes,
                     );
                     const legEtaKst = formatKstEtaFromOffsetMins(cumMins);
-                    const visualMidLat = (leg.from.lat + leg.to.lat) / 2;
-                    const visualMidLng = (leg.from.lng + leg.to.lng) / 2;
+                    const badgeMidLat = Number.isFinite(leg.midLat)
+                      ? leg.midLat
+                      : (leg.from.lat + leg.to.lat) / 2;
+                    const badgeMidLng = Number.isFinite(leg.midLng)
+                      ? leg.midLng
+                      : (leg.from.lng + leg.to.lng) / 2;
 
                     return (
                       <div
@@ -836,7 +970,7 @@ export function RouteTimeCalculator({
                           type="button"
                           onClick={() => {
                             onSelectLeg?.(isSelected ? null : legIdx);
-                            onFlyToWaypoint(visualMidLat, visualMidLng);
+                            onFlyToWaypoint(badgeMidLat, badgeMidLng);
                           }}
                           className="min-w-0 flex-1 text-left"
                           title="탭하여 지도에서 이 구간 보기"

@@ -261,6 +261,7 @@ export function resolveSmartWaypoint(
   lng: number;
   matchedPortId?: string;
   isCustomCoord: boolean;
+  wasSnappedFromLand?: boolean;
   subCategory?: 'official_docking' | 'small_berth' | 'port';
   facilityLabel?: string;
   minDepthMeters?: number;
@@ -286,6 +287,7 @@ export function resolveSmartWaypoint(
       lng: closestPort.lng,
       matchedPortId: closestPort.id,
       isCustomCoord: false,
+      wasSnappedFromLand: false,
       subCategory: closestPort.subCategory,
       facilityLabel: closestPort.facilityLabel,
       minDepthMeters: closestPort.minDepthMeters,
@@ -306,6 +308,7 @@ export function resolveSmartWaypoint(
         lng: p.lng,
         matchedPortId: p.id,
         isCustomCoord: false,
+        wasSnappedFromLand: true,
         subCategory: p.subCategory,
         facilityLabel: p.facilityLabel,
         minDepthMeters: p.minDepthMeters,
@@ -321,6 +324,7 @@ export function resolveSmartWaypoint(
       lng: snapped.lng,
       matchedPortId: undefined,
       isCustomCoord: true,
+      wasSnappedFromLand: true,
     };
   }
 
@@ -331,6 +335,7 @@ export function resolveSmartWaypoint(
     lng,
     matchedPortId: undefined,
     isCustomCoord: true,
+    wasSnappedFromLand: false,
   };
 }
 

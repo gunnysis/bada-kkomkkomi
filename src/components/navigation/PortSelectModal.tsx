@@ -28,6 +28,7 @@ interface PortSelectModalProps {
   isWaypointMode?: boolean;
   onSelectPort: (port: MarinePort) => void;
   onSelectUserGps: () => void;
+  onPickOnMap?: () => void;
 }
 
 type FilterTabKey = 'all' | 'small_berth' | 'port' | '통영' | '거제' | 'island';
@@ -55,6 +56,7 @@ export function PortSelectModal({
   isWaypointMode = false,
   onSelectPort,
   onSelectUserGps,
+  onPickOnMap,
 }: PortSelectModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [query, setQuery] = useState('');
@@ -208,50 +210,76 @@ export function PortSelectModal({
           </button>
         )}
 
-        {/* [GAP-03 해소] 임의 GPS 좌표 즉시 삽입 대신 현재 GPS 기준 가까운 등록 항구 순 정렬 보조 기능 제공 */}
-        <button
-          type="button"
-          onClick={() => {
-            if (!userLocation) {
+        {/* [RC-BERTH-03 해결] 해상 순찰·단속 중 현재 선박 GPS 좌표를 즉시 출발지·도착지·경유지로 설정 */}
+        <div className="mt-2.5 flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
               onSelectUserGps();
-              setSortByGpsDistance(true);
-              setSortByRouteDetour(false);
-            } else {
-              setSortByGpsDistance((prev) => {
-                const next = !prev;
-                if (next) setSortByRouteDetour(false);
-                return next;
-              });
-            }
-          }}
-          aria-pressed={Boolean(userLocation && sortByGpsDistance)}
-          className={`mt-2.5 flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded-2xl border px-3.5 py-2 text-left transition active:scale-[0.99] ${
-            userLocation && sortByGpsDistance
-              ? 'border-[#00846c] bg-emerald-50/90 text-[#003360]'
-              : 'border-sky-300 bg-sky-50/90 text-[#003360] hover:border-[#0066b3]'
-          }`}
-        >
-          <div className="flex min-w-0 items-center gap-2.5">
-            <LocateFixed className="h-5 w-5 shrink-0 text-[#0066b3]" />
-            <div className="min-w-0">
-              <p className="truncate text-xs font-black text-[#003360]">
-                내 선박 현재 GPS에서 가까운 등록 항구 순 정렬
-              </p>
-              <p className="truncate font-mono text-[11px] font-bold tabular-nums text-slate-600">
-                {userLocation
-                  ? `기준 위치: ${userLocation.lat.toFixed(4)}°N, ${userLocation.lng.toFixed(4)}°E`
-                  : '클릭 시 현재 GPS 위치를 확인하여 가까운 등록 항포구 순으로 정렬합니다'}
-              </p>
-            </div>
-          </div>
-          <span
-            className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-black text-white shadow-2xs ${
-              userLocation && sortByGpsDistance ? 'bg-[#00846c]' : 'bg-[#0066b3]'
-            }`}
+              onClose();
+            }}
+            className="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-2xl border-2 border-[#00846c] bg-emerald-50/95 px-3.5 py-2 text-left text-[#003360] shadow-2xs transition hover:bg-emerald-100 active:scale-[0.99]"
           >
-            {userLocation && sortByGpsDistance ? '가까운 순 켜짐' : '가까운 순 정렬'}
-          </span>
-        </button>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <LocateFixed className="h-5 w-5 shrink-0 text-[#00846c]" />
+              <div className="min-w-0">
+                <p className="truncate text-xs font-black text-[#003360]">
+                  내 선박 현재 GPS 위치로 {targetLabel} 설정
+                </p>
+                <p className="truncate font-mono text-[11px] font-bold tabular-nums text-slate-600">
+                  {userLocation
+                    ? `현재 해상 위치 (${userLocation.lat.toFixed(4)}°N, ${userLocation.lng.toFixed(4)}°E)`
+                    : '탭하면 현재 선박 GPS 좌표를 즉시 반영합니다'}
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 rounded-lg bg-[#00846c] px-2.5 py-1 text-[11px] font-black text-white shadow-2xs">
+              즉시 적용
+            </span>
+          </button>
+
+          {onPickOnMap && (
+            <button
+              type="button"
+              onClick={() => {
+                onPickOnMap();
+                onClose();
+              }}
+              title="모달을 닫고 지도에서 바다·해안·항구 위치를 직접 탭하여 지정"
+              className="flex min-h-11 shrink-0 flex-col items-center justify-center rounded-2xl border-2 border-[#0284c7] bg-sky-50/95 px-2.5 py-1.5 text-[11px] font-black text-[#003360] shadow-2xs transition hover:bg-sky-100 active:scale-95"
+            >
+              <span>지도직접</span>
+              <span className="text-[9.5px] font-bold text-[#0284c7]">
+                위치찍기
+              </span>
+            </button>
+          )}
+
+          {userLocation && (
+            <button
+              type="button"
+              onClick={() => {
+                setSortByGpsDistance((prev) => {
+                  const next = !prev;
+                  if (next) setSortByRouteDetour(false);
+                  return next;
+                });
+              }}
+              aria-pressed={sortByGpsDistance}
+              title="내 선박 현재 GPS에서 가까운 등록 항구 순으로 목록 정렬"
+              className={`flex min-h-11 shrink-0 flex-col items-center justify-center rounded-2xl border px-2.5 py-1.5 text-[11px] font-black transition active:scale-95 ${
+                sortByGpsDistance
+                  ? 'border-[#0066b3] bg-[#0066b3] text-white shadow-2xs'
+                  : 'border-sky-300 bg-sky-50/90 text-[#003360] hover:border-[#0066b3]'
+              }`}
+            >
+              <span>거리순</span>
+              <span className="text-[9.5px] font-bold opacity-85">
+                {sortByGpsDistance ? '켜짐' : '정렬'}
+              </span>
+            </button>
+          )}
+        </div>
 
         {/* 검색창 */}
         <div className="relative mt-2 shrink-0">
