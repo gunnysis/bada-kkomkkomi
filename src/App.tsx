@@ -1464,11 +1464,7 @@ export function App() {
                                 ? '거제권 '
                                 : ''
                           }${filteredFeatures.length}/${totalDockingCount}개 접안지 표시`
-                      : routeWaypoints.length >= 2
-                        ? `실항로 ${routeCalculation.totalDistanceKm.toFixed(1)}km · 약 ${Math.round(routeCalculation.totalDurationMinutes)}분`
-                        : routeWaypoints.length === 1
-                          ? `출발: ${routeWaypoints[0].name} · 도착지 선택 대기`
-                          : '출발지·도착지 항구를 선택해 소요시간 계산'}
+                      : `실항로 ${routeCalculation.totalDistanceKm.toFixed(1)}km · 약 ${Math.round(routeCalculation.totalDurationMinutes)}분`}
                   </p>
                 </div>
                 <img

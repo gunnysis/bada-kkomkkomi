@@ -589,8 +589,8 @@ describe('6. v2.4 Spatial CRS Detection, Route Leg Label Toggle & Nearby Marine 
     );
     assert.equal(nearCustom.isCustomCoord, true);
     assert.ok(
-      nearCustom.name.includes('인근 해상'),
-      `Expected nearby place label for custom coordinate within 5 NM, got: ${nearCustom.name}`,
+      nearCustom.name.includes('인근') && !nearCustom.name.includes('°N'),
+      `Expected concise nearby place label without coordinate suffix for custom coordinate within 5 NM, got: ${nearCustom.name}`,
     );
 
     // 3) Far offshore (>5 NM from any port) returns null from getNearbyMarinePlaceLabel

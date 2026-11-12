@@ -243,7 +243,7 @@ export function getNearbyMarinePlaceLabel(
   const placeName = closestPort.islandName
     ? `${closestPort.islandName}·${closestPort.name}`
     : closestPort.name;
-  return `${placeName} 인근 해상`;
+  return `${placeName} 인근`;
 }
 
 /**
@@ -319,7 +319,9 @@ export function resolveSmartWaypoint(
     }
     const nearbySnapLabel = getNearbyMarinePlaceLabel(snapped.lat, snapped.lng, ports);
     return {
-      name: `${nearbySnapLabel ?? `${fallbackLabel}·해상보정`} (${snapped.lat.toFixed(3)}°N, ${snapped.lng.toFixed(3)}°E)`,
+      name:
+        nearbySnapLabel ??
+        `${fallbackLabel}·해상보정 (${snapped.lat.toFixed(3)}°N, ${snapped.lng.toFixed(3)}°E)`,
       lat: snapped.lat,
       lng: snapped.lng,
       matchedPortId: undefined,
@@ -330,7 +332,7 @@ export function resolveSmartWaypoint(
 
   const nearbyLabel = getNearbyMarinePlaceLabel(lat, lng, ports);
   return {
-    name: `${nearbyLabel ?? fallbackLabel} (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`,
+    name: nearbyLabel ?? `${fallbackLabel} (${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E)`,
     lat,
     lng,
     matchedPortId: undefined,

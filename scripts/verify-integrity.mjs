@@ -232,6 +232,12 @@ assert(
     !routeCalcTsx.includes('56변침점·67해안장벽 우회'),
   'RouteTimeCalculator.tsx: provenance badge must display 300변침점·378실측해안선 우회',
 );
+assert(
+  routeCalcTsx.includes('if (isCollapsed)') &&
+    routeCalcTsx.includes('전체 예상 소요시간') &&
+    !routeCalcTsx.includes('RotateCcw'),
+  'RouteTimeCalculator.tsx: must render compact summary card when isCollapsed and prevent Row 1 toolbar overflow (UI-BUG-01..04)',
+);
 
 // 6. public/backup 레거시 백업 폴더 클린 확인 (public/dev는 개발·디자인 레퍼런스 보관용으로 보존하되 SW 프리캐시에서 제외)
 if (fs.existsSync('public/backup')) {

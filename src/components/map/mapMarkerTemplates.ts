@@ -264,85 +264,32 @@ export function buildPorpoiseSpec(count: number): MarkerTemplateSpec {
  */
 export function buildRouteWaypointSpec(
   type: 'start' | 'waypoint' | 'end',
-  label: string,
-  orderIdx: number,
-  waypointId?: string,
+  _label: string,
+  _orderIdx: number,
+  _waypointId?: string,
 ): MarkerTemplateSpec {
-  const rawShortLabel = label.length > 12 ? `${label.slice(0, 12)}…` : label;
-  const shortLabel = escapeHtml(rawShortLabel);
   const bg =
     type === 'start' ? '#10b981' : type === 'waypoint' ? '#f59e0b' : '#ef4444';
-  const roleTag =
-    type === 'start' ? '출발' : type === 'end' ? '도착' : `경유${orderIdx}`;
-  const safeWpId = waypointId ? escapeHtml(waypointId) : '';
-  const removeBtnHtml =
-    type === 'waypoint' && safeWpId
-      ? `<button
-          type="button"
-          data-remove-waypoint-id="${safeWpId}"
-          aria-label="${roleTag} ${shortLabel} 경유지 취소"
-          title="이 경유지 취소(삭제)"
-          style="
-            margin-left: 5px;
-            min-width: 24px;
-            min-height: 24px;
-            padding: 0 5px;
-            border-radius: 6px;
-            background: #ef4444;
-            border: 1.5px solid #fecaca;
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 900;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            pointer-events: auto;
-          "
-        >✕</button>`
-      : '';
-
   const html = `
-    <div class="bada-draggable-overlay" title="드래그하여 정박지 위치 미세 조정" style="display: flex; flex-direction: column; align-items: center; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;">
+    <div class="bada-draggable-overlay" title="드래그하여 정박지 위치 미세 조정" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;">
       <div style="
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 7px;
-        border-radius: 8px;
-        background: #020617;
-        border: 2px solid ${bg};
-        color: #ffffff;
-        font-size: 10px;
-        font-weight: 900;
-        margin-bottom: 3px;
-        white-space: nowrap;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.75);
-      "><span>[${roleTag}] ${shortLabel}</span>${removeBtnHtml}</div>
-      <div style="
-        width: 38px;
-        height: 38px;
+        width: 18px;
+        height: 18px;
         border-radius: 9999px;
         background: ${bg};
-        border: 3px solid #ffffff;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.75);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 900;
-        color: #020617;
-      ">${type === 'start' ? '출' : type === 'end' ? '착' : orderIdx}</div>
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 7px rgba(0,0,0,0.75);
+      "></div>
     </div>
   `;
   return {
     html,
-    width: 56,
-    height: 56,
-    anchorX: 28,
-    anchorY: 50,
+    width: 24,
+    height: 24,
+    anchorX: 12,
+    anchorY: 12,
     xAnchorRatio: 0.5,
-    yAnchorRatio: 50 / 56,
+    yAnchorRatio: 0.5,
   };
 }
 
